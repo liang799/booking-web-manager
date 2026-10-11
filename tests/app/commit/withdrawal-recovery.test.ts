@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { JoinedSessionItem } from "@/app/commit/withdrawal-ports";
 import {
-  browserUnresolvedStore, reconcile, settleAttempt, termsDiffer, unresolvedDepartureSchema, unresolvedWithdrawalSchema,
+  browserUnresolvedStore, keepListed, reconcile, settleAttempt, termsDiffer, unresolvedDepartureSchema, unresolvedWithdrawalSchema,
   type UnresolvedWithdrawal,
 } from "@/app/commit/withdrawal-recovery";
 
@@ -83,6 +83,25 @@ describe("UC2-05 reconciling with the server's joined sessions", () => {
   });
 });
 
+describe("UC2-05 reconciling with a list of pending invitations", () => {
+  const unresolved = new Map([[sessionId, "accept-key"]]);
+
+  test("keeps the request while the invitation is still listed, so it can be retried", () => {
+    // Act & Assert
+    expect(keepListed(unresolved, [sessionId, "22222222-2222-4222-8222-222222222222"])).toBe(unresolved);
+  });
+
+  test("clears the request once the invitation is no longer listed (accepted, withdrawn or closed)", () => {
+    // Act & Assert
+    expect(keepListed(unresolved, ["22222222-2222-4222-8222-222222222222"]).size).toBe(0);
+  });
+
+  test("changes nothing until the list has loaded", () => {
+    // Act & Assert
+    expect(keepListed(unresolved, undefined)).toBe(unresolved);
+  });
+});
+
 describe("UC2-05 refund terms", () => {
   test.each([
     [{ kind: "AWAITING_REPLACEMENT", refundCents: 0, heldCents: 1250 }, true],
@@ -109,7 +128,7 @@ describe("UC2-05 saved unresolved requests", () => {
     expect(otherUser.size).toBe(0);
   });
 
-  test("keeps withdrawals and waitlist departures apart, and removes the entry when empty", () => {
+  test("keeps withdrawals, waitlist departures and acceptances apart, and removes the entry when empty", () => {
     // Arrange
     const storage = memoryStorage();
     const departures = browserUnresolvedStore("waitlist-departures", "user-a", unresolvedDepartureSchema, () => storage);
@@ -117,6 +136,7 @@ describe("UC2-05 saved unresolved requests", () => {
 
     // Act & Assert
     expect(browserUnresolvedStore("withdrawals", "user-a", unresolvedWithdrawalSchema, () => storage).load().size).toBe(0);
+    expect(browserUnresolvedStore("replacement-acceptances", "user-a", unresolvedDepartureSchema, () => storage).load().size).toBe(0);
     expect(departures.load().get(sessionId)).toBe("leave-key");
     departures.save(new Map());
     expect(storage.length).toBe(0);

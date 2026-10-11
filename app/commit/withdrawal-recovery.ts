@@ -51,10 +51,19 @@ export function reconcile<T>(
   sessions: readonly JoinedSessionItem[] | undefined,
   status: JoinedSessionItem["status"],
 ): ReadonlyMap<string, T> {
-  if (sessions === undefined) return unresolved;
+  return keepListed(unresolved, sessions?.filter((session) => session.status === status).map((session) => session.sessionId));
+}
+
+/**
+ * Keeps only the unresolved requests whose session the server still lists (for example a pending
+ * invitation); one no longer listed has an established outcome. Changes nothing until the list
+ * has loaded, and returns the same map when nothing changes.
+ */
+export function keepListed<T>(unresolved: ReadonlyMap<string, T>, listedSessionIds: readonly string[] | undefined): ReadonlyMap<string, T> {
+  if (listedSessionIds === undefined) return unresolved;
   let next = unresolved;
   for (const sessionId of unresolved.keys()) {
-    if (!sessions.some((session) => session.sessionId === sessionId && session.status === status)) next = without(next, sessionId);
+    if (!listedSessionIds.includes(sessionId)) next = without(next, sessionId);
   }
   return next;
 }
@@ -87,7 +96,7 @@ export const unresolvedWithdrawalSchema: z.ZodType<UnresolvedWithdrawal> = z.obj
   request: z.object({ sessionId: z.string().min(1), idempotencyKey: z.string().min(1), replacement: replacementSchema }),
   preview: previewSchema,
 });
-/** An unresolved waitlist departure is just its idempotency key. */
+/** An unresolved waitlist departure or replacement acceptance is just its idempotency key. */
 export const unresolvedDepartureSchema: z.ZodType<string> = z.string().min(1);
 
 /**
@@ -96,7 +105,7 @@ export const unresolvedDepartureSchema: z.ZodType<string> = z.string().min(1);
  * on load; unreadable data or unavailable storage falls back to an empty map, never an error.
  */
 export function browserUnresolvedStore<T>(
-  kind: "withdrawals" | "waitlist-departures",
+  kind: "withdrawals" | "waitlist-departures" | "replacement-acceptances",
   userId: string,
   schema: z.ZodType<T>,
   storage: () => Storage | undefined = () => (typeof window === "undefined" ? undefined : window.localStorage),

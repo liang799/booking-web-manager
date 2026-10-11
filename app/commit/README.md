@@ -132,6 +132,31 @@ unknown), in [`withdrawal-recovery.ts`](./withdrawal-recovery.ts):
   [`withdrawal-fakes.ts`](./_components/withdrawal-fakes.ts). The page, the composition root
   that loads the list with React Query and provides the `QueryClient`, follows once it exists.
 
+### Accept-replacement screen
+
+A player named in a withdrawal's invitation (ADR-0006) takes the reserved place only by
+accepting it. The screen follows the same split as the withdrawal screens.
+
+- [`ReplacementInvitationsView`](./_components/replacement-invitations-view.tsx) is
+  presentational: it lists the places reserved for the player, each with the share accepting
+  would hold, and reports which one they want to accept.
+- [`AcceptReplacementDialog`](./_components/accept-replacement-dialog.tsx) is a single
+  controlled dialog, display only. It shows the amount held before anything happens, links to
+  the wallet when the balance is too low, and offers "Retry accepting" / "Retry later" after an
+  unresolved request.
+- [`useAcceptReplacementFlow`](./use-accept-replacement-flow.ts) runs the acceptance with
+  `useMutation` and refreshes the invitations, joined sessions and wallet. It keeps unresolved
+  acceptances' idempotency keys under the recovery strategy above (`replacement-acceptances`
+  store); an outcome is established when a retry succeeds or the server no longer lists the
+  invitation (`keepListed`).
+- [`replacement-transport.ts`](./replacement-transport.ts) calls
+  `POST /api/sessions/replacements/accept`, sending only the session and idempotency key, and
+  maps the reply to [`replacement-ports.ts`](./replacement-ports.ts). It shares request handling
+  and failure classification with the withdrawal transport through
+  [`session-action-request.ts`](./session-action-request.ts).
+- No API lists a player's pending invitations yet; stories use
+  [`replacement-fakes.ts`](./_components/replacement-fakes.ts).
+
 ## UC2-06 Verify Attendance
 
 - [`VerifyAttendance`](../../use-cases/sessions/VerifyAttendance.ts) records the
