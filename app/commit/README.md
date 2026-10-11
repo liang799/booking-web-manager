@@ -117,7 +117,9 @@ enforces the financial rules.
 unknown), in [`withdrawal-recovery.ts`](./withdrawal-recovery.ts):
 
 1. Kept per user and session, and saved in this browser's `localStorage` under a key that
-   includes the user ID, so it survives a reload.
+   includes the user ID before the first attempt is sent, so it survives a reload, even one
+   while the request is in flight. When another account signs in, its own requests are loaded
+   instead ([`useUnresolvedRequests`](./use-unresolved-requests.ts), shared by the flow hooks).
 2. Only ever retried exactly, with the same idempotency key, so the server replays the
    original result instead of acting twice. The dialogs offer "Retry" and "Retry later", never
    "Keep my place", because the action may already have happened.

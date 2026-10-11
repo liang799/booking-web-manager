@@ -6,8 +6,9 @@ import type { JoinedSessionItem, WithdrawRequest, WithdrawalPreview } from "./wi
  * departure that may or may not have happened. Plain functions, so they are unit-tested in CI.
  *
  * Recovery strategy:
- * 1. An unresolved request is kept per user and session, and saved in this browser, so it
- *    survives a reload (`UnresolvedStore`).
+ * 1. An unresolved request is kept per user and session, and saved in this browser before its
+ *    first attempt is sent, so it survives a reload, even mid-request (`UnresolvedStore`,
+ *    `useUnresolvedRequests`). Another account signing in never sees or saves it.
  * 2. It is only ever retried exactly, with the same idempotency key, so the server replays the
  *    original result instead of acting twice.
  * 3. It is cleared only when its outcome is established: the retry succeeds, or the server's

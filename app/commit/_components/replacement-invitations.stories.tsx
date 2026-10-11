@@ -209,6 +209,32 @@ export const UnresolvedAfterReload: Story = {
   },
 };
 
+/**
+ * The page closes while the first attempt is in flight: its key was saved before the request
+ * left, so the next visit retries it instead of sending a new acceptance.
+ */
+let inFlightStore = memoryUnresolvedStore<string>();
+let savedWhenSent: string | undefined;
+export const KeySavedBeforeSending: Story = {
+  beforeEach: () => { inFlightStore = memoryUnresolvedStore<string>(); savedWhenSent = undefined; },
+  args: {
+    acceptReplacement: fn<AcceptReplacement>((request) => {
+      savedWhenSent = inFlightStore.saved().get(request.sessionId);
+      return new Promise(() => undefined);
+    }),
+  },
+  render: (args) => <ReplacementInvitationsPageHarness {...args} store={inFlightStore} />,
+  play: async ({ args, canvas }) => {
+    await openAccept(canvas, "Our Tampines Hub");
+    await userEvent.click(within(dialog()).getByRole("button", { name: "Accept and hold" }));
+    await expect(args.acceptReplacement).toHaveBeenCalledOnce();
+    await expect(savedWhenSent).toBe(calls(args.acceptReplacement)[0]![0].idempotencyKey);
+    // Still the first attempt, so it isn't shown as unconfirmed yet.
+    await expect(within(dialog()).getByRole("button", { name: "Accepting…" })).toBeDisabled();
+    await expect(within(dialog()).queryByText(/wasn't confirmed/i)).not.toBeInTheDocument();
+  },
+};
+
 /** The server no longer lists the invitation, which establishes the saved request's outcome. */
 let settledStore = memoryUnresolvedStore<string>();
 export const UnresolvedAlreadySettled: Story = {

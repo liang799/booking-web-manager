@@ -1,13 +1,12 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { AcceptReplacement, AcceptReplacementRequest, ReplacementInvitation } from "./replacement-ports";
 import { SessionActionError } from "./withdrawal-errors";
 import { joinedSessionsQueryKey, replacementInvitationsQueryKey, walletQueryKey } from "./withdrawal-query-keys";
-import {
-  browserUnresolvedStore, keepListed, settleAttempt, unresolvedDepartureSchema, type AttemptOutcome, type UnresolvedStore,
-} from "./withdrawal-recovery";
+import { useUnresolvedRequests, type SettleAttempt } from "./use-unresolved-requests";
+import { browserUnresolvedStore, keepListed, unresolvedDepartureSchema, type UnresolvedStore } from "./withdrawal-recovery";
 
 /** Everything the accept-replacement dialog shows. `closed` means no dialog. */
 export type AcceptReplacementState =
@@ -37,8 +36,9 @@ const UNCONFIRMED_MESSAGE = "We couldn't confirm whether you took the place. Try
  * UC2-05 accept a replacement invitation, for one dialog shared by every invitation. React Query
  * runs the acceptance (`useMutation`) and refreshes the invitations, joined sessions and wallet;
  * this hook keeps the selected invitation and unresolved acceptances' idempotency keys, following
- * `withdrawal-recovery.ts`: per user, saved across reloads, retried exactly, and cleared only once
- * the outcome is established (the retry succeeds, or the server no longer lists the invitation).
+ * `withdrawal-recovery.ts`: per user, saved before each first attempt is sent, retried exactly,
+ * and cleared only once the outcome is established (an attempt succeeds or is rejected outright,
+ * or the server no longer lists the invitation).
  */
 export function useAcceptReplacementFlow({ userId, invitations, acceptReplacement, store: givenStore }: {
   readonly userId: string;
@@ -49,17 +49,17 @@ export function useAcceptReplacementFlow({ userId, invitations, acceptReplacemen
   readonly store?: UnresolvedStore<string>;
 }): AcceptReplacementFlow {
   const queryClient = useQueryClient();
-  const [store] = useState(() => givenStore ?? browserUnresolvedStore("replacement-acceptances", userId, unresolvedDepartureSchema));
   const [selected, setSelected] = useState<ReplacementInvitation | null>(null);
-  const [saved, setSaved] = useState(() => store.load());
-  const retrying = useRef(false);
+  /** The invitation whose first attempt is in flight: saved already, but not yet unresolved. */
+  const [firstAttempt, setFirstAttempt] = useState<string | null>(null);
+  const settleRef = useRef<SettleAttempt | null>(null);
 
   const listed = invitations?.map((invitation) => invitation.sessionId);
-  const keys = keepListed(saved, listed);
-  useEffect(() => { store.save(keys); }, [store, keys]);
-
-  const settle = (request: AcceptReplacementRequest, outcome: AttemptOutcome) =>
-    setSaved((current) => settleAttempt(keepListed(current, listed), request.sessionId, request.idempotencyKey, outcome, retrying.current));
+  const { unresolved: keys, begin } = useUnresolvedRequests({
+    userId,
+    openStore: (id) => givenStore ?? browserUnresolvedStore("replacement-acceptances", id, unresolvedDepartureSchema),
+    reconcile: (saved) => keepListed(saved, listed),
+  });
   const refresh = (queryKeys: readonly (readonly unknown[])[]) => {
     for (const queryKey of queryKeys) void queryClient.invalidateQueries({ queryKey });
   };
@@ -76,15 +76,16 @@ export function useAcceptReplacementFlow({ userId, invitations, acceptReplacemen
       return result.heldCents;
     },
     retry: false,
-    onSuccess: (_heldCents, request) => {
-      settle(request, "succeeded");
+    onSuccess: () => {
+      settleRef.current?.("succeeded");
       refresh([replacementInvitationsQueryKey(userId), joinedSessionsQueryKey(userId), walletQueryKey]);
     },
-    onError: (error, request) => {
-      settle(request, error.unconfirmed ? "unconfirmed" : "rejected");
+    onError: (error) => {
+      settleRef.current?.(error.unconfirmed ? "unconfirmed" : "rejected");
       // A definite rejection often means the invitation changed (taken back, session closed): show the current list.
       if (!error.unconfirmed) refresh([replacementInvitationsQueryKey(userId)]);
     },
+    onSettled: () => setFirstAttempt(null),
   });
 
   const forSelected = selected !== null && mutation.variables?.sessionId === selected.sessionId;
@@ -96,7 +97,7 @@ export function useAcceptReplacementFlow({ userId, invitations, acceptReplacemen
   } else {
     const failed = forSelected && mutation.isError ? mutation.error : null;
     state = {
-      step: "confirming", invitation: selected, submitting: mutation.isPending, unresolved: keys.has(selected.sessionId),
+      step: "confirming", invitation: selected, submitting: mutation.isPending, unresolved: keys.has(selected.sessionId) && firstAttempt !== selected.sessionId,
       error: failed?.message ?? null, errorCode: failed?.code ?? null,
     };
   }
@@ -111,8 +112,10 @@ export function useAcceptReplacementFlow({ userId, invitations, acceptReplacemen
     confirm: () => {
       if (selected === null || mutation.isPending) return;
       const savedKey = keys.get(selected.sessionId);
-      retrying.current = savedKey !== undefined;
-      mutation.mutate({ sessionId: selected.sessionId, idempotencyKey: savedKey ?? crypto.randomUUID() });
+      const request = { sessionId: selected.sessionId, idempotencyKey: savedKey ?? crypto.randomUUID() };
+      settleRef.current = begin(request.sessionId, request.idempotencyKey, savedKey !== undefined);
+      setFirstAttempt(savedKey === undefined ? request.sessionId : null);
+      mutation.mutate(request);
     },
     close: () => { if (!mutation.isPending) setSelected(null); },
   };
