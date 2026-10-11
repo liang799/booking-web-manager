@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { settleAttempt, type AttemptOutcome, type UnresolvedStore } from "./withdrawal-recovery";
 
 /** Settles one attempt with what it established. */
@@ -37,7 +37,19 @@ export function useUnresolvedRequests<T>({ userId, openStore, reconcile }: {
   }
   const { store } = current;
   const unresolved = reconcile(current.saved);
-  useEffect(() => { store.save(unresolved); }, [store, unresolved]);
+  /**
+   * First attempts saved by `begin` and not yet settled. Every save includes them, so a save
+   * React was about to run with an older map can never drop a request that has already left.
+   */
+  const sending = useRef(new Map<string, { readonly store: UnresolvedStore<T>; readonly entry: T }>());
+  const withSending = (map: ReadonlyMap<string, T>, into: UnresolvedStore<T>) => {
+    let next = map;
+    for (const [sessionId, sent] of sending.current) {
+      if (sent.store === into && next.get(sessionId) !== sent.entry) next = new Map(next).set(sessionId, sent.entry);
+    }
+    return next;
+  };
+  useEffect(() => { store.save(withSending(unresolved, store)); }, [store, unresolved]);
 
   const update = (change: (saved: ReadonlyMap<string, T>) => ReadonlyMap<string, T>) =>
     setLoaded((latest) => (latest.store === store ? { ...latest, saved: change(reconcile(latest.saved)) } : latest));
@@ -46,11 +58,14 @@ export function useUnresolvedRequests<T>({ userId, openStore, reconcile }: {
     unresolved,
     begin: (sessionId, entry, wasRetry) => {
       if (!wasRetry) {
-        const next = new Map(unresolved).set(sessionId, entry);
-        store.save(next); // Now, not after the next render: the request is about to leave.
+        sending.current.set(sessionId, { store, entry });
+        store.save(withSending(unresolved, store)); // Now, not after the next render: the request is about to leave.
         update((saved) => new Map(saved).set(sessionId, entry));
       }
-      return (outcome) => update((saved) => settleAttempt(saved, sessionId, entry, outcome, wasRetry));
+      return (outcome) => {
+        if (sending.current.get(sessionId)?.entry === entry) sending.current.delete(sessionId);
+        update((saved) => settleAttempt(saved, sessionId, entry, outcome, wasRetry));
+      };
     },
   };
 }

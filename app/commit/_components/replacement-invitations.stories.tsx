@@ -135,8 +135,10 @@ export const AcceptAPlace: Story = {
 
 /** Not enough available balance: nothing is held, the player is pointed to a top-up, and the next attempt is a new request. */
 let fundedAttempts = 0;
+let fundedStore = memoryUnresolvedStore<string>();
 export const NotEnoughFunds: Story = {
-  beforeEach: () => { fundedAttempts = 0; },
+  beforeEach: () => { fundedAttempts = 0; fundedStore = memoryUnresolvedStore<string>(); },
+  render: (args) => <ReplacementInvitationsPageHarness {...args} store={fundedStore} />,
   args: {
     acceptReplacement: fn<AcceptReplacement>(async (request) => {
       fundedAttempts += 1;
@@ -151,6 +153,7 @@ export const NotEnoughFunds: Story = {
     await waitFor(() => expect(within(dialog()).getByRole("link", { name: "Top up your wallet" })).toHaveAttribute("href", "/wallet"));
     // A definite rejection: nothing happened, so declining is still offered.
     await expect(within(dialog()).getByRole("button", { name: "Not now" })).toBeEnabled();
+    await waitFor(() => expect(fundedStore.saved().size).toBe(0));
     await userEvent.click(within(dialog()).getByRole("button", { name: "Accept and hold" }));
     await waitFor(() => expect(within(dialog()).getByRole("status")).toHaveTextContent("is now held"));
     const [first, second] = calls(args.acceptReplacement).map(([request]) => request.idempotencyKey);
