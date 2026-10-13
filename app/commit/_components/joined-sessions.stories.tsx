@@ -379,6 +379,55 @@ export const UnresolvedAfterReload: Story = {
   },
 };
 
+/**
+ * The page closes while the first attempt is in flight: the request was saved before it left,
+ * so the next visit retries it exactly instead of withdrawing again.
+ */
+let inFlightWithdrawals = memoryUnresolvedStore<UnresolvedWithdrawal>();
+let withdrawalWhenSent: UnresolvedWithdrawal | undefined;
+export const WithdrawalSavedBeforeSending: Story = {
+  beforeEach: () => { inFlightWithdrawals = memoryUnresolvedStore<UnresolvedWithdrawal>(); withdrawalWhenSent = undefined; },
+  args: {
+    withdraw: fn<WithdrawFromSession>((request) => {
+      withdrawalWhenSent = inFlightWithdrawals.saved().get(request.sessionId);
+      return new Promise(() => undefined);
+    }),
+  },
+  render: (args) => <JoinedSessionsPageHarness {...args} withdrawalStore={inFlightWithdrawals} />,
+  play: async ({ args, canvas }) => {
+    await openWithdraw(canvas, "Bishan Sports Hall");
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /open it to the waitlist/i }));
+    await userEvent.click(within(dialog()).getByRole("button", { name: "Withdraw" }));
+    await waitFor(() => expect(args.withdraw).toHaveBeenCalledOnce());
+    await expect(withdrawalWhenSent?.request).toEqual(calls(args.withdraw)[0]![0]);
+    // Still the first attempt, so it isn't shown as unconfirmed yet.
+    await expect(within(dialog()).getByRole("button", { name: "Withdrawing…" })).toBeDisabled();
+    await expect(within(dialog()).queryByText(/wasn't confirmed/i)).not.toBeInTheDocument();
+  },
+};
+
+let inFlightDepartures = memoryUnresolvedStore<string>();
+let departureWhenSent: string | undefined;
+export const DepartureSavedBeforeSending: Story = {
+  beforeEach: () => { inFlightDepartures = memoryUnresolvedStore<string>(); departureWhenSent = undefined; },
+  args: {
+    leaveWaitlist: fn<LeaveWaitlist>((request) => {
+      departureWhenSent = inFlightDepartures.saved().get(request.sessionId);
+      return new Promise(() => undefined);
+    }),
+  },
+  render: (args) => <JoinedSessionsPageHarness {...args} departureStore={inFlightDepartures} />,
+  play: async ({ args, canvas }) => {
+    await listed(canvas);
+    await userEvent.click(row(canvas, "Jurong East Sports Hall").getByRole("button", { name: /leave the waitlist/i }));
+    await userEvent.click(await within(dialog()).findByRole("button", { name: "Leave waitlist" }));
+    await expect(args.leaveWaitlist).toHaveBeenCalledOnce();
+    await expect(departureWhenSent).toBe(calls(args.leaveWaitlist)[0]![0].idempotencyKey);
+    await expect(within(dialog()).getByRole("button", { name: "Leaving…" })).toBeDisabled();
+    await expect(within(dialog()).queryByText(/wasn't confirmed/i)).not.toBeInTheDocument();
+  },
+};
+
 /** The server's list shows the place has already gone, which establishes the saved request's outcome. */
 let goneStore = memoryUnresolvedStore<UnresolvedWithdrawal>();
 export const UnresolvedAlreadySettled: Story = {

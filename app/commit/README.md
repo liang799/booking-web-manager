@@ -117,7 +117,9 @@ enforces the financial rules.
 unknown), in [`withdrawal-recovery.ts`](./withdrawal-recovery.ts):
 
 1. Kept per user and session, and saved in this browser's `localStorage` under a key that
-   includes the user ID, so it survives a reload.
+   includes the user ID before the first attempt is sent, so it survives a reload, even one
+   while the request is in flight. When another account signs in, its own requests are loaded
+   instead ([`useUnresolvedRequests`](./use-unresolved-requests.ts), shared by the flow hooks).
 2. Only ever retried exactly, with the same idempotency key, so the server replays the
    original result instead of acting twice. The dialogs offer "Retry" and "Retry later", never
    "Keep my place", because the action may already have happened.
@@ -131,6 +133,31 @@ unknown), in [`withdrawal-recovery.ts`](./withdrawal-recovery.ts):
 - The joined-sessions list has no API yet; stories use
   [`withdrawal-fakes.ts`](./_components/withdrawal-fakes.ts). The page, the composition root
   that loads the list with React Query and provides the `QueryClient`, follows once it exists.
+
+### Accept-replacement screen
+
+A player named in a withdrawal's invitation (ADR-0006) takes the reserved place only by
+accepting it. The screen follows the same split as the withdrawal screens.
+
+- [`ReplacementInvitationsView`](./_components/replacement-invitations-view.tsx) is
+  presentational: it lists the places reserved for the player, each with the share accepting
+  would hold, and reports which one they want to accept.
+- [`AcceptReplacementDialog`](./_components/accept-replacement-dialog.tsx) is a single
+  controlled dialog, display only. It shows the amount held before anything happens, links to
+  the wallet when the balance is too low, and offers "Retry accepting" / "Retry later" after an
+  unresolved request.
+- [`useAcceptReplacementFlow`](./use-accept-replacement-flow.ts) runs the acceptance with
+  `useMutation` and refreshes the invitations, joined sessions and wallet. It keeps unresolved
+  acceptances' idempotency keys under the recovery strategy above (`replacement-acceptances`
+  store); an outcome is established when a retry succeeds or the server no longer lists the
+  invitation (`keepListed`).
+- [`replacement-transport.ts`](./replacement-transport.ts) calls
+  `POST /api/sessions/replacements/accept`, sending only the session and idempotency key, and
+  maps the reply to [`replacement-ports.ts`](./replacement-ports.ts). It shares request handling
+  and failure classification with the withdrawal transport through
+  [`session-action-request.ts`](./session-action-request.ts).
+- No API lists a player's pending invitations yet; stories use
+  [`replacement-fakes.ts`](./_components/replacement-fakes.ts).
 
 ## UC2-06 Verify Attendance
 
@@ -193,7 +220,7 @@ The routes share one set of dependencies from
 Supabase bearer-token identity check and the
 [`PostgresCommitmentUnitOfWork`](../../lib/sessions/postgres-commitment-unit-of-work.ts).
 Authentication only verifies identity; the unit of work loads the complete
-User, whose roles enforce account status, email verification and reliability.
+User, whose roles enforce account status, email presence and reliability.
 Until Web Push is configured, notifications go to a
 [`NoDeliveryNotifier`](../../lib/commit/no-delivery-notifier.ts) that accepts
 and discards them.
