@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
       <InfoSection id="privacy-collect" title="What we keep">
         <ul>
-          <li>Your account: display name and email address. Your password is handled by our sign-in provider, Supabase; we never see it.</li>
+          <li>Your account: display name and email address. When you register or log in, your password is passed to our sign-in provider, Supabase, which stores it securely; we never store it ourselves.</li>
           <li>Your preferences: the sports and regions you choose.</li>
           <li>Your activity: sessions you create, join, wait for or leave, attendance, and the groups you belong to.</li>
           <li>Your wallet records: top-ups, held shares, refunds and releases.</li>

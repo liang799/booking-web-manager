@@ -47,8 +47,8 @@ const account: readonly Question[] = [
     answer: <>Use Push notifications in <Link href="/profile">Settings</Link>. It applies to this browser only.</>,
   },
   {
-    question: "How do I change my email address?",
-    answer: <>Go to <Link href="/profile/email">Email</Link> to add or confirm one.</>,
+    question: "How do I add or confirm my email address?",
+    answer: <>Go to <Link href="/profile/email">Email</Link>. Add one there if your account has none, or resend the confirmation link and check its status. Changing an address you have already added isn&apos;t available yet.</>,
   },
   {
     question: "How do I delete my account?",

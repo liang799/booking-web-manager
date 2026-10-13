@@ -25,7 +25,7 @@ export default function TermsPage() {
       <InfoSection id="terms-account" title="Your account">
         <ul>
           <li>Keep your login details to yourself. You are responsible for what happens in your account.</li>
-          <li>Keep your email address up to date; you need one to create or join sessions.</li>
+          <li>Use an email address you can access; you need one to create or join sessions.</li>
           <li>Sessions can set a minimum reliability score, which is calculated from your past sessions.</li>
         </ul>
       </InfoSection>

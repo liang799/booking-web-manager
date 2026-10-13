@@ -41,5 +41,8 @@ test("the privacy policy links to every account control it mentions", () => {
     expect(html).toContain(`href="${href}"`);
   }
   expect(html).toContain("never shown to other players");
+  // The register and log-in actions receive the password and pass it to Supabase; it is never stored here.
+  expect(html).toContain("we never store it ourselves");
+  expect(html).not.toContain("we never see it");
   expect(html).toContain("kept without your name");
 });

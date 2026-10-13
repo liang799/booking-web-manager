@@ -33,5 +33,8 @@ test("help answers link to the pages they mention", () => {
     expect(html).toContain(`href="${href}"`);
   }
   expect(html).toContain("<details");
+  // /profile/email can add or confirm an address, not replace one.
+  expect(html).toContain("How do I add or confirm my email address?");
+  expect(html).not.toContain("change my email");
   expect(html).toContain("72 hours after the session ends");
 });
