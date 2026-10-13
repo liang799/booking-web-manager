@@ -6,6 +6,12 @@ UC1-01 Register User, UC1-02 Authenticate User. Approval for this directory
 may be given by Joseph alone (delegated review — see CLAUDE.md "Directory
 ownership"), so routine interface changes don't queue behind payment work.
 
+## Terms and privacy
+
+`/terms` and `/privacy` are public (`PUBLIC_PATHS` in `redirect-path.ts`) so the
+register form can link to them before sign-up. They share the
+[`InfoPage`](./_components/info-page.tsx) frame, which has no app sidebar.
+
 ## Email confirmation (UC1-01 / UC1-02)
 
 Hosted email confirmations are currently disabled; see the

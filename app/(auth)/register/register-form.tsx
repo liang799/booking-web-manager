@@ -168,7 +168,9 @@ export function RegisterForm() {
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        By continuing, you agree to the Terms and Privacy Policy.
+        By continuing, you agree to the{" "}
+        <Link href="/terms" className="font-medium text-foreground underline-offset-4 hover:underline">Terms</Link> and{" "}
+        <Link href="/privacy" className="font-medium text-foreground underline-offset-4 hover:underline">Privacy Policy</Link>.
         <br />
         <span className="font-medium text-foreground">
           Already have an account?{" "}

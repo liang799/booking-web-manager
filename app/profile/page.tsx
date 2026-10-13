@@ -74,9 +74,9 @@ export default async function ProfilePage() {
           <div className="divide-y overflow-hidden rounded-lg border bg-card">
             <SettingsRow code="EP" title="Edit profile" href="/profile/edit" />
             <SettingsRow code="TH" title="Transaction history" href="/wallet" />
-            <SettingsRow code="PR" title="Privacy and security" />
-            <SettingsRow code="HS" title="Help and support" />
-            <SettingsRow code="TC" title="Terms and conditions" />
+            <SettingsRow code="PR" title="Privacy and security" href="/privacy" />
+            <SettingsRow code="HS" title="Help and support" href="/profile/help" />
+            <SettingsRow code="TC" title="Terms and conditions" href="/terms" />
           </div>
           <div className="overflow-hidden rounded-lg border border-destructive/30">
             <SettingsRow
