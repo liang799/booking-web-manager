@@ -26,11 +26,17 @@ the signed-in navigation and verification prompt; an unavailable auth provider
 must not block public browsing. Other personal screens remain protected.
 
 Discovery requires only `DATABASE_URL` and the existing session schema. It has no
-new migration, browser table grants, wallet dependency or cached results. Inside
-one error boundary the GET handler loads dependencies, validates query parameters,
-reads public summaries and paginates them. Unexpected failures return a safe
-category, execution stage and request identifier; raw exception details stay in
-server logs. All responses use `Cache-Control: no-store`.
+new migration, browser table grants, wallet dependency or cached results. The
+GET route declares `parse`, `run` and `serialize` through
+[`discoveryAction`](./discovery-action.ts). Its factory owns one error boundary
+around dependency loading, query validation, querying and serialization; the
+route's `run` callback visibly invokes `DiscoverSessions.searchPublic`, and its
+serializer applies pagination. It does not authenticate or read a request body.
+Unexpected failures return a safe category, execution stage and request
+identifier; raw exception details stay in
+server logs. The factory preserves the four diagnostic stages described below.
+All responses use `Cache-Control: no-store`. See
+[ADR-0015](../../docs/adr/0015-declarative-session-http-actions.md).
 
 [`readDiscoveryRequest`](./request.ts) adapts the existing query parser to HTTP
 and reports invalid queries through the discovery response mapper. The server
