@@ -23,3 +23,14 @@ Run `npm test -- tests/use-cases/UC1-03-manage-profile.test.ts tests/app/profile
 for application coverage and `npm run test:integration` for the real RPC,
 privilege, signup and deactivation-race scenarios on the disposable stack.
 See [ADR-0014](../../docs/adr/0014-account-policies-and-transaction-guards.md).
+
+## Help, terms and privacy
+
+Settings links to [`/profile/help`](./help/page.tsx), a static list of common
+questions, and to the public [`/terms`](../(auth)/terms/page.tsx) and
+[`/privacy`](../(auth)/privacy/page.tsx) pages. Terms and privacy live in
+`app/(auth)` because registration asks people to agree to them before they have
+an account. All three only describe rules enforced elsewhere (the 30-hour
+refund rule, 72-hour auto-verification, anonymised deletion); update them when
+those rules change. `tests/app/auth/policy-pages.test.ts` and
+`tests/app/profile/settings-links.test.ts` check the links and key statements.

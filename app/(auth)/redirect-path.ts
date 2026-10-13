@@ -29,8 +29,8 @@ function hasUnsafeCharacters(value: string): boolean {
   return false;
 }
 
-/** Pages anyone can open without logging in: Landing, discovery, registration and login. */
-const PUBLIC_PATHS: readonly string[] = ["/", "/discover", "/login", "/register", AUTH_CALLBACK_PATH];
+/** Pages anyone can open without logging in: Landing, discovery, registration, login, terms and privacy. */
+const PUBLIC_PATHS: readonly string[] = ["/", "/discover", "/login", "/register", "/terms", "/privacy", AUTH_CALLBACK_PATH];
 
 /** Page sections whose root and nested routes require a login. */
 const PROTECTED_PATHS: readonly string[] = ["/groups", "/profile", "/sessions", "/wallet"];
