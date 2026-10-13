@@ -7,13 +7,18 @@ import {
 } from "@/app/payouts/payout-dependencies";
 import { createStripeClient, readStripeSettings, type StripeSettings } from "@/app/payouts/stripe-client";
 import { StripePayoutAccountProvider } from "@/app/payouts/stripe-payout-account-provider";
+import { StripePayoutTransfers } from "@/app/payouts/stripe-payout-transfers";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
 import { createPostgresPoolProvider } from "@/lib/database/postgres-pool";
 import { PostgresPayoutSetupStore } from "@/lib/payouts/postgres-payout-setup-store";
+import { PostgresPayoutUnitOfWork } from "@/lib/payouts/postgres-payout-unit-of-work";
+import { PostgresSessionPayoutReader } from "@/lib/payouts/postgres-session-payout-reader";
 import { createSupabaseSessionAuthenticator } from "@/lib/supabase/bearer-auth";
 import { createSupabaseCookieSessionAuthenticator } from "@/lib/supabase/cookie-auth";
 import { bearerOrLoginCookie } from "@/lib/supabase/request-authenticator";
+import { ListSessionPayouts } from "@/use-cases/payouts/ListSessionPayouts";
 import { SetUpPayoutAccount } from "@/use-cases/payouts/SetUpPayoutAccount";
+import { WithdrawSessionPayout } from "@/use-cases/payouts/WithdrawSessionPayout";
 
 export interface PayoutServices {
   readonly getPool: () => Pool;
@@ -53,20 +58,37 @@ export function createPayoutServices(
   };
 }
 
-/** UC1-07 routes. The status read accepts login cookies; starting setup needs a bearer token. */
+/**
+ * UC1-07 and UC1-08 routes. Reads accept login cookies; starting setup and
+ * withdrawing need a bearer token, since cookie authentication accepts GET only.
+ */
 export function createPayoutDependencies(): PayoutDependencies {
   const services = createPayoutServices();
   if (services === undefined) {
     const unavailable = async (): Promise<never> => {
       throw new PayoutsUnavailableError();
     };
-    return { authenticate: unavailable, payoutSetup: { status: unavailable, start: unavailable } };
+    return {
+      authenticate: unavailable,
+      payoutSetup: { status: unavailable, start: unavailable },
+      sessionPayouts: { forBooker: unavailable },
+      withdrawals: { forBooker: unavailable },
+    };
   }
+  const clock = { now: () => new Date() };
   return {
     authenticate: bearerOrLoginCookie(
       createSupabaseSessionAuthenticator(services.supabaseUrl, services.supabaseAnonKey),
       createSupabaseCookieSessionAuthenticator(services.supabaseUrl, services.supabaseAnonKey),
     ),
     payoutSetup: services.payoutSetup,
+    sessionPayouts: new ListSessionPayouts(new PostgresSessionPayoutReader(services.getPool)),
+    withdrawals: new WithdrawSessionPayout({
+      unitOfWork: new PostgresPayoutUnitOfWork(services.getPool, clock),
+      transfers: new StripePayoutTransfers(services.stripe),
+      accounts: services.accounts,
+      clock,
+      ids: { next: randomUUID },
+    }),
   };
 }
