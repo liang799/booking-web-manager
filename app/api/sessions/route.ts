@@ -7,6 +7,7 @@ import { toDiscoveryPage } from "@/app/discover/contracts";
 import {
   discoveryErrorResponse,
   discoveryJson,
+  type DiscoveryFailureStage,
 } from "@/app/discover/response";
 import { loadDependencies } from "@/app/http/load-dependencies";
 import { requireUserId } from "@/app/http/require-user-id";
@@ -14,13 +15,17 @@ import { requireUserId } from "@/app/http/require-user-id";
 export const runtime = "nodejs";
 
 export async function GET(request: Request): Promise<Response> {
+  let stage: DiscoveryFailureStage = "initialization";
   try {
     const dependencies = await loadDependencies(getDiscoveryDependencies);
+    stage = "validation";
     const { criteria, after } = readDiscoveryRequest(request);
+    stage = "query";
     const sessions = await dependencies.discoverSessions.searchPublic(criteria);
+    stage = "serialization";
     return discoveryJson(toDiscoveryPage(sessions, after));
   } catch (error) {
-    return discoveryErrorResponse(error);
+    return discoveryErrorResponse(error, stage);
   }
 }
 
