@@ -1,13 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { PreviewUnavailableError, SessionActionError } from "./withdrawal-errors";
 import type { JoinedSessionItem, PreviewWithdrawal, Replacement, WithdrawFromSession, WithdrawRequest, WithdrawalPreview } from "./withdrawal-ports";
 import { joinedSessionsQueryKey, walletQueryKey, withdrawalPreviewQueryKey } from "./withdrawal-query-keys";
+import { useUnresolvedRequests, type SettleAttempt } from "./use-unresolved-requests";
 import {
-  browserUnresolvedStore, reconcile, settleAttempt, termsDiffer, unresolvedWithdrawalSchema,
-  type AttemptOutcome, type UnresolvedStore, type UnresolvedWithdrawal,
+  browserUnresolvedStore, reconcile, termsDiffer, unresolvedWithdrawalSchema, type AttemptOutcome, type UnresolvedStore, type UnresolvedWithdrawal,
 } from "./withdrawal-recovery";
 
 type Withdrawn = Extract<Awaited<ReturnType<WithdrawFromSession>>, { status: "withdrawn" }>;
@@ -60,8 +60,8 @@ const UNCONFIRMED_MESSAGE = "We couldn't confirm whether you withdrew. Try again
  * - The refund shown is a snapshot: React Query never replaces it in the background (focus and
  *   reconnect refetches are off), and it is checked against the server just before
  *   withdrawing; if it changed, the player must confirm the new terms.
- * - Unresolved requests follow `withdrawal-recovery.ts`: kept per user, saved across reloads,
- *   replayed exactly, and cleared only once their outcome is established.
+ * - Unresolved requests follow `withdrawal-recovery.ts`: kept per user, saved before each first
+ *   attempt is sent, replayed exactly, and cleared only once their outcome is established.
  */
 export function useWithdrawalFlow({ userId, sessions, previewWithdrawal, withdraw, store: givenStore }: {
   readonly userId: string;
@@ -73,7 +73,6 @@ export function useWithdrawalFlow({ userId, sessions, previewWithdrawal, withdra
   readonly store?: UnresolvedStore<UnresolvedWithdrawal>;
 }): WithdrawalFlow {
   const queryClient = useQueryClient();
-  const [store] = useState(() => givenStore ?? browserUnresolvedStore("withdrawals", userId, unresolvedWithdrawalSchema));
   const [selected, setSelected] = useState<JoinedSessionItem | null>(null);
   const [mode, setMode] = useState<Replacement["mode"] | null>(null);
   const [inviteeId, setInviteeId] = useState<string | null>(null);
@@ -81,16 +80,20 @@ export function useWithdrawalFlow({ userId, sessions, previewWithdrawal, withdra
   const [presented, setPresented] = useState<WithdrawalPreview | null>(null);
   const [termsChanged, setTermsChanged] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [saved, setSaved] = useState(() => store.load());
   /** The attempt being sent, for the result screen and to settle it afterwards. */
   const [attempt, setAttempt] = useState<{ readonly entry: UnresolvedWithdrawal; readonly retry: boolean } | null>(null);
-  const attemptRef = useRef<{ readonly entry: UnresolvedWithdrawal; readonly retry: boolean } | null>(null);
+  const attemptRef = useRef<{ readonly retry: boolean; readonly settle: SettleAttempt } | null>(null);
+  /** The session whose first attempt is in flight: saved already, but not yet unresolved. */
+  const [firstAttempt, setFirstAttempt] = useState<string | null>(null);
 
-  const unresolved = reconcile(saved, sessions, "COMMITTED");
-  useEffect(() => { store.save(unresolved); }, [store, unresolved]);
+  const { unresolved, begin } = useUnresolvedRequests({
+    userId,
+    openStore: (id) => givenStore ?? browserUnresolvedStore("withdrawals", id, unresolvedWithdrawalSchema),
+    reconcile: (saved) => reconcile(saved, sessions, "COMMITTED"),
+  });
 
   const sessionId = selected?.sessionId ?? "";
-  const pending = selected === null ? undefined : unresolved.get(selected.sessionId);
+  const pending = selected === null || firstAttempt === selected.sessionId ? undefined : unresolved.get(selected.sessionId);
   const loadPreview = (id: string) => async () => {
     const result = await previewWithdrawal(id);
     if (result.status === "error") throw new PreviewUnavailableError(result.message);
@@ -114,11 +117,7 @@ export function useWithdrawalFlow({ userId, sessions, previewWithdrawal, withdra
     refetchOnReconnect: false,
   });
 
-  const settle = (request: WithdrawRequest, outcome: AttemptOutcome) => {
-    const sent = attemptRef.current;
-    if (sent === null) return;
-    setSaved((current) => settleAttempt(reconcile(current, sessions, "COMMITTED"), request.sessionId, sent.entry, outcome, sent.retry));
-  };
+  const settle = (outcome: AttemptOutcome) => attemptRef.current?.settle(outcome);
 
   const mutation = useMutation<Withdrawn, SessionActionError, WithdrawRequest>({
     mutationFn: async (request) => {
@@ -132,23 +131,25 @@ export function useWithdrawalFlow({ userId, sessions, previewWithdrawal, withdra
       return result;
     },
     retry: false,
-    onSuccess: (_result, request) => {
-      settle(request, "succeeded");
+    onSuccess: () => {
+      settle("succeeded");
       void queryClient.invalidateQueries({ queryKey: joinedSessionsQueryKey(userId) });
       void queryClient.invalidateQueries({ queryKey: walletQueryKey });
     },
-    onError: (error, request) => {
-      settle(request, error.unconfirmed ? "unconfirmed" : "rejected");
+    onError: (error) => {
+      settle(error.unconfirmed ? "unconfirmed" : "rejected");
       if (!error.unconfirmed && !attemptRef.current?.retry) {
         setMode(null);
         setInviteeId(null);
       }
     },
+    onSettled: () => setFirstAttempt(null),
   });
 
   function send(entry: UnresolvedWithdrawal, retry: boolean) {
-    attemptRef.current = { entry, retry };
+    attemptRef.current = { retry, settle: begin(entry.request.sessionId, entry, retry) };
     setAttempt({ entry, retry });
+    setFirstAttempt(retry ? null : entry.request.sessionId);
     mutation.mutate(entry.request);
   }
 
