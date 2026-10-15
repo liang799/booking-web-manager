@@ -11,6 +11,7 @@ import { ErrorMessage } from "@/components/ui/error-message";
 import { Input } from "@/components/ui/input";
 import { Money } from "@/components/ui/money";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { sportImage } from "@/lib/sessions/sport-image";
 import { DateTimeEditor } from "./date-time-editor";
 import { VenuePicker } from "./venue-picker";
@@ -118,7 +119,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
             <SelectTrigger id="visibility" className="min-h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PRIVATE">Private</SelectItem><SelectItem value="PUBLIC">Public</SelectItem></SelectContent>
           </Select><p className="text-xs text-muted-foreground">{draft.visibility === "PRIVATE" ? "Only people with your room link can join." : "People can find this session in Discover."}</p>
         </div>
-        <Stepper id="totalSlots" label="No. of Slots" value={draft.totalSlots} min={2} max={8} disabled={locked} onChange={(totalSlots) => change({ totalSlots })} />
+        <Stepper id="totalSlots" label="No. of Slots" value={draft.totalSlots} min={MIN_SESSION_SLOTS} max={MAX_SESSION_SLOTS} disabled={locked} onChange={(totalSlots) => change({ totalSlots })} />
         <Stepper id="minimumHeadcount" label="Minimum viable headcount" value={draft.minimumHeadcount} min={2} max={draft.totalSlots} disabled={locked} onChange={(minimumHeadcount) => change({ minimumHeadcount })} />
         {errors.minimumHeadcount && <p role="alert" className="text-xs text-destructive">{errors.minimumHeadcount}</p>}
         <div className="space-y-2"><label htmlFor="reliability" className="text-xs font-semibold">Minimum Reliability Score</label>
