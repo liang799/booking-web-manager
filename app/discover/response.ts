@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isRequestFailure } from "@/app/http/request-failure";
 import { DISCOVERY_API_UNAVAILABLE_MESSAGE, DiscoveryApiUnavailableError } from "./discovery-api-unavailable";
+import { discoveryErrorDiagnostics } from "./error-diagnostics";
 
 export type DiscoveryFailureStage = "initialization" | "validation" | "query" | "serialization";
 
@@ -10,7 +11,7 @@ const databaseMessages = {
   DATABASE_SCHEMA_MISMATCH: "The sessions database schema does not match this deployment. Check that database migrations have been applied.",
 };
 
-// Only fixed messages for recognized driver/SQLSTATE codes may reach the public API.
+// The primary explanation is fixed; redacted exception details are added separately.
 const databaseReasons = new Map<string, keyof typeof databaseMessages>([
   ["ECONNREFUSED", "DATABASE_UNAVAILABLE"],
   ["ECONNRESET", "DATABASE_UNAVAILABLE"],
@@ -69,7 +70,10 @@ function discoveryInternalError(error: unknown, stage: DiscoveryFailureStage): R
   console.error("Session discovery failed", {
     requestId, method: "GET", path: "/api/sessions", stage, reason, error,
   });
-  return Response.json({ error: { code: "INTERNAL_ERROR", message, requestId, reason, stage } }, {
+  return Response.json({ error: {
+    code: "INTERNAL_ERROR", message, requestId, reason, stage,
+    diagnostics: discoveryErrorDiagnostics(error),
+  } }, {
     status: 500,
     headers: { "Cache-Control": "no-store", "X-Request-Id": requestId },
   });

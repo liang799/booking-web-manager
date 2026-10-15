@@ -32,9 +32,9 @@ GET route declares `parse`, `run` and `serialize` through
 around dependency loading, query validation, querying and serialization; the
 route's `run` callback visibly invokes `DiscoverSessions.searchPublic`, and its
 serializer applies pagination. It does not authenticate or read a request body.
-Unexpected failures return a safe category, execution stage and request
-identifier; raw exception details stay in
-server logs. The factory preserves the four diagnostic stages described below.
+Unexpected failures return a category, execution stage, request identifier and
+redacted exception/cause diagnostics. Original exceptions stay in server logs.
+The factory preserves the four diagnostic stages described below.
 All responses use `Cache-Control: no-store`. See
 [ADR-0015](../../docs/adr/0015-declarative-session-http-actions.md).
 
@@ -79,11 +79,11 @@ the latter also depends on replacement reservations.
 | --- | --- |
 | 200 | Results or an empty page |
 | 400 | Invalid filters, dates, time range or cursor |
-| 500 | Unexpected failure with a diagnostic reason, stage and request identifier |
+| 500 | Unexpected failure with a diagnostic reason, stage, request identifier and redacted exception/cause messages |
 | 503 | Missing server settings (`DISCOVERY_API_UNAVAILABLE`) |
 
 Errors use `{ error: { code, message } }`. A 500 keeps `INTERNAL_ERROR` and adds
-`requestId`, `reason` and `stage` inside `error`, for example:
+`requestId`, `reason`, `stage` and `diagnostics` inside `error`, for example:
 
 ```json
 {
@@ -92,16 +92,28 @@ Errors use `{ error: { code, message } }`. A 500 keeps `INTERNAL_ERROR` and adds
     "message": "The sessions database schema does not match this deployment. Check that database migrations have been applied.",
     "requestId": "b6b6b6b6-1234-4123-8123-123456789abc",
     "reason": "DATABASE_SCHEMA_MISMATCH",
-    "stage": "query"
+    "stage": "query",
+    "diagnostics": [
+      { "message": "column [REDACTED] does not exist", "code": "42703" }
+    ]
   }
 }
 ```
 
-The generated UUID also appears in the `X-Request-Id` response header. Search the
-Vercel server logs for that identifier and the structured `Session discovery failed`
-entry to inspect the stage, reason and original error/cause. Request query
-parameters and headers are not logged. Raw exception messages, stacks and causes
-are never included in the response.
+`diagnostics` contains one to eight entries from the exception and its causes.
+Each entry includes a redacted `message` of at most 500 characters and an optional
+driver `code` of at most 64 characters. These details allow investigation without
+Vercel log access; for example, a TLS failure can report
+`{ "message": "self-signed certificate in certificate chain", "code": "SELF_SIGNED_CERT_IN_CHAIN" }`.
+Stack traces and SQL fields are omitted from the response.
+Redaction masks configured credentials, connection URLs, quoted values and common
+credential patterns before limiting message length. It is best-effort: exception
+messages should still avoid embedding sensitive data in unrecognized formats.
+
+The generated UUID also appears in the `X-Request-Id` response header. If server
+logs are available, search for that identifier and the structured `Session
+discovery failed` entry to inspect the stage, reason and original error/cause.
+Request query parameters and headers are not logged.
 
 `reason` is one of `DATABASE_UNAVAILABLE`, `DATABASE_ACCESS_DENIED`,
 `DATABASE_SCHEMA_MISMATCH`, `INITIALIZATION_FAILED` or `UNEXPECTED_ERROR`.

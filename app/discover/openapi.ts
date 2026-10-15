@@ -30,6 +30,10 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
         "UNEXPECTED_ERROR",
       ]),
       stage: z.enum(["initialization", "validation", "query", "serialization"]),
+      diagnostics: z.array(z.object({
+        message: z.string().max(500).openapi({ description: "Redacted exception or cause message, without stack traces or SQL fields." }),
+        code: z.string().max(64).optional().openapi({ description: "Driver error code, when available." }),
+      })).min(1).max(8).openapi({ description: "Bounded exception and cause diagnostics available without server-log access." }),
     }),
   }));
   const discoveryExample = {
@@ -119,7 +123,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
       },
       400: errorResponse("Malformed or duplicate filters, search text longer than 100 characters after trimming, invalid calendar date/time range, or invalid cursor.", "INVALID_REQUEST", "Invalid session discovery query"),
       500: {
-        description: "Discovery failed. The response identifies the failure category and stage with a generated requestId. Find the matching 'Session discovery failed' entry in the Vercel server logs for the original error and cause; raw exception details are never returned.",
+        description: "Discovery failed. The response identifies the failure category and stage with a generated requestId and includes redacted exception/cause messages and optional driver codes in diagnostics. Stack traces and SQL fields are omitted. The matching 'Session discovery failed' server-log entry retains the original error and cause.",
         headers: {
           "Cache-Control": { schema: { type: "string", enum: ["no-store"] } },
           "X-Request-Id": {
@@ -137,6 +141,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
                 requestId: "b6b6b6b6-1234-4123-8123-123456789abc",
                 reason: "DATABASE_SCHEMA_MISMATCH",
                 stage: "query",
+                diagnostics: [{ message: "column [REDACTED] does not exist", code: "42703" }],
               },
             },
           },

@@ -11,7 +11,10 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 async function scenario() {
   const searchPublic = vi.fn<DiscoveryDependencies["discoverSessions"]["searchPublic"]>().mockResolvedValue([]);
@@ -25,9 +28,56 @@ async function scenario() {
 const request = (query = "") => new Request(`http://localhost/api/sessions?${query}`, { headers: { authorization: "Bearer token" } });
 
 describe("GET /api/sessions", () => {
+  test("returns the underlying TLS error without requiring access to server logs", async () => {
+    const { GET, searchPublic } = await scenario();
+    const cause = Object.assign(new Error("self-signed certificate in certificate chain"), {
+      code: "SELF_SIGNED_CERT_IN_CHAIN",
+    });
+    searchPublic.mockRejectedValue(new Error("Database connection failed", { cause }));
+
+    const response = await GET(request());
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(body.error.diagnostics).toEqual([
+      { message: "Database connection failed" },
+      { code: "SELF_SIGNED_CERT_IN_CHAIN", message: "self-signed certificate in certificate chain" },
+    ]);
+  });
+
+  test("redacts credentials in cause messages and omits stacks, SQL and provider detail fields", async () => {
+    const { GET, searchPublic } = await scenario();
+    vi.stubEnv("DATABASE_URL", "postgresql://private-user:p%40ss-secret@db.private.test/postgres?sslmode=require");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "private-service-role-key");
+    const cause = Object.assign(new Error("password authentication failed for user \"private-user\"; password=p@ss-secret; token=unconfigured-token; Authorization: Bearer unconfigured-bearer; private-service-role-key"), {
+      code: "28P01", detail: "private-row-detail", query: "select private-query", stack: "private-stack",
+    });
+    searchPublic.mockRejectedValue(new Error(`Failed connecting to ${process.env.DATABASE_URL}`, { cause }));
+
+    const body = await (await GET(request())).json();
+
+    expect(body.error.diagnostics).toEqual([
+      { message: "Failed connecting to [REDACTED]" },
+      { code: "28P01", message: "password authentication failed for user [REDACTED]; password=[REDACTED]; token=[REDACTED]; Authorization: Bearer [REDACTED]; [REDACTED]" },
+    ]);
+    for (const secret of ["private-user", "p@ss-secret", "p%40ss-secret", "db.private.test", "unconfigured-token", "unconfigured-bearer", "private-service-role-key", "private-row-detail", "private-query", "private-stack"]) {
+      expect(JSON.stringify(body)).not.toContain(secret);
+    }
+  });
+
+  test("returns useful messages for connection timeouts without driver codes", async () => {
+    const { GET, searchPublic } = await scenario();
+    searchPublic.mockRejectedValue(new Error("Connection terminated due to connection timeout"));
+
+    expect(await (await GET(request())).json()).toMatchObject({ error: {
+      diagnostics: [{ message: "Connection terminated due to connection timeout" }],
+    } });
+  });
+
   test("explains a database schema failure and correlates the response with server logs", async () => {
     const { GET, searchPublic } = await scenario();
-    const failure = Object.assign(new Error("private table and connection details"), { code: "42703" });
+    const failure = Object.assign(new Error('column "private_column" does not exist'), { code: "42703" });
     searchPublic.mockRejectedValue(failure);
     const response = await GET(request("q=Jurong&sport=Basketball&region=East&date=2040-01-02&timeFrom=18%3A00&timeTo=20%3A00&cursor=eyJzdGFydEF0IjoiMjA0MC0wMS0wMlQxMDowMDowMC4wMDBaIiwic2Vzc2lvbklkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMDAwMDAwMDAwMDIwIn0"));
     const body = await response.json();
@@ -40,6 +90,7 @@ describe("GET /api/sessions", () => {
       requestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
       reason: "DATABASE_SCHEMA_MISMATCH",
       stage: "query",
+      diagnostics: [{ code: "42703", message: "column [REDACTED] does not exist" }],
     } });
     expect(response.headers.get("x-request-id")).toBe(body.error.requestId);
     expect(console.error).toHaveBeenCalledExactlyOnceWith("Session discovery failed", {
@@ -58,7 +109,7 @@ describe("GET /api/sessions", () => {
     ["42883", "DATABASE_SCHEMA_MISMATCH", "migrations"],
   ])("gives safe guidance for database error %s", async (code, reason, guidance) => {
     const { GET, searchPublic } = await scenario();
-    searchPublic.mockRejectedValue(Object.assign(new Error("private provider details"), { code }));
+    searchPublic.mockRejectedValue(Object.assign(new Error('Provider rejected "private detail"'), { code }));
 
     const response = await GET(request());
     const body = await response.json();
@@ -67,13 +118,13 @@ describe("GET /api/sessions", () => {
     expect(body.error).toMatchObject({ code: "INTERNAL_ERROR", reason, stage: "query" });
     expect(body.error.message).toContain(guidance);
     expect(JSON.stringify(body)).not.toContain("private");
-    expect(JSON.stringify(body)).not.toContain(code);
+    expect(body.error.diagnostics).toEqual([{ code, message: "Provider rejected [REDACTED]" }]);
   });
 
   test("recognizes a wrapped database failure during initialization and retains the cause in logs", async () => {
     const { GET } = await scenario();
-    const cause = Object.assign(new Error("private connection string"), { code: "ECONNREFUSED" });
-    const failure = new Error("private setup context", { cause });
+    const cause = Object.assign(new Error("connect ECONNREFUSED postgresql://private:private@private/postgres"), { code: "ECONNREFUSED" });
+    const failure = new Error("Discovery setup failed", { cause });
     configuration.createDiscoveryDependencies.mockImplementationOnce(() => { throw failure; });
 
     const response = await GET(request());
@@ -108,8 +159,8 @@ describe("GET /api/sessions", () => {
     expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("?q=");
   });
 
-  test.each([undefined, null, "private failure", { code: "UNKNOWN", message: "private failure" }])(
-    "handles unrecognized thrown values without leaking them: %j", async (failure) => {
+  test.each([undefined, null, "token=private-failure", { code: "UNKNOWN", message: "token=private-failure" }])(
+    "handles unrecognized thrown values without leaking credentials: %j", async (failure) => {
       const { GET, searchPublic } = await scenario();
       searchPublic.mockRejectedValue(failure);
 
@@ -215,10 +266,10 @@ describe("GET /api/sessions", () => {
     async (kind) => {
       const { GET, searchPublic, DomainError, DiscoveryApiUnavailableError } = await scenario();
       const failure = kind === "DomainError"
-        ? new DomainError("INACTIVE_ACCOUNT", "private-discovery-setup-failure")
+        ? new DomainError("INACTIVE_ACCOUNT", "token=private-discovery-setup-failure")
         : kind === "DiscoveryApiUnavailableError"
           ? new DiscoveryApiUnavailableError()
-          : new Error("private-discovery-setup-failure");
+          : new Error("token=private-discovery-setup-failure");
       configuration.createDiscoveryDependencies.mockImplementationOnce(() => { throw failure; });
 
       const response = await GET(request());
@@ -229,6 +280,13 @@ describe("GET /api/sessions", () => {
         code: "INTERNAL_ERROR",
         message: "Session discovery could not initialize. Check the deployment configuration and server logs using the request ID.",
         requestId: expect.any(String), reason: "INITIALIZATION_FAILED", stage: "initialization",
+        diagnostics: [
+          { message: "Route dependencies could not be loaded" },
+          {
+            message: kind === "DiscoveryApiUnavailableError" ? "Session discovery is not available yet" : "token=[REDACTED]",
+            ...(kind === "DomainError" ? { code: "INACTIVE_ACCOUNT" } : {}),
+          },
+        ],
       } });
       expect(searchPublic).not.toHaveBeenCalled();
 
@@ -241,7 +299,7 @@ describe("GET /api/sessions", () => {
 
   test.each(["searchPublic", "setup"])("redacts %s failures", async (stage) => {
     const { GET, searchPublic } = await scenario();
-    const error = new Error("private-database-or-provider-secret");
+    const error = new Error("token=private-database-or-provider-secret");
     if (stage === "searchPublic") searchPublic.mockRejectedValue(error);
     if (stage === "setup") configuration.createDiscoveryDependencies.mockImplementation(() => { throw error; });
     const response = await GET(request());
@@ -255,6 +313,10 @@ describe("GET /api/sessions", () => {
       requestId: expect.any(String),
       reason: stage === "setup" ? "INITIALIZATION_FAILED" : "UNEXPECTED_ERROR",
       stage: stage === "setup" ? "initialization" : "query",
+      diagnostics: [
+        ...(stage === "setup" ? [{ message: "Route dependencies could not be loaded" }] : []),
+        { message: "token=[REDACTED]" },
+      ],
     } });
   });
 });
