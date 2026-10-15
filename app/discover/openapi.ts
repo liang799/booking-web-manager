@@ -1,6 +1,7 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z, errorResponse } from "@/app/openapi/contracts";
 import { REGIONS, SPORTS } from "@/app/(auth)/schemas";
+import { MAX_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { DISCOVERY_API_UNAVAILABLE_MESSAGE } from "./discovery-api-unavailable";
 
 export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
@@ -12,7 +13,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
       sport: z.string(),
       startAt: z.string().datetime(),
       endAt: z.string().datetime(),
-      totalSlots: z.number().int().min(1).max(8),
+      totalSlots: z.number().int().min(1).max(MAX_SESSION_SLOTS),
       bookingShareCents: z.number().int().positive().safe(),
     })).max(20),
     nextCursor: z.string().nullable(),

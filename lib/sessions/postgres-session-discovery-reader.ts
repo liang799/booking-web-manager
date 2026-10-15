@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { fromDatabaseCents } from "@/lib/money/cents";
 import type { SqlExecutor } from "@/lib/money/sql";
 import type {
@@ -46,7 +47,7 @@ export class PostgresSessionDiscoveryReader implements SessionDiscoveryReader {
       region: text(row.region),
       startAt: date(row.start_at),
       endAt: date(row.end_at),
-      totalSlots: z.number().int().min(1).max(8).parse(row.total_slots),
+      totalSlots: z.number().int().min(1).max(MAX_SESSION_SLOTS).parse(row.total_slots),
       bookingShareCents: fromDatabaseCents(row.booking_share_cents, "booking_share_cents").toCents(),
     }));
   }
