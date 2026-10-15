@@ -4,6 +4,7 @@ import type {
   PayoutBatch,
 } from "../../shared/operations";
 import type { UUID } from "../../shared/types";
+import { isValidSlotCount, MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "../capacity";
 import type { FundHold } from "../fund-hold";
 import type { SessionDetails } from "./session";
 import type { ParticipantListView } from "./participant-list";
@@ -76,14 +77,10 @@ export function validateSessionConfiguration(
     "INVALID_INPUT",
     "Unknown session visibility",
   );
-  const hasValidSlotCount =
-    Number.isSafeInteger(input.totalSlots) &&
-    input.totalSlots >= 2 &&
-    input.totalSlots <= 8;
   DomainError.require(
-    hasValidSlotCount,
+    isValidSlotCount(input.totalSlots),
     "INVALID_INPUT",
-    "totalSlots must be a safe integer from 2 to 8",
+    `totalSlots must be a safe integer from ${MIN_SESSION_SLOTS} to ${MAX_SESSION_SLOTS}`,
   );
   const hasValidMinimumHeadcount =
     Number.isSafeInteger(input.minimumHeadcount) &&

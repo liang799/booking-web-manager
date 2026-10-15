@@ -312,9 +312,27 @@ describe("UC2-02 Create Session", () => {
 
     // Act & Assert
     await expect(
-      createSessions.forBooker(bookerId, booking, { ...config, totalSlots: 9 }),
+      createSessions.forBooker(bookerId, booking, { ...config, totalSlots: 31 }),
     ).rejects.toMatchObject({ code: "INVALID_INPUT" });
     expect(unitOfWork.sessions.size).toBe(0);
+  });
+
+  test("accepts the maximum capacity of thirty slots", async () => {
+    // Arrange
+    const { createSessions, unitOfWork } = sessionCreationScenario();
+    const request = creationInput({ totalSlots: 30, minimumHeadcount: 30 });
+
+    // Act
+    const result = await createSessions.forBooker(
+      request.bookerId,
+      { ...request.booking, totalCostCents: 30000 },
+      request.config,
+    );
+
+    // Assert
+    const session = unitOfWork.requireSession(result.sessionId);
+    expect(session.totalSlots).toBe(30);
+    expect(session.bookingShare.toCents()).toBe(1000);
   });
 
   test("rejects capacity below the domain limit without persisting a session", async () => {

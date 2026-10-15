@@ -32,6 +32,8 @@ most likely way this project loses an afternoon.
 | 0009 | `commitment_scheduling` — scheduled commitment jobs and push subscriptions | Yajie |
 | 0010 | `group_account_guards` — group writes share active-profile locks with account deactivation | Joseph / Rishi |
 | 0011 | `profile_policy_guards` — guarded profile edits and removal of direct authenticated updates | Joseph / Rishi |
+| 0012 | `payout_attempts` — UC1-08 payout attempts (the PayoutAttempt aggregate); a REQUESTED row is the durable payout intent | Rishi |
+| 0013 | `session_slot_limit` — session capacity raised from 8 to 30 slots | Neoh / Rishi |
 
 The deployed sequence ends at 0011. New migrations must use a unique number
 after it; do not reuse a deployed number or insert a file below it. Supabase's

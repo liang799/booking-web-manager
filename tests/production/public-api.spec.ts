@@ -11,7 +11,7 @@ const discoveryPageSchema = z.object({
       sport: z.string(),
       startAt: z.string().datetime(),
       endAt: z.string().datetime(),
-      totalSlots: z.number().int().min(1).max(8),
+      totalSlots: z.number().int().min(1).max(30),
       bookingShareCents: z.number().int().positive().safe(),
     }).strict(),
   ).max(20),

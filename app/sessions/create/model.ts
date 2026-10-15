@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { REGIONS, SPORTS } from "@/app/(auth)/schemas";
 import { createSessionRequestSchema } from "../create-session-input";
+import { isValidSlotCount, MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { sessionPricing } from "@/domain/sessions/pricing";
 import type { VenueCandidate } from "@/lib/venues/contracts";
 
@@ -86,7 +87,7 @@ export function validateStep(draft: SessionDraft, step: number, now = Date.now()
     ...(!draftPricing(draft) && { cost: "Enter a valid booking cost, with at least one cent per slot." }),
   };
   if (step === 2) return {
-    ...(!Number.isInteger(draft.totalSlots) || draft.totalSlots < 2 || draft.totalSlots > 8 ? { totalSlots: "Choose 2 to 8 slots." } : {}),
+    ...(!isValidSlotCount(draft.totalSlots) ? { totalSlots: `Choose ${MIN_SESSION_SLOTS} to ${MAX_SESSION_SLOTS} slots.` } : {}),
     ...(!Number.isInteger(draft.minimumHeadcount) || draft.minimumHeadcount < 2 || draft.minimumHeadcount > draft.totalSlots
       ? { minimumHeadcount: "Choose a minimum headcount between 2 and the number of slots." } : {}),
     ...(!["none", "60", "70", "80", "90", "100"].includes(draft.reliability) && { reliability: "Choose a reliability requirement." }),
