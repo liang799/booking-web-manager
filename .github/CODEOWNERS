@@ -27,6 +27,8 @@
 /use-case-config/payouts.ts @rbrishi15
 /use-case-config/stripe-webhooks.ts @rbrishi15
 /lib/payouts/ @rbrishi15
+/lib/payments/ @rbrishi15
+/supabase/migrations/0012_payout_attempts.sql @rbrishi15
 /tests/app/payouts/ @rbrishi15
 /tests/app/webhooks/ @rbrishi15
 

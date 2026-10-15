@@ -2,6 +2,7 @@ import { DomainError, type UUID } from "@/domain";
 import { loadDependencies } from "@/app/http/load-dependencies";
 import { isRequestFailure } from "@/app/http/request-failure";
 import { requireUserId } from "@/app/http/require-user-id";
+import { LedgerError } from "@/lib/money/errors";
 import { PayoutProviderError } from "@/use-cases/payouts/SetUpPayoutAccount";
 import {
   PAYOUTS_UNAVAILABLE_MESSAGE,
@@ -10,11 +11,22 @@ import {
 } from "./payout-dependencies";
 
 const domainErrorStatuses: Partial<Record<DomainError["code"], number>> = {
+  INVALID_INPUT: 422,
+  UNAUTHORIZED: 403,
   INACTIVE_ACCOUNT: 403,
   NOT_FOUND: 404,
   INVALID_STATE: 409,
   PAYOUT_ACCOUNT_NOT_READY: 409,
+  SESSION_CLOSED: 409,
+  SESSION_NOT_ENDED: 409,
+  ATTENDANCE_INCOMPLETE: 409,
+  PAYOUT_IN_PROGRESS: 409,
+  STALE_PAYOUT: 409,
+  PAYOUT_CONFLICT: 409,
 };
+
+/** A reused or concurrently retried idempotency key. */
+const ledgerConflicts = new Set(["IDEMPOTENCY_CONFLICT", "IDEMPOTENCY_IN_FLIGHT"]);
 
 export type PayoutRun<Output> = (
   dependencies: PayoutDependencies,
@@ -58,6 +70,12 @@ export function payoutErrorResponse(error: unknown): Response {
     const status = domainErrorStatuses[error.code];
     if (status !== undefined) return errorResponse(status, error.code, error.message);
   }
+  if (error instanceof LedgerError && ledgerConflicts.has(error.code))
+    return errorResponse(
+      409,
+      error.code,
+      "This request is already being processed, or its key was used for a different request",
+    );
   return errorResponse(500, "INTERNAL_ERROR", "Internal server error");
 }
 
