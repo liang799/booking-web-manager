@@ -26,7 +26,7 @@ export function EmailInput({ className, onBlur, disabled, ...props }: EmailInput
       <Input
         autoComplete="email"
         inputMode="email"
-        placeholder="example@chakraui"
+        placeholder="example@vorterlune"
         {...props}
         type="email"
         className={styles.address}
