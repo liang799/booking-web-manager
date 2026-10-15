@@ -125,7 +125,7 @@ export const Settings: Story = {
   play: async ({ canvas }) => {
     const minimum = within(canvas.getByRole("group", { name: "Minimum viable headcount" }));
     await expect(minimum.getByRole("status")).toHaveTextContent("4");
-    await expect(canvas.getByRole("button", { name: "Increase No. of Slots" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "Increase No. of Slots" })).toBeEnabled();
     for (let index = 0; index < 6; index++) await userEvent.click(canvas.getByRole("button", { name: "Decrease No. of Slots" }));
     await expect(canvas.getByRole("button", { name: "Decrease No. of Slots" })).toBeDisabled();
     await expect(within(canvas.getByRole("group", { name: "No. of Slots" })).getByRole("status")).toHaveTextContent("2");
