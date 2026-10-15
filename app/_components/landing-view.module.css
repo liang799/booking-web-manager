@@ -26,6 +26,9 @@
 .backdrop, .wash { position: absolute; inset: 0; z-index: -2; pointer-events: none; }
 .backdrop img { height: 100%; width: 100%; object-fit: cover; object-position: center; }
 .wash { z-index: -1; background: linear-gradient(90deg, rgba(246,245,241,.25), transparent 55%); }
+.wallCaption { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.wallCaption text { fill: #4e514a; font-size: 10px; font-weight: 500; letter-spacing: .6em; text-transform: uppercase; }
+.wallCaption path { fill: none; stroke: #72756a; stroke-width: .6; }
 .header { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 32px 5%; gap: 32px; }
 .logo { font-size: 31px; font-weight: 500; letter-spacing: -.8px; line-height: 1.2; }
 .desktopNav { display: flex; gap: clamp(24px, 3.4vw, 58px); font-size: 13px; }
@@ -43,7 +46,7 @@
 .primaryLink:hover { background: #34402d; transform: translateY(-2px); }
 .primaryLink svg { width: 22px; height: 22px; stroke-width: 1.4; transition: transform 180ms ease; }
 .primaryLink:hover svg { transform: translateX(4px); }
-.sectionIndex { position: absolute; right: 5%; top: 34%; z-index: 2; display: grid; gap: 3px; color: var(--ink); }
+.sectionIndex { display: none; }
 .sectionIndex a { font-size: 12px; display: flex; align-items: center; min-width: 44px; min-height: 34px; }
 .sectionIndex .currentSection { color: var(--ink); }
 .sectionIndex > span { width: 1px; height: 45px; background: #93968e; margin: 14px 0 22px 6px; }
@@ -101,7 +104,6 @@
   .heroCopy h1 { font-size: 72px; }
   .desktopNav { gap: 22px; }
   .facts li { padding: 0 16px; }
-  .sectionIndex { right: 3%; }
 }
 @media (max-width: 700px) {
   .hero { height: max(740px, 186vw); min-height: 0; max-height: 1250px; }
@@ -110,6 +112,7 @@
   .header { padding: 14px 6.5%; }
   .logo { font-size: 27px; letter-spacing: -.7px; }
   .desktopNav, .login { display: none; }
+  .wallCaption { display: none; }
   .mobileMenu { display: block; }
   .mobileMenu summary { list-style: none; cursor: pointer; display: flex; min-height: 44px; min-width: 44px; justify-content: flex-end; align-items: center; }
   .mobileMenu summary::-webkit-details-marker { display: none; }
@@ -123,10 +126,11 @@
   .intro { font-size: clamp(13px, 3.65vw, 23px); line-height: 1.4; max-width: 78%; }
   .heroCopy .primaryLink { min-height: 49px; font-size: 13px; margin-top: 23px; padding: 14px 18px; gap: 24px; }
   .heroCopy .primaryLink svg { width: 22px; }
-  .sectionIndex { top: 120px; right: 6.5%; gap: 0; width: 42px; }
+  .sectionIndex { position: absolute; top: 120px; right: 6.5%; z-index: 2; display: grid; gap: 0; width: 42px; color: var(--ink); }
   .sectionIndex a { min-height: 30px; font-size: 9px; }
   .sectionIndex > span { height: 36px; margin: 10px 0 17px 5px; }
-  .sectionIndex p { font-size: 6px; letter-spacing: .25em; line-height: 2.5; }
+  .sectionIndex p { font-size: 6px; font-weight: 400; letter-spacing: .35em; line-height: 2.5; }
+  .sectionIndex p::after { content: ""; display: block; width: 12px; border-top: 1px solid #a2a59b; margin-top: 12px; }
   .facts { left: 6.5%; right: 6.5%; bottom: 6.5%; justify-content: space-between; }
   .facts li { flex: 1; padding: 0 12px; }
   .facts li:last-child { padding-right: 0; }

@@ -19,6 +19,12 @@ color applies only to the decorative hero label; functional text and the
 remaining app retain their existing contrast and typography. Font provenance
 and license: `public/fonts/README.md`.
 
+The desktop wall caption follows the artwork's crop through a static SVG text
+overlay with the same aspect ratio and cover alignment. Its four lines and
+short rule remain anchored to the wall at different viewport sizes. Numbered
+section navigation appears only on mobile, with its caption separate from
+the navigation landmark.
+
 Product proof is descriptive: supported sports, date/time filters, and the
 price per player. No venue, player or location totals are invented. Sports
 links use canonical discovery query values (UC2-01). Hosting links to the

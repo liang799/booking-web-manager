@@ -21,6 +21,17 @@ export function LandingView() {
           <img src="/images/landing-court.webp" alt="" width="1536" height="1024" fetchPriority="high" />
         </picture>
         <div className={styles.wash} aria-hidden="true" />
+        <svg className={styles.wallCaption} viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Same sport. Different people.">
+          <g transform="translate(1327 377) skewY(-5) scale(.7 1)">
+            <text>
+              <tspan x="0" dy="0">Same</tspan>
+              <tspan x="0" dy="25">Sport</tspan>
+              <tspan x="0" dy="25">Different</tspan>
+              <tspan x="0" dy="25">People</tspan>
+            </text>
+            <path d="M0 110h29" />
+          </g>
+        </svg>
         <header className={styles.header}>
           <Link href="/" className={styles.logo} aria-label="Booking home">Booking.</Link>
           <nav className={styles.desktopNav} aria-label="Main navigation">
@@ -49,14 +60,16 @@ export function LandingView() {
           <Link className={styles.primaryLink} href="/discover">Browse sessions<ArrowRight aria-hidden="true" /></Link>
         </div>
 
-        <nav className={styles.sectionIndex} aria-label="Page sections">
-          <a href="#play" aria-label="01 — Play" className={styles.currentSection}>01</a>
-          <a href="#sports" aria-label="02 — Find your sport">02</a>
-          <a href="#how-it-works" aria-label="03 — How it works">03</a>
-          <a href="#host" aria-label="04 — Host a session">04</a>
+        <div className={styles.sectionIndex}>
+          <nav aria-label="Page sections">
+            <a href="#play" aria-label="01 — Play" className={styles.currentSection}>01</a>
+            <a href="#sports" aria-label="02 — Find your sport">02</a>
+            <a href="#how-it-works" aria-label="03 — How it works">03</a>
+            <a href="#host" aria-label="04 — Host a session">04</a>
+          </nav>
           <span aria-hidden="true" />
-          <p>Same sport.<br />Different<br />people.</p>
-        </nav>
+          <p>Same<br />sport<br />different<br />people</p>
+        </div>
 
         <ul className={styles.facts} aria-label="What you can do with Booking">
           <li><strong>Your sport</strong><span>From tennis to futsal</span></li>
