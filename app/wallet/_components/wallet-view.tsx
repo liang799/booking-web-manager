@@ -68,6 +68,14 @@ export function WalletView({ summary, history, loadingMore, moreError, onRetry, 
         </>}
       </section>
 
+      <section aria-labelledby="payout-heading" className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
+        <div className="min-w-0 flex-1">
+          <h2 id="payout-heading" className="font-semibold">Payout account</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Needed to create sessions and receive the shares players pay you.</p>
+        </div>
+        <Button asChild variant="outline" className="min-h-11 shrink-0"><Link href="/payouts">Manage payouts</Link></Button>
+      </section>
+
       {summary.status === "ready" && (
         <section aria-labelledby="holds-heading" className="mb-8">
           <h2 id="holds-heading" className="mb-3 text-lg font-semibold">Held for sessions</h2>
