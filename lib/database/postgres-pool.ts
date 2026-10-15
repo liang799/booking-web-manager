@@ -1,5 +1,25 @@
+import { rootCertificates } from "node:tls";
 import { attachDatabasePool } from "@vercel/functions";
-import { Pool } from "pg";
+import { Pool, type PoolConfig } from "pg";
+import { SUPABASE_ROOT_CA_2021 } from "./supabase-root-ca";
+
+const urlTlsParameters = ["sslmode", "uselibpqcompat", "sslrootcert", "sslcert", "sslkey", "ssl"];
+
+/**
+ * TLS settings for a validated connection string. pg lets TLS parameters in the
+ * URL override an explicit `ssl` option, so they are removed and replaced by full
+ * verification against the public roots plus Supabase's own root CA.
+ */
+export function postgresConnectionConfig(connectionString: string): PoolConfig {
+  const url = new URL(connectionString);
+  const sslmode = url.searchParams.getAll("sslmode").at(-1);
+  if (sslmode === undefined || sslmode === "disable") return { connectionString };
+  for (const parameter of urlTlsParameters) url.searchParams.delete(parameter);
+  return {
+    connectionString: url.toString(),
+    ssl: { ca: [...rootCertificates, SUPABASE_ROOT_CA_2021], rejectUnauthorized: true },
+  };
+}
 
 /** Share connections within one runtime, opening the pool only for a parsed submission. */
 export function createPostgresPoolProvider(
@@ -9,7 +29,7 @@ export function createPostgresPoolProvider(
   return () => {
     if (pool === undefined) {
       pool = new Pool({
-        connectionString,
+        ...postgresConnectionConfig(connectionString),
         max: 2,
         min: 0,
         connectionTimeoutMillis: 5000,
