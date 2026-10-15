@@ -28,10 +28,11 @@ test("production serves its OpenAPI contract", async ({ request }) => {
   expect(document.paths?.["/api/sessions"]?.get).toBeDefined();
 });
 
-test("production session discovery reads from a working database", async ({ request }) => {
+test("live GET /api/sessions returns HTTP 200 for anonymous visitors", async ({ request }) => {
   const response = await request.get("/api/sessions");
-  expect(response.status()).toBe(200);
+  expect(response.status(), "Live session discovery must be healthy; a 503 is a production failure").toBe(200);
   expect(response.headers()["content-type"]).toContain("application/json");
+  expect(response.headers()["cache-control"]).toBe("no-store");
 
   const parsed = discoveryPageSchema.safeParse(await response.json());
   expect(parsed.success, parsed.success ? undefined : parsed.error.message).toBe(true);

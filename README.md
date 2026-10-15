@@ -1,5 +1,12 @@
 # Booking Web Manager
 
+[![Live production API health](https://github.com/rbrishi15/booking-web-manager/actions/workflows/production-smoke.yml/badge.svg?branch=main)](https://github.com/rbrishi15/booking-web-manager/actions/workflows/production-smoke.yml?query=branch%3Amain)
+
+**Production tracker:** the badge reports the latest live API check on `main`.
+Click it for timestamps and run history. Local CI checks the candidate code;
+**Live production API health (HTTP 200 required)** checks the deployed site.
+The tracker runs hourly and on PRs/pushes; it is a sampled check, not continuous uptime monitoring.
+
 Sports venue booking coordination. One person books and pays a venue upfront,
 participants commit their share into an in-app wallet where it is held, and
 the held funds are released to the booker after attendance is verified.
@@ -395,6 +402,17 @@ Session contract tests run with `npm test` and injected dependencies.
 Swagger documentation, landing links, hosted Storybook deep links and assets,
 and verifies that unconfigured local session routes return 503.
 These [HTTP/browser tests](./tests/e2e) need no Supabase stack or credentials.
+They test missing-configuration error handling, not service health.
+
+`npm run test:e2e:discovery` builds the app and runs the public discovery API
+tests against a disposable Supabase stack with the checked-in migrations.
+Anonymous `GET /api/sessions` and an empty search must return HTTP 200 with
+`Cache-Control: no-store`; 500/503 responses fail. The suite also checks stored
+listings, filtering, pagination, and private-session exclusion. Pull-request
+and main-branch CI run this as **Public session discovery (HTTP 200)**, separately
+from the deliberately unconfigured tests. Docker and the Supabase CLI are
+required; production credentials and a browser installation are not.
+
 `npm run test:integration` and `npm run test:e2e:integration` provision a separate
 disposable Supabase stack for database and authenticated HTTP coverage.
 `npm run test:sessions:integration` runs both. They require Docker, the
@@ -418,8 +436,11 @@ malformed responses and connection failures fail the suite. The tests do not
 start a local server, require credentials, or install a browser.
 
 The [production smoke workflow](./.github/workflows/production-smoke.yml)
-runs approximately hourly on the default branch and can be dispatched manually.
-It observes the already-deployed site; it does not gate a deployment or test
+runs on every pull request and push to `main`, approximately hourly on the
+default branch, and on manual dispatch. A deployed 503 fails this check even
+when the local CI suites pass. It observes the already-deployed site, so a
+failure may reflect a production outage unrelated to the PR; it does not wait
+for Vercel to deploy the commit or verify the candidate deployment. It does not test
 signed-in routes, OneMap credentials, or money-moving operations. Keep mutating
 end-to-end scenarios on isolated test or staging infrastructure.
 

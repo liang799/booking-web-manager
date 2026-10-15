@@ -15,6 +15,22 @@ interface DiscoveryItem {
 }
 interface DiscoveryPage { items: DiscoveryItem[]; nextCursor: string | null }
 
+test("public discovery smoke requires HTTP 200 for anonymous listings and empty results", async ({ request }) => {
+  const response = await request.get("/api/sessions");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toContain("application/json");
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  const body: DiscoveryPage = await response.json();
+  expect(Array.isArray(body.items)).toBe(true);
+  expect(body.items.length).toBeLessThanOrEqual(20);
+  expect(body.nextCursor === null || typeof body.nextCursor === "string").toBe(true);
+
+  const empty = await request.get("/api/sessions", { params: { q: randomUUID() } });
+  expect(empty.status()).toBe(200);
+  expect(empty.headers()["cache-control"]).toBe("no-store");
+  expect(await empty.json()).toEqual({ items: [], nextCursor: null });
+});
+
 test("public discovery filters real stored sessions and protects private details for every viewer", async ({ request }) => {
   const context = sessionTestContext();
   try {

@@ -1,6 +1,9 @@
-name: Production API smoke tests
+name: Live production API health
 
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
   schedule:
     - cron: "17 * * * *"
@@ -9,12 +12,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: production-api-smoke
+  group: production-api-smoke-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
   smoke:
-    name: Check public production APIs
+    name: Live production API health (HTTP 200 required)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

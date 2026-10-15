@@ -13,8 +13,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const mode = process.argv[2] ?? "db";
-if (!["db", "http", "all"].includes(mode))
-  throw new Error("Choose db, http or all");
+if (!["db", "http", "discovery", "all"].includes(mode))
+  throw new Error("Choose db, http, discovery or all");
 const migrations = "supabase/migrations";
 const groupMigration = join(migrations, "0005_regular_groups.sql");
 const preview = process.env.SESSION_TEST_PREREQUISITE_SQL;
@@ -130,6 +130,9 @@ try {
             "vitest.integration.config.ts",
           ]
         : ["run", "test:e2e:authenticated"];
+    if (command === "discovery") {
+      args.push("--", "tests/e2e/discovery-api.spec.ts");
+    }
     const result = spawnSync("npm", args, {
       env: environment,
       stdio: "inherit",
