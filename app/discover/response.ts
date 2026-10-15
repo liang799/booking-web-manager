@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isRequestFailure } from "@/app/http/request-failure";
 import { DISCOVERY_API_UNAVAILABLE_MESSAGE, DiscoveryApiUnavailableError } from "./discovery-api-unavailable";
+import { discoveryErrorDiagnostics } from "./error-diagnostics";
 
 export type DiscoveryFailureStage = "initialization" | "validation" | "query" | "serialization";
 
@@ -10,7 +11,7 @@ const databaseMessages = {
   DATABASE_SCHEMA_MISMATCH: "The sessions database schema does not match this deployment. Check that database migrations have been applied.",
 };
 
-// Only fixed messages for recognized driver/SQLSTATE codes may reach the public API.
+// The primary explanation is fixed; allowlisted diagnostics are added separately.
 const databaseReasons = new Map<string, keyof typeof databaseMessages>([
   ["ECONNREFUSED", "DATABASE_UNAVAILABLE"],
   ["ECONNRESET", "DATABASE_UNAVAILABLE"],
@@ -37,6 +38,7 @@ const stageMessages: Record<DiscoveryFailureStage, string> = {
   serialization: "Session discovery could not prepare the response. Check server logs using the request ID.",
 };
 
+/** Classify known database causes without putting their raw messages in the primary error. */
 function failureDetails(error: unknown, stage: DiscoveryFailureStage) {
   // Setup/transaction wrappers retain the actual driver error as their cause.
   const seen = new Set<object>();
@@ -55,26 +57,33 @@ function failureDetails(error: unknown, stage: DiscoveryFailureStage) {
   };
 }
 
+/** Prevent caching for every discovery result, including failures. */
 export function discoveryJson(body: unknown, status = 200): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
+/** Preserve the ordinary request/unavailable error contract. */
 export function discoveryError(status: number, code: string, message: string): Response {
   return discoveryJson({ error: { code, message } }, status);
 }
 
+/** Correlate private error logs with fixed, allowlisted public diagnostics. */
 function discoveryInternalError(error: unknown, stage: DiscoveryFailureStage): Response {
   const requestId = randomUUID();
   const { reason, message } = failureDetails(error, stage);
   console.error("Session discovery failed", {
     requestId, method: "GET", path: "/api/sessions", stage, reason, error,
   });
-  return Response.json({ error: { code: "INTERNAL_ERROR", message, requestId, reason, stage } }, {
+  return Response.json({ error: {
+    code: "INTERNAL_ERROR", message, requestId, reason, stage,
+    diagnostics: discoveryErrorDiagnostics(error),
+  } }, {
     status: 500,
     headers: { "Cache-Control": "no-store", "X-Request-Id": requestId },
   });
 }
 
+/** Keep expected request failures distinct from unexpected infrastructure failures. */
 export function discoveryErrorResponse(error: unknown, stage: DiscoveryFailureStage): Response {
   if (isRequestFailure(error))
     return discoveryError(error.status, error.code, error.message);
