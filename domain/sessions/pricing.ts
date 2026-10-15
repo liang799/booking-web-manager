@@ -1,5 +1,6 @@
 import { Money } from "../finance/money";
 import { DomainError } from "../shared/errors";
+import { isValidSlotCount, MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "./capacity";
 
 export interface SessionPricing {
   readonly suggestedCents: number;
@@ -11,8 +12,8 @@ export interface SessionPricing {
 export function sessionPricing(totalCostCents: number, totalSlots: number): SessionPricing {
   DomainError.require(Number.isSafeInteger(totalCostCents) && totalCostCents > 0,
     "INVALID_INPUT", "A booking cost must be positive safe integer cents");
-  DomainError.require(Number.isSafeInteger(totalSlots) && totalSlots >= 2 && totalSlots <= 8,
-    "INVALID_INPUT", "A session needs between 2 and 8 slots");
+  DomainError.require(isValidSlotCount(totalSlots),
+    "INVALID_INPUT", `A session needs between ${MIN_SESSION_SLOTS} and ${MAX_SESSION_SLOTS} slots`);
   // Money division uses integer arithmetic even near MAX_SAFE_INTEGER.
   const suggestedCents = Money.fromCents(totalCostCents).divideFloor(totalSlots).toCents();
   DomainError.require(suggestedCents > 0, "INVALID_INPUT", "The booking share must be positive");

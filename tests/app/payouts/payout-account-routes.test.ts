@@ -125,5 +125,10 @@ function dependencies(
   const unused = async (): Promise<never> => {
     throw new Error("not used in this test");
   };
-  return { authenticate, payoutSetup: { status: unused, start: unused, ...payoutSetup } };
+  return {
+    authenticate,
+    payoutSetup: { status: unused, start: unused, ...payoutSetup },
+    sessionPayouts: { forBooker: unused },
+    withdrawals: { forBooker: unused },
+  };
 }

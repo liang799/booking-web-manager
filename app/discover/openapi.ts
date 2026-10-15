@@ -1,8 +1,10 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z, errorResponse } from "@/app/openapi/contracts";
 import { REGIONS, SPORTS } from "@/app/(auth)/schemas";
+import { MAX_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { DISCOVERY_API_UNAVAILABLE_MESSAGE } from "./discovery-api-unavailable";
 
+/** Registers public session discovery filters, listing responses and safe failure diagnostics. */
 export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
   const discoveryResultSchema = registry.register("DiscoverSessionsResult", z.object({
     items: z.array(z.object({
@@ -12,7 +14,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
       sport: z.string(),
       startAt: z.string().datetime(),
       endAt: z.string().datetime(),
-      totalSlots: z.number().int().min(1).max(8),
+      totalSlots: z.number().int().min(1).max(MAX_SESSION_SLOTS),
       bookingShareCents: z.number().int().positive().safe(),
     })).max(20),
     nextCursor: z.string().nullable(),
@@ -30,6 +32,10 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
         "UNEXPECTED_ERROR",
       ]),
       stage: z.enum(["initialization", "validation", "query", "serialization"]),
+      diagnostics: z.array(z.object({
+        message: z.string().max(500).openapi({ description: "Fixed safe message for an allowlisted error code or exact known message; otherwise Unknown error. Raw exception text, stack traces and SQL fields are never returned." }),
+        code: z.string().max(64).optional().openapi({ description: "Allowlisted driver error code, when recognized; unknown codes are omitted." }),
+      })).min(1).max(8).openapi({ description: "Bounded safe diagnostics from the exception, nested causes and aggregate errors. Available without server-log access, an environment toggle or operator authentication." }),
     }),
   }));
   const discoveryExample = {
@@ -119,7 +125,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
       },
       400: errorResponse("Malformed or duplicate filters, search text longer than 100 characters after trimming, invalid calendar date/time range, or invalid cursor.", "INVALID_REQUEST", "Invalid session discovery query"),
       500: {
-        description: "Discovery failed. The response identifies the failure category and stage with a generated requestId. Find the matching 'Session discovery failed' entry in the Vercel server logs for the original error and cause; raw exception details are never returned.",
+        description: "Discovery failed. The response identifies the failure category and stage with a generated requestId. Diagnostics use fixed safe explanations for allowlisted driver codes and exact known messages. Exact known messages can identify failures even with no code or a generic code; unknown codes are omitted. Unrecognized failures return Unknown error. Raw exception text, stack traces and SQL fields are never returned. Safe diagnostics require no environment toggle or operator authentication. The matching 'Session discovery failed' server-log entry retains the original error and cause.",
         headers: {
           "Cache-Control": { schema: { type: "string", enum: ["no-store"] } },
           "X-Request-Id": {
@@ -137,6 +143,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
                 requestId: "b6b6b6b6-1234-4123-8123-123456789abc",
                 reason: "DATABASE_SCHEMA_MISMATCH",
                 stage: "query",
+                diagnostics: [{ message: "Database column does not exist", code: "42703" }],
               },
             },
           },

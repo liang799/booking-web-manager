@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { PayoutAccountView, type PayoutScreenState } from "./_components/payout-account-view";
+import { SessionPayouts } from "./_components/session-payouts";
 import { payoutTransport, type PayoutLoad, type PayoutTransport } from "./payout-transport";
 
 function toState(result: PayoutLoad): PayoutScreenState {
@@ -58,6 +59,11 @@ function PayoutPage({ transport }: { readonly transport: PayoutTransport }) {
       startError={startError}
       onStart={() => void start()}
       onRetry={() => void load()}
+      sessionPayouts={
+        state.status === "ready" && state.data.status === "COMPLETE" && (
+          <SessionPayouts transport={transport} instantAvailable={state.data.instantPayoutsAvailable === true} />
+        )
+      }
     />
   );
 }

@@ -377,7 +377,7 @@ describe("UC2-02 POST /api/sessions", () => {
   test("preserves the domain capacity limit as an input error", async () => {
     // Arrange
     const { POST, unitOfWork } = await sessionRouteScenario();
-    const request = creationRequest({ totalSlots: 9 });
+    const request = creationRequest({ totalSlots: 31 });
 
     // Act
     const response = await POST(postRequest(request));

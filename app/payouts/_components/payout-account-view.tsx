@@ -19,6 +19,8 @@ export interface PayoutAccountViewProps {
   readonly startError: string | null;
   readonly onStart: () => void;
   readonly onRetry: () => void;
+  /** UC1-08 withdrawals, shown once setup is complete. */
+  readonly sessionPayouts?: React.ReactNode;
 }
 
 const copy = {
@@ -51,6 +53,7 @@ export function PayoutAccountView({
   startError,
   onStart,
   onRetry,
+  sessionPayouts,
 }: PayoutAccountViewProps) {
   return (
     <div className="mx-auto w-full max-w-2xl px-6 pb-10 pt-6 md:px-8 md:pt-10">
@@ -89,6 +92,8 @@ export function PayoutAccountView({
           <Button asChild className="min-h-11"><Link href="/sessions/create">Create a session</Link></Button>
         </section>
       )}
+
+      {state.status === "ready" && state.data.status === "COMPLETE" && sessionPayouts}
 
       {state.status === "ready" && state.data.status !== "COMPLETE" && (
         <section className="space-y-4 rounded-lg border bg-card p-4 md:p-6">

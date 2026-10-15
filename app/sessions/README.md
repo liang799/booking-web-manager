@@ -41,9 +41,9 @@ scrolling body; short screens can scroll every field fully into view.
 Details start with Tennis and empty venue, dates and cost. The date dialog uses
 Singapore time, with separate start/end dates for overnight bookings. Cost is
 parsed directly into integer cents. Settings default to Private, eight slots,
-a minimum headcount of four, and 4.5/5 reliability (90/100). Capacity is 2–8;
-minimum headcount must be between two and the selected capacity. UC2-02 retains
-this required configuration from the SRS. Reliability choices are no minimum or
+a minimum headcount of four, and 4.5/5 reliability (90/100). Capacity is 2–30
+(`domain/sessions/capacity.ts`, raised from the SRS's original 2–8 by migration
+0013); minimum headcount must be between two and the selected capacity. Reliability choices are no minimum or
 3–5 in half-point increments. Pricing uses the selected sport's local photo and the
 shared framework-independent calculation in `domain/sessions/pricing.ts`.
 

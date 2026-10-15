@@ -28,7 +28,7 @@ export function registerSessionApi(registry: OpenAPIRegistry): void {
       "even when valid booking details change. Use a new key for a new session; keys are isolated per booker.",
       "Current account status and email presence are checked before every successful replay; creation-specific payout and booking-time rules are not repeated for a replay.",
       "Booking timestamps are ISO strings with Z or a timezone offset. Unknown fields are ignored.",
-      "Blank venue names, nonpositive cost, invalid time order, capacity outside 2–8,",
+      "Blank venue names, nonpositive cost, invalid time order, capacity outside 2–30,",
       "minimum headcount outside 2–totalSlots, or reliability outside 0–100 are domain errors (422),",
       "while malformed JSON and structural errors return 400. No funds move during creation.",
     ].join(" "),

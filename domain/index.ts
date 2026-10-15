@@ -118,4 +118,5 @@ export type {
 export type { Region, Sport, UUID } from "./shared/types";
 export { Money } from "./finance/money";
 export { sessionPricing, type SessionPricing } from "./sessions/pricing";
+export { isValidSlotCount, MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "./sessions/capacity";
 export { ReliabilityScore } from "./reliability/reliability-score";

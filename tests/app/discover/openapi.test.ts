@@ -70,6 +70,7 @@ describe("session discovery OpenAPI contract", () => {
               requestId: "b6b6b6b6-1234-4123-8123-123456789abc",
               reason: "DATABASE_SCHEMA_MISMATCH",
               stage: "query",
+              diagnostics: [{ message: "Database column does not exist", code: "42703" }],
             },
           },
         },
@@ -79,7 +80,7 @@ describe("session discovery OpenAPI contract", () => {
       required: ["error"],
       properties: {
         error: {
-          required: ["code", "message", "requestId", "reason", "stage"],
+          required: ["code", "message", "requestId", "reason", "stage", "diagnostics"],
           properties: {
             code: { type: "string", enum: ["INTERNAL_ERROR"] },
             message: { type: "string" },
@@ -89,6 +90,19 @@ describe("session discovery OpenAPI contract", () => {
               enum: ["DATABASE_UNAVAILABLE", "DATABASE_ACCESS_DENIED", "DATABASE_SCHEMA_MISMATCH", "INITIALIZATION_FAILED", "UNEXPECTED_ERROR"],
             },
             stage: { type: "string", enum: ["initialization", "validation", "query", "serialization"] },
+            diagnostics: {
+              type: "array",
+              minItems: 1,
+              maxItems: 8,
+              items: {
+                type: "object",
+                required: ["message"],
+                properties: {
+                  message: { type: "string", maxLength: 500 },
+                  code: { type: "string", maxLength: 64 },
+                },
+              },
+            },
           },
         },
       },
