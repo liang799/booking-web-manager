@@ -17,6 +17,21 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
     })).max(20),
     nextCursor: z.string().nullable(),
   }));
+  const discoveryInternalErrorSchema = registry.register("DiscoveryInternalError", z.object({
+    error: z.object({
+      code: z.literal("INTERNAL_ERROR"),
+      message: z.string().openapi({ description: "An explanation and suggested next step without raw exception details." }),
+      requestId: z.string().uuid().openapi({ description: "Generated identifier matching X-Request-Id and the server error log." }),
+      reason: z.enum([
+        "DATABASE_UNAVAILABLE",
+        "DATABASE_ACCESS_DENIED",
+        "DATABASE_SCHEMA_MISMATCH",
+        "INITIALIZATION_FAILED",
+        "UNEXPECTED_ERROR",
+      ]),
+      stage: z.enum(["initialization", "validation", "query", "serialization"]),
+    }),
+  }));
   const discoveryExample = {
     sessionId: "11111111-1111-4111-8111-111111111111",
     venueName: "Jurong East Sports Hall",
@@ -103,7 +118,30 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
         },
       },
       400: errorResponse("Malformed or duplicate filters, search text longer than 100 characters after trimming, invalid calendar date/time range, or invalid cursor.", "INVALID_REQUEST", "Invalid session discovery query"),
-      500: errorResponse("Unexpected configuration or persistence failure; internal details are redacted.", "INTERNAL_ERROR", "Internal server error"),
+      500: {
+        description: "Discovery failed. The response identifies the failure category and stage with a generated requestId. Find the matching 'Session discovery failed' entry in the Vercel server logs for the original error and cause; raw exception details are never returned.",
+        headers: {
+          "Cache-Control": { schema: { type: "string", enum: ["no-store"] } },
+          "X-Request-Id": {
+            description: "The same generated identifier as error.requestId.",
+            schema: { type: "string", format: "uuid" },
+          },
+        },
+        content: {
+          "application/json": {
+            schema: discoveryInternalErrorSchema,
+            example: {
+              error: {
+                code: "INTERNAL_ERROR",
+                message: "The sessions database schema does not match this deployment. Check that database migrations have been applied.",
+                requestId: "b6b6b6b6-1234-4123-8123-123456789abc",
+                reason: "DATABASE_SCHEMA_MISMATCH",
+                stage: "query",
+              },
+            },
+          },
+        },
+      },
       503: errorResponse("Required discovery server settings are missing.", "DISCOVERY_API_UNAVAILABLE", DISCOVERY_API_UNAVAILABLE_MESSAGE),
     },
   });

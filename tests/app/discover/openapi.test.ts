@@ -53,6 +53,56 @@ describe("session discovery OpenAPI contract", () => {
     }
   });
 
+  test("documents diagnostic 500 responses without changing ordinary error contracts", () => {
+    const operation = discoveryOpenApiDocument.paths["/api/sessions"]?.get;
+    expect(operation?.responses["500"]).toMatchObject({
+      headers: {
+        "Cache-Control": { schema: { type: "string", enum: ["no-store"] } },
+        "X-Request-Id": { schema: { type: "string", format: "uuid" } },
+      },
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/DiscoveryInternalError" },
+          example: {
+            error: {
+              code: "INTERNAL_ERROR",
+              message: "The sessions database schema does not match this deployment. Check that database migrations have been applied.",
+              requestId: "b6b6b6b6-1234-4123-8123-123456789abc",
+              reason: "DATABASE_SCHEMA_MISMATCH",
+              stage: "query",
+            },
+          },
+        },
+      },
+    });
+    expect(discoveryOpenApiDocument.components?.schemas?.DiscoveryInternalError).toMatchObject({
+      required: ["error"],
+      properties: {
+        error: {
+          required: ["code", "message", "requestId", "reason", "stage"],
+          properties: {
+            code: { type: "string", enum: ["INTERNAL_ERROR"] },
+            message: { type: "string" },
+            requestId: { type: "string", format: "uuid" },
+            reason: {
+              type: "string",
+              enum: ["DATABASE_UNAVAILABLE", "DATABASE_ACCESS_DENIED", "DATABASE_SCHEMA_MISMATCH", "INITIALIZATION_FAILED", "UNEXPECTED_ERROR"],
+            },
+            stage: { type: "string", enum: ["initialization", "validation", "query", "serialization"] },
+          },
+        },
+      },
+    });
+    for (const status of ["400", "503"]) {
+      expect(operation?.responses[status]).toMatchObject({
+        content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } },
+      });
+    }
+    expect(discoveryOpenApiDocument.components?.schemas?.ApiError).toMatchObject({
+      properties: { error: { required: ["code", "message"] } },
+    });
+  });
+
   test("provides meaningful populated, empty and paginated discovery examples", () => {
     const response = discoveryOpenApiDocument.paths["/api/sessions"]?.get?.responses["200"];
     if (!response || !("content" in response)) throw new Error("Missing discovery response");

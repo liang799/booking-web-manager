@@ -65,10 +65,29 @@ See [venue configuration](../../use-case-config/README.md#venue-search-configura
 
 ## Configured HTTP contract
 
-The [route module](../api/sessions/route.ts) exports ordinary async GET and POST
-functions with the standard `Request` → `Promise<Response>` signature. Each
-function encloses dependency loading, authentication and request handling in one
-`try`/`catch`, then maps failures through its feature's response helpers.
+Authenticated session API routes declare their `parse`, `run` and `invalidRequestMessage`
+through app-owned action factories. Each route's `run` callback visibly invokes
+its use case; the factory supplies the common HTTP steps. For example, the
+[creation route](../api/sessions/route.ts) declares:
+
+```ts
+export const POST = sessionCreationAction({
+  parse: parseCreateSessionInput,
+  run: (dependencies, { input, submission }) =>
+    dependencies.createForSubmission(submission).forBooker(
+      input.bookerId, input.booking, input.config,
+    ),
+  invalidRequestMessage: "Invalid session creation request",
+  successStatus: 201,
+});
+```
+
+[`createAuthenticatedActions`](../http/authenticated-action.ts) owns dependency
+loading, authentication, route parameters, JSON-body parsing and error mapping.
+Feature factories select their existing dependency getter and response policy;
+JSON mutations use `.json`, and authenticated reads use `.get` without reading
+a request body. An optional `serialize` callback maps a use-case result to its
+HTTP representation. See [ADR-0015](../../docs/adr/0015-declarative-session-http-actions.md).
 
 [`loadDependencies`](../http/load-dependencies.ts) awaits the app-owned
 [dependency getter](./server-dependencies.ts). It makes initialization failures
@@ -79,15 +98,14 @@ POST's authenticator also checks current active-account access before parsing or
 replay. Dependencies and actor identities remain local values in each handler;
 the helpers do not modify the Request or store shared actor state.
 
-After loading [`SessionApiDependencies`](./dependencies.ts), the POST handler
-authenticates, reads the request, creates a submission-scoped use case and invokes
-[`CreateSessions.forBooker`](../../use-cases/sessions/CreateSessions.ts) directly.
-Tests inject those dependencies and exercise the real helpers. The production
-default never substitutes a fake authenticated user or persisted session.
+Creation's factory uses [`SessionApiDependencies`](./dependencies.ts), then the
+route's `run` callback constructs a submission-scoped use case and invokes
+[`CreateSessions.forBooker`](../../use-cases/sessions/CreateSessions.ts).
+Tests inject those dependencies and exercise the real action factories. The
+production default never substitutes a fake authenticated user or persisted session.
 
-`readCreateSessionRequest(request, bookerId)` reads JSON and delegates to the
-existing parser. It distinguishes malformed JSON from an invalid request schema;
-only the JSON/schema failures it identifies become 400 responses. Internal
+The shared JSON action distinguishes malformed JSON from an invalid request
+schema; only input failures at that boundary become 400 responses. Internal
 validation errors from authentication or the use case remain opaque 500s.
 
 [parseCreateSessionInput](./create-session-input.ts) validates the authenticated
