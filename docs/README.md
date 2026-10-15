@@ -21,10 +21,11 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0008: Booker behavior and the Session lifecycle](./adr/0008-booker-behavior-and-session-lifecycle.md) — callback routing superseded by ADR-0009.
 - [ADR-0009: Role workflows and Session recording](./adr/0009-role-workflows-and-session-recording.md).
 - [ADR-0010: Session's participant list](./adr/0010-session-participant-list.md).
-- [ADR-0011: API routes invoke use cases](./adr/0011-api-routes-invoke-use-cases.md).
+- [ADR-0011: API routes invoke use cases](./adr/0011-api-routes-invoke-use-cases.md) — repeated session HTTP orchestration superseded by ADR-0015; route-visible invocation and dependency-only assembly remain.
 - [ADR-0012: Booker-selected session pricing](./adr/0012-booker-selected-session-pricing.md).
 - [ADR-0013: Cancellation preserves terminal participations](./adr/0013-cancellation-preserves-terminal-participations.md).
 - [ADR-0014: Account policies and transaction guards](./adr/0014-account-policies-and-transaction-guards.md) — profile policy exception to ADR-0003, account deactivation, group transaction guards, and dependency enforcement.
+- [ADR-0015: Declarative session HTTP actions](./adr/0015-declarative-session-http-actions.md).
 
 Product decisions and remaining discussion:
 

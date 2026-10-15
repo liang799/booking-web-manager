@@ -20,6 +20,7 @@
     "test:e2e:production": "playwright test --config playwright.production.config.ts",
     "test:integration": "node scripts/test-session-integration.mjs db",
     "test:e2e:integration": "node scripts/test-session-integration.mjs http",
+    "test:e2e:discovery": "node scripts/test-session-integration.mjs discovery",
     "test:e2e:authenticated": "npm run build && playwright test --config playwright.integration.config.ts",
     "test:sessions:integration": "node scripts/test-session-integration.mjs all",
     "storybook": "storybook dev -p 6006",

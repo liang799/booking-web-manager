@@ -89,9 +89,14 @@ use cases coordinate domain behavior, and infrastructure adapters live in `/lib`
 | `authenticate(request)` | Verify a Supabase bearer token, current active status and a present email address for every request, including replay. |
 | `createForSubmission(submission)` | Construct a fresh `CreateSessions` and PostgreSQL transaction capturing this submission's retry key. |
 
-The route authenticates, parses JSON, invokes `forBooker(bookerId, booking, config)`
-and returns 201. The verified token supplies the booker identity; body identities
-are ignored. No cookie session or mutable request identity is shared between calls.
+The route declares its parser and a `run` callback that constructs the
+submission-scoped use case and invokes `forBooker(bookerId, booking, config)`.
+App-owned action factories load these dependencies, authenticate, parse JSON and
+map responses; creation returns 201. Configuration still only assembles
+dependencies and never returns an HTTP handler. See
+[ADR-0015](../docs/adr/0015-declarative-session-http-actions.md).
+The verified token supplies the booker identity; body identities are ignored.
+No cookie session or mutable request identity is shared between calls.
 
 `getSessionDependencies()` shares pending and successful assembly within a runtime.
 Failed setup clears its promise for retry. PostgreSQL connections are pooled lazily

@@ -4,6 +4,11 @@
 - Date: 2026-09-30
 - Partially supersedes: the session factory output decision in
   [ADR-0001](./0001-use-case-driven-development.md).
+- Partially superseded: [ADR-0015](./0015-declarative-session-http-actions.md)
+  moves repeated session HTTP orchestration into app-owned action factories.
+  Routes retain visible use-case calls in `run` callbacks, and configuration
+  continues to assemble dependencies only. The description below records the
+  original implementation and availability state.
 
 The session API previously forwarded requests through a configured HTTP
 handler and an app HTTP function before reaching the use case. The API route

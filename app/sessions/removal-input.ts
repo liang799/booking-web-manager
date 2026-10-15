@@ -26,13 +26,3 @@ export function parseRemovalInput(sessionId: unknown, participationId: unknown, 
   if (!parsed.success) throw invalidRequest("Invalid participant removal request");
   return { ...params, ...parsed.data };
 }
-
-export async function readRemovalRequest(request: Request, sessionId: unknown, participationId: unknown) {
-  let body: unknown;
-  try { body = await request.json(); }
-  catch (cause) {
-    if (cause instanceof SyntaxError) throw invalidRequest("Request body must be valid JSON");
-    throw new Error("Removal body could not be read", { cause });
-  }
-  return parseRemovalInput(sessionId, participationId, body);
-}
