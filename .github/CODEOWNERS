@@ -22,6 +22,13 @@
 /app/wallet/ @rbrishi15
 /app/payouts/ @rbrishi15
 /app/api/webhooks/ @rbrishi15
+/app/api/payouts/ @rbrishi15
+/use-cases/payouts/ @rbrishi15
+/use-case-config/payouts.ts @rbrishi15
+/use-case-config/stripe-webhooks.ts @rbrishi15
+/lib/payouts/ @rbrishi15
+/tests/app/payouts/ @rbrishi15
+/tests/app/webhooks/ @rbrishi15
 
 # Shared HTTP orchestration and identity helpers: infrastructure and auth owners.
 /app/http/ @rbrishi15 @Jolingoes
