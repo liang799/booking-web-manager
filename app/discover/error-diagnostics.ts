@@ -3,105 +3,85 @@ export interface DiscoveryErrorDiagnostic {
   readonly code?: string;
 }
 
-const REDACTED = "[REDACTED]";
 const MAX_DIAGNOSTICS = 8;
-const sensitiveSetting = /(?:^|_)(?:PASSWORD|PASS|SECRET|TOKEN|KEY|CREDENTIALS?|URL|URI)(?:_|$)|^PG(?:PASSWORD|USER)$/i;
 
-function configuredSecrets(environment: Readonly<Record<string, string | undefined>>): string[] {
-  const secrets = new Set<string>();
-  const add = (value: string) => {
-    if (!value) return;
-    secrets.add(value);
-    secrets.add(encodeURIComponent(value));
-    secrets.add(JSON.stringify(value).slice(1, -1));
-    try { secrets.add(decodeURIComponent(value)); } catch { /* Not every password is URI-encoded. */ }
+// Codes and explanations are both fixed: even a well-formed unknown code may contain private data.
+const driverMessages = new Map<string, string>([
+  ["ECONNREFUSED", "Database connection refused"],
+  ["ECONNRESET", "Database connection reset"],
+  ["ETIMEDOUT", "Database connection timed out"],
+  ["ENOTFOUND", "Database hostname could not be resolved"],
+  ["EAI_AGAIN", "Database hostname lookup temporarily failed"],
+  ["ENETUNREACH", "Database network is unreachable"],
+  ["EHOSTUNREACH", "Database host is unreachable"],
+  ["08001", "Unable to establish a database connection"],
+  ["08006", "Database connection failure"],
+  ["53300", "Too many database connections"],
+  ["57P01", "Database connection terminated by an administrator"],
+  ["57P03", "Database is not accepting connections"],
+  ["28P01", "Database password authentication failed"],
+  ["28000", "Database authorization failed"],
+  ["42501", "Insufficient database permissions"],
+  ["42P01", "Database table does not exist"],
+  ["42703", "Database column does not exist"],
+  ["42883", "Database function does not exist"],
+  ["42601", "Database query syntax error"],
+  ["22P02", "Invalid database input representation"],
+  ["57014", "Database query was cancelled"],
+  ["XX000", "Database internal error"],
+  ["SELF_SIGNED_CERT_IN_CHAIN", "self-signed certificate in certificate chain"],
+  ["DEPTH_ZERO_SELF_SIGNED_CERT", "self-signed certificate"],
+  ["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "unable to verify the first certificate"],
+  ["UNABLE_TO_GET_ISSUER_CERT_LOCALLY", "unable to get local issuer certificate"],
+  ["CERT_HAS_EXPIRED", "certificate has expired"],
+  ["CERT_NOT_YET_VALID", "certificate is not yet valid"],
+  ["ERR_TLS_CERT_ALTNAME_INVALID", "Database TLS certificate does not match the hostname"],
+]);
+
+// Some pg/pooler failures have no specific code. Match complete known text, never prefixes.
+const safeMessages = new Map([
+  "Route dependencies could not be loaded",
+  "Session discovery is not available yet",
+  "Tenant or user not found",
+  "timeout exceeded when trying to connect",
+  "Connection terminated due to connection timeout",
+  "timeout expired",
+  "Connection terminated",
+  "Connection terminated unexpectedly",
+  "Query read timeout",
+  "The server does not support SSL connections",
+  "There was an error establishing an SSL connection",
+  "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string",
+  "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a non-empty string",
+].map((message) => [message, message]));
+
+/** Select a fixed public explanation; unknown codes and text never pass through. */
+function publicDiagnostic(message: unknown, code?: unknown): DiscoveryErrorDiagnostic {
+  const driverMessage = typeof code === "string" ? driverMessages.get(code) : undefined;
+  const safeMessage = typeof message === "string" ? safeMessages.get(message) : undefined;
+  return {
+    message: safeMessage ?? driverMessage ?? "Unknown error",
+    ...(driverMessage && typeof code === "string" ? { code } : {}),
   };
-  for (const [name, value] of Object.entries(environment)) {
-    if (!value || !sensitiveSetting.test(name)) continue;
-    add(value);
-    try {
-      const url = new URL(value);
-      add(url.username);
-      add(url.password);
-      add(url.hostname);
-      // PostgreSQL connection parameters may override authority credentials.
-      for (const [key, parameter] of url.searchParams) {
-        if (/^(?:user|password|pass|token|secret|key|api_key)$/i.test(key)) add(parameter);
-      }
-    } catch { /* Most settings are individual credentials, not URLs. */ }
-  }
-  return [...secrets].filter(Boolean).sort((a, b) => b.length - a.length);
 }
 
-function redact(message: string, secrets: readonly string[]): string {
-  // Reject oversized input rather than cutting a credential before redaction can recognize it.
-  if (message.length > 16_000) return "Error message omitted because it is too long";
-  const spans: { start: number; end: number }[] = [];
-  // Find every sensitive span in the original text. Replacing a short username first
-  // could otherwise break a URL scheme or credential label and expose its value.
-  for (const secret of secrets) {
-    let start = message.indexOf(secret);
-    while (start !== -1) {
-      spans.push({ start, end: start + secret.length });
-      start = message.indexOf(secret, start + secret.length);
-    }
-  }
-  const maskMatches = (pattern: RegExp, keepPrefix = false) => {
-    for (const match of message.matchAll(pattern)) {
-      spans.push({
-        start: match.index + (keepPrefix ? match[1]?.length ?? 0 : 0),
-        end: match.index + match[0].length,
-      });
-    }
-  };
-  maskMatches(/\b[a-z][a-z\d+.-]*:\/\/[^\s"'`<>]+/gi);
-  maskMatches(/"(?:\\.|[^"\\])*(?:"|$)|(?<!\w)'(?:\\.|[^'\\])*(?:'|$)|`(?:\\.|[^`\\])*(?:`|$)/g);
-  maskMatches(/\b(authorization\s*[=:]\s*(?:(?:Bearer|Basic)\s+)?)[^\s;,]+/gi, true);
-  maskMatches(/\b((?:Bearer|Basic)\s+)[^\s;,]+/gi, true);
-  maskMatches(/\b((?:[\w.-]*[_-])?(?:password|passwd|pwd|secret|token|api[_-]?key)\s*[=:]\s*)[^\s;,]+/gi, true);
-  maskMatches(/\b(cookie\s*[=:])[^\r\n]*/gi, true);
-  maskMatches(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g);
-
-  const merged: typeof spans = [];
-  for (const span of spans.sort((a, b) => a.start - b.start)) {
-    const previous = merged.at(-1);
-    if (previous && span.start <= previous.end) previous.end = Math.max(previous.end, span.end);
-    else merged.push({ ...span });
-  }
-  let result = "";
-  let position = 0;
-  for (const span of merged) {
-    result += message.slice(position, span.start) + REDACTED;
-    position = span.end;
-  }
-  result += message.slice(position);
-  // Exception messages can embed stack/SQL continuations; only return the first line.
-  return (result.split(/[\r\n]/, 1)[0]?.trim() || "Unknown error").slice(0, 500);
-}
-
-/** Best-effort redaction for public diagnostics; never serialize arbitrary error properties. */
-export function discoveryErrorDiagnostics(
-  error: unknown,
-  environment: Readonly<Record<string, string | undefined>> = process.env,
-): DiscoveryErrorDiagnostic[] {
-  const secrets = configuredSecrets(environment);
+/** Collect up to eight allowlisted diagnostics from exception, cause and aggregate failures. */
+export function discoveryErrorDiagnostics(error: unknown): DiscoveryErrorDiagnostic[] {
   const diagnostics: DiscoveryErrorDiagnostic[] = [];
   const seen = new Set<object>();
   const pending: unknown[] = [error];
   while (pending.length > 0 && diagnostics.length < MAX_DIAGNOSTICS) {
     const current = pending.shift();
     if (current === null || typeof current !== "object") {
-      diagnostics.push({ message: redact(typeof current === "string" ? current : "Unknown error", secrets) });
+      diagnostics.push(publicDiagnostic(current));
       continue;
     }
     if (seen.has(current)) continue;
     seen.add(current);
-    const message = "message" in current && typeof current.message === "string" ? current.message : "Unknown error";
-    const code = "code" in current && typeof current.code === "string" ? redact(current.code, secrets) : undefined;
-    diagnostics.push({
-      message: redact(message, secrets),
-      ...(code && /^[A-Z0-9_]{2,64}$/.test(code) ? { code } : {}),
-    });
+    diagnostics.push(publicDiagnostic(
+      "message" in current ? current.message : undefined,
+      "code" in current ? current.code : undefined,
+    ));
     if ("cause" in current && current.cause !== undefined) pending.push(current.cause);
     if (current instanceof AggregateError) pending.push(...current.errors.slice(0, MAX_DIAGNOSTICS));
   }

@@ -70,7 +70,7 @@ describe("session discovery OpenAPI contract", () => {
               requestId: "b6b6b6b6-1234-4123-8123-123456789abc",
               reason: "DATABASE_SCHEMA_MISMATCH",
               stage: "query",
-              diagnostics: [{ message: "column [REDACTED] does not exist", code: "42703" }],
+              diagnostics: [{ message: "Database column does not exist", code: "42703" }],
             },
           },
         },

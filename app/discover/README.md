@@ -33,7 +33,7 @@ around dependency loading, query validation, querying and serialization; the
 route's `run` callback visibly invokes `DiscoverSessions.searchPublic`, and its
 serializer applies pagination. It does not authenticate or read a request body.
 Unexpected failures return a category, execution stage, request identifier and
-redacted exception/cause diagnostics. Original exceptions stay in server logs.
+safe exception/cause diagnostics. Original exceptions stay in server logs.
 The factory preserves the four diagnostic stages described below.
 All responses use `Cache-Control: no-store`. See
 [ADR-0015](../../docs/adr/0015-declarative-session-http-actions.md).
@@ -79,7 +79,7 @@ the latter also depends on replacement reservations.
 | --- | --- |
 | 200 | Results or an empty page |
 | 400 | Invalid filters, dates, time range or cursor |
-| 500 | Unexpected failure with a diagnostic reason, stage, request identifier and redacted exception/cause messages |
+| 500 | Unexpected failure with a diagnostic reason, stage, request identifier and safe exception/cause messages |
 | 503 | Missing server settings (`DISCOVERY_API_UNAVAILABLE`) |
 
 Errors use `{ error: { code, message } }`. A 500 keeps `INTERNAL_ERROR` and adds
@@ -94,21 +94,23 @@ Errors use `{ error: { code, message } }`. A 500 keeps `INTERNAL_ERROR` and adds
     "reason": "DATABASE_SCHEMA_MISMATCH",
     "stage": "query",
     "diagnostics": [
-      { "message": "column [REDACTED] does not exist", "code": "42703" }
+      { "message": "Database column does not exist", "code": "42703" }
     ]
   }
 }
 ```
 
-`diagnostics` contains one to eight entries from the exception and its causes.
-Each entry includes a redacted `message` of at most 500 characters and an optional
-driver `code` of at most 64 characters. These details allow investigation without
-Vercel log access; for example, a TLS failure can report
+`diagnostics` contains one to eight entries from the exception, nested causes and
+aggregate errors. Each entry includes a safe `message` of at most 500 characters
+and an optional allowlisted driver `code` of at most 64 characters. Recognized
+codes map to fixed safe messages; exact known messages can supply a more specific
+explanation even for failures with no code or a generic code. Every other entry becomes
+`{ "message": "Unknown error" }`, with its
+unknown code omitted. These details allow investigation without Vercel log access,
+an environment toggle or operator authentication; for example, a TLS failure can report
 `{ "message": "self-signed certificate in certificate chain", "code": "SELF_SIGNED_CERT_IN_CHAIN" }`.
-Stack traces and SQL fields are omitted from the response.
-Redaction masks configured credentials, connection URLs, quoted values and common
-credential patterns before limiting message length. It is best-effort: exception
-messages should still avoid embedding sensitive data in unrecognized formats.
+Raw exception text, stack traces and SQL fields are never returned. Unrecognized
+message and code values are not copied into the response.
 
 The generated UUID also appears in the `X-Request-Id` response header. If server
 logs are available, search for that identifier and the structured `Session

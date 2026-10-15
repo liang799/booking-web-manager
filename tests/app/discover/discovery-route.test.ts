@@ -33,7 +33,7 @@ describe("GET /api/sessions", () => {
     const cause = Object.assign(new Error("self-signed certificate in certificate chain"), {
       code: "SELF_SIGNED_CERT_IN_CHAIN",
     });
-    searchPublic.mockRejectedValue(new Error("Database connection failed", { cause }));
+    searchPublic.mockRejectedValue(new Error("Route dependencies could not be loaded", { cause }));
 
     const response = await GET(request());
     const body = await response.json();
@@ -41,12 +41,12 @@ describe("GET /api/sessions", () => {
     expect(response.status).toBe(500);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(body.error.diagnostics).toEqual([
-      { message: "Database connection failed" },
+      { message: "Route dependencies could not be loaded" },
       { code: "SELF_SIGNED_CERT_IN_CHAIN", message: "self-signed certificate in certificate chain" },
     ]);
   });
 
-  test("redacts credentials in cause messages and omits stacks, SQL and provider detail fields", async () => {
+  test("withholds credentials in cause messages and omits stacks, SQL and provider detail fields", async () => {
     const { GET, searchPublic } = await scenario();
     vi.stubEnv("DATABASE_URL", "postgresql://private-user:p%40ss-secret@db.private.test/postgres?sslmode=require");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "private-service-role-key");
@@ -58,11 +58,32 @@ describe("GET /api/sessions", () => {
     const body = await (await GET(request())).json();
 
     expect(body.error.diagnostics).toEqual([
-      { message: "Failed connecting to [REDACTED]" },
-      { code: "28P01", message: "password authentication failed for user [REDACTED]; password=[REDACTED]; token=[REDACTED]; Authorization: Bearer [REDACTED]; [REDACTED]" },
+      { message: "Unknown error" },
+      { code: "28P01", message: "Database password authentication failed" },
     ]);
     for (const secret of ["private-user", "p@ss-secret", "p%40ss-secret", "db.private.test", "unconfigured-token", "unconfigured-bearer", "private-service-role-key", "private-row-detail", "private-query", "private-stack"]) {
       expect(JSON.stringify(body)).not.toContain(secret);
+    }
+  });
+
+  test("withholds unconfigured topology and arbitrary codes from anonymous callers", async () => {
+    const { GET, searchPublic } = await scenario();
+    const cause = Object.assign(new Error("getaddrinfo ENOTFOUND db.internal.corp"), { code: "ENOTFOUND" });
+    const failure = Object.assign(new Error("user=alice host=db.internal 10.0.0.5:5432"), {
+      code: "PRIVATE_INTERNAL_ACCOUNT", cause,
+    });
+    searchPublic.mockRejectedValue(failure);
+
+    const response = await GET(new Request("http://localhost/api/sessions"));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error.diagnostics).toEqual([
+      { message: "Unknown error" },
+      { code: "ENOTFOUND", message: "Database hostname could not be resolved" },
+    ]);
+    for (const value of ["alice", "db.internal", "10.0.0.5", "5432", "PRIVATE_INTERNAL_ACCOUNT"]) {
+      expect(JSON.stringify(body)).not.toContain(value);
     }
   });
 
@@ -90,7 +111,7 @@ describe("GET /api/sessions", () => {
       requestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
       reason: "DATABASE_SCHEMA_MISMATCH",
       stage: "query",
-      diagnostics: [{ code: "42703", message: "column [REDACTED] does not exist" }],
+      diagnostics: [{ code: "42703", message: "Database column does not exist" }],
     } });
     expect(response.headers.get("x-request-id")).toBe(body.error.requestId);
     expect(console.error).toHaveBeenCalledExactlyOnceWith("Session discovery failed", {
@@ -118,7 +139,7 @@ describe("GET /api/sessions", () => {
     expect(body.error).toMatchObject({ code: "INTERNAL_ERROR", reason, stage: "query" });
     expect(body.error.message).toContain(guidance);
     expect(JSON.stringify(body)).not.toContain("private");
-    expect(body.error.diagnostics).toEqual([{ code, message: "Provider rejected [REDACTED]" }]);
+    expect(body.error.diagnostics).toEqual([{ code, message: expect.any(String) }]);
   });
 
   test("recognizes a wrapped database failure during initialization and retains the cause in logs", async () => {
@@ -283,8 +304,7 @@ describe("GET /api/sessions", () => {
         diagnostics: [
           { message: "Route dependencies could not be loaded" },
           {
-            message: kind === "DiscoveryApiUnavailableError" ? "Session discovery is not available yet" : "token=[REDACTED]",
-            ...(kind === "DomainError" ? { code: "INACTIVE_ACCOUNT" } : {}),
+            message: kind === "DiscoveryApiUnavailableError" ? "Session discovery is not available yet" : "Unknown error",
           },
         ],
       } });
@@ -315,7 +335,7 @@ describe("GET /api/sessions", () => {
       stage: stage === "setup" ? "initialization" : "query",
       diagnostics: [
         ...(stage === "setup" ? [{ message: "Route dependencies could not be loaded" }] : []),
-        { message: "token=[REDACTED]" },
+        { message: "Unknown error" },
       ],
     } });
   });
