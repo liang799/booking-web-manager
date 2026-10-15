@@ -1,9 +1,19 @@
+@font-face {
+  font-family: "Outfit Landing";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/outfit-latin-variable.woff2") format("woff2");
+}
+
 .page {
   --paper: #f6f5f1;
   --ink: #141716;
   --muted: #62665e;
   background: var(--paper);
   color: var(--ink);
+  font-family: "Outfit Landing", sans-serif;
+  font-synthesis: none;
   overflow: clip;
 }
 
@@ -17,7 +27,7 @@
 .backdrop img { height: 100%; width: 100%; object-fit: cover; object-position: center; }
 .wash { z-index: -1; background: linear-gradient(90deg, rgba(246,245,241,.25), transparent 55%); }
 .header { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 32px 5%; gap: 32px; }
-.logo { font-size: 31px; font-weight: 650; letter-spacing: -1.7px; line-height: 1.2; }
+.logo { font-size: 31px; font-weight: 500; letter-spacing: -.8px; line-height: 1.2; }
 .desktopNav { display: flex; gap: clamp(24px, 3.4vw, 58px); font-size: 13px; }
 .desktopNav a, .login { display: inline-flex; min-height: 44px; align-items: center; gap: 12px; }
 .desktopNav a, .textLink, .login { transition: color 180ms ease; }
@@ -26,8 +36,9 @@
 .mobileMenu, .mobileBreak { display: none; }
 .heroCopy { position: relative; z-index: 2; padding: clamp(62px, 10vh, 140px) 5% 0; width: fit-content; }
 .eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; line-height: 1.8; color: var(--muted); }
-.heroCopy h1 { font-size: clamp(66px, 6.4vw, 110px); font-weight: 550; letter-spacing: -.065em; line-height: .99; margin: 38px 0 25px; }
-.intro { font-size: clamp(16px, 1.55vw, 23px); line-height: 1.45; color: #676b64; letter-spacing: -.035em; }
+.heroCopy .eyebrow { font-weight: 400; letter-spacing: .54em; color: #919392; }
+.heroCopy h1 { font-size: clamp(66px, 6.4vw, 110px); font-weight: 500; letter-spacing: -.01em; line-height: .99; margin: 38px 0 25px; }
+.intro { font-size: clamp(16px, 1.55vw, 23px); line-height: 1.45; color: #676b64; letter-spacing: -.015em; }
 .primaryLink { display: inline-flex; align-items: center; justify-content: space-between; gap: 30px; background: var(--ink); color: #fff; border-radius: 3px; padding: 18px 25px; min-height: 58px; font-size: 16px; margin-top: 32px; transition: background 180ms ease, transform 180ms ease; }
 .primaryLink:hover { background: #34402d; transform: translateY(-2px); }
 .primaryLink svg { width: 22px; height: 22px; stroke-width: 1.4; transition: transform 180ms ease; }
@@ -97,7 +108,7 @@
   .backdrop img { object-position: center; }
   .wash { background: linear-gradient(0deg, rgba(246,245,241,.65) 0%, transparent 17%); }
   .header { padding: 14px 6.5%; }
-  .logo { font-size: 27px; letter-spacing: -1.4px; }
+  .logo { font-size: 27px; letter-spacing: -.7px; }
   .desktopNav, .login { display: none; }
   .mobileMenu { display: block; }
   .mobileMenu summary { list-style: none; cursor: pointer; display: flex; min-height: 44px; min-width: 44px; justify-content: flex-end; align-items: center; }
@@ -106,9 +117,9 @@
   .mobileMenu nav { position: absolute; top: 80px; left: 6.5%; right: 6.5%; padding: 16px 22px; background: #f6f5f1; border: 1px solid #d5d7ca; box-shadow: 0 12px 40px #22251c15; display: grid; }
   .mobileMenu nav a { min-height: 44px; display: flex; align-items: center; font-size: 15px; }
   .heroCopy { padding: 14px 6.5% 0; width: 100%; }
-  .heroCopy .eyebrow { font-size: 8px; line-height: 1.9; letter-spacing: .32em; max-width: 70%; }
+  .heroCopy .eyebrow { font-size: 7px; line-height: 1.8; letter-spacing: .5em; max-width: 70%; }
   .mobileBreak { display: block; }
-  .heroCopy h1 { font-size: clamp(45px, 12.6vw, 85px); line-height: 1; letter-spacing: -.065em; margin-top: 25px; margin-bottom: 19px; }
+  .heroCopy h1 { font-size: clamp(45px, 12.6vw, 85px); line-height: 1; letter-spacing: -.01em; margin-top: 25px; margin-bottom: 19px; }
   .intro { font-size: clamp(13px, 3.65vw, 23px); line-height: 1.4; max-width: 78%; }
   .heroCopy .primaryLink { min-height: 49px; font-size: 13px; margin-top: 23px; padding: 14px 18px; gap: 24px; }
   .heroCopy .primaryLink svg { width: 22px; }

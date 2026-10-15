@@ -11,6 +11,14 @@ and navigation remain HTML. The mobile menu uses native `details`/`summary`
 and the skip link moves keyboard focus past navigation. Reduced-motion users
 receive no decorative transitions.
 
+Landing typography uses a locally bundled Outfit variable font, scoped to this
+view. The geometric letter shapes, headline weight and hero eyebrow tracking
+are visually matched to the supplied references. The eyebrow is 10px with
+5.4px tracking on desktop and 7px with 3.5px tracking on mobile. Its lighter
+color applies only to the decorative hero label; functional text and the
+remaining app retain their existing contrast and typography. Font provenance
+and license: `public/fonts/README.md`.
+
 Product proof is descriptive: supported sports, date/time filters, and the
 price per player. No venue, player or location totals are invented. Sports
 links use canonical discovery query values (UC2-01). Hosting links to the
