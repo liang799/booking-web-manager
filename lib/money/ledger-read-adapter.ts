@@ -10,29 +10,9 @@ import {
 import { fromDatabaseCents } from "./cents";
 import { LedgerError, rethrowDatabaseError } from "./errors";
 import type { SqlExecutor, SqlRow } from "./sql";
+import type { WalletHistoryQuery, WalletHistoryReadPort } from "@/use-cases/wallet/contracts";
 
-/** A page of a wallet's history, newest first (REQ-7). */
-export interface WalletHistoryQuery {
-  readonly walletId: UUID;
-  /** Defaults to 50, capped at 200. */
-  readonly limit?: number;
-  /** Returns only entries strictly older than this, for paging. */
-  readonly occurredBefore?: Date;
-}
-
-/**
- * The read half of the ledger, which `LedgerReadPort` does not cover.
- *
- * Transaction history is a requirement (REQ-7) but is not on the port, because
- * the port exists for the domain layer and the domain never reads a list of
- * transactions. It belongs in `/domain` if a use case ever needs it; until
- * then it lives here and the wallet page depends on this interface.
- */
-export interface WalletHistoryReadPort {
-  listWalletTransactions(
-    query: WalletHistoryQuery,
-  ): Promise<readonly LedgerTransaction[]>;
-}
+export type { WalletHistoryQuery, WalletHistoryReadPort } from "@/use-cases/wallet/contracts";
 
 const DEFAULT_HISTORY_LIMIT = 50;
 const MAX_HISTORY_LIMIT = 200;
