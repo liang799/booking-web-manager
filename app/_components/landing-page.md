@@ -8,8 +8,18 @@ The hero uses static, separately composed desktop and mobile WebP backgrounds.
 Its responsive `picture` selects the mobile image below 701px and prioritizes
 loading the hero. Both assets together are approximately 112 KiB. Text, links
 and navigation remain HTML. The mobile menu uses native `details`/`summary`
-and the skip link moves keyboard focus past navigation. Reduced-motion users
-receive no decorative transitions.
+with a small client enhancement in `landing-navigation.tsx`. Its trigger morphs
+between hamburger and close icons, the panel and links animate in, and closing
+finishes before the disclosure is hidden. Closing links become inert immediately.
+Escape returns focus to the trigger; outside taps, focus leaving the menu,
+link selection, and the desktop breakpoint also dismiss it. The nonmodal panel
+scrolls independently on short screens and does not trap keyboard focus.
+
+Landing section links preserve their hash URLs and history while smoothly
+scrolling and moving focus to the destination. Modified clicks retain native
+browser behavior. The skip link remains immediate, and reduced-motion users
+receive instant scrolling with no decorative transitions. Without JavaScript,
+the disclosure and anchor links retain their native behavior.
 
 Landing typography uses a locally bundled Outfit variable font, scoped to this
 view. The geometric letter shapes, headline weight and hero eyebrow tracking
@@ -30,13 +40,17 @@ price per player. No venue, player or location totals are invented. Sports
 links use canonical discovery query values (UC2-01). Hosting links to the
 existing protected creation flow (UC2-02); venues are booked separately.
 
-The landing Playwright project covers responsive navigation, correct image
-selection, short desktop layouts, keyboard navigation and JavaScript-disabled
-use. The public resources project continues to check anonymous API docs and
+The landing Playwright projects run in Chromium and WebKit and cover responsive
+navigation, correct image
+selection, short desktop layouts, menu dismissal and focus, rapid toggling,
+short mobile viewports, smooth scrolling, reduced motion and JavaScript-disabled
+use, including Safari pointer focus during link activation. The public resources
+project continues to check anonymous API docs and
 Storybook access. `Landing/Page` provides desktop, mobile and dark-theme
 stories; the public art direction intentionally retains its light palette.
 
 Asset provenance and editing prompts: `public/images/landing-court.md`.
 
 Production-rendered review captures: [desktop](../../docs/assets/landing-page-desktop.webp)
-and [mobile](../../docs/assets/landing-page-mobile.webp).
+and [mobile](../../docs/assets/landing-page-mobile.webp). The enhanced mobile
+navigation has its own [open-menu capture](../../docs/assets/landing-mobile-menu.webp).

@@ -29,6 +29,11 @@ export default defineConfig({
       testMatch: "**/landing-page.spec.ts",
       use: { trace: "retain-on-failure" },
     },
+    {
+      name: "landing-page-webkit",
+      testMatch: "**/landing-page.spec.ts",
+      use: { browserName: "webkit", trace: "retain-on-failure" },
+    },
   ],
   use: {
     baseURL: "http://127.0.0.1:3100",

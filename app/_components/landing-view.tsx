@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowRight, ArrowUpRight, Menu } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { LandingMobileMenu, LandingPage } from "./landing-navigation";
 import styles from "./landing-view.module.css";
 
 const sports = [
@@ -12,9 +13,9 @@ const sports = [
 /** Public and synchronous: content and navigation never depend on authentication or services. */
 export function LandingView() {
   return (
-    <main className={styles.page}>
+    <LandingPage>
       <a className={styles.skipLink} href="#landing-content">Skip to content</a>
-      <section className={styles.hero} aria-labelledby="landing-title" id="play">
+      <section className={styles.hero} aria-labelledby="landing-title" id="play" tabIndex={-1}>
         <picture className={styles.backdrop} aria-hidden="true">
           <source media="(max-width: 700px)" srcSet="/images/landing-court-mobile.webp" />
           {/* Art direction uses a different composition on mobile, not a crop of the desktop court. */}
@@ -41,16 +42,7 @@ export function LandingView() {
             <a href="#how-it-works">How it works</a>
           </nav>
           <Link href="/login" prefetch={false} className={styles.login}>Log in<ArrowUpRight size={15} aria-hidden="true" /></Link>
-          <details className={styles.mobileMenu}>
-            <summary aria-label="Open navigation menu"><Menu size={29} strokeWidth={1.3} aria-hidden="true" /></summary>
-            <nav aria-label="Mobile navigation">
-              <Link href="/discover">Discover sessions</Link>
-              <a href="#how-it-works">How it works</a>
-              <Link href="/sessions/create" prefetch={false}>Host a session</Link>
-              <Link href="/register" prefetch={false}>Get started</Link>
-              <Link href="/login" prefetch={false}>Sign in</Link>
-            </nav>
-          </details>
+          <LandingMobileMenu />
         </header>
 
         <div className={styles.heroCopy} id="landing-content" tabIndex={-1}>
@@ -79,7 +71,7 @@ export function LandingView() {
         <a href="#sports" className={styles.scrollCue}><span>Play more.<br />Live brighter.</span><ArrowDown size={18} aria-hidden="true" /></a>
       </section>
 
-      <section className={styles.sportsSection} id="sports" aria-labelledby="sports-title">
+      <section className={styles.sportsSection} id="sports" aria-labelledby="sports-title" tabIndex={-1}>
         <div className={styles.sectionHeading}>
           <div><p className={styles.eyebrow}>01 / Find your people</p><h2 id="sports-title">A game for your kind of day.</h2></div>
           <Link href="/discover" className={styles.textLink}>Explore all sessions<ArrowUpRight size={20} aria-hidden="true" /></Link>
@@ -96,7 +88,7 @@ export function LandingView() {
         <div className={styles.moreSports}><span>More your thing?</span>{["Football", "Futsal", "Volleyball"].map((sport) => <Link key={sport} href={`/discover?sport=${sport}`}>{sport}<ArrowUpRight size={14} aria-hidden="true" /></Link>)}</div>
       </section>
 
-      <section className={styles.howSection} id="how-it-works" aria-labelledby="how-title">
+      <section className={styles.howSection} id="how-it-works" aria-labelledby="how-title" tabIndex={-1}>
         <div><p className={styles.eyebrow}>02 / Less planning. More playing.</p><h2 id="how-title">Good company.<br />A shared court.<br /><span>Your next game.</span></h2><Link href="/register" prefetch={false} className={styles.textLink}>Create account<ArrowRight size={20} aria-hidden="true" /></Link></div>
         <ol className={styles.steps}>
           <li><span>01</span><div><h3>See what’s on.</h3><p>Explore public sports sessions without signing in. Start with a sport you love or try something different.</p></div></li>
@@ -105,7 +97,7 @@ export function LandingView() {
         </ol>
       </section>
 
-      <section className={styles.hostSection} id="host" aria-labelledby="host-title">
+      <section className={styles.hostSection} id="host" aria-labelledby="host-title" tabIndex={-1}>
         <div><p className={styles.eyebrow}>03 / Bring people together</p><h2 id="host-title">Got a court?<br />Make it a game.</h2><p>Already booked a venue? Create a session, set your places and price, and give people a reason to play.</p><Link href="/sessions/create" prefetch={false} className={styles.primaryLink}>Host a session<ArrowUpRight aria-hidden="true" /></Link></div>
         <div className={styles.courtMark} aria-hidden="true"><span /><span /><span /><span /></div>
       </section>
@@ -115,6 +107,6 @@ export function LandingView() {
         <nav aria-label="Project resources"><span>Explore the project</span><Link href="/api-docs" prefetch={false}>API docs<ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/api/openapi" prefetch={false}>OpenAPI<ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/storybook" prefetch={false}>Storybook<ArrowUpRight size={14} aria-hidden="true" /></Link></nav>
         <p className={styles.credit}>Made for the love of the game.<br />NTU SC2006 · Group 3</p>
       </footer>
-    </main>
+    </LandingPage>
   );
 }
