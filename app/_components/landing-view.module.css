@@ -220,7 +220,7 @@
   .menuUtilities svg:last-child { width: 20px; height: 20px; color: #747c67; stroke-width: 1.4; transition: transform 180ms ease; }
   .menuUtilities a:active { color: #596443; transform: translateX(3px); }
   .menuFooter { position: relative; isolation: isolate; display: flex; flex: 1 0 120px; align-items: flex-end; padding: 32px 7.5%; overflow: hidden; }
-  .menuFooter p { color: #9a9e93; font-size: 8px; font-weight: 500; line-height: 2.2; letter-spacing: .35em; text-transform: uppercase; }
+  .menuFooter p { color: var(--muted); font-size: 8px; font-weight: 500; line-height: 2.2; letter-spacing: .35em; text-transform: uppercase; }
   .menuFooter p::after { content: ""; display: block; width: 12px; margin-top: 10px; border-top: 1px solid #bfc2b7; }
   .menuCourt { position: absolute; z-index: -1; right: 0; bottom: 0; width: 44%; height: auto; fill: none; stroke: #c8cbbf; stroke-width: 1; pointer-events: none; }
   .mobileMenu[open] .menuLinks a { animation: menu-link-reveal 360ms cubic-bezier(.22, 1, .36, 1) backwards; }
