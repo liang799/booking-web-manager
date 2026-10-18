@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import styles from "./landing-view.module.css";
@@ -119,7 +119,7 @@ export function LandingMobileMenu() {
           setState((current) => current === "open" ? "closing" : "open");
         }}
       >
-        <span className={styles.menuIcon} aria-hidden="true"><span /><span /></span>
+        <span className={styles.menuIcon} aria-hidden="true"><span /><span /><span /></span>
       </summary>
       <nav
         id="landing-mobile-navigation"
@@ -144,9 +144,16 @@ export function LandingMobileMenu() {
           <a href="#how-it-works"><span>How it works</span><ArrowRight aria-hidden="true" /></a>
           <Link href="/sessions/create" prefetch={false}><span>Host a session</span><ArrowUpRight aria-hidden="true" /></Link>
         </div>
-        <div className={styles.menuActions}>
-          <Link href="/register" prefetch={false} className={styles.menuStart}>Get started<ArrowUpRight size={18} aria-hidden="true" /></Link>
-          <Link href="/login" prefetch={false} className={styles.menuSignIn}>Sign in<ArrowUpRight size={16} aria-hidden="true" /></Link>
+        <div className={styles.menuUtilities}>
+          <Link href="/login" prefetch={false}><UserRound aria-hidden="true" /><span>Sign in</span><ArrowRight aria-hidden="true" /></Link>
+          <Link href="/profile" prefetch={false}><Settings aria-hidden="true" /><span>Settings</span><ArrowRight aria-hidden="true" /></Link>
+        </div>
+        <div className={styles.menuFooter}>
+          <p>Same sport<br />Different people —</p>
+          <svg className={styles.menuCourt} viewBox="0 0 240 200" aria-hidden="true" focusable="false">
+            <path d="M 0 200 A 240 200 0 0 1 240 0" />
+            <path d="M 150 200 A 90 75 0 0 1 240 125" />
+          </svg>
         </div>
       </nav>
     </details>

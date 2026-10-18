@@ -124,8 +124,8 @@ test("the mobile disclosure supports keyboard navigation and all dismissal paths
     ["Find your sport", "#sports"],
     ["How it works", "#how-it-works"],
     ["Host a session", "/sessions/create"],
-    ["Get started", "/register"],
     ["Sign in", "/login"],
+    ["Settings", "/profile"],
   ] as const) {
     await pressTab(page);
     const link = navigation.getByRole("link", { name, exact: true });
@@ -249,9 +249,9 @@ test("mobile menu actions remain reachable on narrow and short screens", async (
     await page.goto("/");
     await page.getByLabel("Open navigation menu", { exact: true }).click();
     const navigation = page.getByRole("navigation", { name: "Mobile navigation", exact: true });
-    const signIn = navigation.getByRole("link", { name: "Sign in", exact: true });
-    await signIn.scrollIntoViewIfNeeded();
-    await expect(signIn).toBeInViewport();
+    const settings = navigation.getByRole("link", { name: "Settings", exact: true });
+    await settings.scrollIntoViewIfNeeded();
+    await expect(settings).toBeInViewport();
     const bounds = await navigation.boundingBox();
     expect(bounds).not.toBeNull();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);

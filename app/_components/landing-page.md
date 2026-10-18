@@ -8,10 +8,11 @@ The hero uses static, separately composed desktop and mobile WebP backgrounds.
 Its responsive `picture` selects the mobile image below 701px and prioritizes
 loading the hero. Both assets together are approximately 112 KiB. Text, links
 and navigation remain HTML. The mobile menu uses native `details`/`summary`
-with a small client enhancement in `landing-navigation.tsx`. Its two thick
-hamburger strokes converge before rotating into a thick cross, with the sequence
-reversed on close. The panel and links animate in, and closing
-finishes before the disclosure is hidden. Closing links become inert immediately.
+with a small client enhancement in `landing-navigation.tsx`. Its three thin
+hamburger strokes converge, the middle stroke fades, and the outer strokes
+rotate into a thin cross, with the sequence reversed on close. The panel and
+links animate in, and closing finishes before the disclosure is hidden. Closing
+links become inert immediately.
 Escape returns focus to the trigger; outside taps, focus leaving the menu,
 link selection, and the desktop breakpoint also dismiss it. The nonmodal panel
 scrolls independently on short screens and does not trap keyboard focus.
@@ -37,11 +38,13 @@ page's dark ink even when the app theme is dark, keeping contrast on its light
 background. Header and footer use the shared 20px wordmark at every viewport,
 matching the discovery header and keeping the hero headline and primary action
 dominant. The home links retain a 44px hit target and the existing header spacing.
-The mobile menu uses a transparent 44px hit target with two 24px-wide, 3px-thick
-strokes. Its warm-paper surface runs edge to edge below the shared header, with
-generous ruled navigation rows and full-width stacked actions. Dark ink, muted
-olive accents and the actions' 3px corners retain the landing theme without a
-separate trigger box or floating panel border and shadow.
+The mobile menu uses a subtly outlined 44px warm square with three 22px-wide,
+1.5px-thick strokes. Its warm-paper surface fills the viewport below the shared
+header, with generous ruled navigation rows and separate Sign in and Settings
+utility links. Settings uses the app's existing `/profile` destination; both
+utility links disable prefetching. A muted footer caption and decorative court
+arcs finish the surface. Dark ink and muted olive accents retain the landing
+theme without a floating panel border or shadow.
 Use `<BookingLogo tone="inherit" />` on this fixed light surface. The shared
 module owns wordmark styling; other pages use its default navigation treatment
 or explicitly select `size="display"` for a main brand heading.
