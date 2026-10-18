@@ -11,6 +11,7 @@ vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 const origin = "https://booking-web-manager.vercel.app";
 const exchangeCodeForSession = vi.fn();
 const getUser = vi.fn();
+const invitation = "/sessions/11111111-1111-4111-8111-111111111111/join?token=room-token";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -20,6 +21,14 @@ beforeEach(() => {
 });
 
 describe("UC1-01 email confirmation return URL", () => {
+  test("encodes a same-site invitation as the callback continuation", async () => {
+    const callback = new URL((await emailConfirmationRedirectTo(invitation))!);
+    expect(callback.pathname).toBe("/auth/callback");
+    expect(callback.searchParams.get("next")).toBe(invitation);
+  });
+  test.each(["https://elsewhere.example", "//elsewhere.example", "/\\elsewhere.example", "/login", "/auth/callback?code=bad"])("drops unsafe continuation %s", async (next) => {
+    expect(await emailConfirmationRedirectTo(next)).toBe(`${origin}/auth/callback`);
+  });
   test.each([origin, "http://localhost:3000", "http://127.0.0.1:3000"])("returns to the registering site %s", async (site) => {
     vi.mocked(headers).mockResolvedValue(new Headers({ origin: site }) as never);
     expect(await emailConfirmationRedirectTo()).toBe(`${site}/auth/callback`);
@@ -32,6 +41,21 @@ describe("UC1-01 email confirmation return URL", () => {
 });
 
 describe("UC1-01 email confirmation callback", () => {
+  test.each([false, true])("retains an invitation during failed confirmation (signed in: %s)", async (signedIn) => {
+    if (signedIn) getUser.mockResolvedValue({ data: { user: { id: "viewer", email: "viewer@example.com" } }, error: null });
+    exchangeCodeForSession.mockResolvedValue({ data: { session: null }, error: { code: "bad_code_verifier" } });
+    const callback = new URL("/auth/callback", origin);
+    callback.searchParams.set("next", invitation);
+    callback.searchParams.set("code", "expired-code");
+    const response = await GET(new NextRequest(callback));
+    const destination = new URL(response.headers.get("location")!, origin);
+    expect(destination.pathname).toBe(signedIn ? "/profile/email" : "/login");
+    expect(destination.searchParams.get("verification")).toBe("failed");
+    expect(destination.searchParams.get("next")).toBe(invitation);
+    expect(destination.searchParams.has("code")).toBe(false);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+  });
   test("exchanges the confirmation code for a cookie session and returns home without the code", async () => {
     exchangeCodeForSession.mockResolvedValue({ data: { session: {}, user: { id: "user" } }, error: null });
     getUser.mockResolvedValue({ data: { user: { id: "user", email: "viewer@example.com", email_confirmed_at: "2026-10-03T00:00:00Z" } }, error: null });

@@ -10,11 +10,13 @@ public discovery feed. See [`app/home/README.md`](../home/README.md).
 `/discover` is the dedicated public-session search page. It lists upcoming, public,
 open sessions, including full sessions, using the stored region. Cards show venue,
 sport, region, Singapore timing, total capacity and the participant share in SGD.
-Cards have no join/detail action.
+Cards use the shared join confirmation. Signed-out visitors sign in before
+joining; full sessions can accept waitlist requests without holding funds.
 
-OneMap venue search, geocoding and postal-code-to-region derivation remain separate
-work. The OneMap-specific acceptance test remains TODO; stored-region filtering
-does not establish OneMap provenance.
+The creation wizard supports OneMap venue search and coordinate-based region
+derivation. Discovery filters the persisted region; its tests do not establish
+live OneMap availability. Private sessions are accessible through valid
+[invitation links](../sessions/README.md#private-session-invitations), never this feed.
 
 ## Query and HTTP contract
 
@@ -171,7 +173,8 @@ active destination shows a visible label; all four retain accessible names.
 Groups are part of the Sessions area and remain reachable through the account
 sheet, alongside settings and logout. Sessions now opens the UC2-03a hosted-session
 management page. Wallet retains its existing route destination.
-Joining, session details and the create-session page remain separate work.
+The creation wizard is available at `/sessions/create`. Join confirmation reuses
+the commitment endpoint; private-session details require a valid invitation.
 
 Feature-local Storybook stories render the production synchronous view with
 deterministic fixtures, without Supabase or PostgreSQL. They cover results,

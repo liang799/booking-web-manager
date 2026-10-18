@@ -32,6 +32,15 @@ test("resends confirmation to the signed-in account instead of the submitted tar
   expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
 });
 
+test("signed-in resend retains the invitation without trusting a submitted email target", async () => {
+  const next = "/sessions/11111111-1111-4111-8111-111111111111/join?token=room-token";
+  const result = await resendOwnEmailConfirmation({ status: "idle" }, formDataOf({ email: "other@example.com", next }));
+  expect(result.status).toBe("sent");
+  const callback = new URL("https://booking-web-manager.vercel.app/auth/callback");
+  callback.searchParams.set("next", next);
+  expect(resend).toHaveBeenCalledWith({ type: "signup", email: "viewer@example.com", options: { emailRedirectTo: callback.href } });
+});
+
 test("resends a pending email addition without requiring a current email address", async () => {
   getUser.mockResolvedValue({ data: { user: { id: "viewer", email: "", new_email: "pending@example.com" } }, error: null });
   expect((await resendOwnEmailConfirmation({ status: "idle" }, formDataOf({ email: "other@example.com" }))).status).toBe("sent");

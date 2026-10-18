@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
-import { AUTH_CALLBACK_PATH } from "./redirect-path";
+import { AUTH_CALLBACK_PATH, pathWithNext } from "./redirect-path";
 
 /** Server Actions validate Origin against Host; use that origin for this browser's PKCE cookie. */
-export async function emailConfirmationRedirectTo(): Promise<string | null> {
+export async function emailConfirmationRedirectTo(next?: unknown): Promise<string | null> {
   const origin = (await headers()).get("origin");
   if (origin === null) return null;
 
@@ -12,7 +12,7 @@ export async function emailConfirmationRedirectTo(): Promise<string | null> {
     if (url.origin !== origin || (url.protocol !== "https:" && !(local && url.protocol === "http:"))) {
       return null;
     }
-    return new URL(AUTH_CALLBACK_PATH, url).href;
+    return new URL(pathWithNext(AUTH_CALLBACK_PATH, next), url).href;
   } catch {
     return null;
   }

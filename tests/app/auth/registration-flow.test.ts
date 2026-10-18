@@ -15,6 +15,22 @@ vi.mock("next/headers", () => ({
 beforeEach(() => vi.clearAllMocks());
 
 describe("UC1-01/UC1-02 pending email verification", () => {
+  test.each([
+    ["/sessions/11111111-1111-4111-8111-111111111111/join?token=room-token", "/sessions/11111111-1111-4111-8111-111111111111/join?token=room-token"],
+    ["https://elsewhere.example/steal", "/"], ["//elsewhere.example", "/"], ["/\\elsewhere.example", "/"],
+    ["/login?next=/profile", "/"], ["/auth/callback?code=untrusted", "/"],
+  ])("immediate registration returns safely from %s", async (next, destination) => {
+    const supabase = fakeSupabase({ signUp: { data: { user: { id: "new-user", identities: [{}] }, session: {} }, error: null } });
+    vi.mocked(createClient).mockResolvedValue(supabase as never);
+    await expect(registerUser({ status: "idle" }, formDataOf({
+      displayName: "Marcus", email: "marcus@example.com", password: "password123", region: "West", sport: "Tennis", next,
+    }))).rejects.toThrow(`redirect:${destination}`);
+    const redirectTo = new URL("https://booking-web-manager.vercel.app/auth/callback");
+    if (destination !== "/") redirectTo.searchParams.set("next", destination);
+    expect(supabase.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
+      options: expect.objectContaining({ emailRedirectTo: redirectTo.href }),
+    }));
+  });
   test("keeps registration signed out and retains the email for a replacement confirmation link", async () => {
     const supabase = fakeSupabase({
       signUp: { data: { user: { id: "pending-user", identities: [{}] }, session: null }, error: null },

@@ -20,7 +20,7 @@ export async function resendConfirmation(
   if (!email.success) return { status: "error", message: "Enter a valid email address." };
 
   try {
-    const emailRedirectTo = await emailConfirmationRedirectTo();
+    const emailRedirectTo = await emailConfirmationRedirectTo(formData.get("next"));
     if (emailRedirectTo === null) {
       return { status: "error", message: "We couldn't verify this page's address. Reload the page and try again." };
     }

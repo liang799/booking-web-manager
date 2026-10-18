@@ -7,13 +7,15 @@ import { InfoNote } from "@/components/ui/info-note";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addAccountEmail, type EmailVerificationState, refreshEmailVerification, resendOwnEmailConfirmation } from "./actions";
+import { safeRedirectPath } from "@/app/(auth)/redirect-path";
 
 const initial: EmailVerificationState = { status: "idle" };
 
-export function EmailVerificationForm({ email, pendingEmail, emailVerified }: {
+export function EmailVerificationForm({ email, pendingEmail, emailVerified, next }: {
   readonly email: string | null;
   readonly pendingEmail: string | null;
   readonly emailVerified: boolean;
+  readonly next?: string;
 }) {
   const [added, add, adding] = useActionState(addAccountEmail, initial);
   const [sent, resend, sending] = useActionState(resendOwnEmailConfirmation, initial);
@@ -32,6 +34,7 @@ export function EmailVerificationForm({ email, pendingEmail, emailVerified }: {
       </InfoNote>
       {email === null && (
         <form action={add} className="space-y-3">
+          <input type="hidden" name="next" value={safeRedirectPath(next)} />
           <Label htmlFor="account-email">{pendingEmail === null ? "Add an email address" : "Email address to confirm"}</Label>
           <Input id="account-email" name="email" type="email" autoComplete="email" defaultValue={pendingEmail ?? ""} required aria-describedby={added.status === "error" ? "add-email-error" : undefined} />
           <Button type="submit" className="min-h-11" disabled={busy}>{adding ? "Sending confirmation…" : pendingEmail === null ? "Send confirmation link" : "Update email"}</Button>
@@ -40,6 +43,7 @@ export function EmailVerificationForm({ email, pendingEmail, emailVerified }: {
       )}
       {(email ?? pendingEmail) !== null && (
         <form action={resend} className="space-y-3">
+          <input type="hidden" name="next" value={safeRedirectPath(next)} />
           <Button type="submit" variant="outline" className="min-h-11" disabled={busy}>{sending ? "Sending confirmation…" : "Resend confirmation email"}</Button>
           <VerificationResult state={sent} />
         </form>

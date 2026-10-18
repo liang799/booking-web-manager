@@ -7,13 +7,15 @@ import { InfoNote } from "@/components/ui/info-note";
 import { PageHeader } from "@/components/ui/page-header";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { EmailVerificationForm } from "./email-verification-form";
+import { HOME_PATH, pathWithNext, safeRedirectPath } from "@/app/(auth)/redirect-path";
 
 export const dynamic = "force-dynamic";
 
-export default async function EmailVerificationPage({ searchParams }: { readonly searchParams: Promise<{ readonly verification?: string }> }) {
+export default async function EmailVerificationPage({ searchParams }: { readonly searchParams: Promise<{ readonly verification?: string; readonly next?: string | string[] }> }) {
+  const { verification, next } = await searchParams;
+  const destination = safeRedirectPath(next);
   const user = await getCurrentUser();
-  if (user === null || user.accountStatus !== "ACTIVE") redirect("/login?next=%2Fprofile%2Femail");
-  const { verification } = await searchParams;
+  if (user === null || user.accountStatus !== "ACTIVE") redirect(pathWithNext("/login", pathWithNext("/profile/email", destination)));
   const create = getCreateSessionAction(user);
   return (
     <>
@@ -28,8 +30,10 @@ export default async function EmailVerificationPage({ searchParams }: { readonly
             email={user.email}
             pendingEmail={user.pendingEmail}
             emailVerified={user.emailVerified}
+            next={destination}
           />
           <div className="flex flex-wrap gap-3">
+            {destination !== HOME_PATH && <Button asChild className="min-h-11"><Link href={destination}>Continue where you left off</Link></Button>}
             <Button asChild variant="outline" className="min-h-11"><Link href="/discover">Browse sessions</Link></Button>
             {create !== undefined && <Button asChild className="min-h-11"><Link href={create.href}>Create a session</Link></Button>}
           </div>
