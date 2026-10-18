@@ -36,6 +36,9 @@ page's dark ink even when the app theme is dark, keeping contrast on its light
 background. Header and footer use the shared 20px wordmark at every viewport,
 matching the discovery header and keeping the hero headline and primary action
 dominant. The home links retain a 44px hit target and the existing header spacing.
+The mobile menu pairs an 18px icon with the wordmark inside a 44px hit target.
+Its trigger, panel and actions share the primary link's 3px corners, warm paper,
+dark ink and muted olive accents, keeping the navigation in the landing theme.
 Use `<BookingLogo tone="inherit" />` on this fixed light surface. The shared
 module owns wordmark styling; other pages use its default navigation treatment
 or explicitly select `size="display"` for a main brand heading.
@@ -81,4 +84,5 @@ Asset provenance and editing prompts: `public/images/landing-court.md`.
 
 Production-rendered review captures: [desktop](../../docs/assets/landing-page-desktop.webp)
 and [mobile](../../docs/assets/landing-page-mobile.webp). The enhanced mobile
-navigation has its own [open-menu capture](../../docs/assets/landing-mobile-menu.webp).
+navigation has [closed](../../docs/assets/landing-mobile-menu-closed.webp) and
+[open-menu](../../docs/assets/landing-mobile-menu.webp) captures with the shared wordmark.
