@@ -30,6 +30,20 @@ price per player. No venue, player or location totals are invented. Sports
 links use canonical discovery query values (UC2-01). Hosting links to the
 existing protected creation flow (UC2-02); venues are booked separately.
 
+The hosting section progressively enhances its server-rendered content with
+`LandingHostSection`. Court lines draw on first entry, followed by a floating
+SVG court and a four-shot ball rally with shadows, trails and contact ripples.
+The hosting link has a directional hover/focus treatment. No animation library
+or additional image assets are needed. Motion pauses outside the viewport or
+in a hidden tab; the visible pause control retains the visitor's choice when
+they scroll away and return. Reduced-motion preferences (including live
+changes) show a static court, and JavaScript-disabled visits retain all copy,
+the hosting link and the static illustration without an inert pause control.
+
+Hosting motion review captures: [rally animation](../../docs/assets/host-court-motion.gif),
+[desktop](../../docs/assets/host-court-desktop.png) and
+[mobile](../../docs/assets/host-court-mobile.png).
+
 The landing Playwright project covers responsive navigation, correct image
 selection, short desktop layouts, keyboard navigation and JavaScript-disabled
 use. The public resources project continues to check anonymous API docs and
