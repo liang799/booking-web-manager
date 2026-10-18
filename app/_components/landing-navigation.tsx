@@ -31,6 +31,10 @@ export function LandingPage({ children }: { children: ReactNode }) {
 
 type MenuState = "closed" | "open" | "closing";
 
+function focusDesktopNavigation() {
+  document.querySelector<HTMLAnchorElement>('nav[aria-label="Main navigation"] a')?.focus({ preventScroll: true });
+}
+
 export function LandingMobileMenu() {
   const [state, setState] = useState<MenuState>("closed");
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -88,7 +92,7 @@ export function LandingMobileMenu() {
     function dismissOnDesktop() {
       if (!desktop.matches) return;
       if (detailsRef.current?.contains(document.activeElement)) {
-        document.querySelector<HTMLAnchorElement>('nav[aria-label="Main navigation"] a')?.focus({ preventScroll: true });
+        focusDesktopNavigation();
       }
       setState("closed");
     }
@@ -104,6 +108,10 @@ export function LandingMobileMenu() {
       data-state={state}
       onPointerDownCapture={() => { pointerInside.current = expanded; }}
       onBlur={(event) => {
+        // CSS can hide the focused item before the breakpoint listener runs.
+        if (event.relatedTarget === null && window.matchMedia("(min-width: 701px)").matches) {
+          focusDesktopNavigation();
+        }
         // Safari may focus the containing section instead of the tapped link.
         // Let that pointer interaction finish; keyboard focus leaving still dismisses.
         if (!pointerInside.current && !event.currentTarget.contains(event.relatedTarget)) close();

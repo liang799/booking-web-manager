@@ -174,6 +174,18 @@ test("rapid mobile toggles recover and resizing to desktop closes the disclosure
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(trigger).toHaveAccessibleName("Open navigation menu");
   await expect(panel).toBeHidden();
+
+  // A closed trigger also needs a visible focus destination at the breakpoint.
+  await trigger.focus();
+  await page.setViewportSize({ width: 900, height: 844 });
+  await expect(page.getByRole("navigation", { name: "Main navigation", exact: true }).getByRole("link", { name: "Play", exact: true })).toBeFocused();
+
+  // Resizing must preserve focus when it already belongs to the page content.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const primaryAction = page.getByRole("link", { name: "Browse sessions", exact: true });
+  await primaryAction.focus();
+  await page.setViewportSize({ width: 900, height: 844 });
+  await expect(primaryAction).toBeFocused();
 });
 
 test("modifier-click opens a section in another tab without dismissing the original menu", async ({ page, context }) => {
