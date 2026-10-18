@@ -136,7 +136,10 @@ test("an empty Home offers weather and search on both layouts, and account logou
     await page.getByRole("button", { name: "Open account menu", exact: true }).click();
     await page.getByRole("dialog", { name: "Your account", exact: true }).getByRole("button", { name: "Log out", exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
+    await page.getByLabel("Open navigation menu", { exact: true }).click();
+    const signIn = page.getByRole("navigation", { name: "Mobile navigation", exact: true }).getByRole("link", { name: "Sign in", exact: true });
+    await expect(signIn).toBeVisible();
+    await expect(signIn).toHaveAttribute("href", "/login");
     await expect(page.getByRole("heading", { name: "Upcoming Bookings", exact: true })).toHaveCount(0);
     await page.goto("/discover");
     await expect(page).toHaveURL(/\/discover$/);
