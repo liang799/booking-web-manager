@@ -66,7 +66,7 @@ export const DesktopHome: Story = {
   args: {
     children: (
       <div className="p-8 lg:p-12">
-        <h1><BookingLogo className="text-5xl" /></h1>
+        <h1><BookingLogo size="display" /></h1>
         <p className="mt-3 text-muted-foreground">Find games, meet players, and make time for play.</p>
       </div>
     ),
