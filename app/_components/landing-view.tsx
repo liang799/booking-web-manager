@@ -35,7 +35,7 @@ export function LandingView() {
           </g>
         </svg>
         <header className={styles.header}>
-          <Link href="/" className={styles.logo} aria-label="Booking home"><BookingLogo className="text-inherit dark:text-inherit" /></Link>
+          <Link href="/" className={styles.logo} aria-label="Booking home"><BookingLogo tone="inherit" /></Link>
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <a href="#play">Play</a>
             <a href="#sports">Discover</a>
@@ -115,7 +115,7 @@ export function LandingView() {
       </LandingHostSection>
 
       <footer className={styles.footer}>
-        <div><Link href="/" className={styles.logo}><BookingLogo className="text-inherit dark:text-inherit" /></Link><p>A better game, together.</p></div>
+        <div><Link href="/" className={styles.logo}><BookingLogo tone="inherit" /></Link><p>A better game, together.</p></div>
         <nav aria-label="Project resources"><span>Explore the project</span><Link href="/api-docs" prefetch={false}>API docs<ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/api/openapi" prefetch={false}>OpenAPI<ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/storybook" prefetch={false}>Storybook<ArrowUpRight size={14} aria-hidden="true" /></Link></nav>
         <p className={styles.credit}>Made for the love of the game.<br />NTU SC2006 · Group 3</p>
       </footer>

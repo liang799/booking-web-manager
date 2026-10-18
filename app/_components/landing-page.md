@@ -26,6 +26,9 @@ page's dark ink even when the app theme is dark, keeping contrast on its light
 background. Header and footer use the shared 20px wordmark at every viewport,
 matching the discovery header and keeping the hero headline and primary action
 dominant. The home links retain a 44px hit target and the existing header spacing.
+Use `<BookingLogo tone="inherit" />` on this fixed light surface. The shared
+module owns wordmark styling; other pages use its default navigation treatment
+or explicitly select `size="display"` for a main brand heading.
 
 Wordmark review captures: [desktop](../../docs/assets/landing-wordmark-desktop.png)
 and [mobile](../../docs/assets/landing-wordmark-mobile.png).

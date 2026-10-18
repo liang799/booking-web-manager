@@ -85,11 +85,6 @@
   text-shadow: 0 1px 8px rgb(0 0 0 / 50%);
 }
 
-.sceneFooter p:first-child {
-  font-weight: 600;
-  font-size: 11px;
-}
-
 .header {
   display: flex;
   align-items: center;
@@ -111,11 +106,6 @@
 .terms a:focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 5px;
-}
-
-.logo {
-  font-size: 34px;
-  letter-spacing: -0.045em;
 }
 
 .headerSwitch {
@@ -397,10 +387,6 @@
   .header {
     min-height: 104px;
     padding: 52px 32px 4px;
-  }
-
-  .logo {
-    font-size: 22px;
   }
 
   .main {

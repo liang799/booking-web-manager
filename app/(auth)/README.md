@@ -13,6 +13,12 @@ mobile use separate decorative images reconstructed from the supplied design
 references; the [asset notes](../../public/images/auth-court.md) record their
 provenance. Styles are scoped to these pages and reuse the existing controls.
 
+Headers use the shared `BookingLogo` navigation size (20px); brand typography is
+owned by that module rather than auth-specific overrides. The small wordmark on
+the court image also reuses it with inherited white text. Review captures:
+[desktop](../../docs/assets/shared-logo-auth-desktop.jpg) and
+[mobile](../../docs/assets/shared-logo-auth-mobile.jpg).
+
 Registration starts with region, email and password. **Sign Up** validates those
 details using the existing registration schema and opens the required name and
 preferred-sport step. **Create account** submits all five fields to the unchanged
