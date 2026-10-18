@@ -75,8 +75,9 @@ test("the hero loads the intended mobile and desktop artwork", async ({ page }) 
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("the landing copy and primary discovery link remain usable", async ({ page }) => {
-    for (const width of [390, 1440]) {
+  // Each viewport starts in a fresh context, rather than resizing Discover immediately before leaving it.
+  for (const width of [390, 1440]) {
+    test(`the landing copy and primary discovery link remain usable at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/");
 
@@ -90,6 +91,6 @@ test.describe("without JavaScript", () => {
       await page.getByRole("link", { name: "Browse sessions", exact: true }).click();
       await expect(page).toHaveURL(/\/discover$/);
       await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
-    }
-  });
+    });
+  }
 });
