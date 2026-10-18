@@ -30,7 +30,7 @@
 .wallCaption text { fill: #4e514a; font-size: 10px; font-weight: 500; letter-spacing: .6em; text-transform: uppercase; }
 .wallCaption path { fill: none; stroke: #72756a; stroke-width: .6; }
 .header { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 32px 5%; gap: 32px; }
-.logo { font-size: 31px; line-height: 1.2; }
+.logo { display: inline-flex; align-items: center; min-height: 44px; }
 .desktopNav { display: flex; gap: clamp(24px, 3.4vw, 58px); font-size: 13px; }
 .desktopNav a, .login { display: inline-flex; min-height: 44px; align-items: center; gap: 12px; }
 .desktopNav a, .textLink, .login { transition: color 180ms ease; }
@@ -170,7 +170,6 @@
   12%, 100% { opacity: 0; transform: scale(2.8); }
 }
 .footer { display: flex; gap: 36px; justify-content: space-between; padding-top: 48px; padding-bottom: 48px; }
-.footer .logo { font-size: 27px; }
 .footer p { font-size: 11px; color: var(--muted); line-height: 1.9; margin-top: 12px; }
 .footer nav { display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center; gap: 4px 24px; max-width: 370px; }
 .footer nav > span { width: 100%; color: var(--muted); text-transform: uppercase; font-size: 8px; letter-spacing: .2em; }
@@ -187,7 +186,6 @@
   .backdrop img { object-position: center; }
   .wash { background: linear-gradient(0deg, rgba(246,245,241,.65) 0%, transparent 17%); }
   .header { padding: 14px 6.5%; }
-  .logo { font-size: 27px; }
   .desktopNav, .login { display: none; }
   .wallCaption { display: none; }
   .mobileMenu { display: block; }

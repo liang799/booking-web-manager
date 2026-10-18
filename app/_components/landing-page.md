@@ -23,8 +23,9 @@ Header and footer wordmarks use the shared `BookingLogo`: locally bundled
 Inter Black (900), normal line height and zero tracking, matching the supplied
 brand references and the rest of the application. They inherit the landing
 page's dark ink even when the app theme is dark, keeping contrast on its light
-background. The wordmark retains the landing's 31px desktop header and 27px
-mobile/footer sizes.
+background. Header and footer use the shared 20px wordmark at every viewport,
+matching the discovery header and keeping the hero headline and primary action
+dominant. The home links retain a 44px hit target and the existing header spacing.
 
 Wordmark review captures: [desktop](../../docs/assets/landing-wordmark-desktop.png)
 and [mobile](../../docs/assets/landing-wordmark-mobile.png).
