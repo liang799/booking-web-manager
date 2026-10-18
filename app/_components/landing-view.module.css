@@ -185,34 +185,38 @@
   .hero { height: max(740px, 186vw); min-height: 0; max-height: 1250px; }
   .backdrop img { object-position: center; }
   .wash { background: linear-gradient(0deg, rgba(246,245,241,.65) 0%, transparent 17%); }
-  .header { padding: 14px 6.5%; }
+  .header { padding: 14px 6.5%; transition: background 180ms ease; }
+  .header:has(.mobileMenu[open]) { background: var(--paper); }
   .desktopNav, .login { display: none; }
   .wallCaption { display: none; }
   .mobileMenu { display: block; }
-  .mobileMenu summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #14171624; border-radius: 3px; background: #f6f5f180; transition: background 220ms ease, color 220ms ease, border-color 220ms ease, transform 180ms ease; }
+  .mobileMenu summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 44px; height: 44px; color: var(--ink); background: transparent; transition: color 180ms ease, transform 180ms ease; }
   .mobileMenu summary::-webkit-details-marker { display: none; }
   .mobileMenu summary:active { transform: scale(.92); }
-  .mobileMenu[open]:not([data-state="closing"]) summary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-  .menuIcon { position: relative; display: block; width: 18px; height: 14px; pointer-events: none; }
-  .menuIcon span { position: absolute; left: 0; top: 6px; width: 100%; height: 1.5px; border-radius: 2px; background: currentColor; transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 160ms ease; }
+  .menuIcon { position: relative; display: block; width: 24px; height: 18px; pointer-events: none; }
+  .menuIcon span { position: absolute; left: 0; top: 7.5px; width: 100%; height: 3px; transition: transform 160ms cubic-bezier(.22, 1, .36, 1) 140ms; }
+  .menuIcon span::before { content: ""; display: block; width: 100%; height: 100%; border-radius: 1px; background: currentColor; transform: rotate(0); transition: transform 160ms cubic-bezier(.22, 1, .36, 1); }
   .menuIcon span:first-child { transform: translateY(-5px); }
   .menuIcon span:last-child { transform: translateY(5px); }
-  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span:first-child { transform: rotate(45deg); }
-  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span:nth-child(2) { opacity: 0; transform: scaleX(.4); }
-  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span:last-child { transform: rotate(-45deg); }
-  .menuPanel { position: absolute; top: calc(100% + 6px); left: 6.5%; right: 6.5%; padding: 24px; background: var(--paper); border: 1px solid #d5d7ca; border-radius: 3px; box-shadow: 0 16px 40px #22251c1a, 0 3px 10px #22251c08; max-height: calc(100vh - 102px); max-height: calc(100dvh - 102px); overflow-y: auto; overscroll-behavior: contain; transform-origin: top right; }
+  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span { transform: translateY(0); transition-delay: 0ms; }
+  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span::before { transition-delay: 140ms; }
+  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span:first-child::before { transform: rotate(45deg); }
+  .mobileMenu[open]:not([data-state="closing"]) .menuIcon span:last-child::before { transform: rotate(-45deg); }
+  .menuPanel { position: absolute; top: 100%; left: 0; right: 0; padding: 28px 6.5% 32px; background: var(--paper); max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; }
   .mobileMenu[open] .menuPanel { animation: menu-reveal 320ms cubic-bezier(.22, 1, .36, 1) both; }
   .mobileMenu[data-state="closing"] .menuPanel { animation: menu-dismiss 180ms ease-in both; pointer-events: none; }
-  .menuEyebrow { margin-bottom: 12px; color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; }
+  .menuEyebrow { margin-bottom: 20px; color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; }
   .menuLinks { display: grid; }
-  .menuLinks a { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 56px; border-bottom: 1px solid #dcded4; font-size: clamp(17px, 4.8vw, 21px); font-weight: 400; letter-spacing: -.025em; transition: color 180ms ease, background 180ms ease, transform 180ms ease; }
-  .menuLinks svg { width: 19px; height: 19px; flex-shrink: 0; stroke-width: 1.4; color: #747c67; transition: transform 180ms ease; }
+  .menuLinks a { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: clamp(68px, 18vw, 80px); border-bottom: 1px solid #dcded4; font-size: clamp(20px, 5.6vw, 24px); font-weight: 400; letter-spacing: -.025em; transition: color 180ms ease, background 180ms ease, transform 180ms ease; }
+  .menuLinks a:last-child { border-bottom: 0; }
+  .menuLinks svg { width: 21px; height: 21px; flex-shrink: 0; stroke-width: 1.4; color: #747c67; transition: transform 180ms ease; }
   .menuLinks a:active { transform: translateX(3px); color: #596443; }
   .menuLinks a:active svg { transform: translateX(3px); }
-  .menuActions { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; margin-top: 24px; }
-  .menuActions a { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 8px; border-radius: 3px; font-size: 13px; transition: background 180ms ease, transform 180ms ease; }
+  .menuActions { display: grid; gap: 12px; margin-top: 20px; }
+  .menuActions a { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-radius: 3px; font-size: 16px; transition: background 180ms ease, transform 180ms ease; }
+  .menuActions svg { width: 21px; height: 21px; stroke-width: 1.4; }
   .menuStart { background: var(--ink); color: #fff; }
-  .menuSignIn { border: 1px solid #cbd0c0; }
+  .menuSignIn { border: 1px solid #8d9186; }
   .menuActions a:active { transform: scale(.96); }
   .mobileMenu[open] .menuLinks a { animation: menu-link-reveal 360ms cubic-bezier(.22, 1, .36, 1) backwards; }
   .mobileMenu[open] .menuLinks a:nth-child(2) { animation-delay: 35ms; }
@@ -258,19 +262,19 @@
   .footer .credit { text-align: left; margin: 0; }
 }
 @media (hover: hover) {
-  .mobileMenu summary:hover { border-color: #747c67; }
+  .mobileMenu summary:hover { color: #596443; }
   .menuLinks a:hover { color: #596443; }
   .menuLinks a:hover svg { transform: translate(2px, -2px); }
   .menuStart:hover { background: #34402d; }
   .menuSignIn:hover { background: #e8eade; }
 }
 @keyframes menu-reveal {
-  from { opacity: 0; transform: translateY(-10px) scale(.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes menu-dismiss {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-8px) scale(.98); }
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
 }
 @keyframes menu-link-reveal {
   from { opacity: 0; transform: translateY(8px); }

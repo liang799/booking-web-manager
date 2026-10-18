@@ -8,8 +8,9 @@ The hero uses static, separately composed desktop and mobile WebP backgrounds.
 Its responsive `picture` selects the mobile image below 701px and prioritizes
 loading the hero. Both assets together are approximately 112 KiB. Text, links
 and navigation remain HTML. The mobile menu uses native `details`/`summary`
-with a small client enhancement in `landing-navigation.tsx`. Its trigger morphs
-between hamburger and close icons, the panel and links animate in, and closing
+with a small client enhancement in `landing-navigation.tsx`. Its two thick
+hamburger strokes converge before rotating into a thick cross, with the sequence
+reversed on close. The panel and links animate in, and closing
 finishes before the disclosure is hidden. Closing links become inert immediately.
 Escape returns focus to the trigger; outside taps, focus leaving the menu,
 link selection, and the desktop breakpoint also dismiss it. The nonmodal panel
@@ -36,9 +37,11 @@ page's dark ink even when the app theme is dark, keeping contrast on its light
 background. Header and footer use the shared 20px wordmark at every viewport,
 matching the discovery header and keeping the hero headline and primary action
 dominant. The home links retain a 44px hit target and the existing header spacing.
-The mobile menu pairs an 18px icon with the wordmark inside a 44px hit target.
-Its trigger, panel and actions share the primary link's 3px corners, warm paper,
-dark ink and muted olive accents, keeping the navigation in the landing theme.
+The mobile menu uses a transparent 44px hit target with two 24px-wide, 3px-thick
+strokes. Its warm-paper surface runs edge to edge below the shared header, with
+generous ruled navigation rows and full-width stacked actions. Dark ink, muted
+olive accents and the actions' 3px corners retain the landing theme without a
+separate trigger box or floating panel border and shadow.
 Use `<BookingLogo tone="inherit" />` on this fixed light surface. The shared
 module owns wordmark styling; other pages use its default navigation treatment
 or explicitly select `size="display"` for a main brand heading.
@@ -85,4 +88,5 @@ Asset provenance and editing prompts: `public/images/landing-court.md`.
 Production-rendered review captures: [desktop](../../docs/assets/landing-page-desktop.webp)
 and [mobile](../../docs/assets/landing-page-mobile.webp). The enhanced mobile
 navigation has [closed](../../docs/assets/landing-mobile-menu-closed.webp) and
-[open-menu](../../docs/assets/landing-mobile-menu.webp) captures with the shared wordmark.
+[open-menu](../../docs/assets/landing-mobile-menu.webp) captures with the shared wordmark,
+plus a [recorded transition](../../docs/assets/landing-mobile-menu-motion.gif).

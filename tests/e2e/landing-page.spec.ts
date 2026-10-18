@@ -142,7 +142,7 @@ test("the mobile disclosure supports keyboard navigation and all dismissal paths
   await expect(panel).toBeHidden();
 
   await trigger.click();
-  await page.getByRole("list", { name: "What you can do with Booking", exact: true }).click();
+  await page.locator("header").click();
   await expect(panel).toBeHidden();
   await expect(trigger).toHaveAccessibleName("Open navigation menu");
 });

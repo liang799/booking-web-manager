@@ -119,7 +119,7 @@ export function LandingMobileMenu() {
           setState((current) => current === "open" ? "closing" : "open");
         }}
       >
-        <span className={styles.menuIcon} aria-hidden="true"><span /><span /><span /></span>
+        <span className={styles.menuIcon} aria-hidden="true"><span /><span /></span>
       </summary>
       <nav
         id="landing-mobile-navigation"
