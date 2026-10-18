@@ -19,6 +19,16 @@ color applies only to the decorative hero label; functional text and the
 remaining app retain their existing contrast and typography. Font provenance
 and license: `public/fonts/README.md`.
 
+Header and footer wordmarks use the shared `BookingLogo`: locally bundled
+Inter Black (900), normal line height and zero tracking, matching the supplied
+brand references and the rest of the application. They inherit the landing
+page's dark ink even when the app theme is dark, keeping contrast on its light
+background. The wordmark retains the landing's 31px desktop header and 27px
+mobile/footer sizes.
+
+Wordmark review captures: [desktop](../../docs/assets/landing-wordmark-desktop.png)
+and [mobile](../../docs/assets/landing-wordmark-mobile.png).
+
 The desktop wall caption follows the artwork's crop through a static SVG text
 overlay with the same aspect ratio and cover alignment. Its four lines and
 short rule remain anchored to the wall at different viewport sizes. Numbered
