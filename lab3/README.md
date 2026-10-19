@@ -1,0 +1,23 @@
+# Lab 3: Dialog map
+
+User-interface navigation map for Booking Web Manager, drawn as a UML state
+machine: each state is a screen or dialog, and each transition is
+`event(arguments)[guard] / action`. Dashed states are planned screens whose
+API is on `main` but whose UI is not yet built.
+
+| File | Contents |
+| --- | --- |
+| [dialog-map.pdf](./dialog-map.pdf), [dialog-map.png](./dialog-map.png), [dialog-map.svg](./dialog-map.svg) | Full map |
+| [dialog-map-part1.png](./dialog-map-part1.png), [part2](./dialog-map-part2.png), [part3](./dialog-map-part3.png) | The same map split into report-sized parts |
+| `*.drawio` | Editable sources (open in draw.io) |
+| [build_dialog_map.py](./build_dialog_map.py) | Generates the `.drawio` sources |
+
+To regenerate:
+
+```bash
+python3 build_dialog_map.py
+drawio -x -f png -s 2 -o dialog-map.png dialog-map.drawio
+drawio -x -f svg -o dialog-map.svg dialog-map.drawio
+drawio -x -f pdf --crop -o dialog-map.pdf dialog-map.drawio
+for i in 1 2 3; do drawio -x -f png -s 3 -b 20 -o dialog-map-part$i.png dialog-map-part$i.drawio; done
+```
