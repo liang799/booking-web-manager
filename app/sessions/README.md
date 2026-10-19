@@ -191,8 +191,53 @@ real use case. The [E2E tests](../../tests/e2e) load the documentation and check
 exercise real authentication, database persistence, concurrent replay and
 rejection after deactivation; see the configuration guide for their commands.
 
-The discovery page is covered by UC2-01. Participant removal and Realtime
-subscriptions remain separate work.
+The discovery page is covered by UC2-01. Participant removal is documented below;
+Realtime subscriptions remain separate work.
+
+## Private-session invitations
+
+Upcoming hosted-session cards offer **Copy invitation link**. The browser retrieves
+the link only on request, adds its current origin and copies it. Loading, copied
+and retry states are announced; clipboard failure exposes a labelled, selectable
+link. Creation still redirects to hosted sessions, so sharing works immediately
+and after reload.
+
+`GET /api/sessions/{sessionId}/invitation` accepts login cookies or bearer
+authentication and returns `{ invitationPath }`. An active owner can retrieve
+an OPEN, upcoming session's link, including when it is full. Missing authentication
+is 401, inactive/foreign access 403, missing account/session 404, and started/closed
+sessions 409. Invalid IDs are 400, missing configuration 503, and unexpected
+failures opaque 500. Every response is `no-store`.
+
+The HTTP serializer creates `/sessions/{sessionId}/join?token=…` from the persisted
+room token without changing it. Reloads and visibility changes preserve the link.
+No migration or token rotation is introduced. Room tokens remain excluded from
+ordinary discovery, hosted-session summaries and application logs.
+
+The invitation page is public and lives outside the authenticated management
+layout. Its Server Component invokes a narrow PostgreSQL preview capability
+directly. A valid invitation displays venue, sport, region, Singapore dates/times,
+total capacity and booking share. Wrong or absent tokens, unknown sessions, and
+started/closed sessions all show the same unavailable page without private facts.
+Infrastructure failure instead offers Retry. Optional authentication failure does
+not prevent anonymous preview. Preview and auth continuation responses use
+`no-store` and `no-referrer`; the invitation page also declares `noindex`.
+
+Opening a link never joins or holds funds. Guests choose **Log in to join** or
+**Create account**; sanitized `next` survives registration, confirmation emails,
+resend and callback recovery. See the
+[authentication guide](../(auth)/README.md#invitation-continuation) for
+Supabase callback allowlist configuration. Signed-in visitors explicitly confirm
+through the shared join component and existing commitment endpoint, with the
+exact room token. Eligibility, available funds, replay keys, uncertain-response
+retry and full-session waitlisting retain their existing rules.
+
+Unit, database and browser acceptance tests cover access and token boundaries,
+stable links, lifecycle/privacy checks, two-context creation-to-join, registration
+return, clipboard fallback, keyboard use at 390px, single holds and replay, and
+waitlisting without a hold. Run `npm run test:sessions:integration` for the real
+disposable-stack suite; `npm run test:storybook` exercises sharing and preview UI
+states without provider dependencies.
 
 ## UC2-03a: visibility management
 
@@ -291,7 +336,8 @@ A hosted session's **Manage participants** link opens
 names and statuses. Records retain their participant-list order, including
 withdrawn and removed history. Account display names are queried through the
 transaction's PostgreSQL connection; inactive accounts display “Deleted user”.
-No room tokens, emails, wallet IDs or ledger history reach the browser.
+Participant-list responses contain no room tokens, emails, wallet IDs or ledger
+history.
 
 Only a COMMITTED participant in an OPEN session strictly before its start is
 removable. The existing Booker domain action refunds the entire historical held
@@ -336,8 +382,8 @@ capacity, announces the result and restores focus to the trigger or page heading
 This slice frees capacity and preserves FIFO priority and direct reservations.
 It does not invoke automatic promotion or send notifications. Those production
 workflows belong to Yajie; queued users await that integration. Database and
-browser tests use real ledger-backed participant fixtures until commitment
-endpoints are mounted. Fixtures do not establish production admission coverage.
+browser removal tests use real ledger-backed participant fixtures. Invitation
+acceptance tests separately exercise the mounted commitment endpoint.
 
 Feature stories exercise confirmation, retry, stale previews, storage recovery,
 keyboard focus and the 390px layout. `npm run test:sessions:integration` includes

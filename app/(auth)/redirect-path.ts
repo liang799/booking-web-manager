@@ -20,6 +20,17 @@ export function safeRedirectPath(value: unknown): string {
   return value;
 }
 
+/** Carries a validated destination through an app-owned authentication/recovery path. */
+export function pathWithNext(path: string, next: unknown): string {
+  const destination = safeRedirectPath(next);
+  return destination === HOME_PATH ? path : `${path}${path.includes("?") ? "&" : "?"}${new URLSearchParams({ next: destination })}`;
+}
+
+/** Only a concrete session's invitation preview is public within the Sessions area. */
+export function isSessionInvitationPath(pathname: string): boolean {
+  return /^\/sessions\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\/join$/i.test(pathname);
+}
+
 /** True if the text contains a backslash or an invisible control character (tab, newline, etc.). */
 function hasUnsafeCharacters(value: string): boolean {
   for (const character of value) {
@@ -32,18 +43,19 @@ function hasUnsafeCharacters(value: string): boolean {
 /** Pages anyone can open without logging in: Landing, discovery, registration, login, terms and privacy. */
 const PUBLIC_PATHS: readonly string[] = ["/", "/discover", "/login", "/register", "/terms", "/privacy", AUTH_CALLBACK_PATH];
 
-/** Page sections whose root and nested routes require a login. */
+/** Protected sections, except the explicitly public invitation preview. */
 const PROTECTED_PATHS: readonly string[] = ["/groups", "/profile", "/sessions", "/wallet"];
 
-/** Pages a logged-in user has no reason to see; they are sent Home instead. */
+/** Signed-in visitors continue to their validated destination instead of these forms. */
 const AUTH_PATHS: readonly string[] = ["/login", "/register"];
 
 export function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname);
+  return PUBLIC_PATHS.includes(pathname) || isSessionInvitationPath(pathname);
 }
 
 export function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return !isSessionInvitationPath(pathname)
+    && PROTECTED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 export function isAuthPage(pathname: string): boolean {

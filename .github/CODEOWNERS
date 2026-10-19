@@ -94,6 +94,8 @@
 /use-cases/sessions/ManageSession.ts @liang799
 /use-cases/sessions/ToggleSessionVisibility.ts @liang799
 /use-cases/sessions/ListHostedSessions.ts @liang799
+/use-cases/sessions/GetSessionInvitation.ts @liang799
+/use-cases/sessions/GetInvitedSession.ts @liang799
 /use-cases/sessions/RemoveParticipant.ts @liang799
 /use-cases/sessions/CancelSession.ts @liang799
 /use-cases/sessions/session-creation-transaction.ts @liang799
@@ -103,6 +105,8 @@
 /use-case-config/sessions.ts @liang799
 /use-case-config/discovery.ts @liang799
 /use-case-config/session-management.ts @liang799
+/use-case-config/invitations.ts @liang799
+/use-case-config/invitation-preview.ts @liang799
 /use-case-config/venues.ts @liang799
 /lib/sessions/ @liang799
 /lib/venues/ @liang799
@@ -113,12 +117,16 @@
 /tests/lib/venues/ @liang799
 /tests/integration/sessions-persistence.test.ts @liang799
 /tests/integration/session-management-persistence.test.ts @liang799
+/tests/integration/session-invitation-persistence.test.ts @liang799
+/tests/use-cases/session-invitations.test.ts @liang799
+/tests/support/invitation-fixtures.ts @liang799
 /tests/integration/session-mixed-isolation.test.ts @liang799 @Wyjessie @harr008 @rbrishi15
 /tests/integration/discovery*.test.ts @liang799
 /tests/e2e/session-api.spec.ts @liang799
 /tests/e2e/session-creation.spec.ts @liang799
 /tests/e2e/session-email-verification.spec.ts @liang799 @Jolingoes
 /tests/e2e/sessions-visibility.spec.ts @liang799
+/tests/e2e/sessions-invitations.spec.ts @liang799 @Jolingoes @Wyjessie
 /tests/e2e/discovery*.spec.ts @liang799
 /tests/e2e/session-api-unavailable.spec.ts @liang799
 /tests/use-cases/support/create-session-unit-of-work.ts @liang799

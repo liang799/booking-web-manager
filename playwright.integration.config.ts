@@ -5,7 +5,8 @@ sessionTestEnvironment();
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: ["**/session-api.spec.ts", "**/session-email-verification.spec.ts", "**/sessions-visibility.spec.ts", "**/sessions-cancellation.spec.ts", "**/session-creation.spec.ts", "**/navigation-fallback.spec.ts", "**/discovery*.spec.ts", "**/wallet-cookie-auth.spec.ts"],
+  testMatch: ["**/session*.spec.ts", "**/navigation-fallback.spec.ts", "**/discovery*.spec.ts", "**/wallet-cookie-auth.spec.ts"],
+  testIgnore: ["**/session-api-unavailable.spec.ts"],
   workers: 1,
   fullyParallel: false,
   retries: 0,

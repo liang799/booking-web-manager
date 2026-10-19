@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { InfoNote } from "@/components/ui/info-note";
 import { Money } from "@/components/ui/money";
@@ -28,11 +28,13 @@ const singaporeStart = new Intl.DateTimeFormat("en-SG", {
  * even if the dialog is closed and reopened, so a retry can never hold the share twice. A new
  * key is made only after a confirmed outcome or an explicit rejection.
  */
-export function JoinSessionButton({ session, joinSession = defaultJoinSession, loginHref = "/login?next=%2Fdiscover", roomToken }: {
+export function JoinSessionButton({ session, joinSession = defaultJoinSession, loginHref = "/login?next=%2Fdiscover", emailHref = "/profile/email", roomToken }: {
   readonly session: JoinableSession;
   /** Injected in stories and tests; production calls POST /api/sessions/commit. */
   readonly joinSession?: JoinSession;
   readonly loginHref?: string;
+  /** Keeps contextual previews reachable after adding the email required for admission. */
+  readonly emailHref?: string;
   readonly roomToken?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -68,11 +70,12 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
   const share = <Money cents={session.bookingShareCents} />;
 
   return (
-    <>
-      <Button type="button" className="min-h-11" onClick={openDialog} aria-label={`Join ${session.sport} session at ${session.venueName}`}>
-        Join
-      </Button>
-      <Dialog open={open} onOpenChange={(next) => { if (!pending) setOpen(next); }}>
+      <Dialog open={open} onOpenChange={(next) => { if (!pending) { if (next) openDialog(); else setOpen(false); } }}>
+        <DialogTrigger asChild>
+          <Button type="button" className="min-h-11" aria-label={`Join ${session.sport} session at ${session.venueName}`}>
+            Join
+          </Button>
+        </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{finished ? (outcome.status === "committed" ? "You're in" : "You're on the waitlist") : "Join this session?"}</DialogTitle>
@@ -106,7 +109,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
             <div className="space-y-2">
               <ErrorMessage>{outcome.message}</ErrorMessage>
               {outcome.code === "UNAUTHENTICATED" && <Button asChild variant="link" className="h-auto p-0"><Link href={loginHref}>Log in</Link></Button>}
-              {outcome.code === "EMAIL_REQUIRED" && <Button asChild variant="link" className="h-auto p-0"><Link href="/profile/email">Add email</Link></Button>}
+              {outcome.code === "EMAIL_REQUIRED" && <Button asChild variant="link" className="h-auto p-0"><Link href={emailHref}>Add email</Link></Button>}
               {outcome.code === "INSUFFICIENT_FUNDS" && <Button asChild variant="link" className="h-auto p-0"><Link href="/wallet">Go to wallet</Link></Button>}
             </div>
           )}
@@ -125,6 +128,5 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
   );
 }

@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { InfoNote } from "@/components/ui/info-note";
 import { resendConfirmation, type ResendConfirmationState } from "../resend-confirmation";
+import { safeRedirectPath } from "../redirect-path";
 
 const initialState: ResendConfirmationState = { status: "idle" };
 
-export function EmailConfirmationNotice({ email }: { readonly email?: string }) {
+export function EmailConfirmationNotice({ email, next }: { readonly email?: string; readonly next?: string }) {
   const [state, formAction, pending] = useActionState(resendConfirmation, initialState);
 
   return (
@@ -26,6 +27,7 @@ export function EmailConfirmationNotice({ email }: { readonly email?: string }) 
       {email !== undefined && (
         <form action={formAction}>
           <input type="hidden" name="email" value={email} />
+          <input type="hidden" name="next" value={safeRedirectPath(next)} />
           <Button type="submit" variant="outline" className="w-full" disabled={pending}>
             {pending ? "Sending confirmation email…" : "Resend confirmation email"}
           </Button>

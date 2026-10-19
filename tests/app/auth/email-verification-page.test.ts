@@ -44,3 +44,17 @@ test("a signed-out request retains a safe login return path", async () => {
   vi.mocked(getCurrentUser).mockResolvedValue(null);
   await expect(EmailVerificationPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("redirect:/login?next=%2Fprofile%2Femail");
 });
+
+test("signed-in confirmation recovery offers a return link and retains it when resending", async () => {
+  const next = "/sessions/11111111-1111-4111-8111-111111111111/join?token=room-token";
+  const html = renderToStaticMarkup(await EmailVerificationPage({ searchParams: Promise.resolve({ verification: "failed", next }) }));
+  expect(html).toContain(`href="${next}"`);
+  expect(html).toContain("Continue where you left off");
+  expect(html).toContain(`name="next" value="${next}"`);
+});
+
+test("signed-in recovery does not render an unsafe return destination", async () => {
+  const html = renderToStaticMarkup(await EmailVerificationPage({ searchParams: Promise.resolve({ next: "https://elsewhere.example" }) }));
+  expect(html).not.toContain("elsewhere.example");
+  expect(html).not.toContain("Continue where you left off");
+});

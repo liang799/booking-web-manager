@@ -33,9 +33,8 @@ function sentResult(error: { readonly code?: string; readonly status?: number } 
 /** Sends only to the trusted current account; submitted email targets are ignored. */
 export async function resendOwnEmailConfirmation(
   _previous: EmailVerificationState,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<EmailVerificationState> {
-  void _formData;
   try {
     const account = await ownAccount();
     if (account === null) return { status: "error", message: "Please log in to an active account again." };
@@ -48,7 +47,7 @@ export async function resendOwnEmailConfirmation(
       revalidatePath("/", "layout");
       return { status: "verified", message: "Your email address is verified." };
     }
-    const emailRedirectTo = await emailConfirmationRedirectTo();
+    const emailRedirectTo = await emailConfirmationRedirectTo(formData.get("next"));
     if (emailRedirectTo === null) return { status: "error", message: "We couldn't verify this page's address. Reload the page and try again." };
     const { error } = email === null
       ? await supabase.auth.updateUser({ email: targetEmail }, { emailRedirectTo })
@@ -70,7 +69,7 @@ export async function addAccountEmail(
     const account = await ownAccount();
     if (account === null) return { status: "error", message: "Please log in to an active account again." };
     if (account.user.email?.trim()) return { status: "error", message: "This account already has an email address. Request its confirmation link instead." };
-    const emailRedirectTo = await emailConfirmationRedirectTo();
+    const emailRedirectTo = await emailConfirmationRedirectTo(formData.get("next"));
     if (emailRedirectTo === null) return { status: "error", message: "We couldn't verify this page's address. Reload the page and try again." };
     const { error } = await account.supabase.auth.updateUser({ email: email.data }, { emailRedirectTo });
     return sentResult(error);
