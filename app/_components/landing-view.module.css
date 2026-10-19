@@ -190,12 +190,11 @@
   .desktopNav, .login { display: none; }
   .wallCaption { display: none; }
   .mobileMenu { display: block; }
-  .mobileMenu summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #d8d9d1; border-radius: 4px; color: var(--ink); background: #f6f5f170; transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
+  .mobileMenu summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; color: var(--ink); background: transparent; transition: color 180ms ease, transform 180ms ease; }
   .mobileMenu summary::-webkit-details-marker { display: none; }
   .mobileMenu summary:active { transform: scale(.92); }
-  .mobileMenu[open]:not([data-state="closing"]) summary { border-color: #e2e3db; background: #f0efe9; }
   .menuIcon { position: relative; display: block; width: 22px; height: 18px; pointer-events: none; }
-  .menuIcon span { position: absolute; left: 0; top: 8px; width: 100%; height: 1.5px; transition: transform 160ms cubic-bezier(.22, 1, .36, 1) 140ms, opacity 100ms ease 140ms; }
+  .menuIcon span { position: absolute; left: 0; top: calc(50% - .75px); width: 100%; height: 1.5px; transition: transform 160ms cubic-bezier(.22, 1, .36, 1) 140ms, opacity 100ms ease 140ms; }
   .menuIcon span::before { content: ""; display: block; width: 100%; height: 100%; border-radius: 1px; background: currentColor; transform: rotate(0); transition: transform 160ms cubic-bezier(.22, 1, .36, 1); }
   .menuIcon span:first-child { transform: translateY(-6px); }
   .menuIcon span:last-child { transform: translateY(6px); }
@@ -235,11 +234,11 @@
   .intro { font-size: clamp(13px, 3.65vw, 23px); line-height: 1.4; max-width: 78%; }
   .heroCopy .primaryLink { min-height: 49px; font-size: 13px; margin-top: 23px; padding: 14px 18px; gap: 24px; }
   .heroCopy .primaryLink svg { width: 22px; }
-  .sectionIndex { position: absolute; top: 120px; right: 6.5%; z-index: 2; display: grid; gap: 0; width: 42px; color: var(--ink); }
-  .sectionIndex a { min-height: 30px; font-size: 9px; }
-  .sectionIndex > span { height: 36px; margin: 10px 0 17px 5px; }
+  .sectionIndex { position: absolute; top: 120px; right: 6.5%; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; width: 44px; color: var(--ink); text-align: center; }
+  .sectionIndex a { justify-content: center; min-height: 30px; font-size: 9px; }
+  .sectionIndex > span { height: 36px; margin: 10px auto 17px; }
   .sectionIndex p { font-size: 6px; font-weight: 400; letter-spacing: .35em; line-height: 2.5; }
-  .sectionIndex p::after { content: ""; display: block; width: 12px; border-top: 1px solid #a2a59b; margin-top: 12px; }
+  .sectionIndex p::after { content: ""; display: block; width: 12px; border-top: 1px solid #a2a59b; margin: 12px auto 0; }
   .facts { left: 6.5%; right: 6.5%; bottom: 6.5%; justify-content: space-between; }
   .facts li { flex: 1; padding: 0 12px; }
   .facts li:last-child { padding-right: 0; }
@@ -267,7 +266,7 @@
   .footer .credit { text-align: left; margin: 0; }
 }
 @media (hover: hover) {
-  .mobileMenu summary:hover { color: #596443; border-color: #b7bcae; }
+  .mobileMenu summary:hover { color: #596443; }
   .menuLinks a:hover { color: #596443; }
   .menuLinks a:hover svg { transform: translate(2px, -2px); }
   .menuUtilities a:hover { color: #596443; }

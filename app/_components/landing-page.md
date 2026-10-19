@@ -38,9 +38,10 @@ page's dark ink even when the app theme is dark, keeping contrast on its light
 background. Header and footer use the shared 20px wordmark at every viewport,
 matching the discovery header and keeping the hero headline and primary action
 dominant. The home links retain a 44px hit target and the existing header spacing.
-The mobile menu uses a subtly outlined 44px warm square with three 22px-wide,
-1.5px-thick strokes. Its warm-paper surface fills the viewport below the shared
-header, with generous ruled navigation rows and separate Sign in and Settings
+The mobile menu uses a transparent, borderless 44px tap target with three
+22px-wide, 1.5px-thick strokes. The icon is centered with the shared logo, and
+the numbered section links, guide line and caption share its horizontal center.
+Its warm-paper surface fills the viewport below the shared header, with generous ruled navigation rows and separate Sign in and Settings
 utility links. Settings uses the app's existing `/profile` destination; both
 utility links disable prefetching. A muted footer caption and decorative court
 arcs finish the surface. Dark ink and muted olive accents retain the landing
