@@ -24,6 +24,7 @@ skinparam ranksep 40
 class Booker <<RoleView>> {
   +userId : UUID
   --
+  +assertCanCreateSession() : void
   +createSession(...) : Session
   +cancel(...) : FinancialResult
   +changeVisibility(...) : void
@@ -45,14 +46,17 @@ class Participant <<RoleView>> {
 
 class User <<AggregateRoot>> {
   +userId : UUID
+  +emailVerified : boolean
   +accountStatus : AccountStatus
   +reliabilityScore : ReliabilityScore
-  +memberGroupIds : UUID[]
+  +memberGroupIds : UUID[] {readOnly}
   --
   {static} +create(...) : User
   +updateProfile(...) : void
   +updatePreferences(...) : void
   +beginPayoutSetup(...) : void
+  +completePayoutSetup(...) : void
+  +failPayoutSetup() : void
   +payoutDestination() : PayoutDestination
   +asBooker() : Booker
   +asParticipant() : Participant
@@ -105,10 +109,23 @@ User "1" *-down- "1" Wallet : wallet
 User "1" *-down- "0..1" PayoutAccount : payoutAccount
 User -down-> "0..1" Email : email
 RegularGroup "1" *-down- "1..*" GroupMembership : memberships
+RegularGroup "0..*" -left-> "1" User : ownerId {ID reference}
+GroupMembership "0..*" -left-> "1" User : userId {ID reference}
+
+note bottom of RegularGroup
+  Membership user IDs are unique within a group.
+  The owner is always a member and cannot be removed.
+end note
+
+note bottom of User
+  UC1-03 profile edits use prepareProfileUpdate(...)
+  without loading User (ADR-0014).
+  Deactivation shares assertDeactivationAllowed(...).
+end note
 
 User -[hidden]right- RegularGroup
 Wallet -[hidden]right- Email
 Email -[hidden]right- PayoutAccount
 
-caption Selected public members; (...) abbreviates parameters.\nRoles authorize actors and run workflows; Session validates and records prepared changes.\nWallet uses committed ledger history; reliability and group IDs are loaded related values.
+caption Selected public members; (...) abbreviates parameters.\nRoles authorize actors and run workflows; Session validates and records prepared changes.\nSession creation/admission require an active account and a present email, without requiring email confirmation.\nWallet uses committed ledger history; reliability and group IDs are loaded related values.
 @enduml

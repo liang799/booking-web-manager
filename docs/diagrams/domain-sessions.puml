@@ -29,6 +29,7 @@ class Session <<AggregateRoot>> {
   +holdingAccountId : UUID
   +status : SessionStatus
   +visibility : Visibility
+  +roomToken : string
   +totalSlots : number
   +minimumHeadcount : number
   +bookingShare : Money {readOnly}
@@ -36,6 +37,8 @@ class Session <<AggregateRoot>> {
   +participantList : ParticipantListView
   +pendingSettlement : PayoutBatch [0..1]
   --
+  +getAvailableSlots(now?) : number
+  +meetsReliabilityRequirement(score) : boolean
   +recordAdmission(...) : void
   +recordParticipationTransition(...) : void
   +recordCancellation(...) : void
@@ -82,7 +85,7 @@ class Booking <<ValueObject>> {
   +hasEnded(...) : boolean
 }
 
-class ParticipantList <<ImmutableCollection>> {
+interface ParticipantListView <<ReadOnlyView>> {
   +participations : readonly Participation[]
   +nextQueueSequence : number
   +committedCount : number
@@ -94,6 +97,8 @@ class ParticipantList <<ImmutableCollection>> {
   +oldestAwaitingReplacement() : Participation [0..1]
   +personalReplacementForInvitee(userId) : Participation [0..1]
 }
+
+class ParticipantList <<ImmutableCollection>>
 
 class Participation <<ImmutableChild>> {
   +participationId : UUID
@@ -136,12 +141,14 @@ class ReliabilityScore <<ValueObject>> {
 Session "1" *-down- "1" Booking : booking
 Participant .down.> Session : records prepared children
 Booker .down.> Session : creates; records prepared changes
-Session "1" *-down- "1" ParticipantList : participantList
+Session "1" *-down- "1" ParticipantList : internal list
+Session .down.> ParticipantListView : exposes queries
+ParticipantList .up.|> ParticipantListView
 ParticipantList "1" *-down- "0..*" Participation : participations
 Participation "1" *-down- "0..1" FundHold : hold
 ReliabilityScore .up.> Participation : finalized outcomes
 Booking -[hidden]right- ParticipantList
 FundHold -[hidden]right- ReliabilityScore
 
-caption Selected public members; (...) abbreviates parameters.\nRoles authorize and calculate; Session atomically records prepared children through its internal list.\nThe accepted bookingShare is fixed at creation (ADR-0012); the participantList getter exposes only queries.
+caption Selected public members; (...) abbreviates parameters. Internal list copy operations are omitted.\nRoles authorize and calculate; Session atomically records prepared children through its internal list.\nThe accepted bookingShare is fixed at creation (ADR-0012); the participantList getter exposes only queries.
 @enduml
