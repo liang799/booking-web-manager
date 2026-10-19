@@ -12,6 +12,7 @@ import { SessionCancellationDialog, type CancellationTransport } from "./session
 import type { SessionCancellationResult } from "@/use-cases/sessions/session-cancellation-transaction";
 import { Money } from "@/components/ui/money";
 import type { SessionAccountAction, SetSessionVisibilityAction } from "../session-actions";
+import { SessionInvitationShare } from "./session-invitation-share";
 
 export interface HostedSessionsViewProps {
   readonly outcome: HostedSessionsOutcome;
@@ -114,6 +115,7 @@ function HostedSessionCard({ session, refreshing, onSetVisibility, onRefresh, on
           {onCancel && cancellationAction && <Button variant="destructive" className="min-h-11" disabled={pending || refreshing} onClick={(event) => onCancel(event.currentTarget)}>Cancel session</Button>}
           {!visibilityAction && <p className="text-sm text-muted-foreground">Visibility cannot be changed for this session.</p>}
         </div>
+        <SessionInvitationShare sessionId={session.sessionId} disabled={pending || refreshing} />
         {result?.status === "error" && <div className="mt-3"><ErrorMessage>{result.message}</ErrorMessage></div>}
         {result?.status === "saved" && result.visibility === session.visibility && <p role="status" className="mt-3 text-sm text-muted-foreground">Session is now {result.visibility.toLowerCase()}.</p>}
       </article>

@@ -1,6 +1,7 @@
 import { InfoNote } from "@/components/ui/info-note";
 import { AuthFrame, AuthHeading } from "../_components/auth-frame";
 import { LoginForm } from "./login-form";
+import { pathWithNext, safeRedirectPath } from "../redirect-path";
 
 interface LoginPageProps {
   /** e.g. /login?next=/profile after being sent here from a locked page (Step 20). */
@@ -10,12 +11,13 @@ interface LoginPageProps {
 /** UC1-02 Authenticate User (mockup 03). */
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { next, deleted, verification } = await searchParams;
+  const destination = safeRedirectPath(next);
 
   return (
     <AuthFrame
       prompt="New to Booking?"
       switchLabel="Create account"
-      switchHref="/register"
+      switchHref={pathWithNext("/register", destination)}
     >
       <AuthHeading
         title="Log in"
@@ -35,7 +37,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </span>
         </InfoNote>
       )}
-      <LoginForm next={typeof next === "string" ? next : undefined} />
+      <LoginForm next={destination} />
     </AuthFrame>
   );
 }

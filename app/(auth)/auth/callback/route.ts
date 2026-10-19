@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { HOME_PATH } from "../../redirect-path";
+import { pathWithNext, safeRedirectPath } from "../../redirect-path";
 
 /** UC1-01: finish Supabase's PKCE email confirmation and persist the session in cookies. */
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
-  let destination = "/login?verification=failed";
+  const next = safeRedirectPath(request.nextUrl.searchParams.get("next"));
+  let destination = pathWithNext("/login?verification=failed", next);
   try {
     const supabase = await createClient();
     let exchanged = false;
@@ -20,10 +21,10 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error === null && user !== null) {
       const verified = Boolean(user.email?.trim() && user.email_confirmed_at);
-      if (exchanged && verified) destination = HOME_PATH;
+      if (exchanged && verified) destination = next;
       else {
         const pending = exchanged || (!code && !request.nextUrl.searchParams.has("error") && request.nextUrl.searchParams.has("message"));
-        destination = `/profile/email?verification=${pending ? "pending" : "failed"}`;
+        destination = pathWithNext(`/profile/email?verification=${pending ? "pending" : "failed"}`, next);
       }
     }
   } catch {
@@ -32,9 +33,9 @@ export async function GET(request: NextRequest) {
 
   // Never retain the single-use code or untrusted provider error text in the next URL.
   // A relative Location retains this browser's cookie origin even when a proxy
-  // supplies an internal request URL. Destinations above are fixed app paths.
+  // supplies an internal request URL. The continuation is validated as a same-site path.
   return new NextResponse(null, {
     status: 307,
-    headers: { Location: destination, "Cache-Control": "private, no-store" },
+    headers: { Location: destination, "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" },
   });
 }

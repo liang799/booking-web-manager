@@ -423,9 +423,13 @@ required; production credentials and a browser installation are not.
 
 `npm run test:integration` and `npm run test:e2e:integration` provision a separate
 disposable Supabase stack for database and authenticated HTTP coverage.
-`npm run test:sessions:integration` runs both. They require Docker, the
-Supabase CLI and the full checked-in ordered migration sequence (currently 0001
-through 0011), including `0005_regular_groups.sql`, which is present. Normal
+`npm run test:sessions:integration` runs both in the **Session
+integration** CI job on pull requests and `main`. It includes the authenticated
+creation, visibility, cancellation and participant-removal browser workflows.
+The Playwright configuration selects `session*.spec.ts`, excluding the separate
+missing-configuration suite. Install Chromium with `npx playwright install chromium`
+before running locally. These suites require Docker, the Supabase CLI and the full
+checked-in ordered migration sequence, including `0005_regular_groups.sql`. Normal
 integration runs must leave `SESSION_TEST_PREREQUISITE_SQL` unset. Only for an
 isolated preview checkout missing migration 0005, set it to an external copy of
 `0005_regular_groups.sql`. See the

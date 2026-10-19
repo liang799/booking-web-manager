@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { emailConfirmationRedirectTo } from "../email-confirmation-url";
-import { HOME_PATH } from "../redirect-path";
+import { safeRedirectPath } from "../redirect-path";
 import { registerSchema } from "../schemas";
 
 
@@ -19,7 +19,7 @@ export interface RegisterState {
   readonly emailTaken?: boolean;
 }
 
-/** UC1-01 Register User: validates the form, creates the Supabase account, then goes Home. */
+/** UC1-01 Register User: creates the account, then returns to a safe app destination. */
 export async function registerUser(
   _previous: RegisterState,
   formData: FormData,
@@ -42,7 +42,8 @@ export async function registerUser(
 
   // 2. Create the account. Migration 0004's trigger then creates the profile and S$0.00 wallet.
   const { displayName, email, password, region, sport } = parsed.data;
-  const emailRedirectTo = await emailConfirmationRedirectTo();
+  const destination = safeRedirectPath(formData.get("next"));
+  const emailRedirectTo = await emailConfirmationRedirectTo(destination);
   if (emailRedirectTo === null) {
     return { status: "error", message: "We couldn't prepare your confirmation link. Reload this page and try again." };
   }
@@ -74,7 +75,8 @@ export async function registerUser(
   }
 
   if (error !== null) {
-    console.error("UC1-01 sign-up failed:", error.code, error.message);
+    // Provider messages may echo the callback URL, which can carry an invitation token.
+    console.error("UC1-01 sign-up failed:", error.code);
     return {
       status: "error",
       message: "We couldn't create your account. Please try again.",
@@ -90,6 +92,6 @@ export async function registerUser(
     };
   }
 
-  // 5. Logged in: go Home (HOME_PATH). redirect() must stay outside try/catch.
-  redirect(HOME_PATH);
+  // 5. Return to the reviewed invitation or Home; joining still requires confirmation.
+  redirect(destination);
 }

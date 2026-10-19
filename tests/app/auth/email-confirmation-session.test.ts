@@ -42,12 +42,17 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test.each(["signup", "resend"])("UC1-01 %s completes the real SSR PKCE flow and saves a usable login cookie", async (flow) => {
+const invitation = "/sessions/11111111-1111-4111-8111-111111111111/join?token=room-token";
+test.each(["signup", "resend"].flatMap((flow) => [
+  { flow, next: "/" }, { flow, next: invitation },
+]))("UC1-01 $flow completes the real SSR PKCE flow and returns to $next", async ({ flow, next }) => {
+  const callback = new URL("/auth/callback", origin);
+  if (next !== "/") callback.searchParams.set("next", next);
   let challenge = "";
   const fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
     if (url.pathname === `/auth/v1/${flow}`) {
-      expect(url.searchParams.get("redirect_to")).toBe(`${origin}/auth/callback`);
+      expect(url.searchParams.get("redirect_to")).toBe(callback.href);
       const body = JSON.parse(String(init?.body));
       expect(body.code_challenge_method).toBe("s256");
       challenge = body.code_challenge;
@@ -73,16 +78,18 @@ test.each(["signup", "resend"])("UC1-01 %s completes the real SSR PKCE flow and 
 
   const state = flow === "signup"
     ? await registerUser({ status: "idle" }, formDataOf({
-      displayName: "Marcus Lim", email: user.email, password: "password123", region: "West", sport: "Tennis",
+      displayName: "Marcus Lim", email: user.email, password: "password123", region: "West", sport: "Tennis", next,
     }))
-    : await resendConfirmation({ status: "idle" }, formDataOf({ email: user.email }));
+    : await resendConfirmation({ status: "idle" }, formDataOf({ email: user.email, next }));
 
   expect(state.status).toBe(flow === "signup" ? "check-email" : "sent");
   expect([...jar.keys()].some((name) => name.includes("code-verifier"))).toBe(true);
 
-  const response = await GET(new NextRequest(`${origin}/auth/callback?code=email-code`));
+  callback.searchParams.set("code", "email-code");
+  const response = await GET(new NextRequest(callback));
 
-  expect(response.headers.get("location")).toBe("/");
+  expect(response.headers.get("location")).toBe(next);
+  expect(response.headers.get("referrer-policy")).toBe("no-referrer");
   expect(jar.has("sb-confirmation-test-auth-token")).toBe(true);
   const subsequentRequestClient = await createClient();
   const currentUser = await subsequentRequestClient.auth.getUser();

@@ -11,6 +11,7 @@ import { EmailConfirmationNotice } from "../_components/email-confirmation-notic
 import { describedBy, FieldError } from "../_components/field-error";
 import { PasswordInput } from "../_components/password-input";
 import { logIn, type LoginState } from "./actions";
+import { pathWithNext, safeRedirectPath } from "../redirect-path";
 
 const initialState: LoginState = { status: "idle" };
 
@@ -21,6 +22,7 @@ interface LoginFormProps {
 
 /** UC1-02 Authenticate User form (mockup 03). */
 export function LoginForm({ next }: LoginFormProps) {
+  const destination = safeRedirectPath(next);
   const [state, formAction, pending] = useActionState(logIn, initialState);
   const [, startTransition] = useTransition();
   const errors = state.fieldErrors ?? {};
@@ -35,13 +37,13 @@ export function LoginForm({ next }: LoginFormProps) {
 
   return (
     <div className="space-y-5">
-      {state.status === "check-email" && <EmailConfirmationNotice key={state.email} email={state.email} />}
+      {state.status === "check-email" && <EmailConfirmationNotice key={state.email} email={state.email} next={destination} />}
       <form onSubmit={handleSubmit} noValidate className={styles.form}>
         {state.status === "error" && state.message !== undefined && (
           <ErrorMessage>{state.message}</ErrorMessage>
         )}
 
-        {next !== undefined && <input type="hidden" name="next" value={next} />}
+        <input type="hidden" name="next" value={destination} />
 
         <div className={styles.field}>
           <Label htmlFor="email">Email</Label>
@@ -78,7 +80,7 @@ export function LoginForm({ next }: LoginFormProps) {
 
         <p className={styles.footer}>
           New to Booking?{" "}
-          <Link href="/register">
+          <Link href={pathWithNext("/register", destination)}>
             Create account
           </Link>
         </p>

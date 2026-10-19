@@ -75,12 +75,17 @@ test("the hero loads the intended mobile and desktop artwork", async ({ page }) 
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("the landing copy and primary discovery link remain usable", async ({ page }) => {
-    for (const width of [390, 1440]) {
+  // Each viewport independently verifies the server-rendered copy and navigation.
+  for (const width of [390, 1440]) {
+    test(`the landing copy and primary discovery link remain usable at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto("/");
+      // Decorative optimized images can remain in flight with JavaScript disabled.
+      // Check the actual usable content and hero instead of waiting for every image.
+      await page.goto("/", { waitUntil: "domcontentloaded" });
 
       await expect(page.getByRole("heading", { name: "Find your next game.", exact: true })).toBeVisible();
+      const artwork = page.getByRole("region", { name: "Find your next game.", exact: true }).locator("picture img");
+      await expect.poll(() => artwork.evaluate((image) => image instanceof HTMLImageElement ? image.naturalWidth : 0)).toBeGreaterThan(0);
       const mobileMenu = page.getByLabel("Open navigation menu", { exact: true });
       const isMobile = await mobileMenu.isVisible();
       if (isMobile) await mobileMenu.click();
@@ -90,6 +95,6 @@ test.describe("without JavaScript", () => {
       await page.getByRole("link", { name: "Browse sessions", exact: true }).click();
       await expect(page).toHaveURL(/\/discover$/);
       await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
-    }
-  });
+    });
+  }
 });

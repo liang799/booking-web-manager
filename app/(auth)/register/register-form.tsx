@@ -17,12 +17,15 @@ import { PasswordInput } from "../_components/password-input";
 import { REGIONS, SPORTS, registerSchema } from "../schemas";
 import { registerUser, type RegisterState } from "./actions";
 import { passwordStrength } from "./password-strength";
+import { pathWithNext, safeRedirectPath } from "../redirect-path";
 
 const initialState: RegisterState = { status: "idle" };
 const accountSchema = registerSchema.pick({ region: true, email: true, password: true });
 
 /** UC1-01: account details first, then the required profile before account creation. */
-export function RegisterForm() {
+export function RegisterForm({ next }: { readonly next?: string }) {
+  const destination = safeRedirectPath(next);
+  const loginHref = pathWithNext("/login", destination);
   const [state, formAction, pending] = useActionState(registerUser, initialState);
   const [, startTransition] = useTransition();
   const [step, setStep] = useState<"account" | "profile">("account");
@@ -60,9 +63,9 @@ export function RegisterForm() {
       <>
         <AuthHeading title="Check your email" description="You're one step away from your next game." />
         <div className="space-y-4">
-          <EmailConfirmationNotice email={state.email} />
+          <EmailConfirmationNotice email={state.email} next={destination} />
           <Button asChild className={styles.submit}>
-            <Link href="/login">Go to log in</Link>
+            <Link href={loginHref}>Go to log in</Link>
           </Button>
         </div>
       </>
@@ -76,12 +79,13 @@ export function RegisterForm() {
         description={step === "account" ? "Create your account to get started." : "A few details to help you find your next game."}
       />
       <form onSubmit={handleSubmit} noValidate className={styles.form}>
+        <input type="hidden" name="next" value={destination} />
         {accountErrors !== undefined && <ErrorMessage>Please fix the highlighted fields.</ErrorMessage>}
         {state.status === "error" && state.message !== undefined && (step === "profile" || state.fieldErrors === undefined) && (
           <ErrorMessage>
             {state.message}{" "}
             {state.emailTaken === true && (
-              <Link href="/login" className="font-semibold underline underline-offset-4">
+              <Link href={loginHref} className="font-semibold underline underline-offset-4">
                 Log in instead
               </Link>
             )}
@@ -212,7 +216,7 @@ export function RegisterForm() {
           </Button>
         )}
         <p className={styles.footer}>
-          I have an account? <Link href="/login">Login</Link>
+          I have an account? <Link href={loginHref}>Login</Link>
         </p>
       </form>
     </>

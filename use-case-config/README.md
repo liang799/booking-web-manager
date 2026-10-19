@@ -49,6 +49,21 @@ rows, room tokens, or direct browser access to session tables. See the
 Swagger and Storybook coverage. OneMap settings are not needed for stored-region
 discovery.
 
+## Invitation configuration
+
+`invitations.ts` assembles owner-only `GetSessionInvitation` with the existing
+session-management transaction. It loads the complete active account and session
+and returns the persisted token only after ownership and lifecycle checks. The
+app's HTTP serializer owns the relative invitation URL.
+
+`invitation-preview.ts` assembles `GetInvitedSession` with the narrow
+`PostgresInvitedSessionReader`. Anonymous preview requires only `DATABASE_URL`;
+it does not hydrate users, participants or wallets. The parameterized query
+matches the exact token and session ID, OPEN status and a future start, and
+selects only invitation display facts. Owner retrieval retains existing
+Supabase authentication settings. Neither capability introduces schema or
+environment settings. See the [invitation guide](../app/sessions/README.md#private-session-invitations).
+
 ## Venue search configuration
 
 Authenticated `GET /api/venues?q=…&page=…` uses the app-owned contract in

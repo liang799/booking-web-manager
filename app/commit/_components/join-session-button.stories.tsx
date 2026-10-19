@@ -33,6 +33,19 @@ export const ShowsShareBeforeConfirming: Story = {
   },
 };
 
+export const KeyboardReturnsFocus: Story = {
+  play: async ({ args, canvasElement }) => {
+    const join = within(canvasElement).getByRole("button", { name: /join badminton session/i });
+    join.focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(within(document.body).getByRole("dialog")).toBeVisible());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument());
+    await expect(join).toHaveFocus();
+    await expect(args.joinSession).not.toHaveBeenCalled();
+  },
+};
+
 export const Committed: Story = {
   play: async ({ args, canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole("button", { name: /join/i }));
@@ -73,6 +86,26 @@ export const EmailMissing: Story = {
     const dialog = within(document.body).getByRole("dialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /confirm and hold/i }));
     await expect(await within(dialog).findByRole("link", { name: "Add email" })).toHaveAttribute("href", "/profile/email");
+  },
+};
+
+/** An invitee can add a missing email and return to the same private-room preview. */
+export const InvitationEmailMissing: Story = {
+  args: {
+    roomToken: "invitation-token",
+    emailHref: `/profile/email?${new URLSearchParams({ next: `/sessions/${session.sessionId}/join?token=invitation-token` })}`,
+    joinSession: fn<JoinSession>(async () => ({ status: "error", code: "EMAIL_REQUIRED", message: JOIN_ERROR_MESSAGES.EMAIL_REQUIRED!, unconfirmed: false })),
+  },
+  play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: /join/i }));
+    const dialog = within(document.body).getByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: /confirm and hold/i }));
+    const emailLink = await within(dialog).findByRole("link", { name: "Add email" });
+    const destination = new URL(emailLink.getAttribute("href")!, window.location.origin);
+    await expect(destination.pathname).toBe("/profile/email");
+    await expect(destination.searchParams.get("next")).toBe(`/sessions/${session.sessionId}/join?token=invitation-token`);
+    await expect(args.joinSession).toHaveBeenCalledTimes(1);
+    await expect(args.joinSession).toHaveBeenCalledWith(expect.objectContaining({ sessionId: session.sessionId, roomToken: "invitation-token" }));
   },
 };
 
