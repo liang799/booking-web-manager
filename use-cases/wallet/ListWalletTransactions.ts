@@ -23,6 +23,7 @@ export class ListWalletTransactions {
         externalReference: tx.externalReference ?? null,
         holdId: tx.holdId ?? null,
         payoutId: tx.payoutId ?? null,
+        sport: tx.sport,
       })),
       nextCursor: transactions.length === limit ? transactions.at(-1)?.occurredAt ?? null : null,
     };

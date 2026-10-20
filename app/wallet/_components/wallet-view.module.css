@@ -1,0 +1,234 @@
+.page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 24px 34px;
+}
+.heading { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.desktopInline { display: none; }
+.money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.overview { display: grid; gap: 21px; }
+.balanceSection { min-width: 0; }
+
+/* Mobile deliberately has no animated decoration. */
+.balanceCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 22px 22px 19px;
+  border: 1px solid #ffffff18;
+  border-radius: 9px;
+  background: radial-gradient(ellipse at 85% 18%, #292b29 0%, transparent 65%), linear-gradient(120deg, #222423, #1c1d1c);
+  color: #fafafa;
+  box-shadow: 0 2px 4px #00000012, 0 8px 14px -10px #00000050;
+}
+.cardArtwork { display: none; }
+.eyebrow { color: #c7c8c5; font-size: 8px; line-height: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+.balanceAmount { display: block; margin-top: 5px; font-size: 36px; font-weight: 600; letter-spacing: -0.045em; line-height: 43px; }
+.balanceHint { display: none; }
+.balanceStats { display: grid; grid-template-columns: 1fr 1fr; margin-top: 10px; padding-top: 14px; border-top: 1px solid #ffffff1b; }
+.balanceStats > div + div { padding-left: 18px; border-left: 1px solid #ffffff14; }
+.balanceStats dt { color: #bfc0bc; font-size: 9px; line-height: 12px; }
+.balanceStats dd { margin-top: 4px; font-size: 13px; line-height: 16px; font-weight: 500; }
+.balanceActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 17px; }
+.balanceActions .addFunds, .balanceActions .payoutAction {
+  position: relative;
+  min-height: 34px;
+  height: 34px;
+  padding: 8px 6px;
+  gap: 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 400;
+  --ring: 42 15% 85%;
+  --background: 120 2% 10%;
+}
+.balanceActions a::after, .balanceActions button::after { position: absolute; content: ""; inset: -5px 0; }
+.withdrawIcon { transform: rotate(45deg); }
+.balanceActions svg { width: 15px; height: 15px; stroke-width: 1.3; }
+.balanceActions .addFunds { background: #ffffff13; color: #fafafa; }
+.balanceActions .addFunds:hover { background: #ffffff22; }
+.balanceActions .payoutAction { border-color: #ffffff22; background: transparent; color: #fafafa; }
+.balanceActions .payoutAction:hover { background: #ffffff12; }
+.topUp { margin-top: 16px; }
+.topUp[hidden] { display: none; }
+.loadingCard, .statePanel { display: grid; align-content: center; min-height: 209px; padding: 24px; border: 1px solid hsl(var(--border)); border-radius: 9px; background: hsl(var(--card)); }
+
+.holds { min-width: 0; scroll-margin-top: 24px; }
+.holds h2, .activityHeader h2 { font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: -0.025em; }
+.holdsDescription, .holdsTotal, .holdCount, .holdPhoto { display: none; }
+.holdPhoto { position: relative; }
+.holdList { margin-top: 7px; overflow: hidden; border: 1px solid hsl(var(--border) / .65); border-radius: 8px; background: hsl(var(--card)); box-shadow: 0 2px 3px hsl(var(--foreground) / .09); }
+.holdList li + li { border-top: 1px solid hsl(var(--border)); }
+.holdLink { display: flex; align-items: center; min-height: 65px; gap: 12px; padding: 12px; outline: none; transition: background-color 160ms ease; }
+.holdLink:hover { background: hsl(var(--muted) / .6); }
+.holdLink:focus-visible { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.holdIcon, .transactionIcon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: hsl(var(--muted)); }
+.holdDetails { min-width: 0; flex: 1; }
+.holdName { font-size: 10px; line-height: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.holdDate { margin-top: 3px; font-size: 9px; line-height: 14px; color: hsl(var(--muted-foreground)); }
+.holdAmount { flex-shrink: 0; font-size: 10px; line-height: 15px; font-weight: 500; text-align: right; }
+.holdAmount p { margin-top: 3px; font-size: 9px; line-height: 14px; font-weight: 400; color: hsl(var(--muted-foreground)); }
+.holdChevron { flex-shrink: 0; width: 13px; color: hsl(var(--muted-foreground)); }
+
+.transactions { min-width: 0; margin-top: 22px; scroll-margin-top: 24px; }
+.desktopHistory, .desktopRetry { display: none; }
+.mobileHistory { display: block; }
+.scrollSentinel { min-height: 1px; text-align: center; }
+.loadingHint { padding: 8px 0; font-size: 11px; color: hsl(var(--muted-foreground)); text-align: center; }
+.activityHeader { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.sectionNav { display: none; }
+.activityHeader .filterToggle { height: 20px; min-height: 20px; gap: 3px; padding: 0; color: hsl(var(--muted-foreground)); font-size: 10px; font-weight: 400; }
+.filterToggle svg { width: 13px; height: 13px; }
+.filters { display: none; flex-basis: 100%; align-items: center; gap: 8px; padding: 6px 0; }
+.filters[data-open="true"] { display: flex; }
+.search { position: relative; min-width: 0; flex: 1; }
+.search > svg { position: absolute; left: 12px; top: 12px; color: hsl(var(--muted-foreground)); }
+.search input { height: 40px; padding-left: 36px; font-size: 11px; border-radius: 5px; background: hsl(var(--card) / .65); }
+.filters .typeFilter { width: 126px; flex-shrink: 0; gap: 6px; height: 40px; border-radius: 5px; font-size: 11px; font-weight: 400; background: hsl(var(--card) / .65); }
+.transactionList { overflow: hidden; padding: 0 13px; border: 1px solid hsl(var(--border) / .65); border-radius: 8px; background: hsl(var(--card)); box-shadow: 0 2px 3px hsl(var(--foreground) / .09); }
+.transactionRow { display: grid; min-height: 57px; grid-template-columns: 36px minmax(0, 1fr) auto; grid-template-areas: "icon name amount" "icon date amount"; column-gap: 13px; row-gap: 3px; padding: 10px 0; }
+.transactionRow + .transactionRow { border-top: 1px solid hsl(var(--border) / .7); }
+.transactionIcon { grid-area: icon; align-self: center; width: 36px; height: 36px; }
+.transactionName { grid-area: name; align-self: end; font-size: 10px; line-height: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.transactionDate { grid-area: date; align-self: start; font-size: 9px; line-height: 13px; color: hsl(var(--muted-foreground)); }
+.transactionAmount { grid-area: amount; align-self: center; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.noResults { padding: 20px 0; text-align: center; }
+.noResults > button { margin-top: 12px; min-height: 44px; }
+
+@media (min-width: 768px) {
+  .page { padding: 38px 24px 26px 36px; max-width: 1600px; }
+  .heading { position: static; width: auto; height: auto; overflow: visible; clip-path: none; margin-bottom: 32px; }
+  .breadcrumb { display: flex; align-items: center; gap: 12px; font-size: 10px; line-height: 14px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+  .breadcrumb span { color: hsl(var(--foreground)); }
+  .desktopInline { display: inline; }
+  .mobileInline { display: none; }
+  .money::before { content: "S"; }
+  .overview { grid-template-columns: minmax(0, 1.365fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .balanceCard { display: flex; flex-direction: column; min-height: 285px; height: 100%; padding: 44px 43px 36px; border: 1px solid #e4e7e2; border-radius: 8px; background: radial-gradient(ellipse at 28% 40%, #ffffff32, transparent 75%), #eef0eb; color: #101110; box-shadow: none; }
+  .balanceMain { position: relative; z-index: 1; }
+  .eyebrow, .balanceStats { display: none; }
+  .balanceAmount { margin: 7px 0 0; font-size: clamp(38px, 4vw, 60px); line-height: 1.1; letter-spacing: -.055em; font-weight: 600; }
+  .balanceHint { display: block; margin-top: 9px; color: #6c706f; font-size: 18px; line-height: 27px; }
+  .balanceActions { position: relative; z-index: 1; display: flex; align-items: center; margin-top: auto; padding-top: 28px; gap: 28px; }
+  .balanceActions .addFunds, .balanceActions .payoutAction { height: 50px; min-height: 50px; gap: 13px; padding: 12px 20px; font-size: 15px; font-weight: 400; border-radius: 5px; --background: 100 14% 93%; --ring: 0 0% 10%; }
+  .balanceActions .addFunds { min-width: 149px; background: #111311; color: white; }
+  .balanceActions .addFunds:hover { background: #292d29; }
+  .balanceActions .payoutAction { border-color: transparent; background: transparent; color: #111311; font-size: 13px; }
+  .balanceActions .payoutAction:hover { background: #00000008; }
+  .balanceActions svg { width: 17px; height: 17px; stroke-width: 1.5; }
+  .cardArtwork { display: block; position: absolute; z-index: -1; inset: 0; pointer-events: none; overflow: hidden; }
+  .cardWaves { width: 100%; height: 100%; }
+  .waveBack { transform-origin: 85% 100%; animation: ribbon-drift 24s ease-in-out infinite alternate; }
+  .waveFront { transform-origin: 100% 100%; animation: ribbon-breathe 32s ease-in-out infinite alternate; }
+  .loadingCard, .statePanel { min-height: 285px; }
+  .holds { min-height: 285px; padding: 31px 31px 10px 33px; border: 1px solid hsl(var(--border) / .75); border-radius: 8px; background: hsl(var(--card) / .8); }
+  .holdsHeader { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+  .holds h2 { display: flex; align-items: center; gap: 14px; font-size: 20px; line-height: 28px; letter-spacing: -.025em; white-space: nowrap; }
+  .holdCount { display: inline-flex; align-items: center; justify-content: center; min-width: 33px; height: 25px; padding: 0 9px; border-radius: 14px; background: hsl(var(--muted)); font-size: 13px; font-weight: 400; }
+  .holdsDescription { display: block; margin-top: 4px; font-size: 14px; line-height: 22px; color: hsl(var(--muted-foreground)); }
+  .holdsTotal { display: block; flex-shrink: 0; font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -.045em; }
+  .holdList { margin-top: 18px; border: 0; border-top: 1px solid hsl(var(--border) / .7); border-radius: 0; box-shadow: none; background: transparent; }
+  .holdLink { min-height: 82px; padding: 12px 0; gap: 19px; }
+  .holdIcon { display: none; }
+  .holdPhoto { display: block; position: relative; flex-shrink: 0; width: 63px; height: 58px; overflow: hidden; border-radius: 7px; }
+  .holdPhoto img { object-fit: cover; object-position: 65% 85%; filter: saturate(.65); }
+  .holdPhoto[data-surface="grass"] img { transform: scale(3); transform-origin: 45% 90%; }
+  .holdPhoto[data-surface="clay"] img { transform: scale(2.8); transform-origin: 80% 20%; }
+  .holdName { font-size: 14px; line-height: 21px; font-weight: 400; }
+  .holdDate { margin-top: 3px; font-size: 13px; line-height: 20px; }
+  .holdAmount { font-size: 14px; font-weight: 400; }
+  .holdAmount .heldCaption { display: none; }
+  .holdChevron { width: 14px; color: hsl(var(--foreground)); margin-left: -7px; }
+  .transactions { margin-top: 22px; padding: 18px 28px 31px; border: 1px solid hsl(var(--border) / .75); border-radius: 8px; background: hsl(var(--card) / .8); }
+  .sectionNav { display: flex; align-items: stretch; gap: 24px; }
+  .sectionNav a { display: flex; align-items: center; min-height: 44px; padding: 0 6px; font-size: 13px; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; }
+  .sectionNav a:hover { color: hsl(var(--foreground)); }
+  .sectionNav a:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+  .sectionNav .currentSection { color: hsl(var(--foreground)); border-bottom-color: currentColor; font-weight: 500; }
+  .desktopHistory { display: block; }
+  .desktopRetry { display: inline-flex; min-height: 44px; margin-top: 12px; }
+  .mobileHistory { display: none; }
+  .tableScroller { overflow-x: auto; outline-offset: 3px; }
+  .tableScroller:focus-visible { outline: 2px solid hsl(var(--ring)); }
+  .dataTable { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 14px; text-align: left; }
+  .dataTable th { height: 48px; padding: 16px 8px 12px; border-bottom: 1px solid hsl(var(--border) / .7); color: hsl(var(--muted-foreground)); font-size: 10px; font-weight: 400; letter-spacing: .035em; text-transform: uppercase; }
+  .dataTable td { height: 49px; padding: 7px 8px; border-bottom: 1px solid hsl(var(--border) / .7); color: hsl(var(--muted-foreground)); vertical-align: middle; }
+  .dataTable th:first-child, .dataTable td:first-child { padding-left: 5px; width: 24%; white-space: nowrap; }
+  .dataTable th:nth-child(2) { width: 20.5%; }
+  .dataTable th:last-child, .dataTable td:last-child { padding-right: 3px; width: 16%; text-align: right; white-space: nowrap; }
+  .dataTable td:last-child { color: hsl(var(--foreground)); }
+  .tableType { display: flex; align-items: center; gap: 24px; color: hsl(var(--foreground)); white-space: nowrap; }
+  .tableType > span { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 6px; background: hsl(var(--muted)); }
+  .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+  .pagination > p { padding-left: 5px; font-size: 12px; line-height: 1.6; color: hsl(var(--muted-foreground)); }
+  .pagination > p > span { display: block; font-size: 11px; }
+  .pagination nav { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
+  .pagination button { min-width: 40px; height: 42px; padding: 8px; color: hsl(var(--muted-foreground)); font-size: 12px; font-weight: 400; }
+  .pagination .pageButton[aria-current="page"] { background: hsl(var(--accent)); color: hsl(var(--foreground)); }
+  .activityHeader { min-height: 53px; gap: 12px; margin-bottom: 0; padding-bottom: 8px; border-bottom: 1px solid hsl(var(--border) / .7); }
+  .activityHeader .filterToggle { display: none; }
+  .filters { display: flex; flex-basis: auto; width: 414px; min-width: 250px; max-width: 45%; padding: 0; gap: 16px; }
+  .search input, .filters .typeFilter { height: 38px; }
+  .filters .typeFilter { width: 166px; padding: 0 14px; }
+  .search > svg { top: 11px; }
+  .transactionAmount { font-size: 14px; font-weight: 400; }
+  .transactionAmount[data-direction="in"] { color: #2c7d46; }
+  .transactionAmount[data-direction="out"] { color: #db3428; }
+  :global(.dark) .transactionAmount[data-direction="in"] { color: #8fc6ab; }
+  :global(.dark) .transactionAmount[data-direction="out"] { color: #f5a39a; }
+  :global(.dark) .balanceCard { background: #dce0d6; border-color: #a4ac9b; }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .page { padding-left: 24px; }
+  .overview { grid-template-columns: 1fr; }
+  .balanceCard { min-height: 260px; }
+  .balanceAmount { font-size: 52px; }
+  .holds { min-height: auto; padding-bottom: 14px; }
+  .holdList { display: grid; grid-template-columns: 1fr 1fr; }
+  .holdList li + li { border-top: 0; border-left: 1px solid hsl(var(--border)); padding-left: 16px; }
+  .holdLink { gap: 10px; }
+  .holdPhoto { width: 44px; height: 48px; }
+  .holdDate { font-size: 11px; }
+  .holdAmount { font-size: 12px; }
+  .holdName { font-size: 12px; }
+  .holdChevron { display: none; }
+  .transactions { padding-right: 20px; padding-left: 20px; }
+  .activityHeader { row-gap: 10px; }
+  .filters { max-width: none; width: 100%; padding-bottom: 6px; }
+  .tableType { gap: 10px; }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .balanceCard { padding-right: 30px; padding-left: 30px; }
+  .balanceHint { font-size: 16px; }
+  .balanceActions { gap: 10px; }
+  .holds { padding-right: 20px; padding-left: 20px; }
+  .holds h2 { font-size: 17px; gap: 8px; }
+  .holdsTotal { font-size: 25px; }
+  .holdsDescription { font-size: 12px; }
+  .holdLink { gap: 12px; }
+  .holdDate { font-size: 11px; }
+  .holdPhoto { width: 50px; }
+  .holdAmount, .holdName { font-size: 12px; }
+}
+
+@media (max-width: 359px) {
+  .holdLink { gap: 12px; padding-right: 10px; padding-left: 10px; }
+  .holdChevron { width: 12px; margin-left: -3px; }
+  .filters { flex-wrap: wrap; }
+  .filters .typeFilter { width: 100%; }
+}
+
+@keyframes ribbon-drift {
+  from { transform: translate3d(0, 0, 0) rotate(0); }
+  to { transform: translate3d(8px, 3px, 0) rotate(2deg); }
+}
+@keyframes ribbon-breathe {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-7px, 2px, 0) scale(1.025); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .waveBack, .waveFront { animation: none; }
+  .holdLink { transition: none; }
+}

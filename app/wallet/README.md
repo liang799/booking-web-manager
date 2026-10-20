@@ -46,6 +46,42 @@ This module adheres strictly to the non-negotiable rules defined in `CLAUDE.md`:
    entry, and records the event in `processed_events`, so a payment credits at most
    once. The page refreshes the balance a few times afterwards.
 
+## Wallet screen
+
+The responsive view has two distinct layouts. Desktop places a pale balance
+card beside Funds on hold, above a full-width semantic transaction table with
+eight rows per page and numbered navigation. Mobile uses a static dark balance
+card, Funds in use and an infinite activity list. TanStack Table owns filtering
+and pagination. Each hold links to its session. The mobile Withdraw and desktop
+Payouts links open the existing
+per-session withdrawal flow; they do not withdraw the available wallet balance.
+
+Mobile Pending displays the total of this booker's `REQUESTED` payout attempts,
+aggregated without a page limit. It means withdrawals being processed, rather
+than available balance or funds held for attendance. An older server response
+without this field displays an em dash. Transaction sport metadata is joined
+onto the already paginated ledger page and omitted when unavailable.
+
+Add funds expands the existing PayNow panel inline. Collapsing it keeps the
+form mounted so its draft and payment attempt survive. The browser still never
+credits the wallet.
+
+Both views share React Query's `useInfiniteQuery` cache. Desktop requests older
+pages when navigation reaches the end of cached data; mobile observes a
+sentinel near the viewport. A continuation failure stops automatic requests
+until explicit retry, and fetching never cancels an in-progress refresh.
+
+Search and date filters operate on loaded transactions, with an explicit hint
+when older activity is available. Totals appear only after the final cursor.
+Only top-ups/refunds have a positive available-balance sign, and locks
+have a negative sign. Release, forfeiture and payout amounts stay unsigned
+because the API does not expose the viewer's ledger leg or a running balance.
+
+On desktop, the balance card's translucent ribbons move on 24- and 32-second
+cycles using CSS transforms. The text and controls stay stationary. Mobile
+has no card animations. `prefers-reduced-motion: reduce` disables desktop
+motion as well. Artwork is inline SVG; court thumbnails use bundled assets.
+
 ---
 
 ## HTTP routes
