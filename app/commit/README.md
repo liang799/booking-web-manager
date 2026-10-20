@@ -259,9 +259,29 @@ claims and releases reminders through `sessions.verification_reminded_at`
 (migration 0009). It is not wired in yet: until Web Push can deliver
 reminders, the sweep claims none, so none are marked as sent and lost.
 
-Not yet configured: the schedule itself, either a Vercel Cron entry (the Hobby
-plan runs crons at most daily) or a `pg_cron` + `pg_net` job calling the route
-with the secret.
+### Schedule
+
+[Migration 0014](../../supabase/migrations/0014_commitment_sweep_schedule.sql)
+schedules `commitment-sweep-every-5-minutes` in pg_cron, like the hourly ledger
+reconciliation in 0002. Each run calls `request_commitment_sweep()`, which sends
+the route request through `pg_net` after the cron transaction commits (rule #4).
+Vercel Cron was not used because the Hobby plan runs crons at most daily, which
+is too coarse for forfeiture at session start. A late withdrawal is therefore
+forfeited, and a free place filled, up to five minutes after it falls due.
+
+The URL and secret live in Supabase Vault, not in git or the migration. Until
+both are set, each run logs a notice and sends nothing. Once per environment,
+with the same value as Vercel's `CRON_SECRET`:
+
+```sql
+select vault.create_secret('https://<deployment>/api/cron/commitments', 'commitment_sweep_url');
+select vault.create_secret('<CRON_SECRET>', 'cron_secret');
+```
+
+Replies are kept in `net._http_response`; a 200 body lists per-job failures.
+Locally, point `commitment_sweep_url` at
+`http://host.docker.internal:3000/api/cron/commitments` and set `CRON_SECRET` in
+`.env.local`, or call the route yourself with `curl`.
 
 ## Notifications
 
