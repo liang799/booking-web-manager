@@ -27,6 +27,7 @@
 /tests/app/wallet/ @rbrishi15
 /tests/use-cases/UC1-05-*.test.ts @rbrishi15
 /tests/lib/wallet/ @rbrishi15 @harr008
+/tests/integration/wallet-persistence.test.ts @rbrishi15 @harr008
 /app/payouts/ @rbrishi15
 /app/api/webhooks/ @rbrishi15
 /app/api/payouts/ @rbrishi15
