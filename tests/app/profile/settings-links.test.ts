@@ -3,11 +3,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, expect, test, vi } from "vitest";
 import HelpPage from "@/app/profile/help/page";
 import ProfilePage from "@/app/profile/page";
+import { loadReliabilityScore } from "@/app/profile/reliability";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 
 vi.mock("@/lib/supabase/current-user", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: (path: string) => { throw new Error(`redirect:${path}`); } }));
 vi.mock("@/app/commit/_components/push-notifications-row", () => ({ PushNotificationsRow: () => null }));
+vi.mock("@/app/profile/reliability", () => ({ loadReliabilityScore: vi.fn() }));
 
 const user = {
   id: "viewer", email: "viewer@example.com", emailVerified: true, accountStatus: "ACTIVE" as const,
@@ -17,6 +19,24 @@ const user = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getCurrentUser).mockResolvedValue(user);
+  vi.mocked(loadReliabilityScore).mockResolvedValue(96);
+});
+
+test("Settings shows the score calculated from the user's history", async () => {
+  const html = renderToStaticMarkup(await ProfilePage());
+
+  expect(loadReliabilityScore).toHaveBeenCalledExactlyOnceWith("viewer");
+  // React separates text parts with empty comments; remove them to read the badge text.
+  expect(html.replaceAll("<!-- -->", "")).toContain("Reliability 4.8 / High");
+});
+
+test("Settings says the score is unavailable instead of showing the starting score", async () => {
+  vi.mocked(loadReliabilityScore).mockResolvedValue(null);
+
+  const html = renderToStaticMarkup(await ProfilePage());
+
+  expect(html).toContain("Reliability score unavailable right now.");
+  expect(html).not.toContain("5.0");
 });
 
 test("every Settings row opens a page; none is left as coming soon", async () => {

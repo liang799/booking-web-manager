@@ -24,6 +24,23 @@ for application coverage and `npm run test:integration` for the real RPC,
 privilege, signup and deactivation-race scenarios on the disposable stack.
 See [ADR-0014](../../docs/adr/0014-account-policies-and-transaction-guards.md).
 
+## Reliability score
+
+Settings and the signed-in sidebar show the score calculated from the user's
+full participation history (REQ-10). `loadReliabilityScore` in
+[`reliability.ts`](./reliability.ts) takes the verified current user's ID and
+runs `GetReliabilityScore` through `use-case-config/profiles.ts`.
+`PostgresReliabilityHistoryReader` reads the same participation, session-end and
+fund-hold rows as the session user reader, without the wallet ledger or row
+locks. The domain decides which outcomes count and how they are weighted.
+
+When the database is not configured or the read fails, the loader returns null
+and the pages say the score is unavailable. They never show the starting score
+in its place. `CurrentUser.reliabilityScore` is deprecated: it is always the
+starting score.
+
+Run `npm test -- tests/use-cases/UC1-03-manage-profile.test.ts tests/lib/supabase/postgres-reliability-history-reader.test.ts tests/app/profile tests/app/auth/signed-in-shell.test.ts`.
+
 ## Help, terms and privacy
 
 Settings links to [`/profile/help`](./help/page.tsx), a static list of common
