@@ -1,0 +1,87 @@
+[
+  {
+    "uc": "UC2-01",
+    "title": "Discover sessions",
+    "scenario": "Find suitable public upcoming sessions without requiring sign in.",
+    "prerequisites": "Healthy configured service; seeded public/private, open/cancelled, full/non-full sessions. Use a fixed clock T. Start each subcase with cleared filters.",
+    "source": "app/discover/query.ts:38-137; lib/sessions/postgres-session-discovery-reader.ts:16-52; app/discover/README.md:47-83.",
+    "cases": [
+      {"id":"D01","description":"Public access","action":"Open Discover anonymously, then while signed in.","inputs":"Same fixture and empty filters.","expected":"Both visitors can view the same public results. Joining may separately require sign in."},
+      {"id":"D02","description":"Visibility and state partitions","action":"Refresh the list for each fixture.","inputs":"PUBLIC/PRIVATE; OPEN/CANCELLED; full/non-full; future start.","expected":"Only PUBLIC and OPEN sessions appear. A full eligible session remains listed."},
+      {"id":"D03","description":"Start boundary","action":"Search with the server clock fixed at T.","inputs":"Starts T-1ms, T, T+1ms.","expected":"Only the session starting at T+1ms appears."},
+      {"id":"D04","description":"Text partitions","action":"Submit each search text independently.","inputs":"Empty; mixed-case matching venue; no match; literal % or _.","expected":"Empty gives unrestricted results; matching is case-insensitive; no match gives an empty state; wildcard characters are literal."},
+      {"id":"D05","description":"Text length boundary","action":"Submit query q using the API or filter form.","inputs":"99, 100 and 101 characters after trimming.","expected":"99 and 100 are accepted; 101 is rejected with a search validation error."},
+      {"id":"D06","description":"Date and time range","action":"Filter 1 Nov 2026, 18:00 to 20:00 Singapore time.","inputs":"Starts 17:59:59.999, 18:00, 19:59:59.999, 20:00.","expected":"Include the middle two sessions; the lower bound is inclusive and upper bound exclusive."},
+      {"id":"D07","description":"Invalid filters","action":"Submit each malformed query separately.","inputs":"Impossible date; time without date; equal/reversed times; duplicate sport; unknown sport.","expected":"Validation fails for the affected field. No successful result set is presented for the invalid query."},
+      {"id":"D08","description":"Result count and pagination","action":"Load results and follow the returned next cursor.","inputs":"0, 1, 20 and 21 matching sessions.","expected":"Empty state for 0; correct results for 1 and 20; first page has 20 for 21 matches, with the final result on the next page and no duplicates."}
+    ]
+  },
+  {
+    "uc": "UC2-02",
+    "title": "Create a session",
+    "scenario": "Create one valid session and reject invalid submissions without saving a session.",
+    "prerequisites": "Active booker with email and completed payout setup. Baseline cost 1001c, 3 slots, minimum headcount 2, nonblank venue, future start and later end. Use a fresh idempotency key per independent subcase.",
+    "source": "use-cases/sessions/CreateSessions.ts:58-111; domain/sessions/pricing.ts:12-34; domain/accounts/booker.ts:93-144; app/sessions/create-session-input.ts.",
+    "cases": [
+      {"id":"C01","description":"Valid default creation","action":"POST /api/sessions using an authenticated API harness.","inputs":"Baseline; omit chosen price and visibility.","expected":"Exactly one session is created, initially PRIVATE, with a 333c share and generated invitation identity. Creation moves no funds."},
+      {"id":"C02","description":"Capacity boundaries","action":"Submit each slot value separately.","inputs":"totalSlots 1, 2, 29, 30, 31 and 2.5.","expected":"Integers 2, 29 and 30 succeed. 1, 31 and 2.5 fail; no session is saved for rejected values."},
+      {"id":"C03","description":"Minimum headcount","action":"Keep capacity 3 and vary minimum headcount.","inputs":"1, 2, 3, 4 and 2.5.","expected":"2 and 3 succeed. 1, 4 and 2.5 fail without saving."},
+      {"id":"C04","description":"Price boundaries","action":"Submit a chosen price for the baseline booking.","inputs":"166, 167, 168, 665, 666, 667 and 333.5 cents.","expected":"167-666 whole cents are accepted. 166, 667 and fractional cents fail. Omission uses 333c."},
+      {"id":"C05","description":"Cost and score partitions","action":"Vary one field per submission.","inputs":"Cost -1, 0, 2, 3, 4 cents; reliability -1, 0, 50.5, 100, 101.","expected":"With 3 slots, costs 3 and 4 yield 1c; lower values fail. Finite reliability 0-100 is accepted, including 50.5; out-of-range values fail."},
+      {"id":"C06","description":"Start and duration boundaries","action":"Submit with a controlled clock.","inputs":"Start T-1ms, T, T+1ms; separately end start-1ms, start, start+1ms.","expected":"Only a strictly future start and a strictly positive duration are accepted. Check millisecond cases through the API harness."},
+      {"id":"C07","description":"Account and required input","action":"Submit once per account/input state.","inputs":"Missing/inactive booker; missing email; incomplete payout; blank venue.","expected":"Each is rejected with the relevant account/input error and no created session. Restore all other baseline conditions per subcase."},
+      {"id":"C08","description":"Retry after ambiguous response","action":"Submit; simulate lost response; retry the identical payload and key.","inputs":"Same authenticated booker, payload and idempotency key.","expected":"Return the original creation result. Exactly one session exists; the retry creates no duplicate."}
+    ]
+  },
+  {
+    "uc": "UC2-03a",
+    "title": "Change session visibility",
+    "scenario": "Allow an eligible owner to set PUBLIC or PRIVATE while protecting capacity and lifecycle rules.",
+    "prerequisites": "Active owner and separate non-owner account. OPEN future session with at least one available place. Keep an independent Discover page open for propagation cases.",
+    "source": "app/sessions/visibility-input.ts:8-13; use-cases/sessions/ToggleSessionVisibility.ts:23-35; domain/accounts/booker.ts:172-198; app/sessions/README.md:242-291.",
+    "cases": [
+      {"id":"V01","description":"Publish a private session","action":"In hosted sessions, set visibility to PUBLIC.","inputs":"Eligible owner; PRIVATE session; one free place.","expected":"Success shows confirmed PUBLIC state. A healthy visible online Discover page includes it within the three-second target."},
+      {"id":"V02","description":"Hide a public session","action":"Set visibility to PRIVATE.","inputs":"Eligible PUBLIC session.","expected":"Success confirms PRIVATE. The healthy foreground discovery list removes it within three seconds."},
+      {"id":"V03","description":"Owner and account guard","action":"Request the change using each rejected identity.","inputs":"Non-owner; inactive owner; unauthenticated request.","expected":"Access is rejected; stored visibility is unchanged. API responses are 403 for foreign/inactive access and 401 without authentication."},
+      {"id":"V04","description":"Capacity boundary","action":"Request PUBLIC and PRIVATE separately.","inputs":"One available place; zero available places, including replacement reservations.","expected":"One available place permits the change. Zero rejects either target; a reserved place does not count as available."},
+      {"id":"V05","description":"Start boundary","action":"Change visibility using a fixed clock.","inputs":"Server time start-1ms and exactly start.","expected":"The first succeeds; exactly start fails. Time is evaluated after authoritative state is loaded."},
+      {"id":"V06","description":"Same target still validates","action":"Submit the current visibility again.","inputs":"Eligible session; separately full, closed or foreign-owned session.","expected":"Eligible same-value request succeeds. Ineligible same-value requests still fail; no shortcut bypasses guards."},
+      {"id":"V07","description":"Transport partitions","action":"Call the visibility endpoint with each input.","inputs":"Bad session UUID; valid UUID with visibility public, null or missing; valid PUBLIC/PRIVATE.","expected":"Malformed values return 400. Exact valid enum values reach the workflow."},
+      {"id":"V08","description":"Failed save","action":"Make the save/commit fail in a test environment.","inputs":"Eligible visibility request; injected transaction failure.","expected":"An error is shown and no successful committed value is reported. After rollback, the persisted visibility remains unchanged."}
+    ]
+  },
+  {
+    "uc": "UC2-03b",
+    "title": "Remove a participant",
+    "scenario": "Remove an eligible committed participant and refund the historical held amount once.",
+    "prerequisites": "Active owner, OPEN future session and a COMMITTED target with a 733c held amount. Read the removal preview before confirmation. Use fixture accounts and funds.",
+    "source": "use-cases/sessions/RemoveParticipant.ts:15-30; domain/accounts/booker.ts:200-218,321-337; app/sessions/README.md:332-399.",
+    "cases": [
+      {"id":"R01","description":"Confirm removal","action":"Open Manage participants, preview the target and confirm.","inputs":"Current preview; committed target; new UUID idempotency key.","expected":"Refund 733c to the participant wallet; retain REMOVED history; free capacity; session stays OPEN. The removed participant cannot rejoin."},
+      {"id":"R02","description":"Refund time partitions","action":"Remove a fresh target at each time before start.","inputs":"48h, exactly 30h, 5h and 1s before start.","expected":"Each refunds the full historical 733c. Participant withdrawal fees do not apply to booker removal."},
+      {"id":"R03","description":"Target status partitions","action":"Request removal for each target state.","inputs":"WAITLISTED, LEFT_WAITLIST, WITHDRAWN or REMOVED.","expected":"Each is rejected as an invalid state. No additional refund or saved removal occurs."},
+      {"id":"R04","description":"Access and missing records","action":"Request the list/preview/removal with each fixture.","inputs":"Foreign owner; inactive owner; missing user/session/participation.","expected":"No unauthorized private data or mutation. Foreign/inactive access is rejected; missing required records produce not-found errors."},
+      {"id":"R05","description":"Session lifecycle","action":"Confirm with a current preview at the boundary.","inputs":"Exactly session start; separately cancelled session.","expected":"Removal fails; no refund is committed and stored participation remains unchanged."},
+      {"id":"R06","description":"Stale and unaffected preview","action":"Preview, change fixture state, then confirm.","inputs":"Change held amount while COMMITTED; separately only visibility or an unrelated participant.","expected":"Changed hold requires a fresh preview and confirmation. Unrelated changes preserve validity. A target that becomes WITHDRAWN/REMOVED is rejected as ineligible."},
+      {"id":"R07","description":"Replay and recovery","action":"Confirm; lose the response; reload and retry the saved request.","inputs":"Identical user, target, payload and key; active account.","expected":"Return the original result, including after start, without another refund. Preserve the key during recovery."},
+      {"id":"R08","description":"Failure and queue effects","action":"Inject ledger/save/commit failure; separately complete a valid removal.","inputs":"Fresh fixtures with a waiting participant.","expected":"Failure commits no removal/refund. Success frees capacity while retaining FIFO priority and reservations; this removal call performs no automatic promotion."}
+    ]
+  },
+  {
+    "uc": "UC2-03c",
+    "title": "Cancel a session",
+    "scenario": "Cancel an eligible session, refund outstanding holds and preserve terminal participant history.",
+    "prerequisites": "Active owner and an OPEN future session. Seed committed, waitlisted and previously removed/refunded records. Read a fresh cancellation preview before confirming.",
+    "source": "use-cases/sessions/CancelSession.ts:15-29; domain/accounts/booker.ts:148-168,294-318; app/sessions/README.md:293-329.",
+    "cases": [
+      {"id":"X01","description":"Cancel with held funds","action":"Open cancellation preview and confirm.","inputs":"Two committed participants holding 500c and 733c.","expected":"Session becomes CANCELLED; the preview and result identify two refund recipients and total 1233c. Wallet refunds occur once."},
+      {"id":"X02","description":"Empty and full sessions","action":"Cancel each session with a fresh preview.","inputs":"No participants; separately all slots occupied.","expected":"Both are cancellable before start. Empty refunds total 0; full refunds outstanding holds. Cancellation is not blocked by fullness."},
+      {"id":"X03","description":"History partitions","action":"Cancel the mixed participant-list fixture.","inputs":"COMMITTED/HELD; WAITLISTED/no hold; REMOVED/REFUNDED.","expected":"Live records become CANCELLED; outstanding holds refund; waitlist produces no refund; REMOVED history stays REMOVED with no second refund."},
+      {"id":"X04","description":"Access and time guard","action":"Attempt cancellation for each rejected condition.","inputs":"Non-owner; inactive owner; exactly start; closed session.","expected":"Reject access or lifecycle violation. No new cancellation or refund is committed."},
+      {"id":"X05","description":"Financial preview becomes stale","action":"Preview; change participant/hold state; confirm the old version.","inputs":"Changed participant list or held amount after preview; session still eligible.","expected":"Return a stale-preview conflict; require a fresh preview and explicit confirmation; do not commit old refund assumptions."},
+      {"id":"X06","description":"Visibility change only","action":"Preview; change visibility; confirm.","inputs":"Unchanged participants/holds/lifecycle with a new PUBLIC/PRIVATE value.","expected":"Visibility alone does not invalidate the cancellation preview. Eligible cancellation succeeds."},
+      {"id":"X07","description":"Replay after completion","action":"Repeat the identical confirmed request.","inputs":"Same key and payload after cancellation or after start; active owner.","expected":"Return the original success and refund totals with no second refund or write."},
+      {"id":"X08","description":"Rollback and discovery","action":"Inject commit failure; separately perform a successful cancellation.","inputs":"Held funds and an open foreground Discover page.","expected":"Failure leaves stored state and funds unchanged. Success removes the session from healthy foreground discovery within three seconds. Venue booking cancellation remains external."}
+    ]
+  }
+]

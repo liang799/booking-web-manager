@@ -1,0 +1,35 @@
+{
+  "documentSha256": "9c52cfe1157517f52396142ef7b766e1a7d3d3147eabc52ced2cbe50d425373a",
+  "renderedPages": 18,
+  "visuallyReviewedPages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "result": "No clipping, overlap, missing diagram labels or broken tables found in final render.",
+  "renderer": "Bundled render_docx.py with bundled LibreOffice",
+  "diagramCount": 5,
+  "tablesAndText": "Editable Word content",
+  "diagrams": "Embedded PNGs; editable Graphviz sources included",
+  "checks": [
+    "Report paths match audited graph manifest",
+    "40 manual scenario groups marked Not run",
+    "46 creation expected/actual comparisons match",
+    "Graph arithmetic and declared paths validated"
+  ]
+}
