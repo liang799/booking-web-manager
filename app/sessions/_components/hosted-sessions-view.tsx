@@ -15,6 +15,10 @@ import type { SessionAccountAction, SetSessionVisibilityAction } from "../sessio
 import { SessionInvitationShare } from "./session-invitation-share";
 
 export interface HostedSessionsViewProps {
+  /** The overview opens the existing management workflow inside a session dialog. */
+  readonly embedded?: boolean;
+  /** A parent overview can own cancellation recovery even when this panel is closed. */
+  readonly onRequestCancellation?: (session: HostedSessionItem, trigger: HTMLButtonElement) => void;
   readonly outcome: HostedSessionsOutcome;
   readonly actions: readonly SessionAccountAction[];
   readonly refreshing: boolean;
@@ -24,20 +28,20 @@ export interface HostedSessionsViewProps {
 }
 
 /** Renders hosted sessions, an empty state, or a retryable loading error. */
-export function HostedSessionsView({ outcome, actions, refreshing, onSetVisibility, onRefresh, cancellation }: HostedSessionsViewProps) {
+export function HostedSessionsView({ outcome, actions, refreshing, onSetVisibility, onRefresh, cancellation, embedded = false, onRequestCancellation }: HostedSessionsViewProps) {
   const [selected, setSelected] = useState<HostedSessionItem | null>(null);
   const [cancelled, setCancelled] = useState<SessionCancellationResult | null>(null);
   const cancellationTrigger = useRef<HTMLButtonElement | null>(null);
   const creation = actions.find((action) => action.name === "create-session");
   const emailSetup = actions.find((action) => action.name === "add-email");
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 pb-10 pt-6 md:px-8 md:pt-10">
-      <header className="mb-6">
+    <div className={embedded ? "w-full" : "mx-auto w-full max-w-5xl px-6 pb-10 pt-6 md:px-8 md:pt-10"}>
+      {!embedded && <header className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Sessions you host</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Manage your upcoming sessions. Public sessions appear in Discover.</p>
         {creation && <Button asChild className="mt-4 min-h-11"><Link href={creation.href}><Plus className="mr-2 h-4 w-4" aria-hidden="true" />Create a session</Link></Button>}
         {emailSetup && <div className="mt-4 space-y-2"><p className="text-sm text-muted-foreground">Add an email address before creating a session.</p><Button asChild variant="outline" className="min-h-11"><Link href={emailSetup.href}>Add email</Link></Button></div>}
-      </header>
+      </header>}
       {outcome.status === "ready" && (outcome.awaitingAttendance?.length ?? 0) > 0 && <AttendanceDueList sessions={outcome.awaitingAttendance!} />}
       {cancelled && <p role="status" className="mb-4 rounded-lg border p-4">Session cancelled.{" "}
         <Money cents={cancelled.totalRefundCents} /> refunded to {cancelled.refundRecipientCount} participants.</p>}
@@ -49,7 +53,7 @@ export function HostedSessionsView({ outcome, actions, refreshing, onSetVisibili
           <ErrorMessage>{outcome.kind === "unavailable" ? "Session management is temporarily unavailable." : "We couldn't load your sessions. Please try again."}</ErrorMessage>
           <Button variant="outline" disabled={refreshing} onClick={onRefresh}>{refreshing ? "Loading…" : "Retry"}</Button>
         </div>
-      ) : outcome.sessions.length === 0 ? (
+      ) : outcome.sessions.length === 0 && !(embedded && (outcome.awaitingAttendance?.length ?? 0) > 0) ? (
         <div className="space-y-4">
           <EmptyState title="No upcoming sessions to manage" description="Your open, upcoming sessions will appear here." />
           <Button asChild variant="outline"><Link href="/discover?returnTo=%2Fsessions">Find a session</Link></Button>
@@ -58,7 +62,7 @@ export function HostedSessionsView({ outcome, actions, refreshing, onSetVisibili
         <ul className="space-y-4">
           {outcome.sessions.map((session) => <HostedSessionCard key={session.sessionId} session={session}
             refreshing={refreshing} onSetVisibility={onSetVisibility} onRefresh={onRefresh}
-            onCancel={cancellation ? (trigger) => { cancellationTrigger.current = trigger; setSelected(session); } : undefined} />)}
+            onCancel={onRequestCancellation ? (trigger) => onRequestCancellation(session, trigger) : cancellation ? (trigger) => { cancellationTrigger.current = trigger; setSelected(session); } : undefined} />)}
         </ul>
       )}
     </div>

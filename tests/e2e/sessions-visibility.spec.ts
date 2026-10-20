@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { PLATFORM_HOLDING_ACCOUNT_ID } from "../../lib/money/constants";
 import { sessionTestContext, type SessionTestContext } from "../support/session-test-context";
+import { openHostedSession } from "./session-overview-helpers";
 
 type Identity = Awaited<ReturnType<SessionTestContext["identity"]>>;
 type Visibility = "PRIVATE" | "PUBLIC";
@@ -85,8 +86,9 @@ test("UC2-03a owner controls update an open discovery page within three seconds 
     const venue = `Visibility-${randomUUID().slice(0, 8)}`;
     await insertSession(context, booker.userId, venue);
     await page.setViewportSize({ width: 390, height: 844 });
-    await login(page, booker, "/sessions");
-    await expect(page.getByRole("heading", { name: "Sessions you host", exact: true })).toBeVisible();
+    await login(page, booker, "/sessions?tab=hosting");
+    await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
+    await openHostedSession(page, venue);
     const destination = `/discover?q=${venue}&returnTo=%2Fsessions`;
     await login(participantPage, participant, destination);
     await expect(participantPage.getByText("No sessions found", { exact: true })).toBeVisible();
@@ -120,6 +122,7 @@ test("UC2-03a owner controls update an open discovery page within three seconds 
     await expect(row(participantPage, venue)).toHaveCount(0, { timeout: Math.max(1, 3000 - (Date.now() - privateAt)) });
     expect(Date.now() - privateAt).toBeLessThanOrEqual(3000);
     await page.reload();
+    await openHostedSession(page, venue);
     await expect(row(page, venue).getByRole("button", { name: "Make public", exact: true })).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.screenshot({ path: testInfo.outputPath("session-visibility-desktop.png"), fullPage: true });
@@ -129,7 +132,7 @@ test("UC2-03a owner controls update an open discovery page within three seconds 
   }
 });
 
-test("management lists only hosted upcoming sessions, blocks full ones, and enforces API access", async ({ page, request }) => {
+test("hosting separates upcoming and past sessions, blocks full ones, and enforces API access", async ({ page, request }) => {
   test.setTimeout(60_000);
   const context = sessionTestContext();
   try {
@@ -144,10 +147,14 @@ test("management lists only hosted upcoming sessions, blocks full ones, and enfo
     const joined = await insertSession(context, other.userId, `${prefix} participant only`);
     await commitFixture(context, joined, booker);
     await insertSession(context, booker.userId, `${prefix} past`, { startAt: "2020-01-01T10:00:00Z" });
-    await login(page, booker, "/sessions");
-    await expect(page.getByRole("listitem")).toHaveCount(2);
+    await login(page, booker, "/sessions?tab=hosting");
+    const upcoming = page.getByRole("region", { name: "Upcoming (2)", exact: true });
+    const past = page.getByRole("region", { name: "Past (1)", exact: true });
+    await expect(upcoming.getByRole("listitem")).toHaveCount(2);
     await expect(row(page, `${prefix} participant only`)).toHaveCount(0);
-    await expect(row(page, `${prefix} past`)).toHaveCount(0);
+    await expect(past.getByRole("listitem").filter({ hasText: `${prefix} past` })).toBeVisible();
+    await expect(upcoming.getByRole("listitem").filter({ hasText: `${prefix} past` })).toHaveCount(0);
+    await openHostedSession(page, `${prefix} full`);
     await expect(row(page, `${prefix} full`).getByRole("button", { name: "Make public", exact: true })).toHaveCount(0);
 
     expect((await request.patch(`/api/sessions/${sessionId}/visibility`, { data: { visibility: "PUBLIC" } })).status()).toBe(401);
@@ -257,7 +264,7 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
         discoveryRequestsAfterLeaving++;
     });
     await page.goto("/sessions");
-    await expect(page.getByRole("heading", { name: "Sessions you host", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
     discoveryRequestsAfterLeaving = 0;
     // A deliberate two-poll observation window verifies interval teardown.
     await page.waitForTimeout(2200);
