@@ -23,14 +23,14 @@ export function AuthFrame({ prompt, switchLabel, switchHref, children }: AuthFra
         <p className={styles.sceneCaption}>Great games<br />start here<span /></p>
         <p className={styles.mobileCaption}>People<br />Courts<br />Community<span /></p>
         <div className={styles.sceneFooter}>
-          <p>Booking.</p>
+          <p><BookingLogo tone="inherit" className="text-[11px] leading-[normal]" /></p>
           <p>People courts community</p>
         </div>
       </div>
 
       <header className={styles.header}>
         <Link href="/" aria-label="Booking home" className={styles.homeLink}>
-          <BookingLogo className={styles.logo} />
+          <BookingLogo />
         </Link>
         <div className={styles.headerSwitch}>
           <span>{prompt}</span>

@@ -18,7 +18,7 @@ export function HomeView({ state, onRetry }: HomeViewProps) {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-6 pb-10 pt-6 md:px-8 md:pb-12 md:pt-0 xl:px-12">
       <header className="hidden min-h-[208px] flex-col justify-center pb-8 pt-10 md:flex lg:min-h-[224px]">
-        <BookingLogo className="text-5xl lg:text-6xl" />
+        <BookingLogo size="display" />
         <p className="mt-3 max-w-md text-base leading-relaxed text-muted-foreground lg:text-lg">Make time to play.</p>
       </header>
       <section aria-labelledby="home-bookings-heading" aria-busy={state.status === "loading"}>

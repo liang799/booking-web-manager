@@ -1,6 +1,8 @@
 import { ArrowDown, ArrowRight, ArrowUpRight, Menu } from "lucide-react";
+import { BookingLogo } from "@/components/ui/booking-logo";
 import Image from "next/image";
 import Link from "next/link";
+import { LandingHostSection } from "./landing-host-section";
 import styles from "./landing-view.module.css";
 
 const sports = [
@@ -33,7 +35,7 @@ export function LandingView() {
           </g>
         </svg>
         <header className={styles.header}>
-          <Link href="/" className={styles.logo} aria-label="Booking home">Booking.</Link>
+          <Link href="/" className={styles.logo} aria-label="Booking home"><BookingLogo tone="inherit" /></Link>
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <a href="#play">Play</a>
             <a href="#sports">Discover</a>
@@ -105,13 +107,15 @@ export function LandingView() {
         </ol>
       </section>
 
-      <section className={styles.hostSection} id="host" aria-labelledby="host-title">
-        <div><p className={styles.eyebrow}>03 / Bring people together</p><h2 id="host-title">Got a court?<br />Make it a game.</h2><p>Already booked a venue? Create a session, set your places and price, and give people a reason to play.</p><Link href="/sessions/create" prefetch={false} className={styles.primaryLink}>Host a session<ArrowUpRight aria-hidden="true" /></Link></div>
-        <div className={styles.courtMark} aria-hidden="true"><span /><span /><span /><span /></div>
-      </section>
+      <LandingHostSection>
+        <p className={styles.eyebrow}>03 / Bring people together</p>
+        <h2 id="host-title">Got a court?<br />Make it a game.</h2>
+        <p>Already booked a venue? Create a session, set your places and price, and give people a reason to play.</p>
+        <Link href="/sessions/create" prefetch={false} className={styles.primaryLink}>Host a session<ArrowUpRight aria-hidden="true" /></Link>
+      </LandingHostSection>
 
       <footer className={styles.footer}>
-        <div><Link href="/" className={styles.logo}>Booking.</Link><p>A better game, together.</p></div>
+        <div><Link href="/" className={styles.logo}><BookingLogo tone="inherit" /></Link><p>A better game, together.</p></div>
         <nav aria-label="Project resources"><span>Explore the project</span><Link href="/api-docs" prefetch={false}>API docs<ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/api/openapi" prefetch={false}>OpenAPI<ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/storybook" prefetch={false}>Storybook<ArrowUpRight size={14} aria-hidden="true" /></Link></nav>
         <p className={styles.credit}>Made for the love of the game.<br />NTU SC2006 · Group 3</p>
       </footer>
