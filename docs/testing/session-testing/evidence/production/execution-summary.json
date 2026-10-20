@@ -1,0 +1,37 @@
+{
+  "opening_summary": "The focused local snapshot passed 228 tests across 13 files. Production execution passed 2 smoke tests, 19 public GET checks, 3 protected GET checks and 7 browser checks, with overlapping assertions. Of 40 scenario groups, 2 passed, 4 are partial, 18 are blocked by fixtures or account setup and 16 await controlled execution or account setup. A separate appendix records 46 local creation boundary tests.",
+  "run_context": "Production target: https://booking-web-manager.vercel.app. Checks ran on 20 October 2026; individual timestamps are retained in the evidence. The deployed Git revision was not verified. These observations describe the live deployment at execution time, not a guarantee for every scenario.",
+  "summary_paragraphs": [
+    "The public discovery service returned HTTP 200, a valid empty page and Cache-Control: no-store. D05 search-length boundaries passed through both HTTP and browser interfaces. D07 malformed-filter inputs passed through HTTP; browser checks also showed errors for missing date and equal or reversed time bounds.",
+    "The empty dataset limited filtering and pagination checks. D01, D04, D06 and D08 therefore remain partial: query acceptance and the zero-result view do not establish matching, lifecycle exclusion, exact time boundaries or multi-page results.",
+    "Account registration was prepared as Neoh Session QA. Public authentication settings enable email signup and auto-confirmation. The final Create account step accepts Terms and Privacy Policy and was awaiting confirmation when this report was generated; no account or session was created. Hosting additionally requires completed Stripe test-mode payout onboarding."
+  ],
+  "checks": [
+    [
+      "Production smoke suite",
+      "2 tests passed: OpenAPI validation and public discovery projection/no-store checks.",
+      "Live endpoint and contract checks; no authenticated mutations."
+    ],
+    [
+      "Public GET matrix",
+      "19 checks passed, including 99/100/101 length, malformed date/time/filter/cursor and valid-range acceptance.",
+      "D05 and D07 API subcases pass; empty-data coverage remains partial."
+    ],
+    [
+      "Anonymous protected reads",
+      "Hosted sessions, participants and cancellation preview each returned 401 UNAUTHENTICATED.",
+      "3 supplemental access-control checks; synthetic UUID only."
+    ],
+    [
+      "Browser observations",
+      "Anonymous empty view; 99/100 accepted; 101 rejected; missing date and equal/reversed times rejected.",
+      "7 observations passed. No sign-in or management action was executed."
+    ],
+    [
+      "Test account setup",
+      "Profile form prepared; final Terms/Privacy acceptance not submitted.",
+      "Account-dependent cases await confirmation and setup."
+    ]
+  ],
+  "limitations": "The check counts are separate suites and include overlapping assertions; do not add them into a unique-case total or combine them with local unit totals. No live session creation, visibility change, removal, cancellation, financial refund, concurrent transaction or injected failure is claimed. Controlled-clock and failure-injection scenarios remain pending; missing account/participant/session fixtures are marked blocked."
+}

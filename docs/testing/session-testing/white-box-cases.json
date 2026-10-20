@@ -18,37 +18,37 @@
         "D2",
         "D0 D1 D2 D3 D5 D7 D9 D11 D12",
         "Text only. Add a bound case-insensitive substring; escape %, _ and backslash literally.",
-        "Proposed isolated path; existing text case also sets sport and region."
+        "Pass; isolated local WB-D2 SQL/parameter test. No database execution or branch instrumentation."
       ],
       [
         "D3",
         "D0 D1 D3 D4 D5 D7 D9 D11 D12",
         "Sport only. Add bound sport equality without other optional predicates.",
-        "Proposed isolated path."
+        "Pass; isolated local WB-D3 SQL/parameter test. No database execution or branch instrumentation."
       ],
       [
         "D4",
         "D0 D1 D3 D5 D6 D7 D9 D11 D12",
         "Region only. Add bound region equality.",
-        "Proposed isolated path."
+        "Pass; isolated local WB-D4 SQL/parameter test. No database execution or branch instrumentation."
       ],
       [
         "D5",
         "D0 D1 D3 D5 D7 D8 D9 D11 D12",
         "Lower time bound only. Add start_at >= from.",
-        "Proposed isolated path."
+        "Pass; isolated local WB-D5 SQL/parameter test. No database execution or branch instrumentation."
       ],
       [
         "D6",
         "D0 D1 D3 D5 D7 D9 D10 D11 D12",
         "Upper time bound only. Add start_at < before.",
-        "Proposed isolated path."
+        "Pass; isolated local WB-D6 SQL/parameter test. No database execution or branch instrumentation."
       ]
     ],
     "notes": [
-      "The baseline takes every false edge. Each subsequent path introduces one distinct true-action edge, giving six independent feasible paths for this graph.",
-      "The five existing reader tests passed. Combined-filter cases exercise the guards but do not execute the five isolated cases above. They inspect SQL and mock rows; they do not execute SQL against PostgreSQL.",
-      "Evidence: tests/lib/sessions/postgres-session-discovery-reader.test.ts:10-68. Also assert bound parameter order and the absence of raw hostile text in SQL."
+      "The baseline takes every false edge. Each subsequent path introduces one distinct true-action edge, giving six independent feasible paths for this graph. The path strings remain source-derived predictions.",
+      "All six declared basis inputs now have executable evidence: D1 from the earlier existing no-filter test, and D2-D6 from five new isolated local checks. The new checks assert exact optional predicates, bound parameter order, escaped literal text and absence of raw input in SQL. No database or production request was made by those checks.",
+      "Earlier evidence: tests/lib/sessions/postgres-session-discovery-reader.test.ts:10-68. New evidence: tests/lab4/discovery-basis-path.test.ts and evidence/production-validation-local/discovery-basis-vitest.json, discovery-basis-observations.json and discovery-basis-vitest.log. The focused run passed 5 tests in 1 file with zero failures; this is not an instrumented branch-coverage result."
     ]
   },
   {

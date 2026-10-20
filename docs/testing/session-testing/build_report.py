@@ -162,7 +162,8 @@ def create_report(output):
     doc.add_paragraph("Black box and white box testing\nfor session use cases", style="Title")
     p(doc, "Booking Web Manager   |   SC2006 Group 3   |   20 October 2026", 12)
     p(doc, "This report covers Neoh's session discovery, creation and management use cases. It provides user-facing test scenarios, code-based control-flow diagrams and recorded automated results that can be used in the project's testing section.")
-    p(doc, "The focused automated checks passed 223 tests across 12 files. The 40 browser/API scenario groups are prepared for execution and are explicitly marked Not run. A separate appendix records the actual outputs of 46 creation boundary tests.", bold=True)
+    production = json.loads((HERE / "evidence/production/execution-summary.json").read_text())
+    p(doc, production["opening_summary"], bold=True)
     table(doc, ["Use case", "Function", "Black box focus", "White box subject"], [
         ["UC2-01", "Discover sessions", "Public visibility, search, filters and pagination", "SQL filter construction"],
         ["UC2-02", "Create session", "Account eligibility, capacity, dates and price", "Account eligibility helper"],
@@ -180,11 +181,22 @@ def create_report(output):
         doc.add_heading(group["title"], level=2)
         p(doc, f"Scenario: {group['scenario']}  Priority: High.", 9.5)
         p(doc, "Prerequisites: " + group["prerequisites"], 9.5)
-        rows = [[r["id"], r["description"], r["action"], r["inputs"], r["expected"], "Not run", "Pending"] for r in group["cases"]]
+        rows = [[r["id"], r["description"], r["action"], r["inputs"], r["expected"],
+                 r.get("actual_summary", r.get("actual", "Not run")),
+                 r.get("result", "Pending")] for r in group["cases"]]
         table(doc, ["ID", "Description", "Action", "Inputs", "Expected output", "Actual output", "Result"],
-              rows, [0.48, 1.2, 1.65, 1.91, 3.58, 0.92, 0.74], 8.6)
-        p(doc, "Run each listed value or state as a separate subcase with a fresh fixture. Record the observed result before changing Pending to Pass or Fail. Millisecond boundaries require a controllable test clock or API harness.", 9)
+              rows, [0.48, 1.1, 1.5, 1.65, 3.05, 1.87, 0.83], 8.6)
+        p(doc, "Pass covers all listed subcases at the stated interface. Partial means only some were observed. Blocked means a required account, fixture or controlled environment is unavailable. The production execution section gives the observations and limits; local unit results do not turn a production case into a pass.", 9)
         p(doc, "Source: " + group["source"], 8.5)
+
+    heading(doc, "Production execution results")
+    p(doc, production["run_context"], 10)
+    for paragraph in production["summary_paragraphs"]:
+        p(doc, paragraph, 10)
+    table(doc, ["Check", "Observed output", "Conclusion"], production["checks"],
+          [2.2, 5.2, 3.08], 9)
+    p(doc, production["limitations"], 9)
+    p(doc, "Evidence: evidence/production/ contains sanitized HTTP results, browser observations and the read-only reproduction script. No account passwords, tokens or private user records are included.", 9)
 
     graph_items = graphs["graphs"] if isinstance(graphs, dict) else graphs
     by_image = {g["pngFile"]: g for g in graph_items}
@@ -227,7 +239,7 @@ def create_report(output):
         p(doc, "Evidence: evidence/testing-black-box-observations.json; tests/lab4/create-sessions-black-box.test.ts. These are class-boundary results using transaction doubles, not browser or database results.", 8.5)
 
     heading(doc, "Execution evidence and reproduction")
-    p(doc, "All 223 focused checks passed with no failed or skipped tests. Execution used Node 22.17.0 and Vitest 4.1.11 on 20 October 2026, between 15:52 and 15:54 Singapore time. The report reuses the recorded outputs; no manual browser result is inferred from those checks.", 10)
+    p(doc, "The local evidence totals 228 passing checks across 13 files: the original 223-test snapshot at 15:52–15:54 SGT and five isolated discovery basis tests at 16:51 SGT on 20 October 2026. Execution used Node 22.17.0 and Vitest 4.1.11, with no failures or skips in these selections. These outputs remain separate from the production HTTP and browser observations above.", 10)
     table(doc, ["Executed suite", "Tests", "What the result establishes"], [
         ["Discovery application", "4", "Criteria and server-time forwarding; returned projection and error propagation"],
         ["Creation application", "25", "Creation rules, defaults, persistence calls and failure behavior"],
@@ -237,11 +249,12 @@ def create_report(output):
         ["Creation EP and BVA", "46", "Recorded expected and actual outputs across selected input partitions"],
         ["Cancellation basis cases", "5", "Concrete outcomes for the five predicted helper paths"],
         ["Discovery query and SQL reader", "37", "32 parser checks and 5 SQL-construction/mocked-row checks"],
+        ["Isolated discovery basis inputs", "5", "One optional filter per test; exact SQL predicates and bound values"],
         ["Visibility routes actions and OpenAPI", "33", "20 route, 11 action and 2 contract checks"],
-        ["Total", "223", "12 distinct files; no browser, real database or external payment execution"],
+        ["Total local focused evidence", "228", "13 distinct files; no real database or external payment execution"],
     ], [3.35, 0.65, 6.48], 9)
-    p(doc, "Evidence files retain the two timestamped Vitest JSON reports and console logs. The accompanying README provides exact reproduction commands and source links. Tests inspect mocks and in-memory state; PostgreSQL atomicity, concurrent transactions, provider payments and the three-second discovery update target still require their service-backed checks.", 9)
-    p(doc, "No branch-coverage percentage, MC/DC result or whole-system pass claim is made. The five isolated discovery filter paths remain proposed; combined-filter tests do not establish that exact independent basis. Cancellation's caller loop and all helper internals excluded from a graph need their own tests.", 9)
+    p(doc, "Evidence files retain three timestamped Vitest JSON reports and console logs. The accompanying README provides exact reproduction commands and source links. Tests inspect mocks and in-memory state; PostgreSQL atomicity, concurrent transactions, provider payments and the three-second discovery update target still require their service-backed checks.", 9)
+    p(doc, "No branch-coverage percentage, MC/DC result or whole-system pass claim is made. All six predicted discovery basis inputs now have local SQL-construction evidence, including five new isolated filters. The paths remain source-derived predictions, not instrumented traces. Cancellation's caller loop and all helper internals excluded from a graph need their own tests.", 9)
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.save(output)
     print(output)

@@ -1,6 +1,6 @@
 {
-  "documentSha256": "9c52cfe1157517f52396142ef7b766e1a7d3d3147eabc52ced2cbe50d425373a",
-  "renderedPages": 18,
+  "documentSha256": "33d3e65e6a5b0f6c825d1be61abdf2630c684c7b213dfda7946434811f9d06b2",
+  "renderedPages": 19,
   "visuallyReviewedPages": [
     1,
     2,
@@ -19,7 +19,8 @@
     15,
     16,
     17,
-    18
+    18,
+    19
   ],
   "result": "No clipping, overlap, missing diagram labels or broken tables found in final render.",
   "renderer": "Bundled render_docx.py with bundled LibreOffice",
@@ -28,8 +29,10 @@
   "diagrams": "Embedded PNGs; editable Graphviz sources included",
   "checks": [
     "Report paths match audited graph manifest",
-    "40 manual scenario groups marked Not run",
+    "40 scenario groups: 2 pass, 4 partial, 18 blocked, 16 pending",
     "46 creation expected/actual comparisons match",
-    "Graph arithmetic and declared paths validated"
+    "All six discovery basis inputs supported by local SQL-construction tests",
+    "Production evidence distinguished from local white-box evidence",
+    "All 19 pages rendered and visually inspected"
   ]
 }
