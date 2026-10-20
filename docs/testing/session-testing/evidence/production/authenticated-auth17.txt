@@ -1,0 +1,30 @@
+Browser tab: 1, Title: "Booking Web Manager", URL: "https://booking-web-manager.vercel.app/sessions/create".
+0 AXWebArea Booking Web Manager, URL: booking-web-manager.vercel.app/sessions/create
+	1 container
+		28 text Booking Web Manager
+		3 container Create a session
+			29 container
+				36 button Previous step
+				31 progress indicator Description: Creation progress, Value: 3
+				32 text 0 3  / 03
+				59 heading Auto-Generated Pricing, Value: 1
+					60 text Auto-Generated Pricing
+				35 text A suggested price based on your booking cost and number of slots.
+			11 container Session form
+				61 text Price per slot
+				62 text S$3.33
+				63 container
+					64 text Suggested  S$3.33  · based on booking cost and  3  slots
+				65 container
+					66 text Estimated revenue at full capacity ( 3  slots)
+				67 text S$9.99
+				68 text Adjust price per slot (SGD)
+				69 text field (settable) Adjust price per slot (SGD), Value: 3.33, ID: price
+				70 slider (settable, integer) Description: Price per slot slider, Value: 333
+				71 container price-range
+					72 text S$1.67 S$6.66
+			56 container
+				57 button Back
+				58 button Done
+
+The focused UI element is 59 heading Auto-Generated Pricing, Value: 1

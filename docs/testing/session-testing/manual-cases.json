@@ -12,7 +12,7 @@
         "action": "Open Discover anonymously, then while signed in.",
         "inputs": "Same fixture and empty filters.",
         "expected": "Both visitors can view the same public results. Joining may separately require sign in.",
-        "actual": "Production anonymous GET /api/sessions returned HTTP 200 with items=[] and nextCursor=null. Signed-in comparison and the browser journey were not run by this API check. Separately, the anonymous browser rendered Find Your Next Game, a Log in link and No sessions found.",
+        "actual": "The production anonymous API returned an empty page, and both anonymous and signed-in browser sessions displayed Find Your Next Game and No sessions found. Neoh Session QA was created and signed in. The comparison covers the naturally empty dataset only; populated-session equivalence and the join sign-in flow remain untested.",
         "result": "Partial",
         "production_evidence": "evidence/production/public-get-checks-20261020T081609Z.json",
         "production_execution": {
@@ -20,7 +20,7 @@
           "target": "https://booking-web-manager.vercel.app",
           "started_at_utc": "2026-10-20T08:16:09.524513+00:00",
           "finished_at_utc": "2026-10-20T08:16:10.738105+00:00",
-          "remaining_scope": "Signed-in visitor comparison and join sign-in behavior."
+          "remaining_scope": "Populated-session equivalence and join sign-in behavior; signed-in/anonymous empty comparison was observed separately in the browser."
         },
         "production_subcases": [
           {
@@ -31,8 +31,25 @@
             "result": "PASS"
           }
         ],
-        "actual_summary": "Anonymous API and browser pass; signed-in comparison not run.",
-        "browser_evidence": "evidence/production/browser-observations.json"
+        "actual_summary": "Anonymous and signed-in views both empty; populated comparison not run.",
+        "browser_evidence": "evidence/production/browser-observations.json",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH01",
+            "case": "D01",
+            "observed_at_utc": "2026-10-20T09:05:31.922Z",
+            "expected": "Signed-in Discover renders the same empty result as the anonymous run",
+            "actual": "Signed-in Find Your Next Game rendered All upcoming public sessions and No sessions found",
+            "result": "PASS",
+            "evidence": "authenticated-auth01.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": false,
+          "remaining_scope": "Populated-session equivalence and join sign-in behavior."
+        }
       },
       {
         "id": "D02",
@@ -41,8 +58,8 @@
         "inputs": "PUBLIC/PRIVATE; OPEN/CANCELLED; full/non-full; future start.",
         "expected": "Only PUBLIC and OPEN sessions appear. A full eligible session remains listed.",
         "result": "Blocked",
-        "actual": "Not run. No controlled public/private, open/cancelled and full/non-full sessions.",
-        "actual_summary": "Not run. No controlled public/private, open/cancelled and full/non-full sessions."
+        "actual": "Not run. The signed-in account exists, but /payouts is unavailable and no owned session was created. Controlled public/private, open/cancelled and full/non-full fixtures remain absent.",
+        "actual_summary": "No controlled visibility/state fixtures; payout setup unavailable."
       },
       {
         "id": "D03",
@@ -308,8 +325,34 @@
         "inputs": "Baseline; omit chosen price and visibility.",
         "expected": "Exactly one session is created, initially PRIVATE, with a 333c share and generated invitation identity. Creation moves no funds.",
         "result": "Blocked",
-        "actual": "Not run. Ready booker and authenticated API harness needed to test omitted defaults.",
-        "actual_summary": "Not run. Ready booker and authenticated API harness needed to test omitted defaults."
+        "actual": "Not run at the specified API boundary. Neoh Session QA now exists and is signed in, but completed payout setup is absent. The otherwise-valid wizard draft showed Complete your payout account setup before creating a session. /payouts remained unavailable after Try again, so no owned session was created. Omitted API defaults and successful persistence were not exercised.",
+        "actual_summary": "Account exists; payout setup unavailable. Successful API creation not run.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH21",
+            "case": "C07 incomplete payout",
+            "observed_at_utc": "2026-10-20T09:11:11.560Z",
+            "expected": "Otherwise-valid draft rejected for incomplete payout with editable fields restored",
+            "actual": "UI displayed Complete your payout account setup before creating a session; price3.33 and Back/Done remained enabled",
+            "result": "PASS",
+            "evidence": "authenticated-auth21.txt"
+          },
+          {
+            "id": "AUTH24",
+            "case": "Production fixture blocker",
+            "observed_at_utc": "2026-10-20T09:12:58.866Z",
+            "expected": "Inspect whether normal payout onboarding is available",
+            "actual": "Payouts are not available yet message persisted after Try again; no onboarding controls offered",
+            "result": "BLOCKED",
+            "evidence": "authenticated-auth24.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": false,
+          "remaining_scope": "Working payout onboarding, completed payout setup and authenticated API creation with omitted optional fields."
+        }
       },
       {
         "id": "C02",
@@ -318,8 +361,43 @@
         "inputs": "totalSlots 1, 2, 29, 30, 31 and 2.5.",
         "expected": "Integers 2, 29 and 30 succeed. 1, 31 and 2.5 fail; no session is saved for rejected values.",
         "result": "Blocked",
-        "actual": "Not run. Ready booker and API inputs needed for every capacity partition.",
-        "actual_summary": "Not run. Ready booker and API inputs needed for every capacity partition."
+        "actual": "Supplemental client stepper checks passed: capacity 2 disabled decrease, 29 allowed increase, and 30 disabled increase to 31. The scenario remains blocked for API and persistence checks, including direct 1, 31 and 2.5 submissions and successful 2/29/30 creation. The signed-in test account cannot complete payout setup because /payouts remains unavailable.",
+        "actual_summary": "UI stepper limits 2/29/30 observed; API/persistence cases blocked.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH08",
+            "case": "C02/C03 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:08:20.601Z",
+            "expected": "Minimum slots2; headcount stays2 and cannot exceed capacity",
+            "actual": "At capacity2, slot decrease disabled; headcount2 with both headcount controls disabled",
+            "result": "PASS",
+            "evidence": "authenticated-auth08.txt"
+          },
+          {
+            "id": "AUTH09",
+            "case": "C02 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:08:26.527Z",
+            "expected": "Capacity29 remains selectable with increment enabled",
+            "actual": "Capacity29 displayed and increase button enabled",
+            "result": "PASS",
+            "evidence": "authenticated-auth09.txt"
+          },
+          {
+            "id": "AUTH10",
+            "case": "C02 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:08:33.597Z",
+            "expected": "Capacity30 disables increment",
+            "actual": "Capacity30 displayed and increase disabled, preventing31 through the stepper",
+            "result": "PASS",
+            "evidence": "authenticated-auth10.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": true,
+          "remaining_scope": "All stated direct API capacity inputs and accepted-session persistence after payout readiness."
+        }
       },
       {
         "id": "C03",
@@ -328,8 +406,34 @@
         "inputs": "1, 2, 3, 4 and 2.5.",
         "expected": "2 and 3 succeed. 1, 4 and 2.5 fail without saving.",
         "result": "Blocked",
-        "actual": "Not run. Ready booker and API inputs needed for every headcount partition.",
-        "actual_summary": "Not run. Ready booker and API inputs needed for every headcount partition."
+        "actual": "Supplemental client controls passed: at capacity 2, headcount stayed at 2 with both controls disabled; at capacity 3, headcount 3 disabled increase, and headcount 2 disabled decrease. Direct API 1/2/3/4/2.5 validation and persistence remain blocked by unavailable payout setup.",
+        "actual_summary": "UI headcount limits 2..capacity observed; API/persistence cases blocked.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH08",
+            "case": "C02/C03 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:08:20.601Z",
+            "expected": "Minimum slots2; headcount stays2 and cannot exceed capacity",
+            "actual": "At capacity2, slot decrease disabled; headcount2 with both headcount controls disabled",
+            "result": "PASS",
+            "evidence": "authenticated-auth08.txt"
+          },
+          {
+            "id": "AUTH11",
+            "case": "C03 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:09:09.927Z",
+            "expected": "Headcount cannot exceed capacity3",
+            "actual": "Headcount3 displayed with increase disabled; lower bound2 previously disabled decrease",
+            "result": "PASS",
+            "evidence": "authenticated-auth11.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": true,
+          "remaining_scope": "All stated direct API headcount inputs and accepted-session persistence after payout readiness."
+        }
       },
       {
         "id": "C04",
@@ -337,9 +441,53 @@
         "action": "Submit a chosen price for the baseline booking.",
         "inputs": "166, 167, 168, 665, 666, 667 and 333.5 cents.",
         "expected": "167-666 whole cents are accepted. 166, 667 and fractional cents fail. Omission uses 333c.",
-        "result": "Blocked",
-        "actual": "Not run. Ready booker needed to verify accepted prices and saved state.",
-        "actual_summary": "Not run. Ready booker needed to verify accepted prices and saved state."
+        "result": "Partial",
+        "actual": "The browser displayed a 333c suggested share, 167-666c permitted range and 999c full-capacity revenue for a 1001c, three-slot draft. It rejected 166c, 667c and 333.5c while keeping the pricing step open. Accepted boundary prices, omission behavior, server validation and saved-session values were not established; payout setup prevented successful creation.",
+        "actual_summary": "333c/range display and invalid 166/667/333.5c UI checks pass; accepted saves blocked.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH17",
+            "case": "C04 pricing display",
+            "observed_at_utc": "2026-10-20T09:10:20.456Z",
+            "expected": "1001c cost/3 slots yields333c suggested; range167\u2013666c",
+            "actual": "UI showed S$3.33 suggested price, S$1.67\u2013S$6.66 range and S$9.99 full-capacity revenue",
+            "result": "PASS",
+            "evidence": "authenticated-auth17.txt"
+          },
+          {
+            "id": "AUTH18",
+            "case": "C04 client price partition",
+            "observed_at_utc": "2026-10-20T09:10:25.855Z",
+            "expected": "166c rejected below167c minimum",
+            "actual": "Done retained pricing step with Choose a price within the displayed range",
+            "result": "PASS",
+            "evidence": "authenticated-auth18.txt"
+          },
+          {
+            "id": "AUTH19",
+            "case": "C04 client price partition",
+            "observed_at_utc": "2026-10-20T09:10:32.732Z",
+            "expected": "667c rejected above666c maximum",
+            "actual": "Done retained pricing step with displayed-range error",
+            "result": "PASS",
+            "evidence": "authenticated-auth19.txt"
+          },
+          {
+            "id": "AUTH20",
+            "case": "C04 client price partition",
+            "observed_at_utc": "2026-10-20T09:10:38.959Z",
+            "expected": "333.5 cents rejected as fractional cents",
+            "actual": "3.335 SGD retained pricing step with displayed-range error",
+            "result": "PASS",
+            "evidence": "authenticated-auth20.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": false,
+          "remaining_scope": "Successful 167/168/665/666c creation, omitted price, server validation and persisted shares."
+        }
       },
       {
         "id": "C05",
@@ -347,9 +495,62 @@
         "action": "Vary one field per submission.",
         "inputs": "Cost -1, 0, 2, 3, 4 cents; reliability -1, 0, 50.5, 100, 101.",
         "expected": "With 3 slots, costs 3 and 4 yield 1c; lower values fail. Finite reliability 0-100 is accepted, including 50.5; out-of-range values fail.",
-        "result": "Blocked",
-        "actual": "Not run. Ready booker and API inputs needed for all cost and reliability partitions.",
-        "actual_summary": "Not run. Ready booker and API inputs needed for all cost and reliability partitions."
+        "result": "Partial",
+        "actual": "With three slots, the browser rejected costs -1c, 0c and 2c. Supplemental checks also rejected 1c and fractional-cent 10.011 SGD. No successful 3c/4c session or reliability partition was exercised; these remain blocked by unavailable payout setup. Client rejection does not prove API validation.",
+        "actual_summary": "Negative/zero/too-small costs rejected in UI; accepted costs and reliability not run.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH12",
+            "case": "C05 client cost partition",
+            "observed_at_utc": "2026-10-20T09:09:32.201Z",
+            "expected": "Negative booking cost rejected",
+            "actual": "-0.01 SGD rejected with Enter a valid booking cost, with at least one cent per slot",
+            "result": "PASS",
+            "evidence": "authenticated-auth12.txt"
+          },
+          {
+            "id": "AUTH13",
+            "case": "C05 client cost partition",
+            "observed_at_utc": "2026-10-20T09:09:38.017Z",
+            "expected": "Zero booking cost rejected",
+            "actual": "0.00 SGD rejected with at-least-one-cent-per-slot error",
+            "result": "PASS",
+            "evidence": "authenticated-auth13.txt"
+          },
+          {
+            "id": "AUTH14",
+            "case": "C05 client cost partition",
+            "observed_at_utc": "2026-10-20T09:09:44.072Z",
+            "expected": "One-cent total is insufficient for three slots",
+            "actual": "0.01 SGD rejected with at-least-one-cent-per-slot error",
+            "result": "PASS",
+            "evidence": "authenticated-auth14.txt"
+          },
+          {
+            "id": "AUTH15",
+            "case": "C05 client cost partition",
+            "observed_at_utc": "2026-10-20T09:09:59.713Z",
+            "expected": "Two-cent total is insufficient for three slots",
+            "actual": "0.02 SGD rejected with at-least-one-cent-per-slot error",
+            "result": "PASS",
+            "evidence": "authenticated-auth15.txt"
+          },
+          {
+            "id": "AUTH16",
+            "case": "C05 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:10:08.801Z",
+            "expected": "Fractional-cent booking cost rejected",
+            "actual": "10.011 SGD rejected with booking-cost validation error",
+            "result": "PASS",
+            "evidence": "authenticated-auth16.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": false,
+          "remaining_scope": "Successful 3c/4c creation, all reliability partitions and direct API validation."
+        }
       },
       {
         "id": "C06",
@@ -358,8 +559,52 @@
         "inputs": "Start T-1ms, T, T+1ms; separately end start-1ms, start, start+1ms.",
         "expected": "Only a strictly future start and a strictly positive duration are accepted. Check millisecond cases through the API harness.",
         "result": "Pending",
-        "actual": "Not run. Controlled clock and API harness needed for millisecond boundaries.",
-        "actual_summary": "Not run. Controlled clock and API harness needed for millisecond boundaries."
+        "actual": "The exact millisecond scenario remains pending. Supplemental browser schedule checks rejected zero, negative and fractional-minute durations, keeping the dialog open, and rejected a 19 October 2026 past start. The minute-based UI does not execute the stated T-1ms/T/T+1ms or end=start\u00b11ms cases.",
+        "actual_summary": "Past date and invalid minute durations rejected in UI; exact-ms cases pending.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH03",
+            "case": "C06 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:07:16.204Z",
+            "expected": "Zero duration rejected",
+            "actual": "Save schedule displayed Enter a valid duration of at least 1 minute and kept dialog open",
+            "result": "PASS",
+            "evidence": "authenticated-auth03.txt"
+          },
+          {
+            "id": "AUTH04",
+            "case": "C06 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:07:21.352Z",
+            "expected": "Negative duration rejected",
+            "actual": "-1 minute retained dialog with Enter a valid duration of at least 1 minute",
+            "result": "PASS",
+            "evidence": "authenticated-auth04.txt"
+          },
+          {
+            "id": "AUTH05",
+            "case": "C06 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:07:28.658Z",
+            "expected": "Fractional-minute duration rejected",
+            "actual": "1.5 minutes retained dialog with Enter a valid duration of at least 1 minute",
+            "result": "PASS",
+            "evidence": "authenticated-auth05.txt"
+          },
+          {
+            "id": "AUTH06",
+            "case": "C06 supplemental UI",
+            "observed_at_utc": "2026-10-20T09:07:37.579Z",
+            "expected": "Past start rejected",
+            "actual": "19 Oct 2026 start retained schedule dialog with Choose a start time in the future",
+            "result": "PASS",
+            "evidence": "authenticated-auth06.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": true,
+          "remaining_scope": "Controlled-clock API tests at the exact stated millisecond boundaries."
+        }
       },
       {
         "id": "C07",
@@ -367,9 +612,110 @@
         "action": "Submit once per account/input state.",
         "inputs": "Missing/inactive booker; missing email; incomplete payout; blank venue.",
         "expected": "Each is rejected with the relevant account/input error and no created session. Restore all other baseline conditions per subcase.",
-        "result": "Pending",
-        "actual": "Not run. Prepared test account awaits final terms acceptance; account-state fixtures absent.",
-        "actual_summary": "Not run. Prepared test account awaits final terms acceptance; account-state fixtures absent."
+        "result": "Partial",
+        "actual": "The browser rejected a whitespace-only venue and displayed the payout-setup guard for an otherwise-valid draft, restoring editable controls. A separate authenticated POST /api/sessions returned HTTP 409 PAYOUT_ACCOUNT_NOT_READY. The following authenticated hosted-session GET returned HTTP 200 with zero sessions, agreeing with the browser reload. The hosted read is an application projection, not a database assertion. Missing/inactive booker and missing-email fixtures remain untested.",
+        "actual_summary": "Blank venue UI rejected; creation API 409 payout guard; hosted API 200 with zero sessions.",
+        "authenticated_browser_evidence": "evidence/production/authenticated-browser-observations.json",
+        "authenticated_browser_observations": [
+          {
+            "id": "AUTH07",
+            "case": "C07 blank venue UI",
+            "observed_at_utc": "2026-10-20T09:07:57.536Z",
+            "expected": "Whitespace-only venue rejected",
+            "actual": "Next remained on step one and displayed Enter or select a venue",
+            "result": "PASS",
+            "evidence": "authenticated-auth07.txt"
+          },
+          {
+            "id": "AUTH21",
+            "case": "C07 incomplete payout",
+            "observed_at_utc": "2026-10-20T09:11:11.560Z",
+            "expected": "Otherwise-valid draft rejected for incomplete payout with editable fields restored",
+            "actual": "UI displayed Complete your payout account setup before creating a session; price3.33 and Back/Done remained enabled",
+            "result": "PASS",
+            "evidence": "authenticated-auth21.txt"
+          },
+          {
+            "id": "AUTH22",
+            "case": "C07 no saved session",
+            "observed_at_utc": "2026-10-20T09:11:50.823Z",
+            "expected": "Rejected draft leaves no hosted session after reload",
+            "actual": "Fresh reload still showed No upcoming sessions to manage",
+            "result": "PASS",
+            "evidence": "authenticated-auth22.txt"
+          }
+        ],
+        "authenticated_browser_scope": {
+          "interface": "Signed-in production browser UI; HTTP response status not captured",
+          "supplemental_only": false,
+          "remaining_scope": "Missing/inactive/missing-email account fixtures and database-level rejection checks. The browser run captured no HTTP status; separate API09/API10 evidence now records 409 and 200."
+        },
+        "authenticated_api_evidence": "evidence/production/authenticated-api-observations.json",
+        "authenticated_api_observations": [
+          {
+            "id": "API09",
+            "case": "C07 incomplete payout",
+            "observed_at_utc": "2026-10-20T09:37:07.169Z",
+            "request": {
+              "method": "POST",
+              "path": "/api/sessions",
+              "authenticated": true,
+              "body": {
+                "idempotencyKey": "session-qa-payout-guard-6f1d81cc-87b3-407e-af2b-edab636d0985",
+                "booking": {
+                  "venueName": "QA Session Test 2026-10-20 Neoh",
+                  "region": "West",
+                  "sport": "Badminton",
+                  "startAt": "2026-11-01T10:00:00.000Z",
+                  "endAt": "2026-11-01T12:00:00.000Z",
+                  "totalCostCents": 1001
+                },
+                "config": {
+                  "totalSlots": 3,
+                  "minimumHeadcount": 2,
+                  "pricePerSlotCents": 333,
+                  "visibility": "PRIVATE"
+                }
+              }
+            },
+            "expected": {
+              "status": 409,
+              "code": "PAYOUT_ACCOUNT_NOT_READY"
+            },
+            "actual": {
+              "status": 409,
+              "code": "PAYOUT_ACCOUNT_NOT_READY",
+              "message": "A session needs a completed payout account"
+            },
+            "result": "PASS"
+          },
+          {
+            "id": "API10",
+            "case": "C07 hosted reload supplemental",
+            "observed_at_utc": "2026-10-20T09:37:07.334Z",
+            "request": {
+              "method": "GET",
+              "path": "/api/sessions/hosted",
+              "authenticated": true
+            },
+            "expected": {
+              "status": 200,
+              "code": null
+            },
+            "actual": {
+              "status": 200,
+              "code": null,
+              "session_count": 0
+            },
+            "result": "PASS"
+          }
+        ],
+        "authenticated_api_scope": {
+          "interface": "Production HTTP using normal password authentication for the approved test account; API01 intentionally anonymous",
+          "started_at_utc": "2026-10-20T09:37:02.820Z",
+          "completed_at_utc": "2026-10-20T09:37:07.335Z",
+          "remaining_scope": "Missing/inactive/missing-email account fixtures and database-level rejection checks; successful creation remains unavailable."
+        }
       },
       {
         "id": "C08",
@@ -388,7 +734,7 @@
     "title": "Change session visibility",
     "scenario": "Allow an eligible owner to set PUBLIC or PRIVATE while protecting capacity and lifecycle rules.",
     "prerequisites": "Active owner and separate non-owner account. OPEN future session with at least one available place. Keep an independent Discover page open for propagation cases.",
-    "source": "app/sessions/visibility-input.ts:8-13; use-cases/sessions/ToggleSessionVisibility.ts:23-35; domain/accounts/booker.ts:172-198; app/sessions/README.md:242-291.",
+    "source": "app/sessions/visibility-input.ts:8-13; use-cases/sessions/ToggleSessionVisibility.ts:20-31; domain/accounts/booker.ts:172-198; app/sessions/README.md:242-291.",
     "cases": [
       {
         "id": "V01",
@@ -397,8 +743,8 @@
         "inputs": "Eligible owner; PRIVATE session; one free place.",
         "expected": "Success shows confirmed PUBLIC state. A healthy visible online Discover page includes it within the three-second target.",
         "result": "Blocked",
-        "actual": "Not run. No owned OPEN future session; creation requires completed payout setup.",
-        "actual_summary": "Not run. No owned OPEN future session; creation requires completed payout setup."
+        "actual": "Not run. Signed-in account exists, but no owned OPEN future session could be created while payout setup remained unavailable.",
+        "actual_summary": "No owned OPEN session; payout setup unavailable."
       },
       {
         "id": "V02",
@@ -407,8 +753,8 @@
         "inputs": "Eligible PUBLIC session.",
         "expected": "Success confirms PRIVATE. The healthy foreground discovery list removes it within three seconds.",
         "result": "Blocked",
-        "actual": "Not run. No owned PUBLIC future session.",
-        "actual_summary": "Not run. No owned PUBLIC future session."
+        "actual": "Not run. Signed-in account exists, but no owned PUBLIC future session is available; payout setup prevents creating the fixture.",
+        "actual_summary": "No owned PUBLIC session; payout setup unavailable."
       },
       {
         "id": "V03",
@@ -416,9 +762,41 @@
         "action": "Request the change using each rejected identity.",
         "inputs": "Non-owner; inactive owner; unauthenticated request.",
         "expected": "Access is rejected; stored visibility is unchanged. API responses are 403 for foreign/inactive access and 401 without authentication.",
-        "result": "Pending",
-        "actual": "Not run. Requires owned session and foreign/inactive identities; visibility requests not run.",
-        "actual_summary": "Not run. Requires owned session and foreign/inactive identities; visibility requests not run."
+        "result": "Partial",
+        "actual": "The anonymous visibility PATCH returned HTTP 401 UNAUTHENTICATED. The inactive-owner and non-owner branches were not exercised because the required account/session fixtures remain unavailable. No existing session identifier was used and no visibility mutation occurred.",
+        "actual_summary": "Anonymous API request rejected 401; inactive/non-owner cases not run.",
+        "authenticated_api_evidence": "evidence/production/authenticated-api-observations.json",
+        "authenticated_api_observations": [
+          {
+            "id": "API01",
+            "case": "V03 unauthenticated",
+            "observed_at_utc": "2026-10-20T09:37:04.866Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+              "authenticated": false,
+              "body": {
+                "visibility": "PUBLIC"
+              }
+            },
+            "expected": {
+              "status": 401,
+              "code": "UNAUTHENTICATED"
+            },
+            "actual": {
+              "status": 401,
+              "code": "UNAUTHENTICATED",
+              "message": "Authentication is required"
+            },
+            "result": "PASS"
+          }
+        ],
+        "authenticated_api_scope": {
+          "interface": "Production HTTP using normal password authentication for the approved test account; API01 intentionally anonymous",
+          "started_at_utc": "2026-10-20T09:37:02.820Z",
+          "completed_at_utc": "2026-10-20T09:37:07.335Z",
+          "remaining_scope": "Inactive-owner and non-owner account/session fixtures, including stored-visibility assertions."
+        }
       },
       {
         "id": "V04",
@@ -427,8 +805,8 @@
         "inputs": "One available place; zero available places, including replacement reservations.",
         "expected": "One available place permits the change. Zero rejects either target; a reserved place does not count as available.",
         "result": "Blocked",
-        "actual": "Not run. One-place, full and replacement-reserved fixtures absent.",
-        "actual_summary": "Not run. One-place, full and replacement-reserved fixtures absent."
+        "actual": "Not run. Account exists, but no owned session, one-place, full or replacement-reserved fixtures are available. Payout setup is unavailable and wallet funding is not offered in the UI.",
+        "actual_summary": "One-place/full/reserved fixtures unavailable."
       },
       {
         "id": "V05",
@@ -447,8 +825,8 @@
         "inputs": "Eligible session; separately full, closed or foreign-owned session.",
         "expected": "Eligible same-value request succeeds. Ineligible same-value requests still fail; no shortcut bypasses guards.",
         "result": "Blocked",
-        "actual": "Not run. Eligible/full/closed/foreign fixtures and authenticated API harness absent.",
-        "actual_summary": "Not run. Eligible/full/closed/foreign fixtures and authenticated API harness absent."
+        "actual": "Not run. Account exists; eligible/full/closed/foreign session fixtures and an authenticated API run remain absent. Payout setup is unavailable, preventing owned-session creation.",
+        "actual_summary": "Eligible/full/closed/foreign session fixtures absent."
       },
       {
         "id": "V07",
@@ -456,9 +834,154 @@
         "action": "Call the visibility endpoint with each input.",
         "inputs": "Bad session UUID; valid UUID with visibility public, null or missing; valid PUBLIC/PRIVATE.",
         "expected": "Malformed values return 400. Exact valid enum values reach the workflow.",
-        "result": "Blocked",
-        "actual": "Not run. Authentication required to reach visibility input parser.",
-        "actual_summary": "Not run. Authentication required to reach visibility input parser."
+        "result": "Pass (API)",
+        "actual": "All six stated visibility transport checks passed in production: an invalid session UUID and lowercase, null or missing visibility each returned HTTP 400 INVALID_REQUEST. Exact PUBLIC and PRIVATE values with a valid synthetic nonexistent session UUID each reached the workflow and returned HTTP 404 NOT_FOUND. This establishes transport acceptance and rejection, not a saved visibility change.",
+        "actual_summary": "Six API parser checks pass: invalid inputs 400; valid enums reach missing-session 404.",
+        "authenticated_api_evidence": "evidence/production/authenticated-api-observations.json",
+        "authenticated_api_observations": [
+          {
+            "id": "API02",
+            "case": "V07 invalid UUID",
+            "observed_at_utc": "2026-10-20T09:37:05.189Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/not-a-uuid/visibility",
+              "authenticated": true,
+              "body": {
+                "visibility": "PUBLIC"
+              }
+            },
+            "expected": {
+              "status": 400,
+              "code": "INVALID_REQUEST"
+            },
+            "actual": {
+              "status": 400,
+              "code": "INVALID_REQUEST",
+              "message": "Invalid session visibility request"
+            },
+            "result": "PASS"
+          },
+          {
+            "id": "API03",
+            "case": "V07 lowercase enum",
+            "observed_at_utc": "2026-10-20T09:37:05.360Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+              "authenticated": true,
+              "body": {
+                "visibility": "public"
+              }
+            },
+            "expected": {
+              "status": 400,
+              "code": "INVALID_REQUEST"
+            },
+            "actual": {
+              "status": 400,
+              "code": "INVALID_REQUEST",
+              "message": "Invalid session visibility request"
+            },
+            "result": "PASS"
+          },
+          {
+            "id": "API04",
+            "case": "V07 null enum",
+            "observed_at_utc": "2026-10-20T09:37:05.492Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+              "authenticated": true,
+              "body": {
+                "visibility": null
+              }
+            },
+            "expected": {
+              "status": 400,
+              "code": "INVALID_REQUEST"
+            },
+            "actual": {
+              "status": 400,
+              "code": "INVALID_REQUEST",
+              "message": "Invalid session visibility request"
+            },
+            "result": "PASS"
+          },
+          {
+            "id": "API05",
+            "case": "V07 missing enum",
+            "observed_at_utc": "2026-10-20T09:37:05.756Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+              "authenticated": true,
+              "body": {}
+            },
+            "expected": {
+              "status": 400,
+              "code": "INVALID_REQUEST"
+            },
+            "actual": {
+              "status": 400,
+              "code": "INVALID_REQUEST",
+              "message": "Invalid session visibility request"
+            },
+            "result": "PASS"
+          },
+          {
+            "id": "API06",
+            "case": "V07 valid PUBLIC parser",
+            "observed_at_utc": "2026-10-20T09:37:06.052Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+              "authenticated": true,
+              "body": {
+                "visibility": "PUBLIC"
+              }
+            },
+            "expected": {
+              "status": 404,
+              "code": "NOT_FOUND"
+            },
+            "actual": {
+              "status": 404,
+              "code": "NOT_FOUND",
+              "message": "Session was not found"
+            },
+            "result": "PASS"
+          },
+          {
+            "id": "API07",
+            "case": "V07 valid PRIVATE parser",
+            "observed_at_utc": "2026-10-20T09:37:06.203Z",
+            "request": {
+              "method": "PATCH",
+              "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+              "authenticated": true,
+              "body": {
+                "visibility": "PRIVATE"
+              }
+            },
+            "expected": {
+              "status": 404,
+              "code": "NOT_FOUND"
+            },
+            "actual": {
+              "status": 404,
+              "code": "NOT_FOUND",
+              "message": "Session was not found"
+            },
+            "result": "PASS"
+          }
+        ],
+        "authenticated_api_scope": {
+          "interface": "Production HTTP using normal password authentication for the approved test account; API01 intentionally anonymous",
+          "started_at_utc": "2026-10-20T09:37:02.820Z",
+          "completed_at_utc": "2026-10-20T09:37:07.335Z",
+          "remaining_scope": "No remaining listed transport subcases. Successful visibility mutation/persistence belongs to separate cases and was not exercised."
+        }
       },
       {
         "id": "V08",
@@ -486,8 +1009,8 @@
         "inputs": "Current preview; committed target; new UUID idempotency key.",
         "expected": "Refund 733c to the participant wallet; retain REMOVED history; free capacity; session stays OPEN. The removed participant cannot rejoin.",
         "result": "Blocked",
-        "actual": "Not run. No committed target holding the historical 733c share.",
-        "actual_summary": "Not run. No committed target holding the historical 733c share."
+        "actual": "Not run. No owned session or committed target holding 733c exists. The account was created, but payout UI is unavailable and the zero-balance wallet offers no top-up flow.",
+        "actual_summary": "No funded committed target; payout/top-up UI unavailable."
       },
       {
         "id": "R02",
@@ -506,8 +1029,8 @@
         "inputs": "WAITLISTED, LEFT_WAITLIST, WITHDRAWN or REMOVED.",
         "expected": "Each is rejected as an invalid state. No additional refund or saved removal occurs.",
         "result": "Blocked",
-        "actual": "Not run. Waitlisted/left/withdrawn/removed target fixtures absent.",
-        "actual_summary": "Not run. Waitlisted/left/withdrawn/removed target fixtures absent."
+        "actual": "Not run. Account exists, but no owned session or waitlisted/left/withdrawn/removed target fixtures exist; payout setup and wallet funding are unavailable through the inspected UI.",
+        "actual_summary": "Required participant-state fixtures absent."
       },
       {
         "id": "R04",
@@ -516,8 +1039,8 @@
         "inputs": "Foreign owner; inactive owner; missing user/session/participation.",
         "expected": "No unauthorized private data or mutation. Foreign/inactive access is rejected; missing required records produce not-found errors.",
         "result": "Blocked",
-        "actual": "Not run. Foreign/inactive identities and owned session/target fixtures absent.",
-        "actual_summary": "Not run. Foreign/inactive identities and owned session/target fixtures absent."
+        "actual": "Not run. The new account is signed in; foreign/inactive identities and owned session/target fixtures remain absent. Payout setup prevents creating the owned session.",
+        "actual_summary": "Foreign/inactive and owned target fixtures absent."
       },
       {
         "id": "R05",
@@ -575,8 +1098,8 @@
         "inputs": "Two committed participants holding 500c and 733c.",
         "expected": "Session becomes CANCELLED; the preview and result identify two refund recipients and total 1233c. Wallet refunds occur once.",
         "result": "Blocked",
-        "actual": "Not run. Two committed targets holding 500c and 733c absent.",
-        "actual_summary": "Not run. Two committed targets holding 500c and 733c absent."
+        "actual": "Not run. No owned session or committed targets holding 500c and 733c exist. Payout UI is unavailable, wallet balances are zero and top-up UI says coming soon.",
+        "actual_summary": "No funded 500c/733c targets; payout/top-up UI unavailable."
       },
       {
         "id": "X02",
@@ -585,8 +1108,8 @@
         "inputs": "No participants; separately all slots occupied.",
         "expected": "Both are cancellable before start. Empty refunds total 0; full refunds outstanding holds. Cancellation is not blocked by fullness.",
         "result": "Blocked",
-        "actual": "Not run. No owned empty or full session available.",
-        "actual_summary": "Not run. No owned empty or full session available."
+        "actual": "Not run. Signed-in account exists, but no owned empty or full session could be created because payout setup is unavailable.",
+        "actual_summary": "No owned empty/full session; payout setup unavailable."
       },
       {
         "id": "X03",
@@ -595,8 +1118,8 @@
         "inputs": "COMMITTED/HELD; WAITLISTED/no hold; REMOVED/REFUNDED.",
         "expected": "Live records become CANCELLED; outstanding holds refund; waitlist produces no refund; REMOVED history stays REMOVED with no second refund.",
         "result": "Blocked",
-        "actual": "Not run. Mixed committed/waitlisted/removed history fixture absent.",
-        "actual_summary": "Not run. Mixed committed/waitlisted/removed history fixture absent."
+        "actual": "Not run. Account exists, but mixed committed/waitlisted/removed history fixtures are absent; no session or funded participants could be prepared through the inspected UI.",
+        "actual_summary": "Mixed participant-history fixture absent."
       },
       {
         "id": "X04",
@@ -625,8 +1148,8 @@
         "inputs": "Unchanged participants/holds/lifecycle with a new PUBLIC/PRIVATE value.",
         "expected": "Visibility alone does not invalidate the cancellation preview. Eligible cancellation succeeds.",
         "result": "Blocked",
-        "actual": "Not run. No owned eligible session and cancellation preview.",
-        "actual_summary": "Not run. No owned eligible session and cancellation preview."
+        "actual": "Not run. Signed-in account exists, but no owned eligible session or cancellation preview is available because payout setup cannot be completed.",
+        "actual_summary": "No owned session or cancellation preview."
       },
       {
         "id": "X07",

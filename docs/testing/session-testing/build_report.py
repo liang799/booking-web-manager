@@ -198,6 +198,20 @@ def create_report(output):
     p(doc, production["limitations"], 9)
     p(doc, "Evidence: evidence/production/ contains sanitized HTTP results, browser observations and the read-only reproduction script. No account passwords, tokens or private user records are included.", 9)
 
+    heading(doc, "Authenticated browser checks")
+    p(doc, production["authenticated_context"], 10)
+    table(doc, ["Check", "Observed output", "Conclusion"], production["authenticated_checks"],
+          [2.2, 5.2, 3.08], 9)
+    p(doc, production["authenticated_limitations"], 9)
+    p(doc, "Evidence: evidence/production/authenticated-browser-observations.json and its per-check accessibility snapshots. Account and payout-guard screenshots are included with the evidence.", 9)
+
+    heading(doc, "Production API checks with the test account")
+    p(doc, production["api_context"], 10)
+    table(doc, ["Check", "Observed output", "Conclusion"], production["api_checks"],
+          [2.2, 5.2, 3.08], 9)
+    p(doc, production["api_limitations"], 9)
+    p(doc, "Evidence: evidence/production/authenticated-api-observations.json retains sanitized request inputs, response status/error codes and timestamps. Authentication used the normal password login; credentials and tokens are excluded.", 9)
+
     graph_items = graphs["graphs"] if isinstance(graphs, dict) else graphs
     by_image = {g["pngFile"]: g for g in graph_items}
     # The figure manifest records all node and edge details; the narrative gives

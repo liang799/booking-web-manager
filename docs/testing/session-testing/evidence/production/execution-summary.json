@@ -1,10 +1,10 @@
 {
-  "opening_summary": "The focused local snapshot passed 228 tests across 13 files. Production execution passed 2 smoke tests, 19 public GET checks, 3 protected GET checks and 7 browser checks, with overlapping assertions. Of 40 scenario groups, 2 passed, 4 are partial, 18 are blocked by fixtures or account setup and 16 await controlled execution or account setup. A separate appendix records 46 local creation boundary tests.",
+  "opening_summary": "The focused local snapshot passed 228 tests across 13 files. Production execution passed 2 smoke tests, 19 public GET checks, 3 protected GET checks, 7 anonymous browser observations, 23 authenticated browser observations and 9 additional API checks, with overlapping assertions. The browser and API runs each recorded the payout-availability blocker separately. Of 40 scenario groups, 3 passed, 8 are partial, 15 are blocked and 14 await controlled execution. A separate appendix records 46 local creation boundary tests.",
   "run_context": "Production target: https://booking-web-manager.vercel.app. Checks ran on 20 October 2026; individual timestamps are retained in the evidence. The deployed Git revision was not verified. These observations describe the live deployment at execution time, not a guarantee for every scenario.",
   "summary_paragraphs": [
-    "The public discovery service returned HTTP 200, a valid empty page and Cache-Control: no-store. D05 search-length boundaries passed through both HTTP and browser interfaces. D07 malformed-filter inputs passed through HTTP; browser checks also showed errors for missing date and equal or reversed time bounds.",
-    "The empty dataset limited filtering and pagination checks. D01, D04, D06 and D08 therefore remain partial: query acceptance and the zero-result view do not establish matching, lifecycle exclusion, exact time boundaries or multi-page results.",
-    "Account registration was prepared as Neoh Session QA. Public authentication settings enable email signup and auto-confirmation. The final Create account step accepts Terms and Privacy Policy and was awaiting confirmation when this report was generated; no account or session was created. Hosting additionally requires completed Stripe test-mode payout onboarding."
+    "The public discovery service returned HTTP 200, a valid empty page and Cache-Control: no-store. D05 search-length boundaries passed through HTTP and browser interfaces. D07 malformed-filter inputs passed through HTTP; selected browser time errors were also observed.",
+    "Anonymous and signed-in discovery both showed the empty result. Populated filtering, exact-time and pagination fixtures remain unavailable. V07 now passes all six API transport subcases: invalid inputs returned 400, while exact valid enums reached the nonexistent-session 404 response. No saved visibility change is claimed.",
+    "Neoh Session QA was created and signed in. Creation API returned 409 PAYOUT_ACCOUNT_NOT_READY, and the hosted API returned 200 with zero sessions. Payout-account GET returned 503 PAYOUTS_UNAVAILABLE. Wallet balances were zero and top-up UI said coming soon, preventing owned-session and funded-participant fixtures."
   ],
   "checks": [
     [
@@ -23,15 +23,104 @@
       "3 supplemental access-control checks; synthetic UUID only."
     ],
     [
-      "Browser observations",
+      "Anonymous browser observations",
       "Anonymous empty view; 99/100 accepted; 101 rejected; missing date and equal/reversed times rejected.",
-      "7 observations passed. No sign-in or management action was executed."
-    ],
-    [
-      "Test account setup",
-      "Profile form prepared; final Terms/Privacy acceptance not submitted.",
-      "Account-dependent cases await confirmation and setup."
+      "7 earlier observations passed; retained separately from the authenticated run."
     ]
   ],
-  "limitations": "The check counts are separate suites and include overlapping assertions; do not add them into a unique-case total or combine them with local unit totals. No live session creation, visibility change, removal, cancellation, financial refund, concurrent transaction or injected failure is claimed. Controlled-clock and failure-injection scenarios remain pending; missing account/participant/session fixtures are marked blocked."
+  "limitations": "Counts describe separate suites with overlapping assertions; do not sum them into a unique-case total or combine them with local unit totals. One test account was created. Production creation returned 409 PAYOUT_ACCOUNT_NOT_READY, while hosted GET returned 200 with zero sessions; this is application-level evidence, not a database query. No successful live session creation, visibility change, removal, cancellation, refund, concurrent transaction or injected failure is claimed. Controlled-clock/failure-injection cases remain pending; unavailable session, participant, account-state and funding fixtures remain blocked.",
+  "authenticated_context": "An approved production signup created Neoh Session QA at 17:04:24 Singapore time on 20 October 2026. The signed-in browser recorded 23 successful observations and one payout-availability blocker from 17:05:31 to 17:12:58. These are UI observations; the browser run did not capture an authenticated creation HTTP status. A later API run, reported separately, captured the exact status. Credentials are excluded from evidence.",
+  "authenticated_checks": [
+    [
+      "Signup and discovery",
+      "Account created and signed in; signed-in Discover showed the same empty result as the anonymous run.",
+      "D01 remains partial without populated fixtures."
+    ],
+    [
+      "Schedule dialog",
+      "Zero, negative and fractional-minute durations rejected; a past start date rejected.",
+      "Supplemental UI checks; C06 exact-ms cases pending."
+    ],
+    [
+      "Capacity and headcount",
+      "Slots 2/29/30 and headcount 2..capacity control limits observed.",
+      "C02/C03 API and persistence cases remain blocked."
+    ],
+    [
+      "Booking cost",
+      "Negative, zero, 1c/2c and fractional-cent costs rejected for three slots.",
+      "C05 partial; accepted costs and reliability not run."
+    ],
+    [
+      "Price selection",
+      "333c suggestion and 167-666c range shown; 166/667/333.5c rejected.",
+      "C04 partial; successful saves not run."
+    ],
+    [
+      "Payout guard and reload",
+      "Whitespace-only venue rejected. Valid draft showed payout-setup message; controls remained editable; hosted list stayed empty after reload.",
+      "C07 partial; this row is UI evidence, not a database assertion."
+    ],
+    [
+      "Wallet readiness",
+      "Available/held balances S$0.00; no transactions; PayNow top-up coming soon.",
+      "No funded participant/refund fixtures."
+    ],
+    [
+      "Payout readiness",
+      "Payouts unavailable message persisted after Try again; no onboarding controls.",
+      "AUTH24 blocker; no owned session created."
+    ]
+  ],
+  "authenticated_limitations": "The account remains signed in; no session was created. Client rejections do not prove server validation. The hosted-list reload supports the observed empty UI but is not a database assertion. Browser observations captured no creation HTTP status; the later API run separately recorded the 409 payout guard. No successful visibility change, participant removal, cancellation or refund was executed. Payout onboarding remained unavailable and the wallet offered no top-up flow. Controlled-clock, failure-injection and multi-account fixtures remain outstanding.",
+  "scenario_group_counts": {
+    "Partial": 8,
+    "Blocked": 15,
+    "Pending": 14,
+    "Pass": 3
+  },
+  "authenticated_observation_counts": {
+    "PASS": 23,
+    "BLOCKED": 1
+  },
+  "authenticated_evidence": "authenticated-browser-observations.json",
+  "api_context": "A separate production API run completed on 20 October 2026 from 17:37:02 to 17:37:07 Singapore time using normal password sign-in for Neoh Session QA. Nine checks passed and one payout-availability observation was blocked. Tokens remained in process memory and credentials are excluded. Visibility calls used a synthetic nonexistent UUID; no existing session identifier was used.",
+  "api_checks": [
+    [
+      "API01 / V03",
+      "Anonymous visibility PATCH returned 401 UNAUTHENTICATED.",
+      "Partial: inactive and foreign-owner branches not run."
+    ],
+    [
+      "API02-API05 / V07",
+      "Bad UUID, lowercase visibility, null and missing enum returned 400 INVALID_REQUEST.",
+      "Four invalid transport subcases pass."
+    ],
+    [
+      "API06-API07 / V07",
+      "Valid PUBLIC and PRIVATE values returned 404 NOT_FOUND for the synthetic session UUID.",
+      "Two valid parser subcases pass; no mutation success."
+    ],
+    [
+      "API08 / fixture readiness",
+      "Payout-account GET returned 503 PAYOUTS_UNAVAILABLE.",
+      "BLOCKED readiness observation, not a successful payout test."
+    ],
+    [
+      "API09 / C07",
+      "Otherwise-valid creation POST returned 409 PAYOUT_ACCOUNT_NOT_READY.",
+      "Payout guard verified; no successful creation."
+    ],
+    [
+      "API10 / C07 supplemental",
+      "Hosted-session GET returned 200 and session_count=0.",
+      "Application projection only; not a direct database assertion."
+    ]
+  ],
+  "api_limitations": "The 9 passes and 1 blocker belong to a separate API run and overlap with earlier browser assertions. Valid visibility enums reached the workflow but could not find the synthetic session; no stored visibility changed. The hosted endpoint is an application projection. No payout configuration change, provider onboarding, transfer, created session, participant, refund, cancellation or concurrency fixture is claimed.",
+  "api_observation_counts": {
+    "PASS": 9,
+    "BLOCKED": 1
+  },
+  "api_evidence": "authenticated-api-observations.json"
 }

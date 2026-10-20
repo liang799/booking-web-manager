@@ -1,6 +1,6 @@
 {
-  "documentSha256": "33d3e65e6a5b0f6c825d1be61abdf2630c684c7b213dfda7946434811f9d06b2",
-  "renderedPages": 19,
+  "documentSha256": "d19f90c6dca8d7ace1efa53afd77d783f47ff25f408d7d2ea3fd654624da01c3",
+  "renderedPages": 21,
   "visuallyReviewedPages": [
     1,
     2,
@@ -20,7 +20,9 @@
     16,
     17,
     18,
-    19
+    19,
+    20,
+    21
   ],
   "result": "No clipping, overlap, missing diagram labels or broken tables found in final render.",
   "renderer": "Bundled render_docx.py with bundled LibreOffice",
@@ -29,10 +31,13 @@
   "diagrams": "Embedded PNGs; editable Graphviz sources included",
   "checks": [
     "Report paths match audited graph manifest",
-    "40 scenario groups: 2 pass, 4 partial, 18 blocked, 16 pending",
+    "40 scenario groups: 3 pass, 8 partial, 15 blocked, 14 pending",
     "46 creation expected/actual comparisons match",
     "All six discovery basis inputs supported by local SQL-construction tests",
-    "Production evidence distinguished from local white-box evidence",
-    "All 19 pages rendered and visually inspected"
+    "Production browser, API and local white-box evidence remain separate",
+    "23 authenticated browser passes and 1 blocker; 9 targeted API passes and 1 blocker",
+    "All 21 pages rendered and visually inspected; final corrected pages 3 and 4 rechecked",
+    "No credentials or tokens detected in new evidence",
+    "All original 40 scenario inputs and expected outputs preserved"
   ]
 }

@@ -11,20 +11,29 @@ The test-table and path-diagram format follows the supplied senior's
 are not requirements or results for this project.
 
 Production checks on **20 October 2026** passed **2 smoke tests**, **19 public GET
-checks**, **3 anonymous protected GET checks** and **7 browser checks**. These
+checks**, **3 anonymous protected GET checks** and **7 anonymous browser checks**.
+After creating the dedicated account, **23 authenticated browser observations
+passed** and **one fixture-readiness check was blocked**. A subsequent API run
+recorded **9 passing checks and one payout-availability blocker**, including
+an anonymous visibility request. These
 suites contain overlapping assertions; their counts are not a unique-case total.
-Of the 40 scenario groups, **2 passed, 4 are partial, 18 are blocked and 16 are
-pending controlled execution or account setup**. Actual results and missing
-prerequisites are recorded per row. The prepared test-account form still awaits
-final Terms/Privacy acceptance; no production account or session was created.
+Of the 40 scenario groups, **3 passed, 8 are partial, 15 are blocked and 14 are
+pending controlled execution or additional fixtures**. Actual results and missing
+prerequisites are recorded per row. **Neoh Session QA was created and signed in**.
+The creation API returned **409 PAYOUT_ACCOUNT_NOT_READY**, with zero hosted
+sessions on the following API read. The payout API returned
+**503 PAYOUTS_UNAVAILABLE**, and the zero-balance wallet showed top-ups as coming
+soon. No session was created or funds moved. All six V07 visibility parser
+subcases passed; valid enums reached a nonexistent-session response, which does
+not establish a successful visibility change.
 
 The local focused evidence records **228 passing tests across 13 files**:
 the original 223 checks plus five isolated discovery filter tests. Earlier PR validation records
 **2,458 passing tests, 33 skipped and 2 TODO**, with type checking and lint passing.
 The original focused tests are included in that earlier full-suite total; do not
 add the totals. The new five-test selection is recorded separately. No
-authenticated production mutation, payment-provider execution or instrumented
-coverage measurement is claimed.
+successful production session creation, visibility change, removal, cancellation,
+refund, payment-provider execution or instrumented coverage measurement is claimed.
 
 ## Diagrams
 
@@ -112,6 +121,16 @@ and refund a live held share once. The caller's participant loop is excluded.
   [protected reads](evidence/production/anonymous-protected-get-checks.json)
   retain the production evidence. Discovery was empty during the run, so matching,
   exact time filtering and pagination were not established.
+- [Authenticated browser observations](evidence/production/authenticated-browser-observations.json)
+  record signed-in discovery, empty hosted sessions, schedule/venue/cost/price
+  validation, constrained capacity/headcount controls and the payout guard.
+  Client validation does not establish server rejection for those invalid inputs.
+  The production payout/top-up blocker prevents creating the session and
+  held-fund fixtures needed for the remaining workflows.
+- [API observations using the test account](evidence/production/authenticated-api-observations.json)
+  retain six visibility parser checks, the anonymous visibility guard, the
+  creation payout guard and hosted/payout account reads. They use normal
+  authentication and synthetic session IDs; credentials and tokens are excluded.
 - [New local discovery basis evidence](evidence/production-validation-local/)
   retains the five additional tests. This directory is local validation performed
   during the production report update, not production white-box execution.
