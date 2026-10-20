@@ -34,3 +34,17 @@ an account. All three only describe rules enforced elsewhere (the 30-hour
 refund rule, 72-hour auto-verification, anonymised deletion); update them when
 those rules change. `tests/app/auth/policy-pages.test.ts` and
 `tests/app/profile/settings-links.test.ts` check the links and key statements.
+
+## Settings presentation
+
+`_components/settings-view.tsx` implements the responsive Settings V4 reference:
+a profile summary, stacked mobile preference tiles (side by side on desktop),
+and icon-based account actions. The existing signed-in shell owns navigation
+and the court backdrop. `page.tsx` supplies the authenticated profile and live
+notification control; presentation stories exercise the same view in light
+and dark themes with empty and long preferences.
+
+Activity totals are not part of the current profile read model. Sessions joined
+and attendance rate therefore display an em dash, announced as “Not available
+yet”, rather than the reference's fictional values. Deletion copy reflects
+anonymization and retention of historical session and financial records.
