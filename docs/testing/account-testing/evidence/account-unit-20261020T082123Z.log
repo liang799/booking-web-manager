@@ -1,0 +1,31 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 <repo>
+
+ ✓ |unit| tests/app/profile/actions.test.ts (2 tests) 100ms
+ ✓ |unit| tests/use-cases/UC1-01-register-user.test.ts (16 tests) 136ms
+ ✓ |unit| tests/lab4/delete-account-black-box.test.ts (21 tests) 24ms
+ ✓ |unit| tests/lab4/account-basis-path.test.ts (10 tests) 14ms
+ ✓ |unit| tests/use-cases/UC1-02-authenticate-user.test.ts (53 tests) 59ms
+ ✓ |unit| tests/lab4/update-profile-black-box.test.ts (19 tests) 30ms
+ ✓ |unit| tests/domain/groups/regular-group.test.ts (26 tests) 25ms
+ ✓ |unit| tests/use-cases/UC1-03-manage-profile.test.ts (15 tests | 1 todo) 14ms
+ ✓ |unit| tests/use-cases/UC1-06-manage-group.test.ts (18 tests) 19ms
+ ✓ |unit| tests/app/profile/settings-links.test.ts (2 tests) 59ms
+ ✓ |unit| tests/use-cases/UC1-04-delete-account.test.ts (16 tests | 1 todo) 12ms
+ ✓ |unit| tests/domain/accounts/deactivation-policy.test.ts (5 tests) 7ms
+
+ Test Files  12 passed (12)
+      Tests  201 passed | 2 todo (203)
+   Start at  08:21:28
+   Duration  3.35s (transform 2.64s, setup 0ms, import 4.61s, tests 498ms, environment 2ms)
+
+JSON report written to <repo>/docs/testing/account-testing/evidence/account-unit-20261020T082123Z.json

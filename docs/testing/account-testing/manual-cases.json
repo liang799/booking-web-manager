@@ -1,0 +1,82 @@
+[
+  {
+    "uc": "UC1-01",
+    "title": "Register user",
+    "scenario": "A visitor creates an account so they can join and host sessions.",
+    "prerequisites": "Configured Supabase project. Use a fresh email address for each subcase unless the case says otherwise. Start each subcase logged out.",
+    "source": "app/(auth)/schemas.ts:15-32; app/(auth)/register/actions.ts; app/(auth)/register/register-form.tsx; supabase/migrations/0004_profiles.sql.",
+    "cases": [
+      { "id": "R01", "description": "Valid registration", "action": "Complete step 1 (region, email, password), then step 2 (name, sport) and submit.", "inputs": "West; new email; 8-character password; Marcus Lim; Badminton.", "expected": "Either \"Account created. Check your email for a confirmation link, then log in.\", or signed in and taken to Home. One profile and one wallet at S$0.00 exist." },
+      { "id": "R02", "description": "Password length boundary", "action": "Submit step 1 with each password separately.", "inputs": "7, 8, 72 and 73 characters.", "expected": "7 shows \"Use at least 8 characters\"; 73 shows \"Use 72 characters or fewer\"; 8 and 72 continue to step 2." },
+      { "id": "R03", "description": "Name length boundary", "action": "Submit step 2 with each name separately.", "inputs": "Empty; 1; 60; 61 characters; spaces only.", "expected": "Empty and spaces show \"Enter your name\"; 61 shows \"Keep your name under 60 characters\"; 1 and 60 are accepted." },
+      { "id": "R04", "description": "Email format and case", "action": "Submit step 1 with each email separately.", "inputs": "not-an-email; Marcus@Example.COM.", "expected": "The first shows \"Enter a valid email address\". The second is accepted and stored in lower case." },
+      { "id": "R05", "description": "Duplicate email", "action": "Register again with an email already in use.", "inputs": "Existing account's email.", "expected": "\"An account with this email already exists.\" with a \"Log in instead\" link. No second account." },
+      { "id": "R06", "description": "Draft kept on Back", "action": "Fill step 1, go to step 2, press Back, then forward again.", "inputs": "Any valid values.", "expected": "Every field keeps its value; nothing is submitted until Create account." },
+      { "id": "R07", "description": "Invitation destination kept", "action": "Open a private-session invitation logged out, choose Create account and finish registering.", "inputs": "Valid invitation link.", "expected": "After sign-in the user returns to the same invitation preview; nothing is joined automatically." }
+    ]
+  },
+  {
+    "uc": "UC1-02",
+    "title": "Authenticate user",
+    "scenario": "A registered user logs in, is kept off protected pages while logged out, and returns to the page they asked for.",
+    "prerequisites": "One active confirmed account, one unconfirmed account and one deleted (INACTIVE) account.",
+    "source": "app/(auth)/login/actions.ts; app/(auth)/redirect-path.ts; middleware.ts.",
+    "cases": [
+      { "id": "L01", "description": "Valid login", "action": "Log in from /login.", "inputs": "Active account's email and password.", "expected": "Signed in and taken to Home." },
+      { "id": "L02", "description": "Wrong credentials", "action": "Log in with each pair separately.", "inputs": "Wrong password; unknown email.", "expected": "\"Invalid email or password.\" for both; the page does not reveal which was wrong." },
+      { "id": "L03", "description": "Unconfirmed email", "action": "Log in.", "inputs": "Unconfirmed account.", "expected": "\"Please confirm your email first, using the link we sent you.\"" },
+      { "id": "L04", "description": "Deleted account", "action": "Log in.", "inputs": "INACTIVE account.", "expected": "Signed out again and shown \"This account is no longer active.\"" },
+      { "id": "L05", "description": "Protected pages", "action": "Open each page while logged out.", "inputs": "/profile, /groups, /sessions, /wallet, /payouts.", "expected": "Each redirects to /login?next=<page>; after login the user lands on that page." },
+      { "id": "L06", "description": "Public pages", "action": "Open each page while logged out.", "inputs": "/, /discover, /terms, /privacy, a session invitation preview.", "expected": "Each opens without a login." },
+      { "id": "L07", "description": "Unsafe redirect target", "action": "Log in from each crafted URL.", "inputs": "/login?next=https://evil.example; /login?next=//evil.example.", "expected": "Signed in and taken to Home, never to another site." }
+    ]
+  },
+  {
+    "uc": "UC1-03",
+    "title": "Manage profile",
+    "scenario": "A signed-in user views Settings and edits their name and preferences.",
+    "prerequisites": "Active signed-in account with name Marcus Lim, Badminton and West.",
+    "source": "app/profile/schemas.ts; app/profile/actions.ts; domain/accounts/profile.ts:21-37; use-cases/accounts/update-profile.ts.",
+    "cases": [
+      { "id": "M01", "description": "Settings content", "action": "Open Settings.", "inputs": "None.", "expected": "Name, email, preferred sports and regions, reliability out of 5.0, and links to Edit profile, Email, Wallet, Payouts, Help, Terms, Privacy and Delete account." },
+      { "id": "M02", "description": "Valid edit", "action": "Change the profile and save.", "inputs": "Name Alex Tan; Tennis and Futsal; East.", "expected": "Returned to Settings showing the new values; reloading keeps them." },
+      { "id": "M03", "description": "Name boundaries", "action": "Save each name separately.", "inputs": "Empty; spaces only; 60; 61 characters.", "expected": "Empty and spaces show \"Enter your name\"; 61 shows \"Keep your name under 60 characters\"; 60 is saved." },
+      { "id": "M04", "description": "Empty preferences", "action": "Untick every sport, then separately every region, and save.", "inputs": "No sports; no regions.", "expected": "\"Choose at least one sport\" or \"Choose at least one region\"; nothing saved." },
+      { "id": "M05", "description": "Add or confirm email", "action": "Open Email, then resend the confirmation link.", "inputs": "Unconfirmed address.", "expected": "Status shows unconfirmed and a new link is sent; changing an existing address is not offered." },
+      { "id": "M06", "description": "Push notifications toggle", "action": "Turn Push notifications on, then off.", "inputs": "Browser that supports push; then one that blocks it.", "expected": "The setting applies to this browser only; a blocked browser shows that it is blocked in browser settings." },
+      { "id": "M07", "description": "Help page", "action": "Open Help and expand each question.", "inputs": "Mouse, then keyboard (Tab and Enter).", "expected": "Each answer opens; links go to Discover, Wallet, Payouts, Settings, Email, Delete account, Terms and Privacy." }
+    ]
+  },
+  {
+    "uc": "UC1-04",
+    "title": "Delete account",
+    "scenario": "A user deletes their account only after every obligation is finished.",
+    "prerequisites": "Separate accounts for each obligation: available balance, held share, active commitment, unsettled hosted session, pending payout, unarchived owned group; plus one account with nothing outstanding.",
+    "source": "app/profile/delete/page.tsx; app/profile/delete/blockers.ts; use-cases/accounts/delete-account.ts:66-95; domain/accounts/deactivation-policy.ts.",
+    "cases": [
+      { "id": "X01", "description": "Each obligation blocks", "action": "Open Delete account for each prepared account.", "inputs": "One obligation per account.", "expected": "The matching blocker is listed with its count or S$ amount; the delete button is not offered." },
+      { "id": "X02", "description": "Several obligations", "action": "Open Delete account.", "inputs": "Account with a balance, a commitment and an owned group.", "expected": "All three blockers are listed together, in the order shown on the page." },
+      { "id": "X03", "description": "No email", "action": "Open Delete account.", "inputs": "Account without an email address.", "expected": "\"Add an email address before deleting your account.\"" },
+      { "id": "X04", "description": "Successful deletion", "action": "Confirm \"Yes, delete my account\".", "inputs": "Account with nothing outstanding.", "expected": "Logged out; the login page shows \"Your account has been deleted.\" Name, email and preferences are removed; ledger rows remain." },
+      { "id": "X05", "description": "Deleted account cannot return", "action": "Log in with the deleted account's old credentials.", "inputs": "Deleted account.", "expected": "Login is refused (see L02/L04)." },
+      { "id": "X06", "description": "Obligation appears during deletion", "action": "Top up between opening the page and confirming.", "inputs": "Account clear at page load.", "expected": "Deletion is refused with \"You must complete your active sessions, use or withdraw your remaining funds, and archive any groups you own before deleting your account.\" The account stays active; reloading lists the new balance." }
+    ]
+  },
+  {
+    "uc": "UC1-06",
+    "title": "Manage group",
+    "scenario": "A user creates a regular group, shares its link, manages members and archives it.",
+    "prerequisites": "Owner and second signed-in user. A group with a linked session that is not settled, for the archive case.",
+    "source": "app/groups/schemas.ts; app/groups/actions.ts; use-cases/groups/manage-group.ts; domain/groups/regular-group.ts.",
+    "cases": [
+      { "id": "G01", "description": "Create group", "action": "Create a group.", "inputs": "Friday Badminton.", "expected": "The group page opens with the owner as the only member and an active invitation link." },
+      { "id": "G02", "description": "Name boundaries", "action": "Create and rename with each name separately.", "inputs": "Empty; spaces only; 60; 61 characters.", "expected": "Empty and spaces show \"Enter a group name\"; 61 shows \"Keep the name under 60 characters\"; 60 is accepted." },
+      { "id": "G03", "description": "Join by link", "action": "Second user opens the link and joins.", "inputs": "Current link.", "expected": "Preview shows the group name; after joining both users see two members." },
+      { "id": "G04", "description": "Already a member", "action": "Second user opens the same link again.", "inputs": "Current link.", "expected": "\"You're already a member of this group.\" No duplicate member." },
+      { "id": "G05", "description": "Turned-off or replaced link", "action": "Owner turns the link off, then on again; open the old link.", "inputs": "Old link after each change.", "expected": "\"This invitation link is invalid or has been turned off. Ask the group owner for a new one.\" The new link works." },
+      { "id": "G06", "description": "Owner-only actions", "action": "Second user tries to rename, remove a member or archive.", "inputs": "Member account.", "expected": "Controls are not offered; a direct request gets \"Only the group owner can do that.\"" },
+      { "id": "G07", "description": "Owner cannot be removed", "action": "Attempt to remove the owner.", "inputs": "Owner as the target.", "expected": "\"The group owner can't be removed.\"" },
+      { "id": "G08", "description": "Archive rules", "action": "Archive each group.", "inputs": "Group with an unsettled linked session; group without one.", "expected": "First: \"This group still has sessions that aren't settled, so it can't be archived yet.\" Second: archived, link off, no further changes." }
+    ]
+  }
+]

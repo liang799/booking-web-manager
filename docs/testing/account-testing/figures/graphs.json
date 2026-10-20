@@ -1,0 +1,614 @@
+{
+  "graphs": [
+    {
+      "id": "delete-account",
+      "title": "UC1-04 deleteAccount use case",
+      "sourcePath": "use-cases/accounts/delete-account.ts",
+      "sourceLines": "66-95",
+      "subject": "deleteAccount(ports, command)",
+      "boundary": "One call with valid ports. canDeactivate is one predicate per call (its six obligation checks are covered by the black-box table). An exception anywhere in the try block follows the same catch edges as the login-removal failure modelled at A6.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "A0",
+          "shape": "oval",
+          "label": "A0 Entry"
+        },
+        {
+          "id": "A1",
+          "shape": "diamond",
+          "label": "A1 First check clear?"
+        },
+        {
+          "id": "A2",
+          "shape": "box",
+          "label": "A2 Return BLOCKED nothing changed"
+        },
+        {
+          "id": "A3",
+          "shape": "box",
+          "label": "A3 Deactivate profile (snapshot)"
+        },
+        {
+          "id": "A4",
+          "shape": "diamond",
+          "label": "A4 Re-check clear?"
+        },
+        {
+          "id": "A5",
+          "shape": "box",
+          "label": "A5 Restore profile Return BLOCKED"
+        },
+        {
+          "id": "A6",
+          "shape": "diamond",
+          "label": "A6 Delete login succeeds?"
+        },
+        {
+          "id": "A7",
+          "shape": "box",
+          "label": "A7 Return DELETED"
+        },
+        {
+          "id": "A8",
+          "shape": "diamond",
+          "label": "A8 Restore succeeds?"
+        },
+        {
+          "id": "A9",
+          "shape": "box",
+          "label": "A9 Rethrow original error"
+        },
+        {
+          "id": "A10",
+          "shape": "box",
+          "label": "A10 Throw AggregateError"
+        },
+        {
+          "id": "A11",
+          "shape": "oval",
+          "label": "A11 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "A0",
+          "to": "A1",
+          "label": null
+        },
+        {
+          "from": "A1",
+          "to": "A2",
+          "label": "F"
+        },
+        {
+          "from": "A1",
+          "to": "A3",
+          "label": "T"
+        },
+        {
+          "from": "A2",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A3",
+          "to": "A4",
+          "label": null
+        },
+        {
+          "from": "A4",
+          "to": "A5",
+          "label": "F"
+        },
+        {
+          "from": "A4",
+          "to": "A6",
+          "label": "T"
+        },
+        {
+          "from": "A5",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A6",
+          "to": "A7",
+          "label": "T"
+        },
+        {
+          "from": "A6",
+          "to": "A8",
+          "label": "F"
+        },
+        {
+          "from": "A7",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A8",
+          "to": "A9",
+          "label": "T"
+        },
+        {
+          "from": "A8",
+          "to": "A10",
+          "label": "F"
+        },
+        {
+          "from": "A9",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A10",
+          "to": "A11",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "A1",
+        "A4",
+        "A6",
+        "A8"
+      ],
+      "paths": [
+        {
+          "id": "WB-D1",
+          "nodes": [
+            "A0",
+            "A1",
+            "A2",
+            "A11"
+          ],
+          "input": "First check: 1 active commitment.",
+          "expected": "BLOCKED; profile unchanged; only the check runs.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A0",
+              "to": "A1"
+            },
+            {
+              "from": "A1",
+              "to": "A2"
+            },
+            {
+              "from": "A2",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D2",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A6",
+            "A7",
+            "A11"
+          ],
+          "input": "Nothing outstanding at either check.",
+          "expected": "DELETED; profile INACTIVE; login removed.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A1",
+              "to": "A3"
+            },
+            {
+              "from": "A3",
+              "to": "A4"
+            },
+            {
+              "from": "A4",
+              "to": "A6"
+            },
+            {
+              "from": "A6",
+              "to": "A7"
+            },
+            {
+              "from": "A7",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D3",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A5",
+            "A11"
+          ],
+          "input": "Clear at first check; 100c available at re-check.",
+          "expected": "Profile restored; BLOCKED with the re-check standing.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A4",
+              "to": "A5"
+            },
+            {
+              "from": "A5",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D4",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A6",
+            "A8",
+            "A9",
+            "A11"
+          ],
+          "input": "Login removal throws; restore succeeds.",
+          "expected": "Profile restored ACTIVE; original error rethrown.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A6",
+              "to": "A8"
+            },
+            {
+              "from": "A8",
+              "to": "A9"
+            },
+            {
+              "from": "A9",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D5",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A6",
+            "A8",
+            "A10",
+            "A11"
+          ],
+          "input": "Login removal throws; restore also throws.",
+          "expected": "AggregateError with both errors; profile left INACTIVE.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A8",
+              "to": "A10"
+            },
+            {
+              "from": "A10",
+              "to": "A11"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 12,
+        "edges": 15,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 5,
+        "formula": "15 - 12 + 2 = 5",
+        "predicateCount": 4
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "delete-account-cfg.dot",
+      "pngFile": "delete-account-cfg.png"
+    },
+    {
+      "id": "group-join",
+      "title": "UC1-06 join a group through its invitation link",
+      "sourcePath": "use-cases/groups/manage-group.ts; domain/groups/regular-group.ts",
+      "sourceLines": "manage-group.ts 90-104; regular-group.ts 74-100",
+      "subject": "ManageGroup.join(command) with RegularGroup.join",
+      "boundary": "One call with a valid user ID (validateId is excluded). The link check \"active and token matches\" is one compound predicate: the group is found by its token, so a mismatched token cannot reach it through this entry point.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "J0",
+          "shape": "oval",
+          "label": "J0 Entry"
+        },
+        {
+          "id": "J1",
+          "shape": "diamond",
+          "label": "J1 Group found by token?"
+        },
+        {
+          "id": "J2",
+          "shape": "box",
+          "label": "J2 Throw INVALID_INVITATION"
+        },
+        {
+          "id": "J3",
+          "shape": "diamond",
+          "label": "J3 Group ACTIVE?"
+        },
+        {
+          "id": "J4",
+          "shape": "box",
+          "label": "J4 Throw INVALID_STATE"
+        },
+        {
+          "id": "J5",
+          "shape": "diamond",
+          "label": "J5 Link active and token matches?"
+        },
+        {
+          "id": "J6",
+          "shape": "box",
+          "label": "J6 Throw INVALID_INVITATION"
+        },
+        {
+          "id": "J7",
+          "shape": "diamond",
+          "label": "J7 Already a member?"
+        },
+        {
+          "id": "J8",
+          "shape": "box",
+          "label": "J8 Return ALREADY_MEMBER no save"
+        },
+        {
+          "id": "J9",
+          "shape": "box",
+          "label": "J9 Add member, save Return JOINED"
+        },
+        {
+          "id": "J10",
+          "shape": "oval",
+          "label": "J10 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "J0",
+          "to": "J1",
+          "label": null
+        },
+        {
+          "from": "J1",
+          "to": "J2",
+          "label": "F"
+        },
+        {
+          "from": "J1",
+          "to": "J3",
+          "label": "T"
+        },
+        {
+          "from": "J2",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J3",
+          "to": "J4",
+          "label": "F"
+        },
+        {
+          "from": "J3",
+          "to": "J5",
+          "label": "T"
+        },
+        {
+          "from": "J4",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J5",
+          "to": "J6",
+          "label": "F"
+        },
+        {
+          "from": "J5",
+          "to": "J7",
+          "label": "T"
+        },
+        {
+          "from": "J6",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J7",
+          "to": "J8",
+          "label": "T"
+        },
+        {
+          "from": "J7",
+          "to": "J9",
+          "label": "F"
+        },
+        {
+          "from": "J8",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J9",
+          "to": "J10",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "J1",
+        "J3",
+        "J5",
+        "J7"
+      ],
+      "paths": [
+        {
+          "id": "WB-J1",
+          "nodes": [
+            "J0",
+            "J1",
+            "J2",
+            "J10"
+          ],
+          "input": "Token that matches no group.",
+          "expected": "INVALID_INVITATION; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J0",
+              "to": "J1"
+            },
+            {
+              "from": "J1",
+              "to": "J2"
+            },
+            {
+              "from": "J2",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J2",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J4",
+            "J10"
+          ],
+          "input": "Old link of an archived group.",
+          "expected": "INVALID_STATE; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J1",
+              "to": "J3"
+            },
+            {
+              "from": "J3",
+              "to": "J4"
+            },
+            {
+              "from": "J4",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J3",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J5",
+            "J6",
+            "J10"
+          ],
+          "input": "Active group whose link was turned off.",
+          "expected": "INVALID_INVITATION; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J3",
+              "to": "J5"
+            },
+            {
+              "from": "J5",
+              "to": "J6"
+            },
+            {
+              "from": "J6",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J4",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J5",
+            "J7",
+            "J8",
+            "J10"
+          ],
+          "input": "The owner opens the valid link.",
+          "expected": "ALREADY_MEMBER; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J5",
+              "to": "J7"
+            },
+            {
+              "from": "J7",
+              "to": "J8"
+            },
+            {
+              "from": "J8",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J5",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J5",
+            "J7",
+            "J9",
+            "J10"
+          ],
+          "input": "A new user opens the valid link.",
+          "expected": "JOINED; saved once; two members.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J7",
+              "to": "J9"
+            },
+            {
+              "from": "J9",
+              "to": "J10"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 11,
+        "edges": 14,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 5,
+        "formula": "14 - 11 + 2 = 5",
+        "predicateCount": 4
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "group-join-cfg.dot",
+      "pngFile": "group-join-cfg.png"
+    }
+  ]
+}
