@@ -1,5 +1,5 @@
 {
-  "runAt": "20261020T082123Z",
+  "runAt": "20261020T121849Z",
   "timezone": "UTC",
   "node": "22.22.2",
   "vitest": "4.1.11",
@@ -8,6 +8,7 @@
   "command": "LAB4_EVIDENCE_DIR=docs/testing/account-testing/evidence npx vitest run --project unit <files>",
   "files": [
     "tests/lab4/account-basis-path.test.ts",
+    "tests/lab4/auth-profile-basis-path.test.ts",
     "tests/lab4/delete-account-black-box.test.ts",
     "tests/lab4/update-profile-black-box.test.ts",
     "tests/use-cases/UC1-01-register-user.test.ts",
@@ -22,11 +23,11 @@
   ],
   "exitCode": 0,
   "totals": {
-    "tests": 203,
-    "passed": 201,
+    "tests": 228,
+    "passed": 226,
     "failed": 0,
     "todo": 2,
-    "files": 12
+    "files": 13
   },
   "todo": [
     "UC1-03 Manage Profile computes and displays the reliability score",

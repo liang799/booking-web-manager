@@ -1,5 +1,203 @@
 [
   {
+    "uc": "UC1-01",
+    "title": "registerUser: sign-up outcomes",
+    "source": "app/(auth)/register/actions.ts:23-97",
+    "image": "register-user-cfg.png",
+    "graph": "register-user",
+    "scope": "Graph one call of the registerUser server action with Supabase and the request headers replaced by test doubles. Field validation and the confirmation link are one decision each; \"hidden duplicate\" (no error, user returned with no identities) is one compound decision because Supabase reports it as one case.",
+    "complexity": "Cyclomatic complexity V(G) = 20 - 15 + 2 = 7. Six decisions (G1, G3, G6, G7, G9, G11) also give 6 + 1 = 7.",
+    "paths": [
+      [
+        "G1",
+        "G0 G1 G2 G14",
+        "Password of 5 characters. \"Please fix the highlighted fields.\"; sign-up not called.",
+        "Pass; WB-G1 actual equals expected."
+      ],
+      [
+        "G2",
+        "G0 G1 G3 G4 G14",
+        "Valid fields; no Origin header. Confirmation-link error; sign-up not called.",
+        "Pass; WB-G2 actual equals expected."
+      ],
+      [
+        "G3",
+        "G0 G1 G3 G5 G6 G8 G14",
+        "Sign-up error user_already_exists. \"An account with this email already exists.\"; emailTaken.",
+        "Pass; WB-G3 actual equals expected."
+      ],
+      [
+        "G4",
+        "G0 G1 G3 G5 G6 G7 G8 G14",
+        "No error; user with no identities. Same duplicate message; emailTaken.",
+        "Pass; WB-G4 actual equals expected."
+      ],
+      [
+        "G5",
+        "G0 G1 G3 G5 G6 G7 G9 G10 G14",
+        "Sign-up error over_email_send_rate_limit. \"We couldn't create your account. Please try again.\"",
+        "Pass; WB-G5 actual equals expected."
+      ],
+      [
+        "G6",
+        "G0 G1 G3 G5 G6 G7 G9 G11 G12 G14",
+        "New user without a session. check-email: \"Account created. Check your email for a confirmation link, then log in.\"",
+        "Pass; WB-G6 actual equals expected."
+      ],
+      [
+        "G7",
+        "G0 G1 G3 G5 G6 G7 G9 G11 G13 G14",
+        "New user with a session; next=/groups/join/abc. Redirected to /groups/join/abc.",
+        "Pass; WB-G7 actual equals expected."
+      ]
+    ],
+    "notes": [
+      "Each path adds at least one edge the earlier paths did not use, and together the seven paths use all 20 edges.",
+      "G2 and G4 also check that Supabase sign-up is never called when the request is rejected early.",
+      "Evidence: tests/lab4/auth-profile-basis-path.test.ts (describe \"registerUser\") and evidence/auth-profile-basis-path-observations.json. Supabase is a test double; no account was created."
+    ]
+  },
+  {
+    "uc": "UC1-02",
+    "title": "safeRedirectPath: where to go after login",
+    "source": "app/(auth)/redirect-path.ts:12-21",
+    "image": "safe-redirect-path-cfg.png",
+    "graph": "safe-redirect-path",
+    "scope": "Graph one call of safeRedirectPath. The two operands of each OR are separate decisions. hasUnsafeCharacters, isAuthPage and the path split are single steps; their internals are outside the graph.",
+    "complexity": "Cyclomatic complexity V(G) = 18 - 12 + 2 = 8. Seven decisions (S1-S5, S7, S8) also give 7 + 1 = 8.",
+    "paths": [
+      [
+        "S1",
+        "S0 S1 S9 S11",
+        "undefined. Returns Home \"/\".",
+        "Pass; WB-S1 actual equals expected."
+      ],
+      [
+        "S2",
+        "S0 S1 S2 S9 S11",
+        "\"\". Returns \"/\".",
+        "Pass; WB-S2 actual equals expected."
+      ],
+      [
+        "S3",
+        "S0 S1 S2 S3 S9 S11",
+        "\"/\\t/evil.example\" (tab). Returns \"/\".",
+        "Pass; WB-S3 actual equals expected."
+      ],
+      [
+        "S4",
+        "S0 S1 S2 S3 S4 S9 S11",
+        "\"https://evil.example\". Returns \"/\".",
+        "Pass; WB-S4 actual equals expected."
+      ],
+      [
+        "S5",
+        "S0 S1 S2 S3 S4 S5 S9 S11",
+        "\"//evil.example\". Returns \"/\".",
+        "Pass; WB-S5 actual equals expected."
+      ],
+      [
+        "S6",
+        "S0 S1 S2 S3 S4 S5 S6 S7 S9 S11",
+        "\"/login?next=/wallet\". Returns \"/\".",
+        "Pass; WB-S6 actual equals expected."
+      ],
+      [
+        "S7",
+        "S0 S1 S2 S3 S4 S5 S6 S7 S8 S9 S11",
+        "\"/auth/callback\". Returns \"/\".",
+        "Pass; WB-S7 actual equals expected."
+      ],
+      [
+        "S8",
+        "S0 S1 S2 S3 S4 S5 S6 S7 S8 S10 S11",
+        "\"/groups?tab=mine\". Returns \"/groups?tab=mine\".",
+        "Pass; WB-S8 actual equals expected."
+      ]
+    ],
+    "notes": [
+      "Each path adds at least one edge the earlier paths did not use, and together the eight paths use all 18 edges.",
+      "S3 to S5 are the open-redirect defences: a crafted login link can never send a user to another site.",
+      "Evidence: tests/lab4/auth-profile-basis-path.test.ts (describe \"safeRedirectPath\") and evidence/auth-profile-basis-path-observations.json."
+    ]
+  },
+  {
+    "uc": "UC1-03",
+    "title": "prepareProfileUpdate: the profile edit policy",
+    "source": "domain/accounts/profile.ts:21-37",
+    "image": "prepare-profile-update-cfg.png",
+    "graph": "prepare-profile-update",
+    "scope": "Graph one call of prepareProfileUpdate, which UpdateProfile applies to every edit. The two operands of each AND are separate decisions. Each assertValidPreferences call is one decision (\"no blank value\"); its loop and the .every callbacks are outside the graph.",
+    "complexity": "Cyclomatic complexity V(G) = 22 - 14 + 2 = 10. Nine decisions (P1-P9) also give 9 + 1 = 10.",
+    "paths": [
+      [
+        "P1",
+        "P0 P1 P11 P13",
+        "Inactive account. INACTIVE_ACCOUNT.",
+        "Pass; WB-P1 actual equals expected."
+      ],
+      [
+        "P2",
+        "P0 P1 P2 P12 P13",
+        "Name of spaces only. INVALID_INPUT: name must be 1-60 characters.",
+        "Pass; WB-P2 actual equals expected."
+      ],
+      [
+        "P3",
+        "P0 P1 P2 P3 P12 P13",
+        "Name of 61 characters. INVALID_INPUT: name must be 1-60 characters.",
+        "Pass; WB-P3 actual equals expected."
+      ],
+      [
+        "P4",
+        "P0 P1 P2 P3 P4 P12 P13",
+        "Sports [\" \"]. INVALID_INPUT: preferredSports contains an empty value.",
+        "Pass; WB-P4 actual equals expected."
+      ],
+      [
+        "P5",
+        "P0 P1 P2 P3 P4 P5 P12 P13",
+        "Regions [\" \"]. INVALID_INPUT: preferredRegions contains an empty value.",
+        "Pass; WB-P5 actual equals expected."
+      ],
+      [
+        "P6",
+        "P0 P1 P2 P3 P4 P5 P6 P12 P13",
+        "No sports. INVALID_INPUT: choose at least one supported sport.",
+        "Pass; WB-P6 actual equals expected."
+      ],
+      [
+        "P7",
+        "P0 P1 P2 P3 P4 P5 P6 P7 P12 P13",
+        "Sports [\"Golf\"]. INVALID_INPUT: choose at least one supported sport.",
+        "Pass; WB-P7 actual equals expected."
+      ],
+      [
+        "P8",
+        "P0 P1 P2 P3 P4 P5 P6 P7 P8 P12 P13",
+        "No regions. INVALID_INPUT: choose at least one supported region.",
+        "Pass; WB-P8 actual equals expected."
+      ],
+      [
+        "P9",
+        "P0 P1 P2 P3 P4 P5 P6 P7 P8 P9 P12 P13",
+        "Regions [\"South\"]. INVALID_INPUT: choose at least one supported region.",
+        "Pass; WB-P9 actual equals expected."
+      ],
+      [
+        "P10",
+        "P0 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P13",
+        "\"  Alex Tan  \"; Tennis, Tennis, Futsal; West. Returns \"Alex Tan\"; Tennis, Futsal; West.",
+        "Pass; WB-P10 actual equals expected."
+      ]
+    ],
+    "notes": [
+      "Each path adds at least one edge the earlier paths did not use, and together the ten paths use all 22 edges.",
+      "The black-box UpdateProfile table tests the same rules from the outside; these paths show every decision in the code is reached.",
+      "Evidence: tests/lab4/auth-profile-basis-path.test.ts (describe \"prepareProfileUpdate\") and evidence/auth-profile-basis-path-observations.json."
+    ]
+  },
+  {
     "uc": "UC1-04",
     "title": "deleteAccount: obligation checks, soft delete and undo",
     "source": "use-cases/accounts/delete-account.ts:66-95",
@@ -8,11 +206,36 @@
     "scope": "Graph one call of deleteAccount with valid ports. Each canDeactivate call is one predicate; its six obligation conditions are tested separately by the black-box table. An exception anywhere in the try block follows the same catch edges as the login-removal failure at A6.",
     "complexity": "Cyclomatic complexity V(G) = 15 - 12 + 2 = 5. Four decisions (A1, A4, A6, A8) also give 4 + 1 = 5.",
     "paths": [
-      ["D1", "A0 A1 A2 A11", "1 active commitment at the first check. BLOCKED; only the check runs; profile stays ACTIVE.", "Pass; WB-D1 actual equals expected."],
-      ["D2", "A0 A1 A3 A4 A6 A7 A11", "Nothing outstanding at either check. DELETED; check, deactivate, check, delete-login; profile INACTIVE.", "Pass; WB-D2 actual equals expected."],
-      ["D3", "A0 A1 A3 A4 A5 A11", "Clear first; 100c available at the re-check. Profile restored ACTIVE; BLOCKED.", "Pass; WB-D3 actual equals expected."],
-      ["D4", "A0 A1 A3 A4 A6 A8 A9 A11", "Login removal throws; restore succeeds. Original error rethrown; profile ACTIVE.", "Pass; WB-D4 actual equals expected."],
-      ["D5", "A0 A1 A3 A4 A6 A8 A10 A11", "Login removal and restore both throw. AggregateError with 2 errors; profile left INACTIVE.", "Pass; WB-D5 actual equals expected."]
+      [
+        "D1",
+        "A0 A1 A2 A11",
+        "1 active commitment at the first check. BLOCKED; only the check runs; profile stays ACTIVE.",
+        "Pass; WB-D1 actual equals expected."
+      ],
+      [
+        "D2",
+        "A0 A1 A3 A4 A6 A7 A11",
+        "Nothing outstanding at either check. DELETED; check, deactivate, check, delete-login; profile INACTIVE.",
+        "Pass; WB-D2 actual equals expected."
+      ],
+      [
+        "D3",
+        "A0 A1 A3 A4 A5 A11",
+        "Clear first; 100c available at the re-check. Profile restored ACTIVE; BLOCKED.",
+        "Pass; WB-D3 actual equals expected."
+      ],
+      [
+        "D4",
+        "A0 A1 A3 A4 A6 A8 A9 A11",
+        "Login removal throws; restore succeeds. Original error rethrown; profile ACTIVE.",
+        "Pass; WB-D4 actual equals expected."
+      ],
+      [
+        "D5",
+        "A0 A1 A3 A4 A6 A8 A10 A11",
+        "Login removal and restore both throw. AggregateError with 2 errors; profile left INACTIVE.",
+        "Pass; WB-D5 actual equals expected."
+      ]
     ],
     "notes": [
       "Each path adds at least one edge the earlier paths did not use, and together the five paths use all 15 edges.",
@@ -29,11 +252,36 @@
     "scope": "Graph one call of ManageGroup.join, including RegularGroup.join, with a valid user ID. \"Link active and token matches\" is one compound predicate: the group is looked up by its token, so the mismatched-token operand cannot be reached through this entry point.",
     "complexity": "Cyclomatic complexity V(G) = 14 - 11 + 2 = 5. Four decisions (J1, J3, J5, J7) also give 4 + 1 = 5.",
     "paths": [
-      ["J1", "J0 J1 J2 J10", "Token that matches no group. INVALID_INVITATION; nothing saved; members unchanged.", "Pass; WB-J1 actual equals expected."],
-      ["J2", "J0 J1 J3 J4 J10", "Old link of an archived group. INVALID_STATE; nothing saved.", "Pass; WB-J2 actual equals expected."],
-      ["J3", "J0 J1 J3 J5 J6 J10", "Active group whose link was turned off. INVALID_INVITATION; nothing saved.", "Pass; WB-J3 actual equals expected."],
-      ["J4", "J0 J1 J3 J5 J7 J8 J10", "The owner opens the valid link. ALREADY_MEMBER; nothing saved.", "Pass; WB-J4 actual equals expected."],
-      ["J5", "J0 J1 J3 J5 J7 J9 J10", "A new user opens the valid link. JOINED; saved once; members owner and newcomer.", "Pass; WB-J5 actual equals expected."]
+      [
+        "J1",
+        "J0 J1 J2 J10",
+        "Token that matches no group. INVALID_INVITATION; nothing saved; members unchanged.",
+        "Pass; WB-J1 actual equals expected."
+      ],
+      [
+        "J2",
+        "J0 J1 J3 J4 J10",
+        "Old link of an archived group. INVALID_STATE; nothing saved.",
+        "Pass; WB-J2 actual equals expected."
+      ],
+      [
+        "J3",
+        "J0 J1 J3 J5 J6 J10",
+        "Active group whose link was turned off. INVALID_INVITATION; nothing saved.",
+        "Pass; WB-J3 actual equals expected."
+      ],
+      [
+        "J4",
+        "J0 J1 J3 J5 J7 J8 J10",
+        "The owner opens the valid link. ALREADY_MEMBER; nothing saved.",
+        "Pass; WB-J4 actual equals expected."
+      ],
+      [
+        "J5",
+        "J0 J1 J3 J5 J7 J9 J10",
+        "A new user opens the valid link. JOINED; saved once; members owner and newcomer.",
+        "Pass; WB-J5 actual equals expected."
+      ]
     ],
     "notes": [
       "Each path adds at least one edge the earlier paths did not use, and together the five paths use all 14 edges.",

@@ -4,12 +4,12 @@
 
 The report covers Joseph's UC1-01 registration, UC1-02 login, UC1-03 profile,
 UC1-04 account deletion and UC1-06 regular groups. It contains 35 browser
-scenarios, 40 executed black-box cases, two control-flow graphs and 10 executed
-basis-path cases. The format follows the
+scenarios, 40 executed black-box cases, five control-flow graphs (one per use
+case) and 35 executed basis-path cases. The format follows the
 [session testing report](../session-testing/README.md).
 
 The browser scenarios are **Not run / Pending**. The focused automated run
-records **201 passing tests and 2 todo across 12 files**. No browser, real
+records **226 passing tests and 2 todo across 13 files**. No browser, real
 PostgreSQL, Supabase Auth or Stripe call is claimed by this package.
 
 ## Black-box tests (Lab 4 section 3.2.1)
@@ -27,10 +27,42 @@ combinations.
 
 ## White-box tests (Lab 4 section 3.2.2)
 
+The lab asks for basis paths of two methods. This report covers one method per
+use case, five in total.
+
 | Use case | Subject | N | E | V = E - N + 2 | Editable source |
 | --- | --- | ---: | ---: | ---: | --- |
+| UC1-01 | `registerUser` server action | 15 | 20 | 7 | [DOT](figures/register-user-cfg.dot) |
+| UC1-02 | `safeRedirectPath` | 12 | 18 | 8 | [DOT](figures/safe-redirect-path-cfg.dot) |
+| UC1-03 | `prepareProfileUpdate` | 14 | 22 | 10 | [DOT](figures/prepare-profile-update-cfg.dot) |
 | UC1-04 | `deleteAccount` use case | 12 | 15 | 5 | [DOT](figures/delete-account-cfg.dot) |
 | UC1-06 | `ManageGroup.join` with `RegularGroup.join` | 11 | 14 | 5 | [DOT](figures/group-join-cfg.dot) |
+
+### UC1-01 registerUser
+
+![registerUser control-flow graph](figures/register-user-cfg.png)
+
+Source: [registerUser](../../../app/(auth)/register/actions.ts). Six
+decisions: fields valid, confirmation link ready, "user already exists" error,
+hidden duplicate (no error and no identities), other error, and no session yet.
+Supabase and the request headers are test doubles.
+
+### UC1-02 safeRedirectPath
+
+![safeRedirectPath control-flow graph](figures/safe-redirect-path-cfg.png)
+
+Source: [safeRedirectPath](../../../app/(auth)/redirect-path.ts). Seven
+decisions, counting each operand of the three ORs separately. Paths S3 to S5 are
+the open-redirect defences.
+
+### UC1-03 prepareProfileUpdate
+
+![prepareProfileUpdate control-flow graph](figures/prepare-profile-update-cfg.png)
+
+Source: [prepareProfileUpdate](../../../domain/accounts/profile.ts), the
+policy `UpdateProfile` applies to every edit. Nine decisions, counting each
+operand of the three ANDs separately; the preference loops are single
+decisions.
 
 ### UC1-04 deleteAccount
 
@@ -61,14 +93,15 @@ token and a mismatched token cannot reach it through this entry point.
 - Observations with expected and actual output:
   [deleteAccount](evidence/delete-account-black-box-observations.json),
   [UpdateProfile](evidence/update-profile-black-box-observations.json),
-  [basis paths](evidence/account-basis-path-observations.json).
+  basis paths for [deleteAccount and group join](evidence/account-basis-path-observations.json)
+  and for [registerUser, safeRedirectPath and prepareProfileUpdate](evidence/auth-profile-basis-path-observations.json).
 - [Focused run](evidence/) (`account-unit-*.json`, `.log` and `.metadata.json`):
-  12 files, 201 passed, 2 todo.
+  13 files, 226 passed, 2 todo.
 - [PR validation](evidence/pr-validation/): full unit, typecheck and lint logs.
 
 The two todos are existing placeholders in the UC1-03 and UC1-04 suites. The
 UC1-03 one ("computes and displays the reliability score") matches a known gap:
-Settings calculates the score from an empty history.
+Settings calculates the score from an empty history (fix proposed in PR #101).
 
 ## Reproduce
 
@@ -78,7 +111,8 @@ Run from the repository root:
 npm ci
 LAB4_EVIDENCE_DIR=docs/testing/account-testing/evidence \
   npx vitest run --project unit tests/lab4/delete-account-black-box.test.ts \
-  tests/lab4/update-profile-black-box.test.ts tests/lab4/account-basis-path.test.ts
+  tests/lab4/update-profile-black-box.test.ts tests/lab4/account-basis-path.test.ts \
+  tests/lab4/auth-profile-basis-path.test.ts
 npm test
 npm run typecheck
 npm run lint

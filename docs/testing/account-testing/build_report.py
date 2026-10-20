@@ -210,7 +210,8 @@ def create_report(output):
     evidence = HERE / "evidence"
     delete_obs = json.loads((evidence / "delete-account-black-box-observations.json").read_text())["observations"]
     profile_obs = json.loads((evidence / "update-profile-black-box-observations.json").read_text())["observations"]
-    basis_obs = {o["id"]: o for o in json.loads((evidence / "account-basis-path-observations.json").read_text())["observations"]}
+    basis_obs = {o["id"]: o for name in ["account-basis-path-observations.json", "auth-profile-basis-path-observations.json"]
+                 for o in json.loads((evidence / name).read_text())["observations"]}
     metadata = json.loads(next(evidence.glob("account-unit-*.metadata.json")).read_text())
     run = json.loads(next(p for p in evidence.glob("account-unit-*.json") if not p.name.endswith(".metadata.json")).read_text())
     totals = metadata["totals"]
@@ -225,15 +226,15 @@ def create_report(output):
            f"{len(delete_obs) + len(profile_obs) + len(basis_obs)} of them are the Lab 4 cases in this report, each with recorded expected and actual output. "
            f"The {manual_count} browser scenarios are prepared for execution and are explicitly marked Not run.", bold=True)
     table(doc, ["Use case", "Function", "Black box focus", "White box subject"], [
-        ["UC1-01", "Register user", "Password, name and email partitions; duplicate account; invitation return", "-"],
-        ["UC1-02", "Authenticate user", "Credentials, unconfirmed and deleted accounts, protected pages, redirects", "-"],
-        ["UC1-03", "Manage profile", "Executed: name length, sport and region lists, account state (19 cases)", "-"],
+        ["UC1-01", "Register user", "Password, name and email partitions; duplicate account; invitation return", "registerUser server action (7 paths)"],
+        ["UC1-02", "Authenticate user", "Credentials, unconfirmed and deleted accounts, protected pages, redirects", "safeRedirectPath after login (8 paths)"],
+        ["UC1-03", "Manage profile", "Executed: name length, sport and region lists, account state (19 cases)", "prepareProfileUpdate policy (10 paths)"],
         ["UC1-04", "Delete account", "Executed: six obligations around zero, invalid facts (21 cases)", "deleteAccount use case (5 paths)"],
         ["UC1-06", "Manage group", "Name limits, links, owner-only actions, archive rule", "Joining through an invitation link (5 paths)"],
     ], [1.0, 1.6, 4.9, 2.98], 10)
     p(doc, "Black-box design selects inputs from valid and invalid groups (equivalence partitioning) and on either side of each limit (boundary value analysis). The expected result is judged only through the class's public interface: the returned outcome, the steps it asked its ports to perform, and the saved state.", 10)
     p(doc, "White-box design selects paths after reading the code. Each graph states its scope. Cyclomatic complexity V(G) = E - N + 2 gives the number of independent paths; one test is written per path, and each path adds an edge the earlier paths did not use. Source-derived paths are not an instrumented coverage measurement.", 10)
-    p(doc, f"Implementation baseline: {BASE_REVISION} (main, 20 October 2026). UC1-04 deleteAccount is the control class chosen for black-box testing, as required by Lab 4 section 3.2.1; UC1-03 UpdateProfile is a second executed table.", 9)
+    p(doc, f"Implementation baseline: {BASE_REVISION} (main, 20 October 2026). UC1-04 deleteAccount is the control class chosen for black-box testing, as required by Lab 4 section 3.2.1; UC1-03 UpdateProfile is a second executed table. Lab 4 section 3.2.2 asks for basis paths of two methods; this report covers one method for each use case (five in total).", 9)
     p(doc, "Format follows the team's session testing report (docs/testing/session-testing).", 9)
 
     for group in cases:
@@ -284,6 +285,7 @@ def create_report(output):
         "tests/lab4/delete-account-black-box.test.ts": "Lab 4 UC1-04 equivalence classes and boundary values",
         "tests/lab4/update-profile-black-box.test.ts": "Lab 4 UC1-03 equivalence classes and boundary values",
         "tests/lab4/account-basis-path.test.ts": "Lab 4 basis paths: deleteAccount and group join",
+        "tests/lab4/auth-profile-basis-path.test.ts": "Lab 4 basis paths: registerUser, safeRedirectPath, prepareProfileUpdate",
         "tests/use-cases/UC1-01-register-user.test.ts": "Registration form, sign-up action and outcomes",
         "tests/use-cases/UC1-02-authenticate-user.test.ts": "Login, middleware protection, safe redirects",
         "tests/use-cases/UC1-03-manage-profile.test.ts": "Profile policy and saving",
@@ -302,7 +304,7 @@ def create_report(output):
         rows.append([name, label, purpose[name]])
     rows.append(["Total", f"{totals['passed']} (+{totals['todo']} todo)", f"{totals['files']} files; in-memory and mocked ports only"])
     table(doc, ["Executed suite", "Tests", "What the result establishes"], rows, [4.3, 1.2, 4.98], 9)
-    p(doc, "Recorded todos: " + "; ".join(metadata["todo"]) + ". The first matches a known gap: Settings calculates the reliability score from an empty history.", 9)
+    p(doc, "Recorded todos: " + "; ".join(metadata["todo"]) + ". The first matches a known gap at this baseline: Settings calculates the reliability score from an empty history (fix proposed in PR #101).", 9)
     p(doc, "Tests use in-memory ports and mocks. Supabase Auth, PostgreSQL row locking, email delivery and the browser pages still need the manual scenarios above. No branch-coverage percentage is claimed.", 9)
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.save(output)
