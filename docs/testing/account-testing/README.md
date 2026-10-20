@@ -8,9 +8,34 @@ scenarios, 40 executed black-box cases, five control-flow graphs (one per use
 case) and 35 executed basis-path cases. The format follows the
 [session testing report](../session-testing/README.md).
 
-The browser scenarios are **Not run / Pending**. The focused automated run
-records **226 passing tests and 2 todo across 13 files**. No browser, real
-PostgreSQL, Supabase Auth or Stripe call is claimed by this package.
+The browser scenarios were run on the production site on 20 October 2026:
+**19 passed, 12 passed in part and 4 were blocked** (production confirms email
+at sign-up, and the run created no money or sessions). The focused automated
+run records **226 passing tests and 2 todo across 13 files**. No real
+PostgreSQL row locking or Stripe call is claimed by this package.
+
+## Browser run on production
+
+The run used headless Chromium against <https://booking-web-manager.vercel.app>
+with three test accounts and two test groups. All three accounts were deleted
+through the app afterwards and both groups were archived. Each case's actual
+output and result are in [manual-cases.json](manual-cases.json); the redacted
+observations are in
+[browser-run-20261020.json](evidence/production/browser-run-20261020.json),
+with [screenshots](evidence/production/screenshots/). Invitation tokens, test
+email addresses and passwords are left out.
+
+Defects found:
+
+| ID | Case | Defect | Status |
+| --- | --- | --- | --- |
+| D1 | UC1-02 | Pressing Log in before the page's JavaScript has loaded submits a plain GET, putting the email and password in the URL. The login and registration forms set no `method`. | Open |
+| D2 | L05 | `/payouts` redirects to `/login` without `next`. | Fixed in PR #98 |
+| D3 | M07 | Help does not link to Payouts. | Fixed in PR #98 |
+| D4 | M01 | Settings shows no email address and has no Email or Payouts link. | Open |
+
+G02's expected output was corrected after the run: the name field holds at most
+60 characters, so a 61st character cannot be typed.
 
 ## Black-box tests (Lab 4 section 3.2.1)
 
@@ -85,7 +110,10 @@ token and a mismatched token cannot reach it through this entry point.
 
 ## Traceability and evidence
 
-- [Manual test cases](manual-cases.json): the 35 browser scenarios.
+- [Manual test cases](manual-cases.json): the 35 browser scenarios with their
+  actual output and result.
+- [Production browser run](evidence/production/): redacted observations and
+  screenshots.
 - [White-box cases](white-box-cases.json): paths, inputs, expected outputs and
   results.
 - [Graph manifest](figures/graphs.json): nodes, edges, source lines, path sets

@@ -130,12 +130,12 @@ def table(doc, headers, rows, widths, size=9):
     return t
 
 
-def figure(doc, path, max_height):
+def figure(doc, path, max_height, description=None):
     w, h = Image.open(path).size
     para = doc.add_paragraph()
     para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     inline = para.add_run().add_picture(str(path), width=Inches(min(10.1, max_height * w / h)))
-    inline._inline.docPr.set("descr", path.stem.replace("-", " ") + " control flow graph")
+    inline._inline.docPr.set("descr", description or path.stem.replace("-", " ") + " control flow graph")
 
 
 # ---------- Rendering of recorded observations ----------
@@ -216,6 +216,8 @@ def create_report(output):
     run = json.loads(next(p for p in evidence.glob("account-unit-*.json") if not p.name.endswith(".metadata.json")).read_text())
     totals = metadata["totals"]
     manual_count = sum(len(group["cases"]) for group in cases)
+    results = [r["result"] for group in cases for r in group["cases"]]
+    production = json.loads((evidence / "production/browser-run-20261020.json").read_text())
 
     doc = Document()
     setup(doc)
@@ -224,7 +226,10 @@ def create_report(output):
     p(doc, "This report covers Joseph's account and group use cases: registration, login, profile settings, account deletion and regular groups. It provides user-facing test scenarios, executed black-box tables, control-flow graphs with basis paths, and recorded automated results.")
     p(doc, f"The focused automated checks passed {totals['passed']} tests across {totals['files']} files, with {totals['todo']} recorded as todo and none failed. "
            f"{len(delete_obs) + len(profile_obs) + len(basis_obs)} of them are the Lab 4 cases in this report, each with recorded expected and actual output. "
-           f"The {manual_count} browser scenarios are prepared for execution and are explicitly marked Not run.", bold=True)
+           f"The {manual_count} browser scenarios were run on the production site on 20 October 2026: {results.count('Pass')} passed, "
+           f"{results.count('Partial')} passed in part and {results.count('Blocked')} were blocked.", bold=True)
+    p(doc, "Partial means some subcases matched while others could not be run or did not match the expected output; each mismatch is listed under Defects found. "
+           "Blocked means the run could not create the required data: production confirms email at sign-up, and no money or sessions were created.", 10)
     table(doc, ["Use case", "Function", "Black box focus", "White box subject"], [
         ["UC1-01", "Register user", "Password, name and email partitions; duplicate account; invitation return", "registerUser server action (7 paths)"],
         ["UC1-02", "Authenticate user", "Credentials, unconfirmed and deleted accounts, protected pages, redirects", "safeRedirectPath after login (8 paths)"],
@@ -242,11 +247,31 @@ def create_report(output):
         doc.add_heading(group["title"], level=2)
         p(doc, f"Scenario: {group['scenario']}  Priority: High.", 9.5)
         p(doc, "Prerequisites: " + group["prerequisites"], 9.5)
-        rows = [[r["id"], r["description"], r["action"], r["inputs"], r["expected"], "Not run", "Pending"] for r in group["cases"]]
+        rows = [[r["id"], r["description"], r["action"], r["inputs"], r["expected"], r["actual"], r["result"]] for r in group["cases"]]
         table(doc, ["ID", "Description", "Action", "Inputs", "Expected output", "Actual output", "Result"],
-              rows, [0.48, 1.2, 1.65, 1.91, 3.58, 0.92, 0.74], 8.6)
-        p(doc, "Run each listed value as a separate subcase with a fresh account. Record the observed result before changing Pending to Pass or Fail.", 9)
+              rows, [0.45, 0.95, 1.3, 1.3, 2.55, 3.15, 0.78], 8.2)
+        p(doc, f"Run on {production['target']} with {production['browser']}. {production['accounts']} "
+               "Observations: evidence/production/browser-run-20261020.json.", 8.5)
         p(doc, "Source: " + group["source"], 8.5)
+
+    heading(doc, "Defects found in the browser run")
+    table(doc, ["ID", "Case", "Defect", "Status"], [
+        ["D1", "UC1-02 (found while logging in)", "If Log in is pressed before the page's JavaScript has loaded, the browser submits the form as a plain GET, so the email and password appear in the address bar, browser history and server logs. The login and registration forms set no method.", "Open. Fix: give both forms method=\"post\"."],
+        ["D2", "L05", "/payouts redirects to /login without ?next=/payouts, so the user lands on Home after logging in.", "Fixed in PR #98."],
+        ["D3", "M07", "The Help page does not link to Payouts.", "Fixed in PR #98."],
+        ["D4", "M01", "Settings shows no email address and has no Email or Payouts link (Email is reached through Help).", "Open."],
+    ], [0.45, 1.6, 6.0, 2.43], 9)
+    p(doc, "Expected outputs corrected after the run: G02 now states that the name field holds at most 60 characters, because the 61st character cannot be typed. "
+           "Observations that need no change: the duplicate-email check appears on step 2, when the account is created (R05); a deleted member stays in the member list as \"Deleted user\", as the anonymise-and-retain rule requires (X04).", 9)
+    shots = HERE / "evidence/production/screenshots"
+    for name, caption in [
+        ("R05-existing-email-account-A", "R05: duplicate email refused, with a Log in instead link."),
+        ("X01-owns-two-groups", "X01: owned groups block deletion; the delete button is not offered."),
+        ("G05-old-link-while-off-member-C", "G05: a turned-off invitation link is refused."),
+        ("X04-account-C-nothing-outstanding", "X04: after deletion the login page confirms the account was deleted."),
+    ]:
+        figure(doc, shots / f"{name}.jpg", max_height=2.4, description=caption)
+        p(doc, caption, 9)
 
     executed_tables(doc, "Executed black-box tests: delete account", "UC1-04 deleteAccount", delete_obs, delete_input, delete_output,
                     "Baseline: active account with a wallet and nothing outstanding (all six obligations 0). Money is in integer cents. "
@@ -305,7 +330,7 @@ def create_report(output):
     rows.append(["Total", f"{totals['passed']} (+{totals['todo']} todo)", f"{totals['files']} files; in-memory and mocked ports only"])
     table(doc, ["Executed suite", "Tests", "What the result establishes"], rows, [4.3, 1.2, 4.98], 9)
     p(doc, "Recorded todos: " + "; ".join(metadata["todo"]) + ". The first matches a known gap at this baseline: Settings calculates the reliability score from an empty history (fix proposed in PR #101).", 9)
-    p(doc, "Tests use in-memory ports and mocks. Supabase Auth, PostgreSQL row locking, email delivery and the browser pages still need the manual scenarios above. No branch-coverage percentage is claimed.", 9)
+    p(doc, "Automated tests use in-memory ports and mocks. The browser scenarios cover the deployed pages and Supabase Auth; PostgreSQL row locking, email delivery and the money-dependent blockers remain untested in the browser. No branch-coverage percentage is claimed.", 9)
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.save(output)
     print(output)
