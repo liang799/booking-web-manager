@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Search, UserRound, UsersRound } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -8,6 +8,7 @@ import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookingLogo } from "@/components/ui/booking-logo";
 import { initials } from "@/components/ui/initials";
+import { NavigationIcon } from "@/components/ui/navigation-icon";
 import { toFivePoint } from "@/components/ui/reliability-badge";
 import {
   Sheet,
@@ -20,19 +21,19 @@ import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home", image: "home" },
-  { href: "/discover", label: "Discover", image: "search" },
-  { href: "/sessions", label: "My sessions", image: "sessions" },
-  { href: "/wallet", label: "Wallet", image: "wallet" },
-  { href: "/groups", label: "Groups", image: null },
-  { href: "/profile", label: "Settings", image: "settings" },
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/discover", label: "Discover", icon: "search" },
+  { href: "/sessions", label: "My sessions", icon: "sessions" },
+  { href: "/wallet", label: "Wallet", icon: "wallet" },
+  { href: "/groups", label: "Groups", icon: "groups" },
+  { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
 const MOBILE_NAV_LINKS = [
-  { href: "/", label: "Home", image: "home" },
-  { href: "/sessions", label: "Sessions", image: "sessions" },
-  { href: "/wallet", label: "Wallet", image: "wallet" },
-  { href: "/profile", label: "Settings", image: "settings" },
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/sessions", label: "Sessions", icon: "sessions" },
+  { href: "/wallet", label: "Wallet", icon: "wallet" },
+  { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
 export interface ShellUser {
@@ -92,13 +93,7 @@ function SidebarContents({
                 active && "bg-accent font-semibold",
               )}
             >
-              {link.image === "search" ? (
-                <Search className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : link.image === null ? (
-                <UsersRound className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : (
-                <Image src={`/images/navigation/${link.image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />
-              )}
+              <NavigationIcon name={link.icon} active={active} />
               {link.label}
             </Link>
           );
@@ -196,8 +191,8 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
               <BookingLogo />
             </Link>
             <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="icon" className="h-11 w-11" aria-label="Search sessions">
-              <Link href={searchHref}><Search className="h-5 w-5" aria-hidden="true" /></Link>
+            <Button asChild variant="ghost" size="icon" className="h-11 w-11 [&_svg]:size-5" aria-label="Search sessions">
+              <Link href={searchHref}><NavigationIcon name="search" active={pathname === "/discover"} /></Link>
             </Button>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
@@ -248,7 +243,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             className="flex items-center rounded-md bg-card p-2.5 shadow-[0_0_1px_0_hsl(var(--foreground)/0.3),0_4px_8px_0_hsl(var(--foreground)/0.1)]"
             aria-label="Main"
           >
-            {MOBILE_NAV_LINKS.map(({ href, label, image }, index) => {
+            {MOBILE_NAV_LINKS.map(({ href, label, icon }, index) => {
               const active = index === activeMobileIndex;
               return (
                 <Fragment key={href}>
@@ -261,7 +256,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
                       active ? "flex-[2] bg-accent font-medium text-foreground" : "flex-1 text-foreground",
                     )}
                   >
-                    <Image src={`/images/navigation/${image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />
+                    <NavigationIcon name={icon} active={active} />
                     <span className={active ? undefined : "sr-only"}>{label}</span>
                   </Link>
                   {index < MOBILE_NAV_LINKS.length - 1 && (
