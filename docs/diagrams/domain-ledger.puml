@@ -21,8 +21,8 @@ skinparam nodesep 35
 skinparam ranksep 40
 
 interface LedgerReadPort {
-  +getWalletBalance(walletId)\n  : Promise<WalletBalance | null>
-  +getHoldingAccountBalance(accountId)\n  : Promise<HoldingAccountBalance | null>
+  +getWalletBalance(walletId : UUID)\n  : Promise<WalletBalance | null>
+  +getHoldingAccountBalance(accountId : UUID)\n  : Promise<HoldingAccountBalance | null>
 }
 
 interface WalletBalance <<ReadModel>> {
@@ -45,18 +45,19 @@ class LedgerTransaction <<ImmutableFact>> {
   +kind : TransactionKind
   +occurredAt : Date
   +idempotencyKey : string
+  +externalReference : string [0..1]
   +walletId : UUID [0..1]
   +holdId : UUID [0..1]
   +payoutId : UUID [0..1]
 }
 
 class Money <<ValueObject>> {
-  {static} +fromCents(...) : Money
+  {static} +fromCents(cents : number) : Money
   +toCents() : number
-  +add(...) : Money
-  +subtract(...) : Money
-  +multiply(...) : Money
-  +divideFloor(...) : Money
+  +add(other : Money) : Money
+  +subtract(other : Money) : Money
+  +multiply(factor : number) : Money
+  +divideFloor(divisor : number) : Money
 }
 
 LedgerReadPort .down.> WalletBalance : returns
@@ -67,5 +68,5 @@ LedgerReadPort -[hidden]right- LedgerTransaction
 WalletBalance -[hidden]right- HoldingAccountBalance
 HoldingAccountBalance -[hidden]right- Money
 
-caption Selected public members; (...) abbreviates parameters.\nTransaction IDs refer to Wallet, FundHold and PayoutAttempt. Wallet derives funds from its complete history.\nRead models serve independent queries; unknown accounts return null. Money uses safe integer SGD cents.
+caption Selected public members. LedgerTransaction amounts are positive; kind determines the movement.\nWallet derives funds from complete committed history; ledger references identify Wallet, FundHold and PayoutAttempt.\nRead models serve independent queries: unknown accounts return null; existing accounts without entries return zero.\nHoldingAccount is a shared identity and owns no holds. Money uses safe integer SGD cents.
 @enduml
