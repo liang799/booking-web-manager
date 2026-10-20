@@ -27,7 +27,13 @@ export default defineConfig({
     {
       name: "landing-page",
       testMatch: "**/landing-page.spec.ts",
-      use: { trace: "retain-on-failure" },
+      // Headless shell can miss background-tab events while tracing on Linux.
+      use: { channel: "chromium", trace: "retain-on-failure" },
+    },
+    {
+      name: "landing-page-webkit",
+      testMatch: "**/landing-page.spec.ts",
+      use: { browserName: "webkit", trace: "retain-on-failure" },
     },
   ],
   use: {

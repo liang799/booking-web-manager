@@ -8,8 +8,20 @@ The hero uses static, separately composed desktop and mobile WebP backgrounds.
 Its responsive `picture` selects the mobile image below 701px and prioritizes
 loading the hero. Both assets together are approximately 112 KiB. Text, links
 and navigation remain HTML. The mobile menu uses native `details`/`summary`
-and the skip link moves keyboard focus past navigation. Reduced-motion users
-receive no decorative transitions.
+with a small client enhancement in `landing-navigation.tsx`. Its three thin
+hamburger strokes converge, the middle stroke fades, and the outer strokes
+rotate into a thin cross, with the sequence reversed on close. The panel and
+links animate in, and closing finishes before the disclosure is hidden. Closing
+links become inert immediately.
+Escape returns focus to the trigger; outside taps, focus leaving the menu,
+link selection, and the desktop breakpoint also dismiss it. The nonmodal panel
+scrolls independently on short screens and does not trap keyboard focus.
+
+Landing section links preserve their hash URLs and history while smoothly
+scrolling and moving focus to the destination. Modified clicks retain native
+browser behavior. The skip link remains immediate, and reduced-motion users
+receive instant scrolling with no decorative transitions. Without JavaScript,
+the disclosure and anchor links retain their native behavior.
 
 Landing typography uses a locally bundled Outfit variable font, scoped to this
 view. The geometric letter shapes, headline weight and hero eyebrow tracking
@@ -26,6 +38,14 @@ page's dark ink even when the app theme is dark, keeping contrast on its light
 background. Header and footer use the shared 20px wordmark at every viewport,
 matching the discovery header and keeping the hero headline and primary action
 dominant. The home links retain a 44px hit target and the existing header spacing.
+The mobile menu uses a transparent, borderless 44px tap target with three
+22px-wide, 1.5px-thick strokes. The icon is centered with the shared logo, and
+the numbered section links, guide line and caption share its horizontal center.
+Its warm-paper surface fills the viewport below the shared header, with generous ruled navigation rows and separate Sign in and Settings
+utility links. Settings uses the app's existing `/profile` destination; both
+utility links disable prefetching. A muted footer caption and decorative court
+arcs finish the surface. Dark ink and muted olive accents retain the landing
+theme without a floating panel border or shadow.
 Use `<BookingLogo tone="inherit" />` on this fixed light surface. The shared
 module owns wordmark styling; other pages use its default navigation treatment
 or explicitly select `size="display"` for a main brand heading.
@@ -58,13 +78,19 @@ Hosting motion review captures: [rally animation](../../docs/assets/host-court-m
 [desktop](../../docs/assets/host-court-desktop.png) and
 [mobile](../../docs/assets/host-court-mobile.png).
 
-The landing Playwright project covers responsive navigation, correct image
-selection, short desktop layouts, keyboard navigation and JavaScript-disabled
-use. The public resources project continues to check anonymous API docs and
+The landing Playwright projects run in Chromium and WebKit and cover responsive
+navigation, host court motion and pause controls, correct image
+selection, short desktop layouts, menu dismissal and focus, rapid toggling,
+short mobile viewports, smooth scrolling, reduced motion and JavaScript-disabled
+use, including Safari pointer focus during link activation. The public resources
+project continues to check anonymous API docs and
 Storybook access. `Landing/Page` provides desktop, mobile and dark-theme
 stories; the public art direction intentionally retains its light palette.
 
 Asset provenance and editing prompts: `public/images/landing-court.md`.
 
 Production-rendered review captures: [desktop](../../docs/assets/landing-page-desktop.webp)
-and [mobile](../../docs/assets/landing-page-mobile.webp).
+and [mobile](../../docs/assets/landing-page-mobile.webp). The enhanced mobile
+navigation has [closed](../../docs/assets/landing-mobile-menu-closed.webp) and
+[open-menu](../../docs/assets/landing-mobile-menu.webp) captures with the shared wordmark,
+plus a [recorded transition](../../docs/assets/landing-mobile-menu-motion.gif).

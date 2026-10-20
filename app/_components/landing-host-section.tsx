@@ -39,7 +39,7 @@ export function LandingHostSection({ children }: { children: ReactNode }) {
   }, [paused]);
 
   return (
-    <section ref={sectionRef} className={styles.hostSection} id="host" aria-labelledby="host-title">
+    <section ref={sectionRef} className={styles.hostSection} id="host" aria-labelledby="host-title" tabIndex={-1}>
       <div className={styles.hostCopy}>{children}</div>
       <div className={styles.courtScene}>
         <div className={styles.courtStage}>
