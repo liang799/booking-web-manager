@@ -482,3 +482,26 @@ export const HostedManagementDialog: Story = {
     await expect(trigger).toBeVisible();
   },
 };
+
+export const HostedManagementLoadingCanClose: Story = {
+  parameters: { nextjs: { navigation: { pathname: "/sessions", query: { tab: "hosting" } } } },
+  args: { loadHosted: () => new Promise<HostedSessionsResponse>(() => {}) },
+  play: async ({ canvas }) => {
+    const trigger = await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
+    await userEvent.click(trigger);
+    const dialogElement = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const dialog = within(dialogElement);
+    await expect(dialog.getByRole("status")).toHaveTextContent("Loading session controls…");
+    const skeleton = dialogElement.querySelector<HTMLElement>("[data-session-controls-skeleton]");
+    if (!skeleton) throw new Error("The session controls skeleton was not rendered.");
+    await waitFor(() => expect(skeleton).toBeVisible());
+    await expect(skeleton.querySelector('[aria-hidden="true"]')).toHaveAttribute("inert");
+    await expect(skeleton.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).toHaveLength(0);
+    await expect(dialogElement.querySelector('[class*="animate-spin"]')).toBeNull();
+    await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeEnabled();
+    await userEvent.click(dialog.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};

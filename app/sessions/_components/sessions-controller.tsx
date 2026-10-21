@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Money } from "@/components/ui/money";
 import { SessionFeedLoadError, loadSessionFeed as defaultLoadFeed, type LoadSessionFeed } from "../session-feed-transport";
 import type { SessionFeedItem } from "../session-feed-contract";
@@ -23,6 +22,7 @@ import { SessionsUiProvider, useSessionsUiStore } from "./sessions-ui-provider";
 import { createSessionsUrlStorage, readSessionsUrlState } from "./sessions-url-storage";
 import { sessionArtwork, sessionStatus, sessionTitle } from "./session-display";
 import styles from "./sessions.module.css";
+import { SessionControlsSkeleton } from "./sessions-skeleton";
 
 export const sessionFeedQueryKey = ["sessions", "feed"] as const;
 
@@ -152,7 +152,7 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
 
 function HostedSessionManagement({ userId, session, loadHosted, onRefresh, onCancel }: { readonly userId: string; readonly session: SessionFeedItem; readonly loadHosted: LoadHostedSessions; readonly onRefresh: () => void; readonly onCancel: (session: HostedSessionItem, trigger: HTMLButtonElement) => void }) {
   const query = useQuery({ queryKey: [...hostedSessionsQueryKey, userId], queryFn: ({ signal }) => loadHosted(signal), retry: false });
-  if (query.isPending) return <LoadingSpinner label="Loading session controls…" />;
+  if (query.isPending) return <SessionControlsSkeleton />;
   if (query.isError) return <div className="space-y-4"><p role="alert">{query.error instanceof HostedSessionsLoadError && query.error.signIn ? "Your sign-in has expired. Sign in again to manage this session." : "We couldn’t load session controls."}</p>{query.error instanceof HostedSessionsLoadError && query.error.signIn ? <Link href="/login?next=%2Fsessions" className={styles.primaryButton}>Sign in</Link> : <button className={styles.secondaryButton} onClick={() => void query.refetch()}>Try again</button>}</div>;
   const managed = query.data.sessions.filter((item) => item.sessionId === session.sessionId);
   const attendance = query.data.awaitingAttendance.filter((item) => item.sessionId === session.sessionId);

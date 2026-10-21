@@ -14,8 +14,12 @@ Captured from the actual `Sessions/Overview` Storybook stories in Chromium on 21
 | `empty-hosting-mobile.webp` | 390 × 844, full page | `empty-hosting`: responsive hosting empty state |
 | `empty-joined-dark.webp` | 1536 × 1024 | `empty-joined`, dark theme |
 | `empty-hosting-dark.webp` | 1536 × 1024 | `empty-hosting`, dark theme |
+| `loading-joined-desktop.webp` | 1536 × 1024, full page | `loading`: Joined date rail, hero and collapsed-row placeholders |
+| `loading-hosting-desktop.webp` | 1536 × 1024, full page | `loading-hosting`: upcoming cards and history-row placeholders |
+| `loading-mobile.webp` | 390 × 844, full page | `mobile-loading`: simple dated-card placeholders |
+| `loading-dark.webp` | 1536 × 1024, full page | `loading-dark`: dark Joined skeleton |
 
-Screenshots were captured at device scale 1 after fonts, images and finite animations settled, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. Populated screenshots show the viewport; mobile empty-state screenshots show the full page.
+Screenshots were captured at device scale 1 after fonts, images and finite animations settled, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. Populated screenshots show the viewport; mobile empty-state and loading screenshots show the full page. Loading captures use reduced motion to freeze the decorative pulse.
 
 [Watch the Joined entrance](joined-entrance.webm): a 1536 × 1024 Chromium recording of `desktop-entrance-sequence`. The rail draws downward for 600ms, the marker travels to the current date for 420ms, then the selected compact card reveals from top to bottom for 520ms. This records the rendered UI at its actual speed, including the initial Storybook load.
 
@@ -32,6 +36,8 @@ Hosting has equal-width upcoming cards with dates above the artwork, venue title
 Zustand keeps account-scoped guarded `browsing`/`viewingSession` modes, selected view, timeline session and remembered detail panels. Validated URL storage restores the tab, Joined session and panel, for example `/sessions?tab=joined&session=<uuid>&panel=participants`. Restoring the URL expands the timeline card without opening a dialog; the remembered panel appears when View details is opened. Account changes create fresh state and clear the session/panel URL selection. React Query retains ownership of data, loading, failures and pagination. Restoration loads further pages as needed, preserves the URL after failed requests for retry, and clears unavailable selections only after exhausting the feed.
 
 The feed supplies real sport, venue, region, dates, attendance counts and session status. The UI does not invent court numbers, notes, names or portraits from the mockups. Creation links respect the account's available actions, including email/account setup requirements. Existing hosting management and cancellation recovery remain connected.
+
+Initial feed loading mirrors the chosen layout with skeletons. The hosting dialog replaces its controls spinner with a card-shaped skeleton while preserving the title and Close action. Placeholders contain no links or buttons and are hidden from assistive technology; one live status announces loading. The subtle pulse is disabled under reduced motion, including inside the portalled dialog. Refetches and pagination retain the loaded content.
 
 ## Validation
 
@@ -56,3 +62,5 @@ The Hosting empty-state refinement was verified separately with typecheck, lint,
 The first-visit entrance was verified with typecheck, lint, 2,498 passing unit tests, 68 focused Storybook interaction/accessibility checks across five suites, and all 43 authenticated browser tests. Browser coverage verifies the line → dot → card sequence, stable layout, immediate interaction/reduced-motion completion, no replay after pagination or returning from Hosting, and a fresh entrance for a new account. Native Chromium/WebKit checks exercise desktop widths 768/1024/1536px, wheel and keyboard interruption, resizing, live reduced-motion changes, mobile, dark appearance and absence of a Hosting timeline. Production Storybook and Next.js builds passed through the authenticated test runner.
 
 The panel/sidebar alignment refinement passed typecheck, lint and all 28 overview Storybook checks. Native Chromium/WebKit verification passed 32 desktop and 24 mobile scenarios: short empty views align without extra scrolling, long Joined/Hosting views align at the page bottom, and mobile keeps its existing 24px bottom padding without horizontal overflow. At 1536 × 1024 both empty panels and the sidebar end at y=1008px. Desktop light/dark empty-state screenshots were refreshed.
+
+The skeleton refinement passed typecheck, lint and all 73 focused Storybook interaction/accessibility checks across five suites, including closing the management dialog while its request remains pending. Native Chromium/WebKit verification passed 24 scenarios across 320/390/768/1024/1536px, light/dark appearances and reduced motion. Loading navigation stays usable, placeholders are not focusable, and no horizontal overflow was found.

@@ -183,9 +183,6 @@
 .emptyStarterCard > svg { flex-shrink: 0; margin-left: auto; color: var(--session-muted); }
 .notice { margin-top: 20px; padding: 16px; font-size: 14px; border: 1px solid var(--session-line); border-radius: 6px; }
 .notice a { text-decoration: underline; }
-.skeleton { display: grid; gap: 16px; padding: 32px 0; }
-.skeleton > div { background: hsl(var(--muted)); height: 80px; border-radius: 8px; animation: skeletonPulse 1.5s ease-in-out infinite alternate; }
-.skeleton > div:first-of-type { height: 300px; }
 .dialogContent { --session-muted: #717175; --session-line: #e4e4e6; --session-paper: #faf9f7; max-height: 90dvh; overflow-y: auto; }
 .dialogHero { position: relative; height: 180px; margin: 0 -24px; overflow: hidden; }
 .dialogHeading { font-size: 22px; font-weight: 600; letter-spacing: -.6px; }
@@ -199,7 +196,6 @@
 :global(.dark) .status[data-tone="green"] { background: #2b3d2f; color: #c5d9c6; }
 @keyframes photoReveal { from { transform: scale(1.035); opacity: .7; } to { transform: scale(1); opacity: 1; } }
 @keyframes detailReveal { from { opacity: .4; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes skeletonPulse { to { opacity: .45; } }
 @media (min-width: 768px) and (max-width: 1199px) {
   .page { padding: 24px 16px 24px; }
   .panel { padding: 16px 20px 24px; }

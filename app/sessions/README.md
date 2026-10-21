@@ -254,6 +254,13 @@ it has no timeline. Both views use the original shared sidebar from `main`, with
 the sessions breadcrumb and bordered content panel inside the page.
 Below 768px both tabs use simple date/title cards, with details in a dialog.
 
+Initial loading uses matching skeletons: the Joined date rail and expanded card,
+Hosting's upcoming cards and history rows, or simple dated cards on mobile. The
+host-management dialog also shows a controls skeleton while retaining its title
+and Close button. Decorative placeholders are hidden from assistive technology
+behind one loading status, and their pulse respects reduced motion. Background
+refreshes and pagination keep existing content visible.
+
 On the first desktop Joined visit, the rail draws downward, the marker travels to
 the selected date, and the compact card reveals from top to bottom. The sequence
 waits for URL restoration and reserves the card's final space to avoid layout

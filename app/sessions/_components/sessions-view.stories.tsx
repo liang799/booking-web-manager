@@ -43,6 +43,27 @@ async function expectNoHorizontalOverflow() {
   await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
 }
 
+async function expectFeedSkeleton(canvasElement: HTMLElement, tab: "joined" | "hosting", mobile = false) {
+  const skeleton = canvasElement.querySelector<HTMLElement>(`[data-sessions-skeleton="${tab}"]`);
+  if (!skeleton) throw new globalThis.Error(`The ${tab} sessions skeleton was not rendered.`);
+  const desktopGraphic = skeleton.querySelector<HTMLElement>("[data-skeleton-desktop]");
+  const mobileGraphic = skeleton.querySelector<HTMLElement>("[data-skeleton-mobile]");
+  if (!desktopGraphic || !mobileGraphic) throw new globalThis.Error("Responsive skeleton graphics were not rendered.");
+  await expect(desktopGraphic).toHaveAttribute("inert");
+  await expect(mobileGraphic).toHaveAttribute("inert");
+  await expect(mobile ? mobileGraphic : desktopGraphic).toBeVisible();
+  await expect(mobile ? desktopGraphic : mobileGraphic).not.toBeVisible();
+  await expect(skeleton.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(0);
+  await expect(skeleton.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).toHaveLength(0);
+  if (tab === "joined") {
+    await expect(skeleton.querySelector("[data-skeleton-timeline]")).not.toBeNull();
+    await expect(skeleton.querySelector("[data-skeleton-hosting]")).toBeNull();
+  } else {
+    await expect(skeleton.querySelector("[data-skeleton-hosting]")).not.toBeNull();
+    await expect(skeleton.querySelector("[data-skeleton-timeline]")).toBeNull();
+  }
+}
+
 let entrancePhases: string[] = [];
 let entranceHeights: number[] = [];
 
@@ -347,9 +368,53 @@ export const EmptyHostingNeedsSetup: Story = {
 
 export const Loading: Story = {
   args: { sessions: [], loading: true },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement, args }) => {
     await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
+    await expectFeedSkeleton(canvasElement, "joined");
     await expect(canvas.queryByRole("heading", { name: "Your sessions will appear here." })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
+    await expect(canvas.getByRole("link", { name: "New session" })).toBeVisible();
+    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "Hosting" }));
+    await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const LoadingHosting: Story = {
+  args: { tab: "hosting", sessions: [], loading: true },
+  play: async ({ canvas, canvasElement, args }) => {
+    await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
+    await expectFeedSkeleton(canvasElement, "hosting");
+    await expect(canvas.queryByRole("heading", { name: "You haven’t created any sessions." })).not.toBeInTheDocument();
+    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "Joined" }));
+    await expect(args.onTabChange).toHaveBeenCalledWith("joined");
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const MobileLoading: Story = {
+  args: Loading.args,
+  globals: { viewport: { value: "phone", isRotated: false } },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
+    await expectFeedSkeleton(canvasElement, "joined", true);
+    await expect(canvas.getByRole("navigation", { name: "Session views" })).toBeVisible();
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const LoadingDark: Story = {
+  ...Loading,
+  globals: { theme: "dark", viewport: { value: "desktop", isRotated: false } },
+};
+
+export const MobileLoadingHostingDark: Story = {
+  args: LoadingHosting.args,
+  globals: { theme: "dark", viewport: { value: "phone", isRotated: false } },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
+    await expectFeedSkeleton(canvasElement, "hosting", true);
+    await expect(canvas.getByRole("navigation", { name: "Session views" })).toBeVisible();
     await expectNoHorizontalOverflow();
   },
 };

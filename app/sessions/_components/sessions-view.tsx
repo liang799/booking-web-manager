@@ -11,6 +11,7 @@ import { useSessionsUiStore } from "./sessions-ui-provider";
 import type { SessionDetailsPanel } from "./sessions-ui-store";
 import styles from "./sessions.module.css";
 import { useTimelineEntrance } from "./use-timeline-entrance";
+import { SessionsSkeleton } from "./sessions-skeleton";
 
 export interface SessionsViewProps {
   readonly tab: "joined" | "hosting";
@@ -50,7 +51,7 @@ export function SessionsView(props: SessionsViewProps) {
       {creation && <Link href={creation.href} className={styles.primaryButton} aria-label="New session"><Plus size={20} strokeWidth={1.4} aria-hidden /><span>New session</span></Link>}
     </header>
     {email && <p className={styles.notice}>Add an email address to host a session. <Link href={email.href}>Add email</Link></p>}
-    {loading ? <div className={styles.skeleton} role="status"><span className="sr-only">Loading your sessions…</span><div /><div /><div /></div>
+    {loading ? <SessionsSkeleton tab={tab} />
       : error && sessions.length === 0 ? <div className={styles.empty}><p role="alert">{error}</p><button className={styles.secondaryButton} onClick={onRetry}>Try again</button></div>
       : sessions.length === 0 ? <EmptySessions tab={tab} actions={actions} />
       : <>
