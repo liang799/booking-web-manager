@@ -584,107 +584,49 @@ export const KeyboardAndSessionSummary: Story = {
   },
 };
 
-export const ScrollAdvancesCurrentSession: Story = {
-  play: async ({ canvas, canvasElement }) => {
+/** A neutral full feed for native Playwright wheel-input coverage. */
+export const DesktopWheelNavigation: Story = {};
+
+export const ProgrammaticScrollKeepsCurrentSession: Story = {
+  play: async ({ canvas }) => {
     const currentDate = canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" });
     await expect(currentDate).toHaveAttribute("aria-expanded", "true");
-    const initialFeature = canvasElement.querySelector<HTMLElement>("[data-timeline-expanded]");
-    if (!initialFeature) throw new globalThis.Error("The initial upcoming session was not expanded.");
-    await expect(initialFeature.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
-    await expect(initialFeature.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
-    const nextDate = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
-    await expect(nextDate).toHaveAttribute("aria-expanded", "false");
-    // Exercise the real page scroll. Keep focus outside the timeline: keyboard focus deliberately pauses automatic selection.
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    const nextRow = canvasElement.querySelector(`[data-session-id="${joinedSessions[1]!.sessionId}"]`);
-    if (!nextRow) throw new globalThis.Error("The second timeline row was not rendered.");
-    const threshold = Math.min(window.innerHeight * 0.32, 260);
-    window.scrollTo({ top: window.scrollY + nextRow.getBoundingClientRect().top - threshold + 8, behavior: "instant" });
-    await waitFor(async () => {
-      await expect(nextDate).toHaveAttribute("aria-expanded", "true");
-      await expect(nextRow).toHaveAttribute("data-current", "true");
-    });
-    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
-    await expectTimelineHierarchy(canvasElement, "2026-10-23");
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await expect(currentDate).toHaveAttribute("aria-expanded", "true");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await expect(currentDate).toHaveAttribute("aria-expanded", "true");
     await expectNoHorizontalOverflow();
   },
 };
 
-export const ScrollReturnsToEarlierSessions: Story = {
+export const KeyboardNavigatesTimeline: Story = {
   play: async ({ canvas, canvasElement }) => {
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    for (const index of [1, 2]) {
-      const next = canvasElement.querySelector(`[data-session-id="${joinedSessions[index]!.sessionId}"]`);
-      if (!next) throw new globalThis.Error("The next timeline row was not rendered.");
-      window.scrollTo({ top: window.scrollY + next.getBoundingClientRect().top - Math.min(window.innerHeight * 0.45, 650) + 8, behavior: "instant" });
-      await waitFor(() => {
-        if (next.getAttribute("data-current") !== "true" && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
-          window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
-        }
-        expect(next).toHaveAttribute("data-current", "true");
-      });
-      await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
-      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
+    for (const [key, date] of [["{ArrowDown}", "23 Oct 2026"], ["{PageDown}", "24 Oct 2026"], ["{ArrowUp}", "23 Oct 2026"], ["{PageUp}", "21 Oct 2026"], ["{Home}", "3 Oct 2026"], ["{End}", "25 Oct 2026"]]) {
+      await userEvent.keyboard(key!);
+      const selected = canvas.getByRole("button", { name: `Show Tennis Court Booking, ${date}` });
+      await expect(selected).toHaveAttribute("aria-expanded", "true");
+      await expect(selected).toHaveFocus();
     }
-    for (const [index, date] of [[1, "23 Oct 2026"], [0, "21 Oct 2026"], [4, "20 Oct 2026"], [5, "17 Oct 2026"]] as const) {
-      const previous = canvas.getByRole("button", { name: `Show Tennis Court Booking, ${date}` });
-      window.scrollBy({ top: -window.innerHeight, behavior: "instant" });
-      // A native wheel still reports upward intent when card folding has reached scrollY=0.
-      await waitFor(() => {
-        if (previous.getAttribute("aria-expanded") !== "true") window.dispatchEvent(new WheelEvent("wheel", { deltaY: -120 }));
-        expect(previous).toHaveAttribute("aria-expanded", "true");
-      });
-      await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
-    }
-    for (const index of [4, 0, 1]) {
-      const next = canvasElement.querySelector<HTMLElement>(`[data-session-id="${joinedSessions[index]!.sessionId}"]`);
-      if (!next) throw new globalThis.Error("The next chronological session was not rendered.");
-      window.scrollTo({ top: window.scrollY + next.getBoundingClientRect().top - Math.min(window.innerHeight * 0.45, 650) + 8, behavior: "instant" });
-      await waitFor(() => {
-        if (next.dataset.current !== "true" && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
-          window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
-        }
-        expect(next).toHaveAttribute("data-current", "true");
-      });
-      await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
-    }
+    await expectTimelineHierarchy(canvasElement, "2026-10-25");
     await expectNoHorizontalOverflow();
   },
 };
 
-export const ScrollContinuesAtBottomOfCompactTimeline: Story = {
+export const CompactTimelineWheelNavigation: Story = {
   globals: { viewport: { value: "tallDesktop", isRotated: false } },
   parameters: {
     viewport: { options: { tallDesktop: { name: "Tall desktop (1440px)", styles: { width: "1440px", height: "1800px" }, type: "desktop" } } },
   },
   play: async ({ canvas, canvasElement }) => {
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-    const second = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
-    // The initial upcoming position can already be at the page boundary in a
-    // tall viewport, so the first downward intent also needs the wheel path.
-    await waitFor(() => {
-      if (second.getAttribute("aria-expanded") !== "true" && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
-        window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
-      }
-      expect(second).toHaveAttribute("aria-expanded", "true");
-    });
-    // Folding the previous card can move the page up. Pause automatic selection
-    // while positioning at the boundary, then release focus for wheel navigation.
-    second.focus();
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    await expect(window.scrollY + window.innerHeight).toBeGreaterThanOrEqual(document.documentElement.scrollHeight - 4);
-    second.blur();
-
-    // At the bottom, another wheel has no native scroll event. It must still
-    // move the current marker after the selection cooldown has elapsed.
-    const third = canvas.getByRole("button", { name: "Show Tennis Court Booking, 24 Oct 2026" });
-    await waitFor(() => {
-      if (third.getAttribute("aria-expanded") !== "true") window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
-      expect(third).toHaveAttribute("aria-expanded", "true");
-    }, { timeout: 2000 });
-    await expectTimelineHierarchy(canvasElement, "2026-10-24");
+    timeline.dispatchEvent(new WheelEvent("wheel", { deltaY: 100, bubbles: true, cancelable: true }));
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
+    await expectTimelineHierarchy(canvasElement, "2026-10-23");
     await expectNoHorizontalOverflow();
   },
 };

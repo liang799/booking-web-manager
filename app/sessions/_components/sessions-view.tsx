@@ -32,7 +32,7 @@ export interface SessionsViewProps {
   readonly onUrlRestored?: () => void;
 }
 
-/** A shared feed, with a scroll-led desktop timeline and a deliberately simple mobile list. */
+/** A shared feed, with a gesture-led desktop timeline and a deliberately simple mobile list. */
 export function SessionsView(props: SessionsViewProps) {
   const { tab, onTabChange, sessions, actions, loading, error, onRetry } = props;
   const timelineEntrancePlayed = useRef(false);
@@ -188,7 +188,7 @@ function ExpandedSession({ session, index, onOpenSession }: { readonly session: 
   </div>;
 }
 
-/** Scroll selection preserves the next card's position when the previous card folds away. */
+/** Wheel intent selects one booking; layout anchoring keeps it beneath the pinned header. */
 function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTargetId, onUrlRestored, entrancePlayed }: SessionsViewProps & { readonly entrancePlayed: RefObject<boolean> }) {
   // The cursor feed prioritizes upcoming bookings, then returns history newest
   // first. A vertical timeline instead advances in time in both directions.
@@ -206,15 +206,15 @@ function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTar
   const positioned = useRef(false);
   const previousSessions = useRef(sessions);
   const viewportAnchor = useRef<{ id: string; top: number } | null>(null);
-  const lastScroll = useRef(0);
-  const ignoreScroll = useRef(false);
-  const lastSelection = useRef(0);
+  const gesture = useRef({ lastEvent: -Infinity, delta: 0, consumed: false, lockedUntil: 0 });
   const entrance = useTimelineEntrance({ root: list, played: entrancePlayed, marker, restoring: Boolean(scrollTargetId), activeSessionId: active });
   const select = useCallback((id: string) => {
     if (id === active) { setActive(id); return; }
     const row = rows.current.get(id);
-    if (row) anchor.current = { id, top: row.getBoundingClientRect().top };
-    lastSelection.current = performance.now();
+    const header = list.current?.closest("[data-view]")?.querySelector("header");
+    if (row && header) anchor.current = { id, top: header.getBoundingClientRect().bottom + 28 };
+    gesture.current.consumed = true;
+    gesture.current.lockedUntil = performance.now() + 520;
     setActive(id);
   }, [active, setActive]);
 
@@ -229,9 +229,7 @@ function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTar
       const heading = row.previousElementSibling;
       const labelSpace = heading?.matches("h2") ? heading.getBoundingClientRect().height : 0;
       const top = header.getBoundingClientRect().bottom + 28 + labelSpace;
-      ignoreScroll.current = true;
       window.scrollBy({ top: row.getBoundingClientRect().top - top, behavior: "instant" });
-      lastScroll.current = window.scrollY;
       positioned.current = true;
     };
     if (scrollTargetId === active && desktop) {
@@ -243,17 +241,21 @@ function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTar
     } else if (anchor.current) {
       const row = rows.current.get(anchor.current.id);
       if (row) {
-        ignoreScroll.current = true;
+        // Compensate for folding the old card before paint. Animate only the
+        // new content, never the document's height or its scroll position.
         window.scrollBy({ top: row.getBoundingClientRect().top - anchor.current.top, behavior: "instant" });
-        lastScroll.current = window.scrollY;
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          row.querySelector<HTMLElement>("[data-timeline-expanded]")?.animate(
+            [{ opacity: .85, transform: "translateY(8px)" }, { opacity: 1, transform: "translateY(0)" }],
+            { duration: 180, easing: "ease-out" },
+          );
+        }
       }
       anchor.current = null;
     } else if (previousSessions.current !== sessions && viewportAnchor.current?.id === active && desktop) {
       const row = rows.current.get(active);
       if (row) {
-        ignoreScroll.current = true;
         window.scrollBy({ top: row.getBoundingClientRect().top - viewportAnchor.current.top, behavior: "instant" });
-        lastScroll.current = window.scrollY;
       }
     }
     previousSessions.current = sessions;
@@ -280,65 +282,65 @@ function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTar
     if (list.current) observer.observe(list.current);
     const day = rows.current.get(active)?.querySelector<HTMLElement>("[data-date-control] time strong");
     if (day) observer.observe(day);
-    const frame = requestAnimationFrame(() => { ignoreScroll.current = false; });
-    return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener("scroll", rememberPosition); };
+    return () => { observer.disconnect(); window.removeEventListener("scroll", rememberPosition); };
   }, [active, sessions, scrollTargetId, onUrlRestored]);
 
   useEffect(() => {
-    let frame = 0;
-    lastScroll.current = window.scrollY;
-    const onScroll = () => {
-      // Dialog focus/scroll locking must not fold away the control that opened it.
-      if (document.querySelector('[role="dialog"]')) { lastScroll.current = window.scrollY; return; }
-      if (frame || ignoreScroll.current || !window.matchMedia("(min-width: 768px)").matches) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        const direction = window.scrollY - lastScroll.current;
-        lastScroll.current = window.scrollY;
-        if (document.querySelector('[role="dialog"]')) return;
-        if (Math.abs(direction) < 2 || (list.current?.contains(document.activeElement) && document.activeElement?.matches(":focus-visible"))) return;
-        const index = sessions.findIndex((session) => session.sessionId === active);
-        const next = sessions[index + (direction > 0 ? 1 : -1)];
-        if (!next) return;
-        const threshold = Math.min(window.innerHeight * .45, 650);
-        const nextRow = rows.current.get(next.sessionId);
-        const current = rows.current.get(active);
-        const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
-        if (direction > 0 && nextRow && (nextRow.getBoundingClientRect().top <= threshold || (atBottom && nextRow.getBoundingClientRect().top < window.innerHeight - 80))) select(next.sessionId);
-        if (direction < 0 && current && current.getBoundingClientRect().top > threshold) select(next.sessionId);
-      });
+    const root = list.current;
+    if (!root) return;
+    const acceptsIntent = (event: WheelEvent | KeyboardEvent) => {
+      if (!window.matchMedia("(min-width: 768px)").matches || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return false;
+      if (document.querySelector('[role="dialog"],dialog[open]')) return false;
+      if (!(event.target instanceof Element)) return false;
+      if (event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="listbox"],[role="menu"],[role="slider"]')) return false;
+      // A nested scroller owns its entire gesture, including overscroll at its
+      // edges. The sidebar/header are outside this listener's subtree entirely.
+      for (let node: Element | null = event.target; node && node !== root; node = node.parentElement) {
+        if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight) return false;
+      }
+      return true;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    // A folded card can exhaust the page's scroll range. Continue selection at
-    // either boundary, where additional wheel/key/touch input emits no scroll event.
-    const selectAtBoundary = (direction: 1 | -1) => {
-      const atBoundary = direction < 0 ? window.scrollY <= 1 : window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
-      if (!atBoundary || performance.now() - lastSelection.current < 550 || !window.matchMedia("(min-width: 768px)").matches) return;
-      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
-      if (list.current?.contains(document.activeElement) && document.activeElement?.matches(":focus-visible")) return;
-      const adjacent = sessions[sessions.findIndex((session) => session.sessionId === active) + direction];
-      if (adjacent) select(adjacent.sessionId);
+    const onWheel = (event: WheelEvent) => {
+      if (!acceptsIntent(event) || !event.cancelable || !event.deltaY || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+      // WheelEvent units are pixels, lines or pages. Use the timeline's actual
+      // line height, with a fallback for computed line-height: normal.
+      const lineHeight = parseFloat(getComputedStyle(root).lineHeight) || 16;
+      const delta = event.deltaY * (event.deltaMode === 1 ? lineHeight : event.deltaMode === 2 ? window.innerHeight : 1);
+      const now = performance.now();
+      const state = gesture.current;
+      // Rearm only after BOTH the transition and a quiet interval. Updating the
+      // timestamp even for tiny momentum tails prevents a held gesture repeating.
+      if (now - state.lastEvent > 220) {
+        state.delta = 0;
+        if (now >= state.lockedUntil) state.consumed = false;
+      }
+      state.lastEvent = now;
+      if (state.consumed || now < state.lockedUntil) { event.preventDefault(); return; }
+      const adjacent = sessions[sessions.findIndex((session) => session.sessionId === active) + (delta > 0 ? 1 : -1)];
+      // At the first/last loaded session, release ordinary page scrolling so
+      // users can leave the timeline and reach the pagination sentinel.
+      if (!adjacent) return;
+      event.preventDefault();
+      if (Math.sign(state.delta) !== Math.sign(delta)) state.delta = 0;
+      state.delta += delta;
+      if (Math.abs(state.delta) >= 24) select(adjacent.sessionId);
     };
-    const onWheel = (event: WheelEvent) => { if (Math.abs(event.deltaY) > 8) selectAtBoundary(event.deltaY > 0 ? 1 : -1); };
     const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLElement && event.target.matches("input,textarea,select,[contenteditable=true]")) return;
-      if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home") selectAtBoundary(-1);
-      if (event.key === "PageDown" || event.key === "ArrowDown" || event.key === "End") selectAtBoundary(1);
+      if (!acceptsIntent(event) || !["PageUp", "ArrowUp", "Home", "PageDown", "ArrowDown", "End"].includes(event.key)) return;
+      const index = sessions.findIndex((session) => session.sessionId === active);
+      const target = sessions[event.key === "Home" ? 0 : event.key === "End" ? sessions.length - 1 : index + (["PageDown", "ArrowDown"].includes(event.key) ? 1 : -1)];
+      if (!target || target.sessionId === active) return;
+      event.preventDefault();
+      pendingFocus.current = target.sessionId;
+      select(target.sessionId);
     };
-    let touchY = 0;
-    const onTouchStart = (event: TouchEvent) => { touchY = event.touches[0]?.clientY ?? 0; };
-    const onTouchMove = (event: TouchEvent) => {
-      const distance = (event.touches[0]?.clientY ?? 0) - touchY;
-      if (Math.abs(distance) > 40) selectAtBoundary(distance < 0 ? 1 : -1);
-    };
-    window.addEventListener("wheel", onWheel, { passive: true });
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    // Selection never subscribes to scroll: anchoring, pagination, restoration
+    // and browser scroll corrections cannot generate another selection.
+    root.addEventListener("wheel", onWheel, { passive: false });
+    root.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener("scroll", onScroll); window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("keydown", onKey); window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove); cancelAnimationFrame(frame);
+      root.removeEventListener("wheel", onWheel);
+      root.removeEventListener("keydown", onKey);
     };
   }, [active, sessions, select]);
 
