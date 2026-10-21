@@ -43,7 +43,7 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
     const venue = `Create-${randomUUID().slice(0, 8)}`;
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, booker);
-    await expect(page.getByRole("heading", { name: "Your next game starts here." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
     await page.getByRole("link", { name: "New session", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Booked Venue Details" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main", exact: true })).not.toBeVisible();

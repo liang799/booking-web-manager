@@ -8,8 +8,14 @@ Captured from the actual `Sessions/Overview` Storybook stories in Chromium on 21
 | `joined-desktop.webp` | 1024 × 1536 | `desktop-joined` | User reference 2: joined timeline with its first session expanded |
 | `joined-mobile.webp` | 390 × 844 | `mobile-reference` | User reference 3: simple two-session mobile list |
 | `joined-scroll-current.webp` | 1024 × 900 | `desktop-joined`, after scrolling to the third session | The black current marker and expanded card move together |
+| `empty-joined-desktop.webp` | 1536 × 1024 | `empty-joined` | Court banner, discovery/creation actions and three starter cards |
+| `empty-hosting-desktop.webp` | 1536 × 1024 | `empty-hosting` | Bench banner, creation action and three hosting tips |
+| `empty-joined-mobile.webp` | 390 × 844, full page | `empty-joined` | Stacked actions and starter cards |
+| `empty-hosting-mobile.webp` | 390 × 844, full page | `empty-hosting` | Responsive hosting empty state |
+| `empty-joined-dark.webp` | 1536 × 1024 | `empty-joined`, dark theme | Dark appearance and readable actions |
+| `empty-hosting-dark.webp` | 1536 × 1024 | `empty-hosting`, dark theme | Dark appearance and readable tips |
 
-The screenshots were captured at device scale 1 after fonts and images loaded, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. They show the viewport rather than stitching the full page.
+The screenshots were captured at device scale 1 after fonts and images loaded, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. Populated screenshots show the viewport; empty mobile screenshots include the full page so every starter card is visible.
 
 ## Reproduce
 
@@ -21,7 +27,7 @@ Run the browser interaction and accessibility checks with:
 npm run test:storybook -- app/sessions/_components/sessions-view.stories.tsx
 ```
 
-All 18 focused stories passed, including accessibility checks. They cover responsive views, dark appearance, empty/loading/error states, keyboard expansion, participant details and calendar links, controlled tab and session actions, forward and reverse scroll selection, infinite-scroll requests, and duplicate-load prevention during loading or error states. The `desktop-current-session-hierarchy` story reproduces the reference with the third session selected and checks its date emphasis and marker alignment.
+All 23 overview stories passed, including accessibility checks. They cover responsive views, dark appearance, empty/loading/error states, keyboard expansion, participant details and calendar links, controlled tab and session actions, forward and reverse scroll selection, infinite-scroll requests, and duplicate-load prevention during loading or error states. The `desktop-current-session-hierarchy` story reproduces the reference with the third session selected and checks its date emphasis and marker alignment.
 
 Direct Playwright checks also verified forward selection through three sessions and native wheel navigation back to the first in Chromium at 1024 × 900 and 1024 × 1536, and in WebKit at 1024 × 900. The current marker remained aligned with its date. Chromium's reduced-motion mode preserved selection without running animations. Both layouts had no horizontal page overflow at widths 320, 390, 767, 768, 1024, 1280 and 1536; WebKit's 390px mobile rendering also had no overflow.
 
@@ -38,3 +44,7 @@ A custom Zustand `persist` storage keeps the tab, selected Joined timeline sessi
 Restoring a session beyond the first feed page loads subsequent pages until the session is found. A failed request preserves the URL for retry. Exhausting the feed without finding the session clears its URL selection and shows an explanatory notice. Switching accounts clears the URL session/panel and creates fresh UI state. The controller stories verify each of these paths, including restoring the Participants panel without opening a dialog. Two provider browser regressions verify that delayed actions from an old account or unmounted page cannot overwrite the current URL.
 
 Typecheck, lint, all 2,498 unit tests and 55 focused Storybook interaction/accessibility checks across five suites passed for URL persistence, including the provider lifecycle cleanup regressions. Store and URL-storage tests cover guarded modes, validation, no-op writes, remembered context, account isolation and restoration. All 43 authenticated browser tests passed, including pagination and URL restoration; the integration runner also built production Storybook and Next.js successfully. The screenshots above are unchanged by URL persistence.
+
+The default Joined and Hosting empty states now follow the supplied references: a wide decorative banner, left-aligned eyebrow and headline, clear actions, and three linked starter cards below a divider. They reuse the existing court/bench artwork. Creation links respect the account's available actions, offering Add email or account setup when needed. Loading and error states retain their existing presentation.
+
+The empty-state pass verified both views in Chromium and WebKit at widths 320, 390, 768, 1024, 1280 and 1536px, plus dark appearance and reduced motion: 28 browser scenarios passed with no horizontal overflow and working keyboard focus. Five additional stories cover mobile layouts and account-gated actions, bringing the five focused suites to 60 passing interaction/accessibility checks. Typecheck, lint, all 2,498 unit tests and all 43 authenticated browser tests also passed after the empty-state changes, with production Storybook and Next.js builds verified by the authenticated runner.

@@ -163,9 +163,21 @@ export const MobileDark: Story = {
 
 export const EmptyJoined: Story = {
   args: { sessions: [], upcomingCount: 0, pastCount: 0 },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole("heading", { name: "Your next game starts here." })).toBeVisible();
-    await expect(canvas.getByRole("link", { name: "Find a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
+    await expect(canvas.getByRole("link", { name: "Create a session" })).toHaveAttribute("href", "/sessions/create");
+    await expect(canvas.getByRole("heading", { name: "Ideas to get started", level: 2 })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Join a public session", level: 3 })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Create your own", level: 3 })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Play with a group", level: 3 })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: /^Join a public session/ })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
+    await expect(canvas.getByRole("link", { name: /^Create your own/ })).toHaveAttribute("href", "/sessions/create");
+    await expect(canvas.getByRole("link", { name: /^Play with a group/ })).toHaveAttribute("href", "/groups");
+    await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
+    const views = within(canvas.getByRole("navigation", { name: "Session views" }));
+    await userEvent.click(views.getByRole("button", { name: "Hosting" }));
+    await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     await expectNoHorizontalOverflow();
   },
 };
@@ -173,8 +185,64 @@ export const EmptyJoined: Story = {
 export const EmptyHosting: Story = {
   args: { tab: "hosting", sessions: [], upcomingCount: 0, pastCount: 0 },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("heading", { name: "Make time for a game." })).toBeVisible();
-    await expect(canvas.getAllByRole("link", { name: "New session" })).toHaveLength(2);
+    await expect(canvas.getByRole("heading", { name: "You haven’t created any sessions." })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Create a session" })).toHaveAttribute("href", "/sessions/create");
+    await expect(canvas.getByRole("heading", { name: "Tips to get started", level: 2 })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Choose a court", level: 3 })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Set session details", level: 3 })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Invite others", level: 3 })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: /^Choose a court/ })).toHaveAttribute("href", "/sessions/create");
+    await expect(canvas.getByRole("link", { name: /^Set session details/ })).toHaveAttribute("href", "/sessions/create");
+    await expect(canvas.getByRole("link", { name: /^Invite others/ })).toHaveAttribute("href", "/groups");
+    await expect(canvas.queryByRole("link", { name: "Join a session" })).not.toBeInTheDocument();
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const MobileEmptyJoined: Story = {
+  ...EmptyJoined,
+  globals: { viewport: { value: "phone", isRotated: false } },
+};
+
+export const MobileEmptyHosting: Story = {
+  ...EmptyHosting,
+  globals: { viewport: { value: "phone", isRotated: false } },
+};
+
+export const EmptyJoinedNeedsEmail: Story = {
+  args: { sessions: [], upcomingCount: 0, pastCount: 0, actions: [{ name: "add-email", href: "/profile/email", method: "GET", inputs: {} }] },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
+    for (const link of canvas.getAllByRole("link", { name: "Add email" })) await expect(link).toHaveAttribute("href", "/profile/email");
+    await expect(canvas.getByRole("link", { name: /^Create your own/ })).toHaveAttribute("href", "/profile/email");
+    await expect(canvas.queryByRole("link", { name: "Create a session" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: "New session" })).not.toBeInTheDocument();
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const EmptyHostingNeedsEmail: Story = {
+  args: { ...EmptyJoinedNeedsEmail.args, tab: "hosting" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "You haven’t created any sessions." })).toBeVisible();
+    for (const link of canvas.getAllByRole("link", { name: "Add email" })) await expect(link).toHaveAttribute("href", "/profile/email");
+    await expect(canvas.getByRole("link", { name: /^Choose a court/ })).toHaveAttribute("href", "/profile/email");
+    await expect(canvas.getByRole("link", { name: /^Set session details/ })).toHaveAttribute("href", "/profile/email");
+    await expect(canvas.queryByRole("link", { name: "Create a session" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: "New session" })).not.toBeInTheDocument();
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const EmptyHostingNeedsSetup: Story = {
+  args: { tab: "hosting", sessions: [], upcomingCount: 0, pastCount: 0, actions: [] },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("link", { name: "Set up your account" })).toHaveAttribute("href", "/profile");
+    await expect(canvas.getByRole("link", { name: /^Choose a court/ })).toHaveAttribute("href", "/profile");
+    await expect(canvas.getByRole("link", { name: /^Set session details/ })).toHaveAttribute("href", "/profile");
+    await expect(canvas.queryByRole("link", { name: "Create a session" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: "New session" })).not.toBeInTheDocument();
     await expectNoHorizontalOverflow();
   },
 };
@@ -183,7 +251,7 @@ export const Loading: Story = {
   args: { sessions: [], loading: true },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
-    await expect(canvas.queryByRole("heading", { name: "Your next game starts here." })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("heading", { name: "Your sessions will appear here." })).not.toBeInTheDocument();
     await expectNoHorizontalOverflow();
   },
 };

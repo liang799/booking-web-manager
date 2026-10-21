@@ -139,6 +139,32 @@
 .empty h2 { font-weight: 600; font-size: 24px; letter-spacing: -.7px; }
 .empty p { color: var(--session-muted); font-size: 14px; }
 .empty > a,.empty > button { margin-top: 8px; }
+.emptySessions { padding-top: 28px; }
+.emptyHero { position: relative; width: calc(100% + 34px); aspect-ratio: 4 / 1; min-height: 170px; margin-right: -34px; overflow: hidden; border-radius: 4px; background: hsl(var(--muted)); }
+.emptyHero .photo { object-position: center 45%; }
+.emptyHero[data-artwork="bench"] .photo { object-position: center 60%; }
+.emptyCopy { margin-top: 48px; }
+.emptyEyebrow { color: var(--session-muted); font-size: 12px; line-height: 1.5; font-weight: 500; letter-spacing: 1.8px; text-transform: uppercase; }
+.emptyCopy h2 { margin-top: 14px; font-size: clamp(28px, 2.5vw, 38px); font-weight: 650; letter-spacing: -1.1px; line-height: 1.2; text-wrap: balance; }
+.emptyDescription { max-width: 560px; margin-top: 10px; color: var(--session-muted); font-size: 20px; line-height: 1.6; }
+.emptyActions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 30px; margin-top: 28px; }
+.emptyActions .primaryButton { min-height: 54px; min-width: 200px; gap: 16px; padding: 12px 22px; font-size: 16px; }
+.emptySecondaryButton { display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 54px; font-size: 16px; line-height: 1.4; }
+.emptySecondaryButton:hover { text-decoration: underline; text-underline-offset: 4px; }
+.emptySuggestions { margin-top: 48px; border-top: 1px solid var(--session-line); padding-top: 24px; }
+.emptySuggestions > h2 { color: var(--session-muted); font-size: 17px; font-weight: 400; line-height: 1.5; }
+.emptyStarterCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; margin-top: 8px; }
+.emptyStarterCards > li { min-width: 0; }
+.emptyStarterCard { display: flex; align-items: center; gap: 22px; min-height: 108px; height: 100%; padding: 10px; border: 1px solid var(--session-line); border-radius: 5px; background: hsl(var(--card)/.24); transition: background 180ms; }
+.emptyStarterCard:hover { background: hsl(var(--muted)/.6); }
+.emptyThumb { display: block; position: relative; width: 82px; height: 82px; flex-shrink: 0; overflow: hidden; border-radius: 5px; background: hsl(var(--muted)); }
+.emptyThumb[data-crop="ball"] .photo { object-position: 16% center; transform: scale(10); transform-origin: 49% 66.5%; }
+.emptyThumb[data-crop="net"] .photo { object-position: right center; transform: scale(1.8); transform-origin: 90% 68%; }
+.emptyThumb[data-crop="racket"] .photo { object-position: 16% center; transform: scale(4.5); transform-origin: 50% 74%; }
+.emptyStarterCopy { display: block; flex: 1; min-width: 0; }
+.emptyStarterCopy h3 { font-size: 15px; font-weight: 600; line-height: 1.4; letter-spacing: -.2px; }
+.emptyStarterCopy > span { display: block; margin-top: 5px; color: var(--session-muted); font-size: 14px; line-height: 1.6; }
+.emptyStarterCard > svg { flex-shrink: 0; margin-left: auto; color: var(--session-muted); }
 .notice { margin-top: 20px; padding: 16px; font-size: 14px; border: 1px solid var(--session-line); border-radius: 6px; }
 .notice a { text-decoration: underline; }
 .skeleton { display: grid; gap: 16px; padding: 32px 0; }
@@ -158,11 +184,12 @@
 @keyframes photoReveal { from { transform: scale(1.035); opacity: .7; } to { transform: scale(1); opacity: 1; } }
 @keyframes detailReveal { from { opacity: .4; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes skeletonPulse { to { opacity: .45; } }
-@media (min-width: 768px) { .page[data-view="joined"] .tabs { margin-top: 2px; } }
-@media (min-width: 1400px) { .page { padding: 29px 36px 40px 60px; } .header h1 { font-size: 44px; } .timelineRow { grid-template-columns: 100px minmax(0,1fr); } .hostingHero { height: 222px; } }
+@media (min-width: 768px) { .page[data-view="joined"] .tabs { margin-top: 2px; } .page[data-empty] .tabs { margin-top: 14px; } }
+@media (min-width: 1400px) { .page { padding: 29px 36px 40px 60px; } .page[data-empty] { padding-left: 38px; } .header h1 { font-size: 44px; } .timelineRow { grid-template-columns: 100px minmax(0,1fr); } .hostingHero { height: 222px; } .emptyHero { width: calc(100% + 36px); margin-right: -36px; } }
+@media (min-width: 768px) and (max-width: 1199px) { .emptyStarterCards { gap: 16px; } .emptyStarterCard { position: relative; flex-direction: column; align-items: flex-start; gap: 14px; padding: 14px; } .emptyThumb { width: 64px; height: 64px; } .emptyStarterCard > svg { position: absolute; right: 12px; top: 37px; } .emptyStarterCopy > span { font-size: 13px; } }
 @media (max-width: 1400px) { .pastRow { gap: 18px; } .pastThumbnail { width: 105px; margin-left: -18px; } .pastRow .players { display: none; } .pastRow .metadata { gap: 18px; } .hostingCard { min-width: 285px; } .hostingTitle { flex-wrap: wrap; gap: 7px; } .hostingTitle > strong { font-size: 17px; } .hostingMeta .players { display: none; } }
 @media (max-width: 1100px) { .collapsedCard { gap: 16px; } .collapsedTime { margin: 0; font-size: 11px; } .collapsedCopy strong { font-size: 13px; } .collapsedCopy > span { font-size: 11px; } .collapsedPlayers { font-size: 11px; } .metadata { gap: 20px 26px; font-size: 13px; } .pastRow .metadata > span:first-child { display: none; } }
-@media (min-width: 768px) and (max-width: 950px) { .page { padding-left: 28px; padding-right: 24px; } .timelineRow { grid-template-columns: 76px minmax(0,1fr); } .collapsedTime,.collapsedPlayers { display: none; } .cardBody { padding: 20px; } .cardBody > .metadata .location { display: none; } .details > div { grid-template-columns: 120px minmax(0,1fr); } .details dt { gap: 12px; } .cardFooter { gap: 8px; } .cardFooter :is(a,button) { padding: 10px; font-size: 11px; } .pastThumbnail { width: 80px; } .pastRow .metadata { display: none; } .pastRow { gap: 12px; padding-right: 12px; } .pastRow .status { font-size: 10px; padding: 4px 7px; } }
+@media (min-width: 768px) and (max-width: 950px) { .page { padding-left: 28px; padding-right: 24px; } .timelineRow { grid-template-columns: 76px minmax(0,1fr); } .collapsedTime,.collapsedPlayers { display: none; } .cardBody { padding: 20px; } .cardBody > .metadata .location { display: none; } .details > div { grid-template-columns: 120px minmax(0,1fr); } .details dt { gap: 12px; } .cardFooter { gap: 8px; } .cardFooter :is(a,button) { padding: 10px; font-size: 11px; } .pastThumbnail { width: 80px; } .pastRow .metadata { display: none; } .pastRow { gap: 12px; padding-right: 12px; } .pastRow .status { font-size: 10px; padding: 4px 7px; } .emptyHero { width: calc(100% + 24px); margin-right: -24px; } }
 @media (max-width: 767px) {
   .page { padding: 0 22px 24px; --session-paper: #fff; }
   .header { display: block; height: 0; }
@@ -184,6 +211,22 @@
   .mobileCopy .mobileStatus { font-size: 10px; color: hsl(var(--foreground)); margin-top: 5px; }
   .empty { min-height: 300px; padding: 35px 0; }
   .empty h2 { font-size: 22px; }
+  .emptySessions { padding-top: 10px; }
+  .emptyHero { width: 100%; min-height: 160px; aspect-ratio: 2 / 1; margin-right: 0; }
+  .emptyCopy { margin-top: 28px; }
+  .emptyEyebrow { font-size: 10px; letter-spacing: 1.5px; }
+  .emptyCopy h2 { margin-top: 12px; font-size: 28px; letter-spacing: -.8px; }
+  .emptyDescription { margin-top: 12px; font-size: 16px; line-height: 1.6; }
+  .emptyActions { align-items: stretch; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .emptyActions .primaryButton { min-width: 0; min-height: 48px; font-size: 14px; }
+  .emptySecondaryButton { min-height: 44px; font-size: 14px; }
+  .emptySuggestions { margin-top: 30px; padding-top: 20px; }
+  .emptySuggestions > h2 { font-size: 16px; }
+  .emptyStarterCards { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+  .emptyStarterCard { min-height: 98px; gap: 16px; }
+  .emptyThumb { width: 72px; height: 72px; }
+  .emptyStarterCopy h3 { font-size: 14px; }
+  .emptyStarterCopy > span { font-size: 12px; line-height: 1.5; }
   .dialogContent { --session-line: #e4e4e6; --session-muted: #717175; --session-paper: #fff; }
   .dialogContent .details > div { grid-template-columns: 102px minmax(0,1fr); gap: 10px; }
   .dialogContent .details dt { gap: 10px; }

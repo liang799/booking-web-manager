@@ -35,7 +35,7 @@ export function SessionsView(props: SessionsViewProps) {
   const { tab, onTabChange, sessions, actions, loading, error, onRetry } = props;
   const creation = actions.find((action) => action.name === "create-session");
   const email = actions.find((action) => action.name === "add-email");
-  return <div className={styles.page} data-view={tab}>
+  return <div className={styles.page} data-view={tab} data-empty={!loading && !error && sessions.length === 0 || undefined}>
     <header className={styles.header}>
       <h1 id="sessions-heading" tabIndex={-1}>Sessions</h1>
       {creation && <Link href={creation.href} className={styles.primaryButton}><Plus size={20} strokeWidth={1.4} aria-hidden />New session</Link>}
@@ -48,7 +48,7 @@ export function SessionsView(props: SessionsViewProps) {
     {email && <p className={styles.notice}>Add an email address to host a session. <Link href={email.href}>Add email</Link></p>}
     {loading ? <div className={styles.skeleton} role="status"><span className="sr-only">Loading your sessions…</span><div /><div /><div /></div>
       : error && sessions.length === 0 ? <div className={styles.empty}><p role="alert">{error}</p><button className={styles.secondaryButton} onClick={onRetry}>Try again</button></div>
-      : sessions.length === 0 ? <div className={styles.empty}><CalendarDays size={32} strokeWidth={1.2} aria-hidden /><h2>{tab === "joined" ? "Your next game starts here." : "Make time for a game."}</h2><p>{tab === "joined" ? "Sessions you join will appear here." : "Your upcoming and past hosted sessions will appear here."}</p><Link className={styles.primaryButton} href={tab === "joined" ? "/discover?returnTo=%2Fsessions" : creation?.href ?? email?.href ?? "/profile"}>{tab === "joined" ? "Find a session" : creation ? "New session" : "Set up your account"}<ArrowRight size={17} aria-hidden /></Link></div>
+      : sessions.length === 0 ? <EmptySessions tab={tab} actions={actions} />
       : <>
         <div className={styles.desktop}>
           {tab === "joined" ? <JoinedTimeline key={tab} {...props} /> : <HostingSessions {...props} />}
@@ -62,6 +62,51 @@ export function SessionsView(props: SessionsViewProps) {
         <FeedPagination {...props} />
       </>}
   </div>;
+}
+
+function EmptySessions({ tab, actions }: Pick<SessionsViewProps, "tab" | "actions">) {
+  const id = useId();
+  const joined = tab === "joined";
+  const creation = actions.find((action) => action.name === "create-session");
+  const email = actions.find((action) => action.name === "add-email");
+  const createHref = creation?.href ?? email?.href ?? "/profile";
+  const createLabel = creation ? "Create a session" : email ? "Add email" : "Set up your account";
+  const discoverHref = "/discover?returnTo=%2Fsessions";
+  const starters = joined ? [
+    { title: "Join a public session", description: "Browse and join sessions in your area.", href: discoverHref, crop: "ball" },
+    { title: "Create your own", description: "Book a court and invite friends.", href: createHref, crop: "net" },
+    { title: "Play with a group", description: "Create or join a group for regular sessions.", href: "/groups", crop: "racket" },
+  ] : [
+    { title: "Choose a court", description: "Pick a location, date and time that works for you.", href: createHref, crop: "ball" },
+    { title: "Set session details", description: "Add player limit, description and any notes.", href: createHref, crop: "net" },
+    { title: "Invite others", description: "Share the session with friends or groups.", href: "/groups", crop: "racket" },
+  ];
+  return <section className={styles.emptySessions} aria-labelledby={`${id}-heading`}>
+    <div className={styles.emptyHero} data-artwork={joined ? "court" : "bench"}>
+      <Image src={`/images/sessions/${joined ? "court" : "bench"}.webp`} alt="" fill priority sizes="(min-width: 768px) 80vw, 100vw" className={styles.photo} />
+    </div>
+    <div className={styles.emptyCopy}>
+      <p className={styles.emptyEyebrow}>{joined ? "No sessions yet" : "No sessions hosting yet"}</p>
+      <h2 id={`${id}-heading`}>{joined ? "Your sessions will appear here." : "You haven’t created any sessions."}</h2>
+      <p className={styles.emptyDescription}>{joined ? "Join a session or create your own to start playing with others." : "Create a session to book a court, set the details, and invite others to join."}</p>
+      <div className={styles.emptyActions}>
+        <Link className={styles.primaryButton} href={joined ? discoverHref : createHref}><Plus size={22} strokeWidth={1.3} aria-hidden />{joined ? "Join a session" : createLabel}</Link>
+        {joined && <Link className={styles.emptySecondaryButton} href={createHref}>{createLabel}<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></Link>}
+      </div>
+    </div>
+    <section className={styles.emptySuggestions} aria-labelledby={`${id}-suggestions`}>
+      <h2 id={`${id}-suggestions`}>{joined ? "Ideas to get started" : "Tips to get started"}</h2>
+      <ul className={styles.emptyStarterCards}>
+        {starters.map((starter) => <li key={starter.title}>
+          <Link href={starter.href} className={styles.emptyStarterCard}>
+            <span className={styles.emptyThumb} data-crop={starter.crop}><Image src={`/images/sessions/${starter.crop === "racket" ? "bench" : "court"}.webp`} alt="" fill sizes={starter.crop === "ball" ? "820px" : starter.crop === "racket" ? "370px" : "160px"} className={styles.photo} /></span>
+            <div className={styles.emptyStarterCopy}><h3>{starter.title}</h3><span>{starter.description}</span></div>
+            <ChevronRight size={18} strokeWidth={1.4} aria-hidden />
+          </Link>
+        </li>)}
+      </ul>
+    </section>
+  </section>;
 }
 
 function DateStamp({ value }: { readonly value: string }) {
