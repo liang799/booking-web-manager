@@ -13,7 +13,7 @@ const meta = {
     nextjs: { navigation: { pathname: "/sessions" } },
     docs: {
       description: {
-        component: "The signed-in sessions overview. Joined sessions use a desktop agenda: the active session places its title, venue, and inline metadata over a shallow photograph, with a status badge at the upper right and View details at the lower right. Other sessions pair landscape thumbnails with grouped information in compact rows. Dates sit in a dedicated timeline column, with the active date beside the upper quarter of its photograph. Upcoming and Later this week labels organize the first sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
+        component: "The signed-in sessions overview. Joined sessions use a chronological desktop agenda that opens at the next upcoming session: scroll up for older sessions and down for later ones. The active session places its title, venue, and inline metadata over a shallow photograph, with a status badge at the upper right and View details at the lower right. Other sessions pair landscape thumbnails with grouped information in compact rows. Dates sit in a dedicated timeline column, with the active date beside the upper quarter of its photograph. Upcoming and Later this week labels organize future sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
       },
     },
   },
@@ -94,20 +94,20 @@ async function expectTimelineContentRevealed(timeline: HTMLElement) {
   await expect(timeline.getAnimations({ subtree: true }).filter((animation) => animation.constructor === Animation)).toHaveLength(0);
 }
 
-function timelineDay(canvasElement: HTMLElement, index: number) {
-  const day = canvasElement.querySelector<HTMLElement>(`[data-session-id="${joinedSessions[index]!.sessionId}"] [data-date-control] time strong`);
+function timelineDay(canvasElement: HTMLElement, date: string) {
+  const day = canvasElement.querySelector<HTMLElement>(`[data-date-control] time[datetime^="${date}"] strong`);
   if (!day) throw new globalThis.Error("The timeline date was not rendered.");
   return day;
 }
 
-async function expectTimelineHierarchy(canvasElement: HTMLElement, activeIndex: number) {
-  const activeDay = timelineDay(canvasElement, activeIndex);
+async function expectTimelineHierarchy(canvasElement: HTMLElement, activeDate: string) {
+  const activeDay = timelineDay(canvasElement, activeDate);
   await expect(getComputedStyle(activeDay).fontSize).toBe(window.innerWidth >= 1200 ? "44px" : "36px");
   await expect(getComputedStyle(activeDay).fontWeight).toBe("500");
-  for (const [index] of joinedSessions.entries()) {
-    if (index !== activeIndex) {
-      await expect(getComputedStyle(timelineDay(canvasElement, index)).fontSize).toBe(window.innerWidth >= 1200 ? "28px" : "24px");
-      await expect(getComputedStyle(timelineDay(canvasElement, index)).fontWeight).toBe("500");
+  for (const day of canvasElement.querySelectorAll<HTMLElement>("[data-date-control] time strong")) {
+    if (day !== activeDay) {
+      await expect(getComputedStyle(day).fontSize).toBe(window.innerWidth >= 1200 ? "28px" : "24px");
+      await expect(getComputedStyle(day).fontWeight).toBe("500");
     }
   }
   // Wait through the marker's movement, then compare actual centers so padding
@@ -120,6 +120,30 @@ async function expectTimelineHierarchy(canvasElement: HTMLElement, activeIndex: 
     expect(Math.abs(markerBounds.top + markerBounds.height / 2 - dayBounds.top - dayBounds.height / 2)).toBeLessThan(1.5);
   });
 }
+
+/** Feed sections may arrive future-first; the desktop timeline always follows time. */
+export const ChronologicalTimeline: Story = {
+  args: {
+    sessions: [joinedSessions[0]!, joinedSessions[4]!, {
+      ...joinedSessions[0]!,
+      sessionId: "54000000-0000-4000-8000-000000000011",
+      startAt: "2026-10-22T19:00:00+08:00",
+      endAt: "2026-10-22T20:00:00+08:00",
+      section: "past",
+      status: "CANCELLED",
+    }],
+    upcomingCount: 1,
+    pastCount: 2,
+  },
+  play: async ({ canvas, args }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    const renderedIds = Array.from(timeline.querySelectorAll<HTMLElement>("[data-session-id]"), (row) => row.dataset.sessionId);
+    await expect(renderedIds).toEqual([joinedSessions[4]!.sessionId, joinedSessions[0]!.sessionId, args.sessions[2]!.sessionId]);
+    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
+    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 20 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
+    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 22 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
+  },
+};
 
 export const DesktopJoined: Story = {
   play: async ({ canvas, canvasElement, args }) => {
@@ -141,7 +165,7 @@ export const DesktopJoined: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "View details" }));
     await expect(args.onOpenSession).toHaveBeenCalledWith(joinedSessions[0]);
     await expect(canvas.getByRole("link", { name: /^New session$/ })).toHaveAttribute("href", "/sessions/create");
-    await expectTimelineHierarchy(canvasElement, 0);
+    await expectTimelineHierarchy(canvasElement, "2026-10-21");
     const feature = overview.querySelector<HTMLElement>("[data-timeline-expanded]");
     const photo = feature?.querySelector<HTMLElement>('[data-timeline-reveal="hero"]');
     const title = feature?.querySelector<HTMLElement>('[data-timeline-reveal="title"]');
@@ -158,7 +182,7 @@ export const DesktopJoined: Story = {
     await expect(Math.abs(photoBounds.height - featureBounds.height)).toBeLessThan(1);
     await expect(featureBounds.height).toBeLessThan(featureBounds.width * .5);
     await expect(featureBounds.height).toBeLessThanOrEqual(334);
-    const activeDayBounds = timelineDay(canvasElement, 0).getBoundingClientRect();
+    const activeDayBounds = timelineDay(canvasElement, "2026-10-21").getBoundingClientRect();
     await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeGreaterThan(featureBounds.top);
     await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeLessThan(featureBounds.top + featureBounds.height * .4);
     for (const text of [title, subtitle]) {
@@ -234,7 +258,7 @@ export const DesktopEntranceSequence: Story = {
     await expect(args.onOpenSession).not.toHaveBeenCalled();
     await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
     await expectTimelineContentRevealed(timeline);
-    await expectTimelineHierarchy(canvasElement, 0);
+    await expectTimelineHierarchy(canvasElement, "2026-10-21");
   },
 };
 
@@ -269,7 +293,7 @@ export const EntranceKeyboardInterrupt: Story = {
     await userEvent.keyboard("{Enter}");
     await expect(timeline).toHaveAttribute("data-timeline-entrance", "complete");
     await expect(date).toHaveAttribute("aria-expanded", "true");
-    await expectTimelineHierarchy(canvasElement, 1);
+    await expectTimelineHierarchy(canvasElement, "2026-10-23");
   },
 };
 
@@ -300,9 +324,9 @@ export const DesktopCurrentSessionHierarchy: Story = {
     if (!third) throw new globalThis.Error("The third session card was not rendered.");
     await userEvent.click(within(third).getByRole("button", { name: "Expand Tennis Court Booking at Choa Chu Kang Tennis Centre" }));
     await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 24 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
-    await expectTimelineHierarchy(canvasElement, 2);
-    await expect(getComputedStyle(timelineDay(canvasElement, 0)).color).toBe(getComputedStyle(timelineDay(canvasElement, 1)).color);
-    await expect(getComputedStyle(timelineDay(canvasElement, 0)).color).not.toBe(getComputedStyle(timelineDay(canvasElement, 2)).color);
+    await expectTimelineHierarchy(canvasElement, "2026-10-24");
+    await expect(getComputedStyle(timelineDay(canvasElement, "2026-10-21")).color).toBe(getComputedStyle(timelineDay(canvasElement, "2026-10-23")).color);
+    await expect(getComputedStyle(timelineDay(canvasElement, "2026-10-21")).color).not.toBe(getComputedStyle(timelineDay(canvasElement, "2026-10-24")).color);
     await expectNoHorizontalOverflow();
   },
 };
@@ -535,7 +559,7 @@ export const KeyboardAndSessionSummary: Story = {
       await userEvent.keyboard("{Enter}");
       await expect(date).toHaveAttribute("aria-expanded", "true");
       await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
-      await expectTimelineHierarchy(canvasElement, 1);
+      await expectTimelineHierarchy(canvasElement, "2026-10-23");
     });
     await step("The compact summary delegates details without inline panels or calendar links", async () => {
       const expanded = canvasElement.querySelector<HTMLElement>(`#timeline-card-${joinedSessions[1]!.sessionId}`);
@@ -554,10 +578,10 @@ export const KeyboardAndSessionSummary: Story = {
       await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     });
     await step("A selected historical date stays subdued while gaining the current date size", async () => {
-      const pastDay = timelineDay(canvasElement, 4);
+      const pastDay = timelineDay(canvasElement, "2026-10-20");
       const historicalColor = getComputedStyle(pastDay).color;
       await userEvent.click(canvas.getByRole("button", { name: "Show Tennis Court Booking, 20 Oct 2026" }));
-      await expectTimelineHierarchy(canvasElement, 4);
+      await expectTimelineHierarchy(canvasElement, "2026-10-20");
       await expect(getComputedStyle(pastDay).color).toBe(historicalColor);
     });
     await expectNoHorizontalOverflow();
@@ -566,6 +590,12 @@ export const KeyboardAndSessionSummary: Story = {
 
 export const ScrollAdvancesCurrentSession: Story = {
   play: async ({ canvas, canvasElement }) => {
+    const currentDate = canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" });
+    await expect(currentDate).toHaveAttribute("aria-expanded", "true");
+    const initialFeature = canvasElement.querySelector<HTMLElement>("[data-timeline-expanded]");
+    if (!initialFeature) throw new globalThis.Error("The initial upcoming session was not expanded.");
+    await expect(initialFeature.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+    await expect(initialFeature.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
     const nextDate = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
     await expect(nextDate).toHaveAttribute("aria-expanded", "false");
     // Exercise the real page scroll. Keep focus outside the timeline: keyboard focus deliberately pauses automatic selection.
@@ -579,7 +609,7 @@ export const ScrollAdvancesCurrentSession: Story = {
       await expect(nextRow).toHaveAttribute("data-current", "true");
     });
     await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
-    await expectTimelineHierarchy(canvasElement, 1);
+    await expectTimelineHierarchy(canvasElement, "2026-10-23");
     await expectNoHorizontalOverflow();
   },
 };
@@ -592,10 +622,10 @@ export const ScrollReturnsToEarlierSessions: Story = {
       if (!next) throw new globalThis.Error("The next timeline row was not rendered.");
       window.scrollTo({ top: window.scrollY + next.getBoundingClientRect().top - Math.min(window.innerHeight * 0.45, 650) + 8, behavior: "instant" });
       await waitFor(() => expect(next).toHaveAttribute("data-current", "true"));
-      await expectTimelineHierarchy(canvasElement, index);
+      await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     }
-    for (const [index, date] of [[1, "23 Oct 2026"], [0, "21 Oct 2026"]] as const) {
+    for (const [index, date] of [[1, "23 Oct 2026"], [0, "21 Oct 2026"], [4, "20 Oct 2026"], [5, "17 Oct 2026"]] as const) {
       const previous = canvas.getByRole("button", { name: `Show Tennis Court Booking, ${date}` });
       window.scrollBy({ top: -window.innerHeight, behavior: "instant" });
       // A native wheel still reports upward intent when card folding has reached scrollY=0.
@@ -603,7 +633,19 @@ export const ScrollReturnsToEarlierSessions: Story = {
         if (previous.getAttribute("aria-expanded") !== "true") window.dispatchEvent(new WheelEvent("wheel", { deltaY: -120 }));
         expect(previous).toHaveAttribute("aria-expanded", "true");
       });
-      await expectTimelineHierarchy(canvasElement, index);
+      await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
+    }
+    for (const index of [4, 0, 1]) {
+      const next = canvasElement.querySelector<HTMLElement>(`[data-session-id="${joinedSessions[index]!.sessionId}"]`);
+      if (!next) throw new globalThis.Error("The next chronological session was not rendered.");
+      window.scrollTo({ top: window.scrollY + next.getBoundingClientRect().top - Math.min(window.innerHeight * 0.45, 650) + 8, behavior: "instant" });
+      await waitFor(() => {
+        if (next.dataset.current !== "true" && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
+          window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
+        }
+        expect(next).toHaveAttribute("data-current", "true");
+      });
+      await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
     }
     await expectNoHorizontalOverflow();
   },
@@ -641,7 +683,7 @@ export const ScrollContinuesAtBottomOfCompactTimeline: Story = {
       if (third.getAttribute("aria-expanded") !== "true") window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
       expect(third).toHaveAttribute("aria-expanded", "true");
     }, { timeout: 2000 });
-    await expectTimelineHierarchy(canvasElement, 2);
+    await expectTimelineHierarchy(canvasElement, "2026-10-24");
     await expectNoHorizontalOverflow();
   },
 };

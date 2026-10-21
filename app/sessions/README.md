@@ -261,7 +261,14 @@ date column is 126px on wide desktop, 80px below 1200px and 64px below 951px.
 The photograph height scales with the viewport between 280px and 334px on wide
 desktop and is 300px below 1200px. Compact thumbnails range from 112px to 210px
 wide and are 80px tall, reducing to 96 × 76px below 951px. Scrolling selects the
-next/previous session and moves the marker to the selected date.
+next/previous session and moves the marker to the selected date. The desktop
+timeline sorts by actual start time, oldest above newest, including future-dated
+cancelled sessions. Entry keeps the earliest upcoming booking selected (or the
+latest booking when no upcoming session exists), with earlier dates above it.
+The breadcrumb and tabs stay visible while scrolling. Older cursor pages are
+inserted in chronological position without moving the selected row or changing
+its artwork; desktop pagination moves above history after all upcoming records
+have loaded. The API cursor order and mobile/Hosting lists remain unchanged.
 **View details** opens Details/Participants and calendar/map actions in a transient
 dialog. Closing it returns keyboard focus to its trigger. Date buttons and compact
 rows provide keyboard alternatives; keyboard focus within a session prevents scroll selection

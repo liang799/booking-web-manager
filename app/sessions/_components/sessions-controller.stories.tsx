@@ -23,6 +23,7 @@ let hostedCalls = 0;
 let accountRequests: { readonly userId: string; readonly tab: FeedRequest["tab"] }[] = [];
 let changeAccount: ((userId: string) => void) | undefined;
 let restoredEntrancePhases: string[] = [];
+let releaseOlderHistoryPage: (() => void) | undefined;
 
 const loadFeed: LoadSessionFeed = async (input) => {
   requests.push(input);
@@ -142,6 +143,55 @@ export const CursorPagination: Story = {
     const cached = client.getQueryData<InfiniteData<SessionFeedResponse>>([...sessionFeedQueryKey, "player", "joined"]);
     await expect(cached?.pageParams).toEqual([null, "next-six"]);
     await expect(cached?.pages).toHaveLength(2);
+    await expect(canvas.queryByRole("button", { name: "Load more sessions" })).not.toBeInTheDocument();
+  },
+};
+
+export const OlderHistoryPreservesTimelineAnchor: Story = {
+  beforeEach: () => {
+    releaseOlderHistoryPage = undefined;
+    reply = async ({ cursor }) => {
+      if (!cursor) return response(joinedSessions.slice(0, 6), "older-history");
+      await new Promise<void>((resolve) => { releaseOlderHistoryPage = resolve; });
+      return response(joinedSessions.slice(5));
+    };
+    return () => { releaseOlderHistoryPage?.(); releaseOlderHistoryPage = undefined; };
+  },
+  play: async ({ canvas }) => {
+    const region = await canvas.findByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(region).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
+    const active = region.querySelector<HTMLElement>("[data-session-id][data-current]");
+    const photo = active?.querySelector<HTMLImageElement>("[data-timeline-expanded] img");
+    if (!active || !photo) throw new Error("The selected session and its artwork must be visible.");
+    await expect(active.dataset.sessionId).toBe(joinedSessions[0]!.sessionId);
+    const artwork = photo.getAttribute("src");
+    const loadMore = canvas.getByRole("button", { name: "Load more sessions" });
+    const firstRow = region.querySelector<HTMLElement>("[data-session-id]");
+    if (!firstRow) throw new Error("The timeline must contain sessions before pagination.");
+    // The API has exhausted upcoming records, so its remaining pages belong
+    // above the displayed history rather than below future sessions.
+    await expect(Boolean(loadMore.compareDocumentPosition(firstRow) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    // Keep the selected row as the anchor; focusing an offscreen button would
+    // otherwise simulate an unrelated upward scroll before the request.
+    loadMore.focus({ preventScroll: true });
+    await userEvent.click(loadMore);
+    await waitFor(() => expect(requests.map(({ cursor }) => cursor)).toEqual([null, "older-history"]));
+    await canvas.findByRole("button", { name: "Loading sessions…" });
+    await expect(region.querySelector("[data-session-id][data-current]")).toBe(active);
+    const beforeTop = active.getBoundingClientRect().top;
+    if (!releaseOlderHistoryPage) throw new Error("The older-history request must be pending.");
+    releaseOlderHistoryPage();
+    await waitFor(() => expect(within(region).getAllByRole("article")).toHaveLength(10));
+    await waitFor(() => expect(Math.abs(active.getBoundingClientRect().top - beforeTop)).toBeLessThan(2));
+    await expect(region.querySelector("[data-session-id][data-current]")).toBe(active);
+    await expect(active.querySelector("[data-timeline-expanded] img")).toHaveAttribute("src", artwork!);
+    const timestamps = Array.from(region.querySelectorAll<HTMLElement>("[data-session-id]"), (row) => {
+      const session = joinedSessions.find(({ sessionId }) => sessionId === row.dataset.sessionId);
+      if (!session) throw new Error("The timeline rendered an unknown session.");
+      return Date.parse(session.startAt);
+    });
+    await expect(timestamps).toEqual([...timestamps].sort((left, right) => left - right));
+    await expect(region).toHaveAttribute("data-timeline-entrance", "complete");
     await expect(canvas.queryByRole("button", { name: "Load more sessions" })).not.toBeInTheDocument();
   },
 };

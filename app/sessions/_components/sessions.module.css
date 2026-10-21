@@ -1,4 +1,4 @@
-.page { --session-muted: #626b7c; --session-line: hsl(var(--border)); --session-paper: hsl(var(--background)); margin: 0 auto; width: 100%; min-width: 0; padding: 40px clamp(28px, 3.125vw, 64px) 40px; color: hsl(var(--foreground)); background: var(--session-paper); }
+.page { --session-sticky-top: 40px; --session-muted: #626b7c; --session-line: hsl(var(--border)); --session-paper: hsl(var(--background)); margin: 0 auto; width: 100%; min-width: 0; padding: 40px clamp(28px, 3.125vw, 64px) 40px; color: hsl(var(--foreground)); background: var(--session-paper); }
 .breadcrumb { display: flex; gap: 18px; margin-bottom: 28px; color: hsl(var(--foreground)); font-size: 12px; font-weight: 500; letter-spacing: .08em; line-height: 18px; text-transform: uppercase; }
 .breadcrumb > span { color: hsl(var(--foreground)); }
 .panel { min-width: 0; }
@@ -17,13 +17,15 @@
 .tabs > [aria-current] { color: hsl(var(--foreground)); font-weight: 600; }
 .tabs > [aria-current]::after { content: ""; position: absolute; height: 2px; bottom: 0; left: 0; right: 0; background: currentColor; }
 .mobileGroups,.mobileList { display: none; }
-.timeline { --date-column: 126px; --session-line: hsl(var(--border) / .7); position: relative; margin-top: 28px; padding: 0 0 12px; overflow-anchor: none; }
+.timeline { --date-column: 126px; --session-line: hsl(var(--border) / .7); position: relative; margin-top: 28px; padding: 0 0 24px; overflow-anchor: none; }
 .rail { position: absolute; left: 5px; top: 32px; bottom: 0; width: 1px; background: var(--session-line); transform-origin: top; }
 .activeDot { position: absolute; z-index: 2; left: .5px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #111211; transform: translateY(calc(var(--marker-y) - 50%)); transition: transform 520ms cubic-bezier(.22,1,.36,1); pointer-events: none; box-shadow: 0 0 0 3px var(--session-paper); }
 .groupLabel { position: relative; width: fit-content; margin-left: 28px; padding: 0 0 12px; color: var(--session-muted); font-size: 12px; font-weight: 500; letter-spacing: .15em; line-height: 1.5; text-transform: uppercase; }
 .rail + .activeDot + .groupLabel { margin-left: 0; }
 .timelineRow + .groupLabel { width: calc(100% - 28px); margin-top: 32px; padding-top: 2px; padding-bottom: 6px; }
 .timelineRow + .groupLabel::after { content: ""; position: absolute; left: calc(var(--date-column) - 28px); right: 0; bottom: 0; height: 1px; background: var(--session-line); }
+.timeline .groupLabel[data-upcoming] { width: 100%; margin-left: 0; padding-top: 0; padding-bottom: 12px; }
+.timeline .groupLabel[data-upcoming]::after { display: none; }
 .timelineRow { display: grid; grid-template-columns: var(--date-column, 126px) minmax(0,1fr); position: relative; }
 .timelineRow[data-current] { margin-bottom: 0; }
 .timelineRow .date { color: var(--session-muted); }
@@ -217,7 +219,7 @@
 :global(.dark) .status { background: #303239; color: #ccc; }
 :global(.dark) .status[data-tone="green"] { background: #2b3d2f; color: #c5d9c6; }
 @media (min-width: 768px) and (max-width: 1199px) {
-  .page { padding: 24px 24px 32px; }
+  .page { --session-sticky-top: 24px; padding: 24px 24px 32px; }
   .timeline { --date-column: 80px; }
   .timeline .date strong { font-size: 24px; }
   .timelineRow[data-current] .date strong { font-size: 36px; }
@@ -272,6 +274,11 @@
   .pastCount { flex-basis: 30px; font-size: 12px; }
 }
 @media (min-width: 768px) {
+  .mobilePagination { display: none; }
+  .page[data-view="joined"] .breadcrumb { position: sticky; top: var(--session-sticky-top); z-index: 4; }
+  .page[data-view="joined"] .breadcrumb::before { content: ""; position: absolute; z-index: -1; top: calc(-1 * var(--session-sticky-top)); bottom: -28px; left: 0; right: 0; background: var(--session-paper); }
+  .page[data-view="joined"] .header { position: sticky; top: calc(var(--session-sticky-top) + 46px); z-index: 3; background: var(--session-paper); }
+  .page[data-view="joined"] .header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -28px; height: 28px; background: var(--session-paper); pointer-events: none; }
   .page { display: flex; flex-direction: column; min-height: 100dvh; }
   .breadcrumb { flex-shrink: 0; }
   .panel { flex: 1; min-height: 0; }

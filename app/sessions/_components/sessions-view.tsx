@@ -3,7 +3,7 @@
 import { ArrowRight, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, ExternalLink, MapPin, Plus, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { SessionFeedItem } from "../session-feed-contract";
 import type { SessionAccountAction } from "../session-actions";
 import { sessionArtwork, sessionCalendarHref, sessionDate, sessionStatus, sessionTime, sessionTitle, timelineGroup } from "./session-display";
@@ -36,6 +36,7 @@ export interface SessionsViewProps {
 export function SessionsView(props: SessionsViewProps) {
   const { tab, onTabChange, sessions, actions, loading, error, onRetry } = props;
   const timelineEntrancePlayed = useRef(false);
+  const historyPages = tab === "joined" && sessions.filter((session) => session.section === "upcoming").length >= props.upcomingCount;
   const creation = actions.find((action) => action.name === "create-session");
   const email = actions.find((action) => action.name === "add-email");
   return <div className={styles.page} data-view={tab} data-empty={!loading && !error && sessions.length === 0 || undefined}>
@@ -56,6 +57,7 @@ export function SessionsView(props: SessionsViewProps) {
       : sessions.length === 0 ? <EmptySessions tab={tab} actions={actions} />
       : <>
         <div className={styles.desktop}>
+          {historyPages && (props.hasMore || error) && <FeedPagination {...props} edge="start" />}
           {tab === "joined" ? <JoinedTimeline key={tab} {...props} entrancePlayed={timelineEntrancePlayed} /> : <HostingSessions {...props} />}
         </div>
         <ul className={styles.mobileList} aria-label={`${tab === "joined" ? "Joined" : "Hosting"} sessions`}>
@@ -64,7 +66,7 @@ export function SessionsView(props: SessionsViewProps) {
             <span className={styles.mobileCopy}><strong>{sessionTitle(session)}</strong><span>{session.venueName}</span><span>{sessionTime(session)}</span>{sessionStatus(session) !== "Joined" && sessionStatus(session) !== "Hosting" && <span className={styles.mobileStatus}>{sessionStatus(session)}</span>}</span>
           </button></li>)}
         </ul>
-        <FeedPagination {...props} />
+        <div className={historyPages ? styles.mobilePagination : undefined}><FeedPagination {...props} /></div>
       </>}
     </div>
   </div>;
@@ -187,15 +189,23 @@ function ExpandedSession({ session, index, onOpenSession }: { readonly session: 
 }
 
 /** Scroll selection preserves the next card's position when the previous card folds away. */
-function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRestored, entrancePlayed }: SessionsViewProps & { readonly entrancePlayed: RefObject<boolean> }) {
+function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTargetId, onUrlRestored, entrancePlayed }: SessionsViewProps & { readonly entrancePlayed: RefObject<boolean> }) {
+  // The cursor feed prioritizes upcoming bookings, then returns history newest
+  // first. A vertical timeline instead advances in time in both directions.
+  const sessions = useMemo(() => [...feedSessions].sort((left, right) => Date.parse(left.startAt) - Date.parse(right.startAt) || left.sessionId.localeCompare(right.sessionId)), [feedSessions]);
+  const firstUpcoming = sessions.find((session) => session.section === "upcoming");
+  const defaultSession = firstUpcoming ?? sessions.at(-1);
   const activeSessionId = useSessionsUiStore((state) => state.activeSessionId);
-  const active = sessions.some((session) => session.sessionId === activeSessionId) ? activeSessionId! : sessions[0]?.sessionId ?? "";
+  const active = sessions.some((session) => session.sessionId === activeSessionId) ? activeSessionId! : defaultSession?.sessionId ?? "";
   const setActive = useSessionsUiStore((state) => state.selectTimelineSession);
   const [marker, setMarker] = useState(0);
   const list = useRef<HTMLDivElement>(null);
   const rows = useRef(new Map<string, HTMLDivElement>());
   const anchor = useRef<{ id: string; top: number } | null>(null);
   const pendingFocus = useRef<string | null>(null);
+  const positioned = useRef(false);
+  const previousSessions = useRef(sessions);
+  const viewportAnchor = useRef<{ id: string; top: number } | null>(null);
   const lastScroll = useRef(0);
   const ignoreScroll = useRef(false);
   const lastSelection = useRef(0);
@@ -209,7 +219,28 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
   }, [active, setActive]);
 
   useLayoutEffect(() => {
-    if (anchor.current) {
+    const desktop = window.matchMedia("(min-width: 768px)").matches;
+    const positionAtEntry = () => {
+      const row = rows.current.get(active);
+      const header = list.current?.closest("[data-view]")?.querySelector("header");
+      if (!row || !header) return;
+      // Keep the next booking visible on entry while earlier dates remain above
+      // it. The pinned heading leaves the page controls in their original place.
+      const heading = row.previousElementSibling;
+      const labelSpace = heading?.matches("h2") ? heading.getBoundingClientRect().height : 0;
+      const top = header.getBoundingClientRect().bottom + 28 + labelSpace;
+      ignoreScroll.current = true;
+      window.scrollBy({ top: row.getBoundingClientRect().top - top, behavior: "instant" });
+      lastScroll.current = window.scrollY;
+      positioned.current = true;
+    };
+    if (scrollTargetId === active && desktop) {
+      positionAtEntry();
+      onUrlRestored?.();
+      anchor.current = null;
+    } else if (!positioned.current && desktop) {
+      positionAtEntry();
+    } else if (anchor.current) {
       const row = rows.current.get(anchor.current.id);
       if (row) {
         ignoreScroll.current = true;
@@ -217,16 +248,15 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
         lastScroll.current = window.scrollY;
       }
       anchor.current = null;
-    }
-    if (scrollTargetId === active && window.matchMedia("(min-width: 768px)").matches) {
-      const target = rows.current.get(active);
-      if (target) {
+    } else if (previousSessions.current !== sessions && viewportAnchor.current?.id === active && desktop) {
+      const row = rows.current.get(active);
+      if (row) {
         ignoreScroll.current = true;
-        target.scrollIntoView({ block: "start", behavior: "instant" });
+        window.scrollBy({ top: row.getBoundingClientRect().top - viewportAnchor.current.top, behavior: "instant" });
         lastScroll.current = window.scrollY;
-        onUrlRestored?.();
       }
     }
+    previousSessions.current = sessions;
     if (pendingFocus.current) {
       rows.current.get(pendingFocus.current)?.querySelector<HTMLButtonElement>("[data-date-control]")?.focus({ preventScroll: true });
       pendingFocus.current = null;
@@ -240,12 +270,18 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
       }
     };
     updateMarker();
+    const rememberPosition = () => {
+      const row = rows.current.get(active);
+      if (row) viewportAnchor.current = { id: active, top: row.getBoundingClientRect().top };
+    };
+    rememberPosition();
+    window.addEventListener("scroll", rememberPosition, { passive: true });
     const observer = new ResizeObserver(updateMarker);
     if (list.current) observer.observe(list.current);
     const day = rows.current.get(active)?.querySelector<HTMLElement>("[data-date-control] time strong");
     if (day) observer.observe(day);
     const frame = requestAnimationFrame(() => { ignoreScroll.current = false; });
-    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener("scroll", rememberPosition); };
   }, [active, sessions, scrollTargetId, onUrlRestored]);
 
   useEffect(() => {
@@ -306,8 +342,8 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
     };
   }, [active, sessions, select]);
 
-  const groupLabel = (session: SessionFeedItem, index: number) => {
-    if (index === 0 && session.section === "upcoming") return "Upcoming";
+  const groupLabel = (session: SessionFeedItem) => {
+    if (session.sessionId === firstUpcoming?.sessionId) return "Upcoming";
     const group = timelineGroup(session, asOf);
     return group === "This week" ? "Later this week" : group;
   };
@@ -315,16 +351,17 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
     <div className={styles.rail} data-timeline-rail aria-hidden />
     <span data-timeline-marker className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
     {sessions.map((session, index) => {
-      const label = groupLabel(session, index);
+      const label = groupLabel(session);
+      const artworkIndex = feedSessions.findIndex((item) => item.sessionId === session.sessionId);
       const previous = sessions[index - 1];
       const expanded = session.sessionId === active;
       return <Fragment key={session.sessionId}>
-        {(!previous || groupLabel(previous, index - 1) !== label) && <h2 className={styles.groupLabel} data-timeline-reveal="label">{label}</h2>}
+        {(!previous || groupLabel(previous) !== label) && <h2 className={styles.groupLabel} data-upcoming={session.sessionId === firstUpcoming?.sessionId || undefined} data-timeline-reveal="label">{label}</h2>}
         <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
           <button type="button" data-date-control data-timeline-reveal="date" className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
-            {expanded ? <ExpandedSession session={session} index={index} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
-              <span className={styles.collapsedThumbnail} data-crop={session.sport === "Tennis" ? ["shadow", "net", "racket"][index % 3] : undefined}><Image src={session.sport === "Tennis" ? `/images/sessions/${index % 3 === 2 ? "bench" : "court"}.webp` : sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1200px) 630px, (min-width: 951px) 492px, 288px" className={styles.photo} /></span>
+            {expanded ? <ExpandedSession session={session} index={artworkIndex} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
+              <span className={styles.collapsedThumbnail} data-crop={session.sport === "Tennis" ? ["shadow", "net", "racket"][artworkIndex % 3] : undefined}><Image src={session.sport === "Tennis" ? `/images/sessions/${artworkIndex % 3 === 2 ? "bench" : "court"}.webp` : sessionArtwork(session, artworkIndex)} alt="" fill sizes="(min-width: 1200px) 630px, (min-width: 951px) 492px, 288px" className={styles.photo} /></span>
               <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span className={styles.collapsedVenue}>{session.sport}{session.region && <> · {session.region}</>}</span><Metadata session={session} reveal={false} /></span>
               <ChevronDown size={18} strokeWidth={1.5} aria-hidden />
             </button>}
@@ -382,7 +419,7 @@ function HostingSessions({ sessions, upcomingCount, pastCount, onOpenSession, on
   </div>;
 }
 
-function FeedPagination({ hasMore, loadingMore, onLoadMore, error, onRetry }: SessionsViewProps) {
+function FeedPagination({ hasMore, loadingMore, onLoadMore, error, onRetry, edge = "end" }: SessionsViewProps & { readonly edge?: "start" | "end" }) {
   const sentinel = useRef<HTMLDivElement>(null);
   const request = useRef({ loadingMore, onLoadMore });
   useEffect(() => { request.current = { loadingMore, onLoadMore }; }, [loadingMore, onLoadMore]);
@@ -391,10 +428,10 @@ function FeedPagination({ hasMore, loadingMore, onLoadMore, error, onRetry }: Se
     if (!node || !hasMore || error) return;
     // Keep the observer across requests. A horizontal hosting carousel doesn't
     // grow vertically, so re-observing after every response would drain all pages.
-    const observer = new IntersectionObserver(([entry]) => { if (entry?.isIntersecting && !request.current.loadingMore) request.current.onLoadMore(); }, { rootMargin: "0px 0px 300px 0px" });
+    const observer = new IntersectionObserver(([entry]) => { if (entry?.isIntersecting && !request.current.loadingMore) request.current.onLoadMore(); }, { rootMargin: edge === "start" ? "300px 0px 0px 0px" : "0px 0px 300px 0px" });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, error]);
+  }, [hasMore, error, edge]);
   return <div ref={sentinel} className={styles.pagination}>
     {error ? <><p role="alert">{error}</p><button className={styles.secondaryButton} onClick={onRetry}>Try again</button></> : hasMore ? <button className={styles.secondaryButton} disabled={loadingMore} onClick={onLoadMore}>{loadingMore ? "Loading sessions…" : "Load more sessions"}</button> : null}
   </div>;

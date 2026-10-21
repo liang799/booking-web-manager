@@ -8,7 +8,31 @@ The main area remains directly on the grey page canvas, without an outer bordere
 
 Upcoming begins at the timeline's left edge; later group labels, including Later this week before the following rows, indent by 28px. Dates and markers sit in a 126px column alongside each session, reducing to 80px below 1200px and 64px below 951px. The active day is 44px at weight 500 and inactive days are 28px at weight 500; below 1200px their sizes reduce to 36px and 24px. The active date sits near the photograph's upper quarter, with a 30px top offset and a 108px minimum control height. Other dates are centered beside their rows. Active and inactive markers are 10px and 7px respectively, and the active marker follows the measured center of the selected numeral after selection and resizing. Historical dates remain grey when selected, and historical artwork is desaturated. Both mobile tabs use simple dated rows with horizontal separators. Joined skeletons mirror the shallow photo, status and text-overlay placeholders, group labels and thumbnail rows; mobile skeletons mirror the dated rows.
 
-Current reference-layout validation:
+## Chronological timeline correction
+
+The API returns upcoming sessions first and history newest-first. Rendering that
+order made downward scrolling jump from 25 October back to 20 October. The desktop
+Joined timeline now sorts a copy by start timestamp, then session ID, so upward
+navigation reaches earlier dates and downward navigation reaches later dates.
+Future-dated cancellations are placed by their date, regardless of feed section.
+The initial selection remains the next upcoming booking, or the most recent
+booking when there are no upcoming records; the page positions that booking below
+the pinned breadcrumb and tabs. The sidebar is unchanged.
+
+Older pages are added above their chronological neighbors without moving the
+selected booking's viewport position or changing its decorative artwork. Desktop
+pagination sits above history once all upcoming records have loaded; the API,
+mobile list, Hosting, URL restoration and entrance-animation contracts remain.
+The server cursor still traverses upcoming pages before history.
+
+Validation for this correction:
+
+- The two-session chronology regression failed on the original ordering and now passes; it also covers a future-dated cancelled session in the history section.
+- All five focused sessions Storybook suites passed: 75 interaction/accessibility checks, including backward/forward traversal across history and upcoming sessions, default upcoming positioning, older-page anchoring and artwork stability, and the existing entrance/reduced-motion/URL-restoration checks.
+- Chromium and WebKit passed actual wheel-navigation checks at 768, 1024 and 1536px: up traversed 21 → 20 → 17 October, and down returned through 20 → 21 → 23 October. Chronology, entry visibility and overflow were checked in each run.
+- Typecheck, lint, production Storybook and Next.js builds passed. Unit tests: 2,498 passed, 33 skipped and 2 todo.
+
+Reference-layout validation before the chronology correction:
 
 - Typecheck and lint passed.
 - All five focused sessions Storybook suites passed: 73 interaction/accessibility checks, including the full-width shallow photograph, overlay placement, status badge, thumbnail rows, responsive date hierarchy, marker alignment, transparent panel, scroll boundaries, dialog focus and URL restoration.
@@ -25,7 +49,8 @@ Captured on 21 October 2026 for the current reference layout. Browser validation
 | --- | --- | --- |
 | `hosting-desktop.webp` | 1536 × 1024 | `desktop-hosting`: upcoming cards and divider-separated past rows on the page canvas; no timeline |
 | `joined-desktop.webp` | 1536 × 1024 | `desktop-joined`: first session active as a shallow photo with lower text overlay, followed by compact thumbnail rows |
-| `joined-scroll-current.webp` | 1536 × 1024 | `desktop-joined`, after scrolling to the third session |
+| `joined-scroll-current.webp` | 1536 × 1024 | `desktop-joined`, with the 24 October session selected |
+| `joined-history.webp` | 1536 × 1024 | `desktop-joined`, after scrolling upward into history |
 | `joined-dark.webp` | 1536 × 1024 | `desktop-joined`, dark theme |
 | `joined-narrow.webp` | 768 × 1024 | `desktop-joined`, narrow photo feature with text overlay |
 | `joined-mobile.webp` | 390 × 844 | `mobile-reference`: two dated rows in the original mobile shell |
@@ -46,7 +71,7 @@ Captured at device scale 1 after fonts and images settled, with reduced motion a
 
 ## Behavior retained
 
-Joined alone has the scroll-driven timeline. Date buttons and compact rows support keyboard selection; keyboard focus inside the active session prevents scrolling from removing the focused control. **View details** opens Details/Participants, map and calendar actions in a transient session dialog. Closing it restores keyboard focus to its trigger. Scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
+Joined alone has the scroll-driven chronological timeline, with earlier dates above later dates. Date buttons and compact rows support keyboard selection; keyboard focus inside the active session prevents scrolling from removing the focused control. **View details** opens Details/Participants, map and calendar actions in a transient session dialog. Closing it restores keyboard focus to its trigger. Scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
 
 The entrance runs once per overview/account visit after URL selection has been restored. The visible rail draws for 560ms, the marker travels to the current date for 380ms, then dates and content reveal independently over 420ms with bounded 70ms staggered starts. Layout space stays reserved throughout; dates only fade to preserve marker alignment. Visible content is prioritized so long feeds and restored selections do not extend the wait. Returning from Hosting and loading more pages do not replay it. Wheel, touch, keyboard/focus/pointer input, scrolling, resizing, tab visibility and motion-preference changes finish it immediately. Mobile and reduced motion skip the sequence. This presentation state lives outside the persisted Zustand store.
 
