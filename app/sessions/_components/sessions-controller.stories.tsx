@@ -118,8 +118,11 @@ export const AccountAndTabCaches: Story = {
   render: (args) => <AccountsHarness {...args} />,
   play: async ({ canvas }) => {
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
+    await userEvent.click(canvas.getByRole("tab", { name: "Participants (2)" }));
+    await expect(canvas.getByRole("tab", { name: "Participants (2)" })).toHaveAttribute("aria-selected", "true");
     await userEvent.click(canvas.getByRole("button", { name: "Use second account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
+    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await expect(canvas.queryByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" })).not.toBeInTheDocument();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
     await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
@@ -129,6 +132,7 @@ export const AccountAndTabCaches: Story = {
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
+    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await expect(accountRequests).toEqual([
       { userId: "first-account", tab: "joined" },
       { userId: "second-account", tab: "joined" },
@@ -137,6 +141,22 @@ export const AccountAndTabCaches: Story = {
     await expect(client.getQueryData([...sessionFeedQueryKey, "first-account", "joined"])).toBeDefined();
     await expect(client.getQueryData([...sessionFeedQueryKey, "second-account", "joined"])).toBeDefined();
     await expect(client.getQueryData([...sessionFeedQueryKey, "second-account", "hosting"])).toBeDefined();
+  },
+};
+
+export const TimelineSelectionSurvivesTabChanges: Story = {
+  play: async ({ canvas }) => {
+    const second = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
+    await userEvent.click(second);
+    await userEvent.click(canvas.getByRole("tab", { name: "Participants (3)" }));
+    const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
+    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
+    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await expect(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
+    await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await expect(canvas.getByRole("tabpanel")).toHaveTextContent("3 players have a place in this session.");
+    await expect(requests.map(({ tab }) => tab)).toEqual(["joined", "hosting"]);
   },
 };
 

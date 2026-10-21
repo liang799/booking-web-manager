@@ -19,28 +19,39 @@ import type { HostedSessionItem } from "../types";
 import type { SessionCancellationResult } from "@/use-cases/sessions/session-cancellation-transaction";
 import { hostedSessionsQueryKey } from "./hosted-sessions-controller";
 import { SessionDetails, SessionsView } from "./sessions-view";
+import { SessionsUiProvider, useSessionsUiStore } from "./sessions-ui-provider";
 import { sessionArtwork, sessionStatus, sessionTitle } from "./session-display";
 import styles from "./sessions.module.css";
 
 export const sessionFeedQueryKey = ["sessions", "feed"] as const;
 
-/** User-scoped, cursor-based React Query cache. Loading another page retains already loaded cards. */
-export function SessionsController({ userId, actions, loadFeed = defaultLoadFeed, loadHosted = defaultLoadHosted }: {
+interface SessionsControllerProps {
   readonly userId: string;
   readonly actions: readonly SessionAccountAction[];
   readonly loadFeed?: LoadSessionFeed;
   readonly loadHosted?: LoadHostedSessions;
-}) {
+}
+
+/** A new account gets fresh UI state; React Query owns the account-scoped feed. */
+export function SessionsController(props: SessionsControllerProps) {
+  const params = useSearchParams();
+  const initialTab = params.get("tab") === "hosting" || params.get("created") === "1" ? "hosting" : "joined";
+  return <SessionsUiProvider key={props.userId} initialTab={initialTab}><SessionsContent {...props} initialTab={initialTab} /></SessionsUiProvider>;
+}
+
+/** Loading another page retains already loaded cards. */
+function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHosted = defaultLoadHosted, initialTab }: SessionsControllerProps & { readonly initialTab: SessionFeedTab }) {
   const params = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const initialTab = params.get("tab") === "hosting" || params.get("created") === "1" ? "hosting" : "joined";
-  const [tab, setTab] = useState<SessionFeedTab>(initialTab);
-  const [selected, setSelected] = useState<SessionFeedItem | null>(null);
+  const tab = useSessionsUiStore((state) => state.tab);
+  const setTab = useSessionsUiStore((state) => state.selectTab);
+  const selectedSessionId = useSessionsUiStore((state) => state.selectedSessionId);
+  const setSelected = useSessionsUiStore((state) => state.selectSession);
   const [cancelling, setCancelling] = useState<HostedSessionItem | null>(null);
   const [cancelled, setCancelled] = useState<SessionCancellationResult | null>(null);
   const cancellationTrigger = useRef<HTMLButtonElement | null>(null);
-  useEffect(() => { setTab(initialTab); }, [initialTab]);
+  useEffect(() => { setTab(initialTab); }, [initialTab, setTab]);
   const feed = useInfiniteQuery({
     queryKey: [...sessionFeedQueryKey, userId, tab],
     initialPageParam: null as string | null,
@@ -54,6 +65,7 @@ export function SessionsController({ userId, actions, loadFeed = defaultLoadFeed
     for (const page of feed.data?.pages ?? []) for (const session of page.sessions) unique.set(session.sessionId, session);
     return Array.from(unique.values());
   }, [feed.data]);
+  const selected = sessions.find((session) => session.sessionId === selectedSessionId) ?? null;
   const first = feed.data?.pages[0];
   const signIn = feed.error instanceof SessionFeedLoadError && feed.error.signIn;
   const loginPath = feed.error instanceof SessionFeedLoadError && feed.error.code === "UNAUTHENTICATED" ? "/login?next=%2Fsessions" : "/login";
@@ -76,7 +88,7 @@ export function SessionsController({ userId, actions, loadFeed = defaultLoadFeed
       router.replace(`/sessions?${search}`, { scroll: false });
     }} sessions={sessions} asOf={first?.asOf ?? new Date().toISOString()} upcomingCount={first?.upcomingCount ?? 0} pastCount={first?.pastCount ?? 0} actions={actions}
       loading={feed.isPending || signIn} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
-      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={setSelected} />
+      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => setSelected(session.sessionId)} />
     <Dialog open={selected !== null} onOpenChange={(open) => { if (!open) setSelected(null); }}>
       <DialogContent className={`${styles.dialogContent} sm:max-w-[680px]`}>
         {selected && <>

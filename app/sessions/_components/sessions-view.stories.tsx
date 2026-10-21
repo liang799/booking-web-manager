@@ -3,6 +3,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { AppShell } from "@/components/ui/app-shell";
 import { hostedSessions, joinedSessions, sessionAccountActions, sessionsAsOf } from "./sessions-fixtures";
 import { SessionsView } from "./sessions-view";
+import { SessionsUiProvider } from "./sessions-ui-provider";
 
 const meta = {
   title: "Sessions/Overview",
@@ -17,7 +18,7 @@ const meta = {
     },
   },
   globals: { viewport: { value: "desktop", isRotated: false } },
-  decorators: [(Story) => <AppShell user={{ name: "NTP", reliabilityScore: 96 }}><Story /></AppShell>],
+  decorators: [(Story, { args }) => <SessionsUiProvider initialTab={args.tab}><AppShell user={{ name: "NTP", reliabilityScore: 96 }}><Story /></AppShell></SessionsUiProvider>],
   beforeEach: () => {
     window.scrollTo({ top: 0, behavior: "instant" });
   },
@@ -238,6 +239,9 @@ export const InfiniteScrollRequestsNextPage: Story = {
   play: async ({ canvas, args }) => {
     const more = canvas.getByRole("button", { name: "Load more sessions" });
     await expect(args.onLoadMore).not.toHaveBeenCalled();
+    // Keyboard focus pauses timeline folding, so this check measures the feed's
+    // intersection trigger without moving the sentinel during the same scroll.
+    canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
     more.scrollIntoView({ block: "center", behavior: "instant" });
     await waitFor(() => expect(args.onLoadMore).toHaveBeenCalled());
     await expectNoHorizontalOverflow();

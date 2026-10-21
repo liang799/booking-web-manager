@@ -7,6 +7,8 @@ import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useRef, useSt
 import type { SessionFeedItem } from "../session-feed-contract";
 import type { SessionAccountAction } from "../session-actions";
 import { sessionArtwork, sessionCalendarHref, sessionDate, sessionStatus, sessionTime, sessionTitle, timelineGroup } from "./session-display";
+import { useSessionsUiStore } from "./sessions-ui-provider";
+import type { SessionDetailsPanel } from "./sessions-ui-store";
 import styles from "./sessions.module.css";
 
 export interface SessionsViewProps {
@@ -31,7 +33,7 @@ export function SessionsView(props: SessionsViewProps) {
   const { tab, onTabChange, sessions, actions, loading, error, onRetry } = props;
   const creation = actions.find((action) => action.name === "create-session");
   const email = actions.find((action) => action.name === "add-email");
-  return <div className={styles.page}>
+  return <div className={styles.page} data-view={tab}>
     <header className={styles.header}>
       <h1 id="sessions-heading" tabIndex={-1}>Sessions</h1>
       {creation && <Link href={creation.href} className={styles.primaryButton}><Plus size={20} strokeWidth={1.4} aria-hidden />New session</Link>}
@@ -87,7 +89,9 @@ function Metadata({ session, location = false }: { readonly session: SessionFeed
 }
 
 export function SessionDetails({ session, footer = true, onOpenSession }: { readonly session: SessionFeedItem; readonly footer?: boolean; readonly onOpenSession?: (session: SessionFeedItem) => void }) {
-  const [panel, setPanel] = useState<"details" | "participants">("details");
+  const panel = useSessionsUiStore((state) => state.detailPanels[session.sessionId] ?? "details");
+  const selectPanel = useSessionsUiStore((state) => state.selectDetailPanel);
+  const setPanel = (next: SessionDetailsPanel) => selectPanel(session.sessionId, next);
   const id = useId();
   const tabs = useRef<HTMLDivElement>(null);
   const handleTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -126,7 +130,9 @@ function ExpandedSession({ session, index, onOpenSession }: { readonly session: 
 
 /** Scroll selection preserves the next card's position when the previous card folds away. */
 function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
-  const [active, setActive] = useState(sessions[0]?.sessionId ?? "");
+  const activeSessionId = useSessionsUiStore((state) => state.activeSessionId);
+  const active = sessions.some((session) => session.sessionId === activeSessionId) ? activeSessionId! : sessions[0]?.sessionId ?? "";
+  const setActive = useSessionsUiStore((state) => state.selectTimelineSession);
   const [marker, setMarker] = useState(0);
   const list = useRef<HTMLDivElement>(null);
   const rows = useRef(new Map<string, HTMLDivElement>());
@@ -141,7 +147,7 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
     if (row) anchor.current = { id, top: row.getBoundingClientRect().top };
     lastSelection.current = performance.now();
     setActive(id);
-  }, [active]);
+  }, [active, setActive]);
 
   useLayoutEffect(() => {
     if (anchor.current) {
@@ -228,7 +234,7 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
       const expanded = session.sessionId === active;
       return <Fragment key={session.sessionId}>
         {(!previous || timelineGroup(previous, asOf) !== label) && <h2 className={styles.groupLabel}>{label}</h2>}
-        <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-session-id={session.sessionId}>
+        <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
           <button type="button" data-date-control className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
             {expanded ? <ExpandedSession session={session} index={index} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
