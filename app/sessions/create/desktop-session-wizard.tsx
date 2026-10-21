@@ -198,7 +198,7 @@ function SessionSummary({ draft, stage }: { readonly draft: SessionDraft; readon
       {draft.endDate !== draft.startDate && <span className={styles.summaryDetail}>Ends {dateFormat.format(new Date(end))}</span>}</> : "Choose a time" },
     ...(stage >= 2 ? [{ label: "Venue cost", value: cost === undefined ? "—" : <Money cents={cost} /> }] : []),
     ...(stage >= 3 ? [{ label: "Players", value: `${draft.totalSlots} slots · minimum ${draft.minimumHeadcount}` }] : []),
-    ...(stage === 4 ? [{ label: "Price per slot", value: validPrice ? <Money cents={price} /> : "—" }, { label: "Revenue at capacity", value: validPrice ? <Money cents={price * draft.totalSlots} /> : "—" }] : []),
+    ...(stage === 4 ? [{ label: "Price per slot", value: validPrice ? <Money cents={price} /> : "—" }] : []),
   ];
   return <aside className={styles.summary} aria-label="Your session at a glance">
     <div className={styles.photo}><Image src={draft.sport === "Tennis" ? "/images/session-court.webp" : sportImage(draft.sport)} alt="" fill priority sizes="(min-width: 1280px) 30vw, (min-width: 1100px) 32vw, 1px" className="object-cover" /></div>
