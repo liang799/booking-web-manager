@@ -22,8 +22,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Populated: Story = {
   play: async ({ canvas, canvasElement }) => {
-    await expect(canvas.getByRole("heading", { name: /Make time to play\./, level: 1 })).toBeVisible();
-    await expect(canvas.getByRole("heading", { name: "Upcoming bookings", level: 2 })).toBeVisible();
+    await waitFor(() => expect(canvas.getByRole("heading", { name: /Make time to play\./, level: 1 })).toBeVisible());
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "Upcoming bookings", level: 2 })).toBeVisible());
     await expect(canvas.getAllByRole("article", { name: "Tennis booking at Bukit Timah CC" })).toHaveLength(2);
     await expect(canvas.queryByRole("button", { name: /filter/i })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("heading", { name: "Discover sessions" })).not.toBeInTheDocument();
@@ -31,7 +31,9 @@ export const Populated: Story = {
     await expect(canvas.getByRole("link", { name: "Search sessions" })).toHaveAttribute("href", "/discover?returnTo=%2F");
     await expect(canvas.getByRole("link", { name: "Find a session" })).toHaveAttribute("href", "/discover?returnTo=%2F");
     await expect(canvas.getByRole("link", { name: "Host a session" })).toHaveAttribute("href", "/sessions/create");
-    await expect(canvas.getByRole("region", { name: "Upcoming bookings" }).querySelector('a[href="/sessions"]')).toHaveTextContent("My sessions");
+    const sessionsLink = canvas.getByRole("link", { name: "View all hosted sessions" });
+    await expect(sessionsLink).toHaveTextContent("View all");
+    await expect(sessionsLink).toHaveAttribute("href", "/sessions");
     await expect(canvas.getByRole("navigation", { name: "Main" }).querySelector('[aria-current="page"]')).toHaveTextContent("Home");
     await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBeLessThanOrEqual(canvasElement.ownerDocument.documentElement.clientWidth);
   },
@@ -40,12 +42,12 @@ export const Populated: Story = {
 export const NoBookingsWeather: Story = {
   args: { state: { status: "empty", weather: exampleWeather } },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText("You have no upcoming bookings.")).toBeVisible();
+    await waitFor(() => expect(canvas.getByText("You have no upcoming bookings.")).toBeVisible());
     await expect(canvas.getByRole("heading", { name: "Singapore weather" })).toBeInTheDocument();
     await expect(canvas.getByText("Thundery showers")).toBeVisible();
     await expect(canvas.getByText(/25–32/)).toBeVisible();
     await expect(canvas.getByText(/Source: NEA/)).not.toBeVisible();
-    await userEvent.click(canvas.getByText("Forecast details", { exact: true }));
+    await userEvent.click(canvas.getByLabelText(/^Forecast details:/));
     await expect(canvas.getByText("Forecast period (SGT)", { exact: true })).toBeVisible();
     await expect(canvas.getByText("Updated", { exact: true })).toBeVisible();
     await expect(canvas.getByRole("link", { name: /Source: NEA/ })).toHaveAttribute("href", "https://data.gov.sg/datasets/d_ce2eb1e307bda31993c533285834ef2b/view");
@@ -62,7 +64,7 @@ export const NoBookingsWeather: Story = {
 export const WeatherUnavailable: Story = {
   args: { state: { status: "empty", weather: { status: "unavailable" } } },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Weather is unavailable right now/)).toBeVisible();
+    await waitFor(() => expect(canvas.getByText(/Weather is unavailable right now/)).toBeVisible());
     await expect(canvas.queryByText(/°C/)).not.toBeInTheDocument();
     await expect(canvas.getAllByRole("link", { name: "Find a session" })).toHaveLength(2);
     await expect(canvas.getAllByRole("link", { name: "Host a session" })).toHaveLength(2);
@@ -91,7 +93,7 @@ export const LongVenueName: Story = { args: { state: { status: "ready", bookings
 export const Overnight: Story = {
   args: { state: { status: "ready", bookings: [overnightBooking] } },
   play: async ({ canvas }) => {
-    await expect(canvas.getByLabelText("31 Dec 2035")).toBeVisible();
+    await waitFor(() => expect(canvas.getByLabelText("31 Dec 2035")).toBeVisible());
     await expect(canvas.getByText(/1 Jan 2036/, { selector: "time" })).toBeVisible();
   },
 };

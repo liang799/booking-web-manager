@@ -119,7 +119,7 @@ test("an empty Home offers weather and search on both layouts, and account logou
       await expect(page.getByText("You have no upcoming bookings.", { exact: true })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Singapore weather", exact: true })).toHaveCount(1);
       // Real forecast availability must not make the authenticated browser suite flaky.
-      const forecastDetails = page.getByText("Forecast details", { exact: true });
+      const forecastDetails = page.getByLabel(/^Forecast details:/);
       const forecastPeriod = page.getByText("Forecast period (SGT)", { exact: true });
       if (await forecastDetails.count() > 0) {
         if (!await forecastPeriod.isVisible()) await forecastDetails.click();

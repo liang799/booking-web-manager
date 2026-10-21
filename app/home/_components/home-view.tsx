@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, ChevronDown, CloudLightning, CloudRain, CloudSun, Search, Sun } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CloudLightning, CloudRain, CloudSun, Search, Sun } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export function HomeView({ state, onRetry }: HomeViewProps) {
   return (
     <div className={styles.home}>
       <header className={`${styles.hero} ${state.status === "empty" ? styles.withWeather : ""}`}>
-        <Image src="/images/home-court.webp" alt="" fill priority sizes="(min-width: 768px) calc(100vw - 256px), 100vw" className={styles.heroArt} />
+        <Image src="/images/home-court.webp" alt="" fill priority sizes="(min-width: 1536px) calc(100vw - 272px), (min-width: 1024px) calc(100vw - 256px), (min-width: 768px) calc(100vw - 224px), 100vw" className={styles.heroArt} />
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Booking</p>
           <h1>Make time<br /> to play.</h1>
@@ -31,7 +31,7 @@ export function HomeView({ state, onRetry }: HomeViewProps) {
       <section className={styles.bookings} aria-labelledby="home-bookings-heading" aria-busy={state.status === "loading"}>
         <div className={styles.sectionHeading}>
           <h2 id="home-bookings-heading">Upcoming bookings</h2>
-          <Link href="/sessions" className={styles.sessionsLink}>My sessions <ArrowRight aria-hidden size={17} /></Link>
+          <Link href="/sessions" className={styles.sessionsLink} aria-label="View all hosted sessions">View all <ArrowRight aria-hidden size={18} /></Link>
         </div>
         <div className={styles.bookingContent}>
           <HomeContent state={state} onRetry={onRetry} />
@@ -88,16 +88,7 @@ function SessionActions({ compact = false }: { readonly compact?: boolean }) {
 /** A quiet decorative ball keeps the empty diary visually distinct from a loading state. */
 function EmptyBall() {
   return (
-    <svg className={styles.emptyBall} width="108" height="78" viewBox="0 0 108 78" fill="none" aria-hidden="true">
-      <ellipse cx="65" cy="65" rx="36" ry="5" fill="currentColor" opacity=".06" />
-      <ellipse cx="61" cy="64" rx="25" ry="3" fill="currentColor" opacity=".07" />
-      <circle cx="47" cy="33" r="28" fill="currentColor" opacity=".05" />
-      <path d="M47 5c9 0 16 4 21 10l-5 15 6 17c-5 9-13 14-23 14L35 49 20 43a28 28 0 0 1 2-24l14-5L47 5Z" fill="currentColor" opacity=".035" />
-      <g stroke="currentColor" strokeOpacity=".16" strokeWidth=".8" strokeLinejoin="round">
-        <circle cx="47" cy="33" r="28" />
-        <path d="m38 22 15-3 10 11-6 16-17 2-10-14 8-12Zm0 0-2-8M53 19l3-12M63 30l11 2M57 46l3 11M40 48l-5 10M30 34l-11 2M36 14l11-9" />
-      </g>
-    </svg>
+    <Image className={styles.emptyBall} src="/images/home-empty-ball.webp" width={128} height={78} alt="" sizes="128px" />
   );
 }
 
@@ -144,28 +135,30 @@ function BookingCard({ booking }: { readonly booking: HomeBooking }) {
 function WeatherCard({ weather }: { readonly weather: WeatherState }) {
   const forecast = weather.status === "ready" ? weather.forecast.toLowerCase() : "";
   const WeatherIcon = /thunder/.test(forecast) ? CloudLightning : /rain|shower/.test(forecast) ? CloudRain : /fair|sunny/.test(forecast) ? Sun : CloudSun;
+  const overview = (
+      <span className={styles.forecastOverview}>
+        <span>
+          <span className={styles.weatherLocation}>Singapore</span>
+          {weather.status === "ready" ? (
+            <>
+              <span className={styles.temperature}>
+                <span className="sr-only">24-hour forecast temperature range: </span>{weather.lowCelsius}–{weather.highCelsius}°C
+              </span>
+              <span className={styles.forecast}>{weather.forecast}</span>
+            </>
+          ) : (
+            <span className={styles.forecast}>Weather is unavailable right now.</span>
+          )}
+        </span>
+        <WeatherIcon className={styles.weatherIcon} strokeWidth={1.35} aria-hidden />
+      </span>
+  );
   return (
     <div className={styles.weather}>
       <h2 className="sr-only">Singapore weather</h2>
-      <div className={styles.forecastOverview}>
-        <div>
-          <p className={styles.weatherLocation}>Singapore</p>
-          {weather.status === "ready" ? (
-            <>
-              <p className={styles.temperature}>
-                <span className="sr-only">24-hour forecast temperature range: </span>{weather.lowCelsius}–{weather.highCelsius}°C
-              </p>
-              <p className={styles.forecast}>{weather.forecast}</p>
-            </>
-          ) : (
-            <p className={styles.forecast}>Weather is unavailable right now.</p>
-          )}
-        </div>
-        <WeatherIcon className={styles.weatherIcon} strokeWidth={1.35} aria-hidden />
-      </div>
-      {weather.status === "ready" && (
+      {weather.status === "ready" ? (
         <details className={styles.weatherDisclosure}>
-          <summary>Forecast details <ChevronDown size={12} aria-hidden /></summary>
+          <summary title="Forecast details" aria-label={`Forecast details: Singapore, ${weather.lowCelsius}–${weather.highCelsius}°C, ${weather.forecast}`}>{overview}</summary>
           <div className={styles.forecastDetails}>
             <p className="font-medium text-foreground">Singapore · 24-hour forecast</p>
             <dl className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
@@ -188,7 +181,7 @@ function WeatherCard({ weather }: { readonly weather: WeatherState }) {
             </div>
           </div>
         </details>
-      )}
+      ) : overview}
     </div>
   );
 }

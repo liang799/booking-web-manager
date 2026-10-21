@@ -1,12 +1,13 @@
 {
-  "capturedAt": "2026-10-21T11:45:38.981Z",
-  "environment": "Local Storybook 6008; Chromium; deterministic Home stories; no authenticated backend",
-  "base": "origin/main at 7aacdc9",
+  "capturedAt": "2026-10-21T12:04:35.108Z",
+  "environment": "Local Storybook 6008; Chromium; deterministic Home fixtures; no authenticated backend",
+  "sidebar": "Unchanged from origin/main",
   "widths": [
     320,
     390,
     768,
     1024,
+    1200,
     1440,
     1750
   ],
@@ -18,72 +19,38 @@
     "empty",
     "long-venue"
   ],
-  "total": 24,
-  "passed": 24,
+  "total": 28,
+  "passed": 28,
   "failed": 0,
   "browserErrors": [],
-  "checks": [
-    "Horizontal document overflow",
-    "Visible controls fit viewport width",
-    "Hero copy does not overlap weather",
-    "Weather disclosure fits viewport",
-    "Home court image decoded",
-    "Exact light/dark class settled before capture",
-    "Reduced-motion disables action transitions"
-  ],
-  "baseline": {
-    "source": "origin/main HomeView and AppShell; temporary story using exampleWeather; fresh Tailwind compile",
-    "desktopHeader": {
-      "display": "flex",
-      "height": 224
-    },
-    "mobileHeader": {
-      "display": "none",
-      "height": 0
-    },
-    "temporarySourcesRemoved": true
-  },
   "screenshots": [
-    {
-      "filename": "before-light-1440.webp",
-      "width": 1440,
-      "theme": "light",
-      "bytes": 32988
-    },
-    {
-      "filename": "before-light-390.webp",
-      "width": 390,
-      "theme": "light",
-      "bytes": 18482
-    },
-    {
-      "filename": "after-light-390.webp",
-      "width": 390,
-      "height": 993,
-      "theme": "light",
-      "bytes": 26460
-    },
-    {
-      "filename": "after-dark-390.webp",
-      "width": 390,
-      "height": 993,
-      "theme": "dark",
-      "bytes": 25502
-    },
-    {
-      "filename": "after-light-1440.webp",
-      "width": 1440,
-      "height": 900,
-      "theme": "light",
-      "bytes": 67396
-    },
-    {
-      "filename": "after-dark-1440.webp",
-      "width": 1440,
-      "height": 900,
-      "theme": "dark",
-      "bytes": 43548
-    }
+    "after-light-390.webp",
+    "after-dark-390.webp",
+    "after-light-1440.webp",
+    "after-dark-1440.webp",
+    "after-light-1750.webp",
+    "after-dark-1750.webp"
+  ],
+  "motion": {
+    "start": [
+      0,
+      0
+    ],
+    "end": [
+      1,
+      1
+    ],
+    "passed": true
+  },
+  "checks": [
+    "Horizontal overflow",
+    "Visible control bounds",
+    "Hero and weather overlap",
+    "Hero and empty ball decoded",
+    "Keyboard-operated forecast disclosure stays in viewport",
+    "Light and dark appearance",
+    "Reduced-motion removes entrance animations and link transitions",
+    "Entrance fades reach full opacity"
   ],
   "results": [
     {
@@ -91,264 +58,936 @@
       "theme": "light",
       "state": "empty",
       "passed": true,
-      "documentWidth": 320,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 320,
+        "height": 483.25,
+        "top": 168,
+        "right": 320,
+        "bottom": 651.25,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 320,
       "theme": "light",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 320,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 320,
+        "height": 410,
+        "top": 168,
+        "right": 320,
+        "bottom": 578,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 320,
       "theme": "dark",
       "state": "empty",
       "passed": true,
-      "documentWidth": 320,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 320,
+        "height": 483.25,
+        "top": 168,
+        "right": 320,
+        "bottom": 651.25,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 320,
       "theme": "dark",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 320,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 320,
+        "height": 410,
+        "top": 168,
+        "right": 320,
+        "bottom": 578,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 390,
       "theme": "light",
       "state": "empty",
       "passed": true,
-      "documentWidth": 390,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 390,
+        "height": 425.25,
+        "top": 168,
+        "right": 390,
+        "bottom": 593.25,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 390,
       "theme": "light",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 390,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 390,
+        "height": 410,
+        "top": 168,
+        "right": 390,
+        "bottom": 578,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 390,
       "theme": "dark",
       "state": "empty",
       "passed": true,
-      "documentWidth": 390,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 390,
+        "height": 425.25,
+        "top": 168,
+        "right": 390,
+        "bottom": 593.25,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 390,
       "theme": "dark",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 390,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 0,
+        "y": 168,
+        "width": 390,
+        "height": 410,
+        "top": 168,
+        "right": 390,
+        "bottom": 578,
+        "left": 0
+      },
+      "loadedImages": true,
+      "sidebar": null,
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 768,
       "theme": "light",
       "state": "empty",
       "passed": true,
-      "documentWidth": 768,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 768,
       "theme": "light",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 768,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 768,
       "theme": "dark",
       "state": "empty",
       "passed": true,
-      "documentWidth": 768,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 768,
       "theme": "dark",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 768,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1024,
       "theme": "light",
       "state": "empty",
       "passed": true,
-      "documentWidth": 1024,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1024,
       "theme": "light",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 1024,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1024,
       "theme": "dark",
       "state": "empty",
       "passed": true,
-      "documentWidth": 1024,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1024,
       "theme": "dark",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 1024,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1440,
       "theme": "light",
       "state": "empty",
       "passed": true,
-      "documentWidth": 1440,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1440,
       "theme": "light",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 1440,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1440,
       "theme": "dark",
       "state": "empty",
       "passed": true,
-      "documentWidth": 1440,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1440,
       "theme": "dark",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 1440,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1750,
       "theme": "light",
       "state": "empty",
       "passed": true,
-      "documentWidth": 1750,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1750,
       "theme": "light",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 1750,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1750,
       "theme": "dark",
       "state": "empty",
       "passed": true,
-      "documentWidth": 1750,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": true,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     },
     {
       "width": 1750,
       "theme": "dark",
       "state": "long-venue",
       "passed": true,
-      "documentWidth": 1750,
-      "offscreenControlCount": 0,
-      "heroWeatherOverlapCount": 0,
-      "disclosureWithinViewport": null,
-      "reducedMotionTransitionDuration": "0s"
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "disclosure": null,
+      "reducedMotion": {
+        "animationsDisabled": true,
+        "transitionsDisabled": true
+      }
     }
   ]
 }
