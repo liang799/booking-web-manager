@@ -160,6 +160,16 @@ button alongside the account menu. Search opens the focused `/discover` view wit
 a back arrow, tennis hero, mounted search/filter form, sport chips and compact cards.
 The desktop sidebar has separate Home and Discover destinations.
 
+From 768px the same view follows the SC2006 Figma "Desktop Home" frame:
+the court image becomes a dark banner with white copy, Filters is a filled square,
+"Upcoming sessions" is a bold section heading, and results are photo-top cards,
+two per row when the results column is at least 600px wide (a container query).
+The styles live in [`discovery-search-view.module.css`](./_components/discovery-search-view.module.css)
+and apply only at that width, so the mobile composition above is unchanged. Labels,
+form behavior, polling and the shared join confirmation are the same at every width.
+Only the decorative banner photograph fades in, and not under reduced motion.
+Before/after captures are in [`docs/assets/discover`](../../docs/assets/discover/README.md).
+
 A UI-only `returnTo` URL value records the originating page and its query. Apply,
 Clear and Next preserve it; it never reaches the API or reader. The back arrow
 replaces the current location with the validated destination, falling back to `/`

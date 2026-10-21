@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn } from "storybook/test";
+import { expect, fn, within } from "storybook/test";
 import { AppShell } from "@/components/ui/app-shell";
 import { emptyFilters, examplePage } from "./discovery-fixtures";
 import { DiscoveryFormController } from "./discovery-form-controller";
@@ -10,7 +10,7 @@ const meta = {
   parameters: {
     layout: "fullscreen",
     nextjs: { navigation: { pathname: "/discover" } },
-    docs: { description: { component: "Desktop Discover keeps the Booking sidebar and a distinct active Discover destination. The centered search column shares the mobile form, disclosure, state transitions, and compact results. Home shows only personal upcoming bookings or the weather fallback." } },
+    docs: { description: { component: "Desktop Discover keeps the Booking sidebar and a distinct active Discover destination. From 768px the view follows the SC2006 Desktop Home frame: a dark court banner, a bold results heading and two photo cards per row when the results column has room. It shares the mobile form, disclosure, state transitions and labels. Home shows only personal upcoming bookings or the weather fallback." } },
   },
   globals: { viewport: { value: "desktop", isRotated: false } },
   decorators: [(Story) => <AppShell mobileVariant="focused" user={{ name: "Marcus Lim", reliabilityScore: 96 }} logoutAction={fn()}><Story /></AppShell>],
@@ -25,9 +25,13 @@ export const Populated: Story = {
     await expect(canvas.getByRole("navigation", { name: "Main" }).querySelector('[aria-current="page"]')).toHaveTextContent("Discover");
     await expect(canvas.getByRole("heading", { name: "Find Your Next Game" })).toBeVisible();
     await expect(canvas.getByRole("heading", { name: "Badminton session" })).toBeVisible();
+    const [first, second] = within(canvas.getByRole("region", { name: "Upcoming sessions" })).getAllByRole("listitem").map((card) => card.getBoundingClientRect());
+    await expect(Math.abs(first!.top - second!.top)).toBeLessThan(2);
+    await expect(first!.right).toBeLessThanOrEqual(second!.left);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
 };
+export const Empty: Story = { args: { outcome: { status: "ready", page: { items: [], nextCursor: null } } } };
 export const Filtered: Story = { args: { filters: { ...emptyFilters, q: "Bishan", sport: "Badminton", region: "Central" }, outcome: { status: "ready", page: { items: [examplePage.items[0]!], nextCursor: null } } } };
 export const Invalid: Story = { args: { filters: { ...emptyFilters, timeFrom: "18:00" }, outcome: { status: "invalid", fieldErrors: { date: ["Choose a date when filtering by time"] } } } };
 export const Loading: Story = { args: { pending: true } };
