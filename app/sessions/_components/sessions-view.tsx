@@ -133,10 +133,10 @@ function Players({ count, large = false }: { readonly count: number; readonly la
   </span>;
 }
 
-function Metadata({ session }: { readonly session: SessionFeedItem }) {
+function Metadata({ session, reveal = true }: { readonly session: SessionFeedItem; readonly reveal?: boolean }) {
   return <span className={styles.metadata}>
-    <span data-timeline-reveal="detail"><Clock3 aria-hidden /><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span>
-    <span data-timeline-reveal="detail"><UsersRound aria-hidden />{session.participantCount} / {session.capacity} players</span>
+    <span data-timeline-reveal={reveal ? "detail" : undefined}><Clock3 aria-hidden /><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span>
+    <span data-timeline-reveal={reveal ? "detail" : undefined}><UsersRound aria-hidden /><span>{session.participantCount} / {session.capacity}<span> players</span></span></span>
   </span>;
 }
 
@@ -176,9 +176,9 @@ export function SessionDetails({ session, footer = true, onOpenSession }: { read
 function ExpandedSession({ session, index, onOpenSession }: { readonly session: SessionFeedItem; readonly index: number; readonly onOpenSession: SessionsViewProps["onOpenSession"] }) {
   const selectTimelineSession = useSessionsUiStore((state) => state.selectTimelineSession);
   return <div className={styles.feature} data-timeline-expanded>
-    <div className={styles.hero} data-timeline-reveal="hero"><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1800px) 480px, (min-width: 1200px) 28vw, 25vw" className={styles.photo} priority={index === 0} /></div>
+    <div className={styles.hero} data-timeline-reveal="hero"><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1200px) 72vw, 85vw" className={styles.photo} priority={index === 0} /></div>
+    <div className={styles.featureStatus} data-timeline-reveal="detail"><Status session={session} /></div>
     <div className={styles.cardBody}>
-      <div className={styles.featureStatus} data-timeline-reveal="detail"><Status session={session} /></div>
       <h2 data-timeline-reveal="title">{sessionTitle(session)}</h2>
       <p className={styles.venue} data-timeline-reveal="venue">{session.venueName}{session.region && <> <span>·</span> {session.region}</>}</p>
       <div className={styles.summaryFooter}><Metadata session={session} /><button type="button" className={styles.viewDetails} data-timeline-reveal="action" onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); selectTimelineSession(session.sessionId); onOpenSession(session); }}>View details<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></button></div>
@@ -306,22 +306,26 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
     };
   }, [active, sessions, select]);
 
+  const groupLabel = (session: SessionFeedItem, index: number) => {
+    if (index === 0 && session.section === "upcoming") return "Upcoming";
+    const group = timelineGroup(session, asOf);
+    return group === "This week" ? "Later this week" : group;
+  };
   return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline" data-timeline-entrance={entrance.phase} onPointerDownCapture={entrance.finish} onFocusCapture={entrance.finish}>
     <div className={styles.rail} data-timeline-rail aria-hidden />
     <span data-timeline-marker className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
     {sessions.map((session, index) => {
-      const label = timelineGroup(session, asOf);
+      const label = groupLabel(session, index);
       const previous = sessions[index - 1];
       const expanded = session.sessionId === active;
       return <Fragment key={session.sessionId}>
-        {(!previous || timelineGroup(previous, asOf) !== label) && <h2 className={styles.groupLabel} data-timeline-reveal="label">{label}</h2>}
+        {(!previous || groupLabel(previous, index - 1) !== label) && <h2 className={styles.groupLabel} data-timeline-reveal="label">{label}</h2>}
         <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
           <button type="button" data-date-control data-timeline-reveal="date" className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
             {expanded ? <ExpandedSession session={session} index={index} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
-              <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span>{session.sport}{session.region && <> · {session.region}</>}</span></span>
-              <span className={styles.collapsedTime}>{sessionTime(session)}</span>
-              <span className={styles.collapsedPlayers}><UsersRound size={18} aria-hidden />{session.participantCount} / {session.capacity}</span>
+              <span className={styles.collapsedThumbnail} data-crop={session.sport === "Tennis" ? ["shadow", "net", "racket"][index % 3] : undefined}><Image src={session.sport === "Tennis" ? `/images/sessions/${index % 3 === 2 ? "bench" : "court"}.webp` : sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1200px) 630px, (min-width: 951px) 492px, 288px" className={styles.photo} /></span>
+              <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span className={styles.collapsedVenue}>{session.sport}{session.region && <> · {session.region}</>}</span><Metadata session={session} reveal={false} /></span>
               <ChevronDown size={18} strokeWidth={1.5} aria-hidden />
             </button>}
           </article>

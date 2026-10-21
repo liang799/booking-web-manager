@@ -65,7 +65,8 @@ export function useTimelineEntrance({ root, played, marker, restoring, activeSes
       const railBounds = rail.getBoundingClientRect();
       const visibleStart = Math.min(railBounds.height, Math.max(0, -railBounds.top));
       const visibleEnd = Math.min(railBounds.height, Math.max(visibleStart, window.innerHeight - railBounds.top));
-      const origin = Math.min(marker, railBounds.top - timeline.getBoundingClientRect().top + visibleStart + 7);
+      const dotRadius = dot.getBoundingClientRect().height / 2;
+      const origin = Math.min(marker, railBounds.top - timeline.getBoundingClientRect().top + visibleStart + dotRadius);
       // Only movement after restoration's queued anchoring frame and the
       // entrance's geometry measurements counts as an interruption.
       initialScroll = window.scrollY;
@@ -78,10 +79,10 @@ export function useTimelineEntrance({ root, played, marker, restoring, activeSes
         if (stopped) return;
         setPhase("dot");
         await animate(dot, [
-          { opacity: 0, transform: `translateY(${origin - 7}px) scale(.65)` },
+          { opacity: 0, transform: `translateY(${origin - dotRadius}px) scale(.65)` },
           { opacity: 1, offset: .2 },
-          { opacity: 1, transform: `translateY(${marker - 7}px) scale(1.08)`, offset: .85 },
-          { opacity: 1, transform: `translateY(${marker - 7}px) scale(1)` },
+          { opacity: 1, transform: `translateY(${marker - dotRadius}px) scale(1.08)`, offset: .85 },
+          { opacity: 1, transform: `translateY(${marker - dotRadius}px) scale(1)` },
         ], 380);
         if (stopped) return;
         setPhase("details");

@@ -1,31 +1,47 @@
 .graphics { animation: pulse 1.6s ease-in-out infinite alternate; }
 .block { display: block; max-width: 100%; height: 14px; border-radius: 4px; background: hsl(var(--muted-foreground) / .13); }
-.timeline { --date-column: 104px; position: relative; margin-top: 32px; padding: 0 0 12px; }
+.timeline { --date-column: 126px; position: relative; margin-top: 32px; padding: 0 0 12px; }
 .rail { position: absolute; left: 5px; top: 32px; bottom: 0; width: 1px; background: hsl(var(--border)); }
-.group { width: 98px; height: 12px; margin: 0 0 20.5px 104px; }
+.group { width: 98px; height: 12px; margin: 0 0 20.5px; }
+.laterGroup { width: 130px; margin-top: 28px; margin-left: 28px; }
 .date { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 24px; }
 .date::before { content: ""; position: absolute; left: 1px; top: 50.5px; width: 9px; height: 9px; border-radius: 50%; border: 1px solid hsl(var(--border)); background: hsl(var(--background)); }
 .weekday { width: 27px; height: 10px; }
 .day { width: 30px; height: 26px; }
 .month { width: 26px; height: 10px; }
-.currentDate .day { width: 40px; height: 40px; }
-.currentDate::before { top: 58px; background: hsl(var(--muted-foreground) / .3); }
-.currentRow { margin-bottom: 12px; }
-.summary { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(180px,36%); gap: 32px; padding: 24px 0 28px; border-top: 1px solid hsl(var(--foreground) / .65); border-bottom: 1px solid hsl(var(--border)); }
-.featureCopy { min-width: 0; min-height: 240px; display: flex; flex-direction: column; align-items: flex-start; }
-.featureStatus { width: 58px; height: 11px; margin-bottom: 20px; }
-.featureTitle { width: 88%; height: 30px; }
-.featureVenue { width: 75%; height: 16px; margin-top: 12px; }
-.featureMetadata { display: grid; gap: 12px; width: 100%; margin-top: 24px; }
-.featureMetadata > .block { width: 160px; height: 16px; }
-.featureAction { width: 110px; height: 16px; margin-top: auto; margin-bottom: 14px; }
-.hero { width: 100%; height: 240px; border-radius: 3px; }
+.timeline .date { align-self: center; gap: 6px; padding-top: 0; }
+.timeline .date::before { left: 2px; top: 50%; width: 7px; height: 7px; transform: translateY(-50%); }
+.timeline .day { width: 31px; height: 28px; }
+.timeline .currentDate { align-self: start; justify-content: center; min-height: 108px; margin-top: 30px; }
+.timeline .currentDate .day { width: 46px; height: 44px; }
+.timeline .currentDate::before { left: .5px; width: 10px; height: 10px; background: hsl(var(--muted-foreground) / .3); }
+.currentRow { margin-bottom: 0; }
+.summary { position: relative; min-width: 0; height: clamp(280px,21.68vw,334px); display: flex; align-items: flex-end; gap: 24px; overflow: hidden; padding: 28px 32px 16px; border-radius: 3px; }
+.featureStatus { position: absolute; z-index: 1; top: 18px; right: 22px; width: 68px; height: 27px; background: hsl(var(--background) / .7); }
+.featureCopy { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.featureCopy .block,.featureAction .block { background: hsl(var(--background) / .7); }
+.featureTitle { width: 100%; max-width: 420px; height: 32px; }
+.featureVenue { width: 75%; max-width: 300px; height: 16px; margin-top: 4px; }
+.featureMetadata { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; width: 100%; min-height: 48px; margin-top: 6px; }
+.featureMetadata > .block { width: 140px; height: 16px; }
+.featureMetadata > .block:last-child { width: 86px; }
+.featureAction { position: relative; z-index: 1; flex-shrink: 0; display: flex; align-items: center; gap: 18px; }
+.featureActionLabel { width: 90px; height: 16px; }
+.featureActionCircle { width: 48px; height: 48px; border-radius: 50%; }
+.hero { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 3px; background: hsl(var(--muted-foreground) / .2); }
 .title { width: 52%; height: 30px; margin-top: 22px; }
 .subtitle { width: 62%; height: 16px; margin-top: 12px; }
 .metadata { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 38px; margin-top: 24px; min-height: 44px; }
 .metadata > .block { width: 160px; height: 16px; }
-.collapsed { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 104px; padding: 20px 0; border-bottom: 1px solid hsl(var(--border)); }
+.collapsed { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 120px; padding: 18px 0; border-bottom: 1px solid hsl(var(--border) / .65); }
 .collapsed > div { flex: 1; min-width: 0; }
+.rowThumbnail { flex-shrink: 0; width: clamp(112px,16vw,210px); height: 80px; }
+.collapsed .rowTitle { height: 20px; }
+.collapsed .rowSubtitle { height: 14px; margin-top: 8px; }
+.rowMetadata { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; }
+.rowMetadata > .block { width: 140px; height: 16px; }
+.rowMetadata > .block:last-child { width: 86px; }
+.chevron { flex-shrink: 0; width: 12px; height: 12px; }
 .rowTitle { width: 240px; height: 18px; }
 .rowSubtitle { width: 165px; height: 13px; margin-top: 10px; }
 .count,.metadata > .count { flex-shrink: 0; width: 64px; height: 14px; }
@@ -57,26 +73,26 @@
 .invitation { width: 160px; height: 44px; margin-top: 16px; }
 @keyframes pulse { to { opacity: .5; } }
 @media (max-width: 1199px) {
-  .timeline { --date-column: 84px; }
-  .group { margin-left: 84px; }
-  .summary { gap: 24px; }
-  .featureCopy { min-height: 220px; }
-  .hero { height: 220px; }
+  .timeline { --date-column: 80px; }
+  .timeline .day { width: 27px; height: 24px; }
+  .timeline .currentDate .day { width: 38px; height: 36px; }
+  .summary { height: 300px; }
+  .featureTitle { height: 26px; }
+  .rowMetadata > .block { height: 13px; }
   .metadata { gap: 14px 24px; }
   .metadata > .block { width: 130px; }
   .pastRow { gap: 16px; }
   .thumbnail { width: 90px; }
 }
 @media (max-width: 950px) {
-  .timeline { --date-column: 76px; }
-  .group { margin-left: 76px; }
-  .summary { grid-template-columns: minmax(0,1fr) minmax(140px,34%); gap: 20px; }
-  .featureCopy { min-height: 200px; }
-  .featureStatus { margin-bottom: 16px; }
+  .timeline { --date-column: 64px; }
+  .summary { height: 300px; gap: 20px; padding: 24px 24px 16px; }
   .featureTitle { height: 26px; }
-  .featureMetadata { margin-top: 18px; }
-  .featureAction { margin-bottom: 8px; }
-  .hero { height: 200px; }
+  .featureMetadata { column-gap: 12px; }
+  .featureMetadata > .block:last-child { width: 50px; }
+  .featureActionLabel { width: 80px; }
+  .collapsed { gap: 18px; }
+  .rowThumbnail { width: 96px; height: 76px; }
   .pastRow { gap: 12px; }
   .thumbnail { width: 64px; }
   .pastTime { display: none; }

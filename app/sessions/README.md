@@ -244,23 +244,38 @@ states without provider dependencies.
 `/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
 creation with `?created=1` selects Hosting and announces success. Desktop Joined
 uses an editorial agenda on the grey page canvas, without an outer bordered card.
-The selected session is a horizontal feature: status, title, venue, time, player
-count and **View details** sit on the left, with a smaller photograph on the right.
-Its active date is bold at 40px; inactive dates are 26px. Dates and markers align
-with each session, and the remaining sessions use compact, full-width rows
-separated by subtle rules. Scrolling selects the next/previous session and moves
-the marker to the selected date.
+The selected session is a full-width, shallow photograph with the session title,
+supporting subtitle and horizontal time/player metadata overlaid at the lower
+left. **View details** sits at the lower right, and the session status badge,
+including Joined, sits at the upper right. Compact sessions retain the text
+hierarchy beside a smaller thumbnail, with a chevron at the right, generous row
+spacing and subtle bottom separators. The feature title is 32px on wide desktop;
+compact titles are 20px with 16px metadata. Upcoming begins at the timeline's left
+edge, while indented labels such as Later this week separate the following rows.
+
+The active date is 44px at weight 500; inactive dates are 28px at weight 500.
+Below 1200px those sizes reduce to 36px and 24px. The active date sits near the
+photograph's upper quarter; other dates are centered alongside their rows.
+Their 10px active and 7px inactive markers align with each date's numeral. The
+date column is 126px on wide desktop, 80px below 1200px and 64px below 951px.
+The photograph height scales with the viewport between 280px and 334px on wide
+desktop and is 300px below 1200px. Compact thumbnails range from 112px to 210px
+wide and are 80px tall, reducing to 96 × 76px below 951px. Scrolling selects the
+next/previous session and moves the marker to the selected date.
 **View details** opens Details/Participants and calendar/map actions in a transient
 dialog. Closing it returns keyboard focus to its trigger. Date buttons and compact
 rows provide keyboard alternatives; keyboard focus within a session prevents scroll selection
 from removing that control. Reduced-motion preferences remove transitions.
 Desktop Hosting has equal-width upcoming carousel cards and compact history rows;
 it has no timeline. Both views use the original shared sidebar from `main`, with
-the sessions breadcrumb and header directly on the page canvas.
+the sessions breadcrumb and header directly on the page canvas. Wide-desktop page
+padding scales from 28px to 64px and is 48px at a 1536px viewport. This reference
+refinement leaves the sidebar and grey canvas color unchanged.
 Below 768px both tabs use simple dated rows separated by rules, with details in a dialog.
 
-Initial loading uses matching skeletons: the Joined date rail, horizontal active
-feature and compact rows; Hosting's upcoming cards and history rows; or simple dated
+Initial loading uses matching skeletons: the Joined date rail, shallow image-led
+feature with status and text-overlay placeholders, group labels and compact thumbnail rows; Hosting's
+upcoming cards and history rows; or simple dated
 rows on mobile. The host-management dialog also shows a controls skeleton while retaining its title
 and Close button. Decorative placeholders are hidden from assistive technology
 behind one loading status, and their pulse respects reduced motion. Background

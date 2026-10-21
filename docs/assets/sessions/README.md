@@ -4,30 +4,30 @@ Evidence uses the actual `Sessions/Overview` Storybook stories in Chromium, with
 
 ## Editorial agenda revision
 
-The main area sits directly on the grey page canvas, without an outer bordered card. Joined uses a horizontal active feature: status, title, venue, time, player count and **View details** appear on the left, with a smaller photograph on the right. The photograph is 240px tall on wide desktop, 220px on medium desktop and 200px on narrow desktop. A restrained top rule, typography and the active timeline marker distinguish the selection. Other sessions are compact, full-width rows separated by subtle rules.
+The main area remains directly on the grey page canvas, without an outer bordered card. The sidebar and canvas color are unchanged by this reference refinement. Wide-desktop page padding scales from 28px to 64px and is 48px at a 1536px viewport. Joined uses a full-width, shallow photograph for the selected session, with its title, supporting subtitle and horizontal time/player metadata overlaid at the lower left and **View details** at the lower right. Its session status badge, including Joined, sits at the upper right. Narrow desktop retains horizontal time/player metadata and lets the details action occupy its own line. The photograph height scales with the viewport between 280px and 334px on wide desktop and is 300px below 1200px. Compact sessions retain the text hierarchy beside a thumbnail, with generous spacing, subtle bottom separators and a chevron at the right. Wide desktop uses a 32px feature title, 20px compact titles and 16px metadata. Thumbnails range from 112px to 210px wide and are 80px tall, reducing to 96 × 76px below 951px.
 
-Group labels align with the session content, while dates and markers sit in a narrow column alongside each session. The active day is bold at 40px; inactive days are muted at 26px. The marker follows the measured center of the selected numeral after selection and resizing. Historical dates remain grey when selected, and historical artwork is desaturated. Both mobile tabs use simple dated rows with horizontal separators. Joined skeletons mirror the feature and row proportions; mobile skeletons mirror the dated rows.
+Upcoming begins at the timeline's left edge; later group labels, including Later this week before the following rows, indent by 28px. Dates and markers sit in a 126px column alongside each session, reducing to 80px below 1200px and 64px below 951px. The active day is 44px at weight 500 and inactive days are 28px at weight 500; below 1200px their sizes reduce to 36px and 24px. The active date sits near the photograph's upper quarter, with a 30px top offset and a 108px minimum control height. Other dates are centered beside their rows. Active and inactive markers are 10px and 7px respectively, and the active marker follows the measured center of the selected numeral after selection and resizing. Historical dates remain grey when selected, and historical artwork is desaturated. Both mobile tabs use simple dated rows with horizontal separators. Joined skeletons mirror the shallow photo, status and text-overlay placeholders, group labels and thumbnail rows; mobile skeletons mirror the dated rows.
 
-Current revision validation:
+Current reference-layout validation:
 
 - Typecheck and lint passed.
-- Unit tests: 2,498 passed, 33 skipped and 2 todo.
-- All five focused sessions Storybook suites passed: 73 interaction/accessibility checks, including feature proportions, the transparent panel, row separators, scroll boundaries, dialog focus and URL restoration.
-- Production Storybook and Next.js builds passed.
-- Chromium and WebKit passed 42 layout scenarios across 320, 390, 768, 1024, 1440 and 1536px, light/dark appearance, populated/empty/loading states and reduced motion. Checks covered no horizontal overflow, loaded artwork, a transparent outer layout, image proportion and active/inactive marker alignment. Keyboard selection, focus transfer and reverse selection also passed in both engines.
-- The shared AppShell is unchanged from the prior PR head. Sixteen screenshots below were refreshed or added for this revision. Earlier authenticated-flow results below were not rerun for this presentation-only update.
+- All five focused sessions Storybook suites passed: 73 interaction/accessibility checks, including the full-width shallow photograph, overlay placement, status badge, thumbnail rows, responsive date hierarchy, marker alignment, transparent panel, scroll boundaries, dialog focus and URL restoration.
+- Unit tests passed: 2,498, with 33 skipped and 2 todo.
+- Chromium and WebKit passed 42 layout scenarios across 320–1536px, light/dark appearance, reduced motion and populated/empty/loading states, with no overflow, loaded artwork, a transparent outer layout and aligned markers. Forward/reverse keyboard selection and focus transfer passed in both engines.
+- Production Storybook and Next.js builds passed. Final light/dark Joined loading geometry was also checked in both Chromium and WebKit against the production Storybook build.
+- The shared AppShell source is unchanged from the prior PR head. Screenshots were refreshed for the current layout and its page margins; mobile captures remain unchanged. Earlier authenticated-flow results below were not rerun for this presentation update.
 
 ## Screenshot manifest
 
-Captured on 21 October 2026. Browser validation is recorded above.
+Captured on 21 October 2026 for the current reference layout. Browser validation is recorded above.
 
 | Screenshot | Viewport | Story / state |
 | --- | --- | --- |
 | `hosting-desktop.webp` | 1536 × 1024 | `desktop-hosting`: upcoming cards and divider-separated past rows on the page canvas; no timeline |
-| `joined-desktop.webp` | 1536 × 1024 | `desktop-joined`: first session active, text left and smaller photograph right, followed by compact rows |
+| `joined-desktop.webp` | 1536 × 1024 | `desktop-joined`: first session active as a shallow photo with lower text overlay, followed by compact thumbnail rows |
 | `joined-scroll-current.webp` | 1536 × 1024 | `desktop-joined`, after scrolling to the third session |
 | `joined-dark.webp` | 1536 × 1024 | `desktop-joined`, dark theme |
-| `joined-narrow.webp` | 768 × 1024 | `desktop-joined`, narrow two-column feature |
+| `joined-narrow.webp` | 768 × 1024 | `desktop-joined`, narrow photo feature with text overlay |
 | `joined-mobile.webp` | 390 × 844 | `mobile-reference`: two dated rows in the original mobile shell |
 | `empty-joined-desktop.webp` | 1536 × 1024 | `empty-joined`: court banner, discovery/creation actions and three starter links |
 | `empty-hosting-desktop.webp` | 1536 × 1024 | `empty-hosting`: bench banner, creation/discovery actions and three hosting tips |
@@ -35,7 +35,7 @@ Captured on 21 October 2026. Browser validation is recorded above.
 | `empty-hosting-mobile.webp` | 390 × 844, full page | `empty-hosting`: responsive hosting empty state |
 | `empty-joined-dark.webp` | 1536 × 1024 | `empty-joined`, dark theme |
 | `empty-hosting-dark.webp` | 1536 × 1024 | `empty-hosting`, dark theme |
-| `loading-joined-desktop.webp` | 1536 × 1024, full page | `loading`: Joined date rail, horizontal feature and compact-row placeholders |
+| `loading-joined-desktop.webp` | 1536 × 1024, full page | `loading`: Joined date rail, shallow photo/overlay feature and thumbnail-row placeholders |
 | `loading-hosting-desktop.webp` | 1536 × 1024, full page | `loading-hosting`: upcoming cards and history-row placeholders |
 | `loading-mobile.webp` | 390 × 844, full page | `mobile-loading`: simple dated-row placeholders |
 | `loading-dark.webp` | 1536 × 1024, full page | `loading-dark`: dark Joined skeleton |

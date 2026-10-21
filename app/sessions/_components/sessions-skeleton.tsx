@@ -13,10 +13,9 @@ function DatePlaceholder({ current = false }: { readonly current?: boolean }) {
 
 function FeaturePlaceholder() {
   return <div className={styles.featureCopy}>
-    <Block className={styles.featureStatus} /><Block className={styles.featureTitle} />
+    <Block className={styles.featureTitle} />
     <Block className={styles.featureVenue} />
     <div className={styles.featureMetadata}><Block /><Block /></div>
-    <Block className={styles.featureAction} />
   </div>;
 }
 
@@ -30,11 +29,23 @@ export function SessionsSkeleton({ tab }: { readonly tab: "joined" | "hosting" }
         <Block className={styles.group} />
         <div className={`${layout.timelineRow} ${styles.currentRow}`}>
           <DatePlaceholder current />
-          <div className={styles.summary}><FeaturePlaceholder /><Block className={styles.hero} /></div>
+          <div className={styles.summary}>
+            <Block className={styles.hero} /><Block className={styles.featureStatus} />
+            <FeaturePlaceholder />
+            <div className={styles.featureAction}><Block className={styles.featureActionLabel} /><Block className={styles.featureActionCircle} /></div>
+          </div>
         </div>
+        <Block className={`${styles.group} ${styles.laterGroup}`} />
         {[0, 1].map((row) => <div className={layout.timelineRow} key={row}>
           <DatePlaceholder />
-          <div className={styles.collapsed}><div><Block className={styles.rowTitle} /><Block className={styles.rowSubtitle} /></div><Block className={styles.count} /></div>
+          <div className={styles.collapsed}>
+            <Block className={styles.rowThumbnail} />
+            <div>
+              <Block className={styles.rowTitle} /><Block className={styles.rowSubtitle} />
+              <div className={styles.rowMetadata}><Block /><Block /></div>
+            </div>
+            <Block className={styles.chevron} />
+          </div>
         </div>)}
       </div> : <div className={layout.hosting} data-skeleton-hosting>
         <Block className={styles.sectionHeading} />

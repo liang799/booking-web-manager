@@ -13,7 +13,7 @@ const meta = {
     nextjs: { navigation: { pathname: "/sessions" } },
     docs: {
       description: {
-        component: "The signed-in sessions overview. Joined sessions use an editorial desktop agenda: the active session pairs its summary and View details action with a smaller photograph, while other sessions form compact rows along the timeline. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
+        component: "The signed-in sessions overview. Joined sessions use a desktop agenda: the active session places its title, venue, and inline metadata over a shallow photograph, with a status badge at the upper right and View details at the lower right. Other sessions pair landscape thumbnails with grouped information in compact rows. Dates sit in a dedicated timeline column, with the active date beside the upper quarter of its photograph. Upcoming and Later this week labels organize the first sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
       },
     },
   },
@@ -102,10 +102,13 @@ function timelineDay(canvasElement: HTMLElement, index: number) {
 
 async function expectTimelineHierarchy(canvasElement: HTMLElement, activeIndex: number) {
   const activeDay = timelineDay(canvasElement, activeIndex);
-  await expect(getComputedStyle(activeDay).fontSize).toBe("40px");
-  await expect(getComputedStyle(activeDay).fontWeight).toBe("700");
+  await expect(getComputedStyle(activeDay).fontSize).toBe(window.innerWidth >= 1200 ? "44px" : "36px");
+  await expect(getComputedStyle(activeDay).fontWeight).toBe("500");
   for (const [index] of joinedSessions.entries()) {
-    if (index !== activeIndex) await expect(getComputedStyle(timelineDay(canvasElement, index)).fontSize).toBe("26px");
+    if (index !== activeIndex) {
+      await expect(getComputedStyle(timelineDay(canvasElement, index)).fontSize).toBe(window.innerWidth >= 1200 ? "28px" : "24px");
+      await expect(getComputedStyle(timelineDay(canvasElement, index)).fontWeight).toBe("500");
+    }
   }
   // Wait through the marker's movement, then compare actual centers so padding
   // or font changes cannot leave the dot aligned with an obsolete fixed offset.
@@ -129,7 +132,8 @@ export const DesktopJoined: Story = {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
-    await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "Upcoming" })).toBeVisible());
+    await expect(canvas.getByRole("heading", { name: "Later this week" })).toBeVisible();
     await expect(canvas.getByRole("heading", { name: "Earlier this month" })).toBeInTheDocument();
     await expect(canvas.queryByRole("tab", { name: "Details" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tab", { name: "Participants (2)" })).not.toBeInTheDocument();
@@ -141,15 +145,46 @@ export const DesktopJoined: Story = {
     const feature = overview.querySelector<HTMLElement>("[data-timeline-expanded]");
     const photo = feature?.querySelector<HTMLElement>('[data-timeline-reveal="hero"]');
     const title = feature?.querySelector<HTMLElement>('[data-timeline-reveal="title"]');
+    const subtitle = feature?.querySelector<HTMLElement>('[data-timeline-reveal="venue"]');
     const panel = overview.querySelector("header")?.parentElement;
-    if (!feature || !photo || !title || !panel) throw new globalThis.Error("The editorial agenda was not rendered.");
-    await expect(title.getBoundingClientRect().right).toBeLessThanOrEqual(photo.getBoundingClientRect().left);
-    await expect(photo.getBoundingClientRect().width).toBeLessThanOrEqual(feature.getBoundingClientRect().width * .4);
+    if (!feature || !photo || !title || !subtitle || !panel) throw new globalThis.Error("The editorial agenda was not rendered.");
+    await expect(title).toHaveTextContent("Tennis Court Booking");
+    await expect(subtitle).toHaveTextContent(`${joinedSessions[0]!.venueName} · ${joinedSessions[0]!.region}`);
+    const featureBounds = feature.getBoundingClientRect();
+    const photoBounds = photo.getBoundingClientRect();
+    await expect(Math.abs(photoBounds.left - featureBounds.left)).toBeLessThan(1);
+    await expect(Math.abs(photoBounds.top - featureBounds.top)).toBeLessThan(1);
+    await expect(Math.abs(photoBounds.width - featureBounds.width)).toBeLessThan(1);
+    await expect(Math.abs(photoBounds.height - featureBounds.height)).toBeLessThan(1);
+    await expect(featureBounds.height).toBeLessThan(featureBounds.width * .5);
+    await expect(featureBounds.height).toBeLessThanOrEqual(334);
+    const activeDayBounds = timelineDay(canvasElement, 0).getBoundingClientRect();
+    await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeGreaterThan(featureBounds.top);
+    await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeLessThan(featureBounds.top + featureBounds.height * .4);
+    for (const text of [title, subtitle]) {
+      const bounds = text.getBoundingClientRect();
+      await expect(bounds.left).toBeGreaterThan(featureBounds.left);
+      await expect(bounds.right).toBeLessThan(featureBounds.right);
+      await expect(bounds.top).toBeGreaterThan(featureBounds.top + featureBounds.height * .4);
+      await expect(bounds.bottom).toBeLessThan(featureBounds.bottom);
+    }
+    const featureContent = within(feature);
+    const time = featureContent.getByText("Singapore time:").parentElement;
+    const players = featureContent.getByText("2 / 4");
+    if (!time) throw new globalThis.Error("The feature time metadata was not rendered.");
+    const timeBounds = time.getBoundingClientRect();
+    const playerBounds = players.getBoundingClientRect();
+    await expect(Math.abs(timeBounds.top + timeBounds.height / 2 - playerBounds.top - playerBounds.height / 2)).toBeLessThan(2);
+    await expect(featureContent.getByText(/^Joined$/i)).toBeVisible();
     await expect(getComputedStyle(panel).borderWidth).toBe("0px");
     await expect(getComputedStyle(panel).boxShadow).toBe("none");
     await expect(getComputedStyle(panel).backgroundColor).toBe("rgba(0, 0, 0, 0)");
     for (const row of canvas.getAllByRole("button", { name: /^Expand / })) {
       await expect(getComputedStyle(row).borderBottomWidth).toBe("1px");
+      const thumbnail = row.querySelector("img");
+      if (!thumbnail) throw new globalThis.Error("A collapsed session thumbnail was not rendered.");
+      await expect(thumbnail).toBeVisible();
+      await expect(thumbnail.getBoundingClientRect().width).toBeGreaterThan(thumbnail.getBoundingClientRect().height);
     }
     await expectNoHorizontalOverflow();
   },
@@ -508,7 +543,8 @@ export const KeyboardAndSessionSummary: Story = {
       const card = within(expanded);
       await expect(card.queryByRole("tablist")).not.toBeInTheDocument();
       await expect(card.queryByRole("link", { name: /View in calendar/ })).not.toBeInTheDocument();
-      await expect(card.getByText("3 / 4 players")).toBeVisible();
+      await expect(card.getByText("3 / 4")).toBeVisible();
+      await expect(card.getByText("3 / 4")).toHaveTextContent("3 / 4 players");
       await userEvent.click(card.getByRole("button", { name: "View details" }));
       await expect(args.onOpenSession).toHaveBeenCalledWith(joinedSessions[1]);
     });
@@ -638,7 +674,7 @@ export const NextPageError: Story = {
   args: { hasMore: true, error: "We couldn’t load more sessions. Please try again." },
   play: async ({ canvas, args }) => {
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
-    await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "Upcoming" })).toBeVisible());
     await expect(canvas.getByRole("alert")).toHaveTextContent("We couldn’t load more sessions.");
     await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
     await expect(args.onRetry).toHaveBeenCalledOnce();
