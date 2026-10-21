@@ -17,11 +17,15 @@ Captured from the actual `Sessions/Overview` Storybook stories in Chromium on 21
 
 Screenshots were captured at device scale 1 after fonts, images and finite animations settled, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. Populated screenshots show the viewport; mobile empty-state screenshots show the full page.
 
+[Watch the Joined entrance](joined-entrance.webm): a 1536 × 1024 Chromium recording of `desktop-entrance-sequence`. The rail draws downward for 600ms, the marker travels to the current date for 420ms, then the selected compact card reveals from top to bottom for 520ms. This records the rendered UI at its actual speed, including the initial Storybook load.
+
 ## Current behavior
 
 The sessions page owns its breadcrumb and bordered content panel. Joined alone has the scroll-driven timeline. Its compact expanded card shows artwork, status, title, venue, time, player count and **View details**. Collapsed rows show venue, time and player count. Details/Participants, map and calendar actions appear in the transient session dialog; closing it restores keyboard focus to its trigger.
 
 The current day is bold at 48px; inactive days are muted at 26px. The animated marker follows the measured center of the current numeral after selection and resizing. Historical dates retain their grey color when selected, and historical artwork is desaturated. Keyboard selection, scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
+
+The entrance runs once per overview/account visit after any URL selection has been restored. Card layout space stays reserved throughout, so revealing it does not move the dates, change selection or shift scroll position. Returning from Hosting and loading more pages do not replay it. Wheel, touch, keyboard/focus/pointer input, resizing, tab visibility and motion-preference changes finish it immediately. Mobile and reduced motion skip the sequence. This presentation state lives outside the persisted Zustand store.
 
 Hosting has equal-width upcoming cards with dates above the artwork, venue titles, sport/region subtitles and time/player metadata. Previous/Next controls move the carousel. Past sessions use plain divider-separated rows. Both mobile views retain simple dated cards. Empty views fit their banners inside the same panel and use three starter links separated by vertical rules on desktop and stacked on mobile. Both use the same primary/secondary action styling: Joined leads with Join a session, while Hosting leads with Create a session and offers Join a session as its secondary action. Hosting keeps its bench artwork and uses the label “No hosted sessions yet”.
 
@@ -48,3 +52,5 @@ Executed for the compact-layout and original-shell update:
 These fixtures and screenshots demonstrate local behavior, not production data.
 
 The Hosting empty-state refinement was verified separately with typecheck, lint, all 24 overview Storybook interaction/accessibility checks, and the 28 empty-view Chromium/WebKit scenarios above. Hosting screenshots were refreshed for desktop, mobile and dark mode. Account-gated stories confirm discovery remains available alongside Add email or account setup.
+
+The first-visit entrance was verified with typecheck, lint, 2,498 passing unit tests, 68 focused Storybook interaction/accessibility checks across five suites, and all 43 authenticated browser tests. Browser coverage verifies the line → dot → card sequence, stable layout, immediate interaction/reduced-motion completion, no replay after pagination or returning from Hosting, and a fresh entrance for a new account. Native Chromium/WebKit checks exercise desktop widths 768/1024/1536px, wheel and keyboard interruption, resizing, live reduced-motion changes, mobile, dark appearance and absence of a Hosting timeline. Production Storybook and Next.js builds passed through the authenticated test runner.

@@ -3,13 +3,14 @@
 import { ArrowRight, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, ExternalLink, MapPin, Plus, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { SessionFeedItem } from "../session-feed-contract";
 import type { SessionAccountAction } from "../session-actions";
 import { sessionArtwork, sessionCalendarHref, sessionDate, sessionStatus, sessionTime, sessionTitle, timelineGroup } from "./session-display";
 import { useSessionsUiStore } from "./sessions-ui-provider";
 import type { SessionDetailsPanel } from "./sessions-ui-store";
 import styles from "./sessions.module.css";
+import { useTimelineEntrance } from "./use-timeline-entrance";
 
 export interface SessionsViewProps {
   readonly tab: "joined" | "hosting";
@@ -33,6 +34,7 @@ export interface SessionsViewProps {
 /** A shared feed, with a scroll-led desktop timeline and a deliberately simple mobile list. */
 export function SessionsView(props: SessionsViewProps) {
   const { tab, onTabChange, sessions, actions, loading, error, onRetry } = props;
+  const timelineEntrancePlayed = useRef(false);
   const creation = actions.find((action) => action.name === "create-session");
   const email = actions.find((action) => action.name === "add-email");
   return <div className={styles.page} data-view={tab} data-empty={!loading && !error && sessions.length === 0 || undefined}>
@@ -53,7 +55,7 @@ export function SessionsView(props: SessionsViewProps) {
       : sessions.length === 0 ? <EmptySessions tab={tab} actions={actions} />
       : <>
         <div className={styles.desktop}>
-          {tab === "joined" ? <JoinedTimeline key={tab} {...props} /> : <HostingSessions {...props} />}
+          {tab === "joined" ? <JoinedTimeline key={tab} {...props} entrancePlayed={timelineEntrancePlayed} /> : <HostingSessions {...props} />}
         </div>
         <ul className={styles.mobileList} aria-label={`${tab === "joined" ? "Joined" : "Hosting"} sessions`}>
           {sessions.map((session) => <li key={session.sessionId}><button type="button" className={styles.mobileCard} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); props.onOpenSession(session); }} aria-label={`View ${sessionTitle(session)} at ${session.venueName}, ${sessionDate(session.startAt).full}`}>
@@ -172,7 +174,7 @@ export function SessionDetails({ session, footer = true, onOpenSession }: { read
 
 function ExpandedSession({ session, index, onOpenSession }: { readonly session: SessionFeedItem; readonly index: number; readonly onOpenSession: SessionsViewProps["onOpenSession"] }) {
   const selectTimelineSession = useSessionsUiStore((state) => state.selectTimelineSession);
-  return <div className={styles.expandedCard}>
+  return <div className={styles.expandedCard} data-timeline-expanded>
     <div className={styles.hero}><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1280px) 1000px, 70vw" className={styles.photo} priority={index === 0} /><Status session={session} /></div>
     <div className={styles.cardBody}>
       <h2>{sessionTitle(session)}</h2>
@@ -183,7 +185,7 @@ function ExpandedSession({ session, index, onOpenSession }: { readonly session: 
 }
 
 /** Scroll selection preserves the next card's position when the previous card folds away. */
-function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRestored }: SessionsViewProps) {
+function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRestored, entrancePlayed }: SessionsViewProps & { readonly entrancePlayed: RefObject<boolean> }) {
   const activeSessionId = useSessionsUiStore((state) => state.activeSessionId);
   const active = sessions.some((session) => session.sessionId === activeSessionId) ? activeSessionId! : sessions[0]?.sessionId ?? "";
   const setActive = useSessionsUiStore((state) => state.selectTimelineSession);
@@ -195,6 +197,7 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
   const lastScroll = useRef(0);
   const ignoreScroll = useRef(false);
   const lastSelection = useRef(0);
+  const entrance = useTimelineEntrance({ root: list, played: entrancePlayed, marker, restoring: Boolean(scrollTargetId), activeSessionId: active });
   const select = useCallback((id: string) => {
     if (id === active) { setActive(id); return; }
     const row = rows.current.get(id);
@@ -301,8 +304,8 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
     };
   }, [active, sessions, select]);
 
-  return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline">
-    <div className={styles.rail} aria-hidden />
+  return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline" data-timeline-entrance={entrance.phase} onPointerDownCapture={entrance.finish} onFocusCapture={entrance.finish}>
+    <div className={styles.rail} data-timeline-rail aria-hidden />
     <span data-timeline-marker className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
     {sessions.map((session, index) => {
       const label = timelineGroup(session, asOf);

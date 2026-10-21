@@ -254,6 +254,13 @@ it has no timeline. Both views use the original shared sidebar from `main`, with
 the sessions breadcrumb and bordered content panel inside the page.
 Below 768px both tabs use simple date/title cards, with details in a dialog.
 
+On the first desktop Joined visit, the rail draws downward, the marker travels to
+the selected date, and the compact card reveals from top to bottom. The sequence
+waits for URL restoration and reserves the card's final space to avoid layout
+shifts. It runs once per overview/account visit, including when arriving from
+Hosting. Interaction, resizing or a motion-preference change finishes it
+immediately; mobile and reduced-motion users see the final state directly.
+
 `SessionsController` uses React Query `useInfiniteQuery`, with account/tab-scoped
 caches and the server's cursor. An intersection observer requests the next page;
 an accessible Load more button provides the same action. Pagination errors retain

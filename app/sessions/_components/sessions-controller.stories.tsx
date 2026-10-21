@@ -126,19 +126,50 @@ export const CursorPagination: Story = {
     reply = async ({ cursor }) => cursor ? response(joinedSessions.slice(5)) : response(joinedSessions.slice(0, 6), "next-six");
   },
   play: async ({ canvas }) => {
-    const timeline = within(await canvas.findByRole("region", { name: "Joined session timeline" }));
+    const region = await canvas.findByRole("region", { name: "Joined session timeline" });
+    const timeline = within(region);
+    await waitFor(() => expect(region).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
     await expect(timeline.getAllByRole("article")).toHaveLength(6);
     await expect(requests).toHaveLength(1);
     await expect(requests[0]).toMatchObject({ tab: "joined", cursor: null });
     await expect(requests[0]?.signal).toBeInstanceOf(AbortSignal);
     await userEvent.click(canvas.getByRole("button", { name: "Load more sessions" }));
     await waitFor(() => expect(timeline.getAllByRole("article")).toHaveLength(10));
+    await expect(region).toHaveAttribute("data-timeline-entrance", "complete");
     await expect(requests).toHaveLength(2);
     await expect(requests[1]).toMatchObject({ tab: "joined", cursor: "next-six" });
     const cached = client.getQueryData<InfiniteData<SessionFeedResponse>>([...sessionFeedQueryKey, "player", "joined"]);
     await expect(cached?.pageParams).toEqual([null, "next-six"]);
     await expect(cached?.pages).toHaveLength(2);
     await expect(canvas.queryByRole("button", { name: "Load more sessions" })).not.toBeInTheDocument();
+  },
+};
+
+export const EntranceDoesNotReplayAfterHosting: Story = {
+  play: async ({ canvas }) => {
+    const firstTimeline = await canvas.findByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(firstTimeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
+    const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
+    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
+    await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
+    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await expect(await canvas.findByRole("region", { name: "Joined session timeline" })).toHaveAttribute("data-timeline-entrance", "complete");
+  },
+};
+
+export const NewAccountGetsFreshEntrance: Story = {
+  render: (args) => <AccountsHarness {...args} />,
+  play: async ({ canvas }) => {
+    const firstTimeline = await canvas.findByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(firstTimeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
+    if (!changeAccount) throw new Error("The account harness has not mounted.");
+    changeAccount("second-account");
+    await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
+    const secondTimeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await expect(secondTimeline).not.toBe(firstTimeline);
+    await expect(secondTimeline).not.toHaveAttribute("data-timeline-entrance", "complete");
+    await waitFor(() => expect(secondTimeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
   },
 };
 

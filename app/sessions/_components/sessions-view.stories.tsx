@@ -43,6 +43,24 @@ async function expectNoHorizontalOverflow() {
   await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
 }
 
+let entrancePhases: string[] = [];
+let entranceHeights: number[] = [];
+
+function observeEntrance() {
+  entrancePhases = [];
+  entranceHeights = [];
+  const observer = new MutationObserver(() => {
+    const timeline = document.querySelector<HTMLElement>("[data-timeline-entrance]");
+    const phase = timeline?.dataset.timelineEntrance;
+    if (!phase || phase === entrancePhases.at(-1)) return;
+    entrancePhases.push(phase);
+    const expanded = timeline?.querySelector<HTMLElement>("[data-timeline-expanded]");
+    if (expanded) entranceHeights.push(expanded.getBoundingClientRect().height);
+  });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-timeline-entrance"] });
+  return () => observer.disconnect();
+}
+
 function timelineDay(canvasElement: HTMLElement, index: number) {
   const day = canvasElement.querySelector<HTMLElement>(`[data-session-id="${joinedSessions[index]!.sessionId}"] [data-date-control] time strong`);
   if (!day) throw new globalThis.Error("The timeline date was not rendered.");
@@ -90,6 +108,72 @@ export const DesktopJoined: Story = {
   },
 };
 
+export const DesktopEntranceSequence: Story = {
+  beforeEach: observeEntrance,
+  play: async ({ canvas, canvasElement, args }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    const expanded = timeline.querySelector<HTMLElement>("[data-timeline-expanded]");
+    const rail = timeline.querySelector<HTMLElement>("[data-timeline-rail]");
+    if (!expanded || !rail) throw new globalThis.Error("The entrance targets were not rendered.");
+    const initialHeight = expanded.getBoundingClientRect().height;
+    const initialScroll = window.scrollY;
+    const initialUrl = window.location.href;
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
+    await expect(entrancePhases.filter((phase) => phase !== "pending")).toEqual(["line", "dot", "card", "complete"]);
+    await expect(entranceHeights.length).toBeGreaterThanOrEqual(3);
+    for (const height of entranceHeights) await expect(Math.abs(height - initialHeight)).toBeLessThan(1);
+    await expect(expanded.getBoundingClientRect().height).toBe(initialHeight);
+    await expect(window.scrollY).toBe(initialScroll);
+    await expect(window.location.href).toBe(initialUrl);
+    await expect(args.onOpenSession).not.toHaveBeenCalled();
+    await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
+    await expectTimelineHierarchy(canvasElement, 0);
+  },
+};
+
+export const EntranceWheelInterrupt: Story = {
+  play: async ({ canvas }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await expect(timeline).not.toHaveAttribute("data-timeline-entrance", "complete");
+    window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"));
+    await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
+  },
+};
+
+export const EntranceKeyboardInterrupt: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await expect(timeline).not.toHaveAttribute("data-timeline-entrance", "complete");
+    const date = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
+    date.focus();
+    await userEvent.keyboard("{Enter}");
+    await expect(timeline).toHaveAttribute("data-timeline-entrance", "complete");
+    await expect(date).toHaveAttribute("aria-expanded", "true");
+    await expectTimelineHierarchy(canvasElement, 1);
+  },
+};
+
+export const ReducedMotionSkipsEntrance: Story = {
+  beforeEach: () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = (query) => {
+      const media = originalMatchMedia.call(window, query);
+      if (query.includes("prefers-reduced-motion")) Object.defineProperty(media, "matches", { value: true });
+      return media;
+    };
+    return () => { window.matchMedia = originalMatchMedia; };
+  },
+  play: async ({ canvas }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await expect(timeline).toHaveAttribute("data-timeline-entrance", "complete");
+    // This boundary mock exercises the entrance hook; the browser matrix also
+    // verifies native reduced-motion CSS. Ignore unrelated CSS transitions here.
+    await expect(timeline.getAnimations({ subtree: true }).filter((animation) => animation.constructor === Animation && animation.playState === "running")).toHaveLength(0);
+    await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
+  },
+};
+
 /** Matches the reference composition: two quiet rows precede the current session. */
 export const DesktopCurrentSessionHierarchy: Story = {
   play: async ({ canvas, canvasElement }) => {
@@ -123,7 +207,8 @@ export const DesktopHosting: Story = {
 
 export const MobileJoined: Story = {
   globals: { viewport: { value: "phone", isRotated: false } },
-  play: async ({ canvas, args }) => {
+  play: async ({ canvas, canvasElement, args }) => {
+    await expect(canvasElement.querySelector("[data-timeline-entrance]")).toHaveAttribute("data-timeline-entrance", "complete");
     const navigation = within(canvas.getByRole("navigation", { name: "Main" }));
     await expect(navigation.getByRole("link", { name: /^Sessions$/ })).toHaveAttribute("aria-current", "page");
     const list = within(canvas.getByRole("list", { name: "Joined sessions" }));
