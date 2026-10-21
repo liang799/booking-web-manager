@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { sessionTestContext, type SessionTestContext } from "../support/session-test-context";
 import { pendingStorageKey } from "../../app/sessions/create/model";
+import { savedDraftStorageKey } from "../../app/sessions/create/saved-session-draft";
 
 type Identity = Awaited<ReturnType<SessionTestContext["identity"]>>;
 async function login(page: Page, identity: Identity, destination = "/sessions") {
@@ -156,7 +157,7 @@ test("desktop creation restores a saved draft and creates a custom-duration sess
     await nextButton(page).click();
     await expect(page.getByRole("heading", { name: "Set your price.", exact: true })).toBeFocused();
     await priceInput(page).fill("10.00");
-    await expect(page.getByRole("status")).toHaveText("S$90.00");
+    await expect(page.getByRole("status").filter({ hasText: /^S\$90\.00$/ })).toHaveText("S$90.00");
     await page.screenshot({ path: testInfo.outputPath("desktop-pricing.png"), fullPage: true });
     const result = page.waitForResponse((response) => response.url().endsWith("/api/sessions") && response.request().method() === "POST");
     await createButton(page).click();
@@ -172,6 +173,68 @@ test("desktop creation restores a saved draft and creates a custom-duration sess
       booking_share_cents: "1000", total_slots: 9, minimum_headcount: 5,
       start_at: new Date("2045-06-17T15:00:00Z"), end_at: new Date("2045-06-17T16:15:00Z"),
     }]);
+  } finally { await context.pool.end(); }
+});
+
+test("saved desktop state restores on mobile and keeps custom duration mode across breakpoints", async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  const context = sessionTestContext();
+  try {
+    const booker = await context.identity();
+    const venue = `Responsive-draft-${randomUUID().slice(0, 8)}`;
+    const savedKey = savedDraftStorageKey(booker.userId);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await login(page, booker, "/sessions/create");
+    await page.getByLabel("Date", { exact: true }).fill("2045-06-17");
+    await page.getByLabel("Start time", { exact: true }).fill("23:00");
+    await page.getByRole("combobox", { name: "Duration", exact: true }).click();
+    await page.getByRole("option", { name: "Custom duration", exact: true }).click();
+    await page.getByLabel("Duration (minutes)", { exact: true }).fill("120");
+    await page.getByRole("button", { name: "Save draft", exact: true }).click();
+    const savedSchedule = await page.evaluate((key) => sessionStorage.getItem(key), savedKey);
+    await nextButton(page).click();
+    await expect(page.getByText("You have unsaved changes.", { exact: true })).toBeVisible();
+    expect(await page.evaluate((key) => sessionStorage.getItem(key), savedKey)).toBe(savedSchedule);
+    await venueDetails(page, venue);
+    await nextButton(page).click();
+    await expect(page.getByRole("heading", { name: "Make it your kind of game.", exact: true })).toBeFocused();
+    await page.getByRole("button", { name: "Save draft", exact: true }).click();
+    const savedSettings = await page.evaluate((key) => sessionStorage.getItem(key), savedKey);
+    expect(JSON.parse(savedSettings!)).toMatchObject({ desktopStep: 3, duration: "120", durationMode: "custom" });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole("heading", { name: "Booked Venue Settings", exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Booked Venue Settings", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Back", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Booked Venue Details", exact: true })).toBeFocused();
+    await expect(page.getByRole("combobox", { name: "Venue", exact: true })).toHaveValue(venue);
+    await expect(page.getByLabel("Booking cost (SGD)", { exact: true })).toHaveValue("60.00");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.getByRole("heading", { name: "What are you playing?", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Back", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "When do you want to play?", exact: true })).toBeFocused();
+    await expect(page.getByRole("combobox", { name: "Duration", exact: true })).toHaveText("Custom duration");
+    await expect(page.getByLabel("Duration (minutes)", { exact: true })).toHaveValue("120");
+
+    for (const width of [320, 390, 768, 1280]) {
+      await page.setViewportSize({ width, height: 844 });
+      await expect(nextButton(page)).toBeVisible();
+      if (desktop(page)) {
+        await expect(page.getByRole("combobox", { name: "Duration", exact: true })).toHaveText("Custom duration");
+        await expect(page.getByLabel("Duration (minutes)", { exact: true })).toHaveValue("120");
+      } else {
+        await page.getByRole("button", { name: "Edit booking schedule" }).click();
+        await expect(page.getByLabel("Start date", { exact: true })).toHaveValue("2045-06-17");
+        await expect(page.getByLabel("Duration (minutes)", { exact: true })).toHaveValue("120");
+        await page.getByRole("button", { name: "Cancel", exact: true }).click();
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.screenshot({ path: testInfo.outputPath(`restored-draft-${width}.png`), fullPage: true });
+    }
+    expect(await page.evaluate((key) => sessionStorage.getItem(key), savedKey)).toBe(savedSettings);
+    expect(await page.evaluate((key) => sessionStorage.getItem(key), pendingStorageKey(booker.userId))).toBeNull();
+    expect((await context.pool.query("select count(*)::int as count from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{ count: 0 }]);
   } finally { await context.pool.end(); }
 });
 

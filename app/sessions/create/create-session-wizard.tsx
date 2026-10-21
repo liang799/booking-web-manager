@@ -15,12 +15,11 @@ import { MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "@/domain/sessions/capacity
 import { sportImage } from "@/lib/sessions/sport-image";
 import { DateTimeEditor } from "./date-time-editor";
 import { VenuePicker } from "./venue-picker";
-import { createSessionStore } from "./create-session-store";
+import { createSessionStore, creationScreen } from "./create-session-store";
 import { connectSessionDevtools } from "./create-session-devtools";
-import { decimalCents, draftPricing, durationMinutes, parseSgdCents, type FieldErrors, type SessionDraft } from "./model";
+import { decimalCents, draftPricing, parseSgdCents, type FieldErrors, type SessionDraft } from "./model";
 import type { CreateSession, SearchVenues } from "./transport";
 import { DesktopSessionWizard } from "./desktop-session-wizard";
-import { clearSavedDraft, readSavedDraft } from "./saved-session-draft";
 
 export interface CreateSessionWizardProps {
   readonly userId: string; readonly create: CreateSession; readonly search: SearchVenues; readonly onCreated: () => void;
@@ -47,21 +46,13 @@ export function CreateSessionWizard(props: CreateSessionWizardProps) {
 function SessionWizard(props: CreateSessionWizardProps) {
   const { userId, create, search, onCreated, initialDraft, initialStep, storage } = props;
   const desktop = useSyncExternalStore(subscribeViewport, isDesktop, serverViewport);
-  const [saved] = useState(() => {
-    try {
-      return typeof window !== "undefined" && isDesktop() && !initialDraft
-        ? readSavedDraft(storage ?? window.sessionStorage, userId) : undefined;
-    } catch { return undefined; }
-  });
-  const [desktopVenue, setDesktopVenue] = useState(saved ? saved.desktopStep > 1 : false);
   const [store] = useState(() => createSessionStore({
-    userId, initialDraft: initialDraft ?? saved?.draft,
-    initialStep: initialStep ?? (saved ? saved.desktopStep > 2 ? saved.desktopStep === 3 ? 2 : 3 : 1 : undefined),
+    userId, initialDraft, initialStep,
     getStorage: () => storage ?? window.sessionStorage,
   }));
-  const [desktopDuration, setDesktopDuration] = useState(() => saved?.duration ?? String(durationMinutes(store.getState().draft) ?? 60));
   const draft = useStore(store, (state) => state.draft);
-  const step = useStore(store, (state) => state.step);
+  const screen = useStore(store, creationScreen);
+  const step = screen === "schedule" || screen === "venue" ? 1 : screen === "settings" ? 2 : 3;
   const workflow = useStore(store, (state) => state.workflow);
   const { change, advance, back, restartAfterRecovery } = store.getState();
   const mounted = useRef(false);
@@ -70,6 +61,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
   useEffect(() => {
     mounted.current = true;
     const disconnectDevtools = connectSessionDevtools(store);
+    void store.getState().initialize();
     return () => { mounted.current = false; disconnectDevtools(); };
   }, [store]);
   const body = useRef<HTMLDivElement>(null);
@@ -97,32 +89,22 @@ function SessionWizard(props: CreateSessionWizardProps) {
   async function submit() {
     const result = await store.getState().submit(create);
     if (!mounted.current) return;
-    if (result.status === "invalid") {
-      setDesktopVenue(!result.errors.dateTime);
-      showErrors(result.errors);
-    }
+    if (result.status === "invalid") showErrors(result.errors);
     // Navigation failures must never turn a confirmed creation into an unknown result.
-    if (result.status === "created") {
-      try { clearSavedDraft(storage ?? window.sessionStorage, userId); } catch { /* Creation is confirmed even if draft cleanup fails. */ }
-      onCreated();
-    }
+    if (result.status === "created") onCreated();
   }
   function next() {
-    const found = advance();
-    if (found) {
-      if (found.dateTime) setDesktopVenue(false);
-      showErrors(found);
-    }
+    const found = advance(desktop ? "desktop" : "mobile");
+    if (found) showErrors(found);
   }
-  if (desktop) return <DesktopSessionWizard store={store} search={search} userId={userId}
-    storage={storage} venueStep={desktopVenue} onVenueStepChange={setDesktopVenue}
-    duration={durationMinutes(draft) ? String(durationMinutes(draft)) : desktopDuration} onDurationChange={setDesktopDuration}
+  if (workflow.status === "initializing") return <p role="status" className="p-6 text-center">Loading session form…</p>;
+  if (desktop) return <DesktopSessionWizard store={store} search={search}
     onNext={next} onSubmit={() => void submit()} formRef={body} />;
   return <section aria-label="Create a session" className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-card md:my-8 md:h-[calc(100svh-4rem)] md:max-w-xl md:rounded-xl md:border md:shadow-sm">
     <header className="shrink-0 bg-foreground px-6 pb-7 pt-5 text-background md:px-8">
       <div className="mb-8 flex items-center gap-5">
         {step === 1 ? <Button asChild variant="ghost" size="icon" className="h-11 w-11 shrink-0 text-background hover:bg-background/10 hover:text-background" aria-label="Back to hosted sessions"><Link href="/sessions"><ArrowLeft aria-hidden="true" className="h-5 w-5" /></Link></Button>
-          : <Button type="button" variant="ghost" size="icon" aria-label="Previous step" disabled={locked} className="h-11 w-11 shrink-0 text-background hover:bg-background/10 hover:text-background" onClick={back}><ArrowLeft aria-hidden="true" className="h-5 w-5" /></Button>}
+          : <Button type="button" variant="ghost" size="icon" aria-label="Previous step" disabled={locked} className="h-11 w-11 shrink-0 text-background hover:bg-background/10 hover:text-background" onClick={() => back("mobile")}><ArrowLeft aria-hidden="true" className="h-5 w-5" /></Button>}
         <div role="progressbar" aria-label="Creation progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} className="h-0.5 flex-1 bg-background/30"><div className="h-full bg-background" style={{ width: `${step / 3 * 100}%` }} /></div>
         <span className="text-xs font-semibold tabular-nums">0{step} / 03</span>
       </div>
@@ -196,7 +178,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
     </div>
     </div>
     <footer className="flex shrink-0 gap-6 border-t bg-card px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 md:px-8">
-      {step > 1 && <Button type="button" variant="outline" className="min-h-12 flex-1" disabled={locked} onClick={back}>Back</Button>}
+      {step > 1 && <Button type="button" variant="outline" className="min-h-12 flex-1" disabled={locked} onClick={() => back("mobile")}>Back</Button>}
       <Button type="button" className="min-h-12 flex-1" disabled={submitting || completed || recoveryRequired} onClick={step === 3 ? () => void submit() : next}>
         {step === 3 ? submitting ? "Creating…" : pending ? "Retry submission" : "Done" : <>Next<ArrowRight aria-hidden="true" className="ml-auto h-5 w-5" /></>}
       </Button>

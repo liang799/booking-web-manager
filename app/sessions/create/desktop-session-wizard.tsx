@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Info, Minus, Plus, Save } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { useStore } from "zustand";
 import { SPORTS } from "@/app/(auth)/schemas";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,8 @@ import { Money } from "@/components/ui/money";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { sportImage } from "@/lib/sessions/sport-image";
-import type { createSessionStore, PendingStorage } from "./create-session-store";
-import { bookingDates, decimalCents, draftPricing, durationMinutes, parseSgdCents, singaporeTimestamp, validateDates, type FieldErrors, type SessionDraft } from "./model";
-import { saveDraft } from "./saved-session-draft";
+import { creationDuration, creationScreen, hasUnsavedDraftChanges, type createSessionStore, type DurationInput, type PresetDuration } from "./create-session-store";
+import { decimalCents, draftPricing, durationMinutes, parseSgdCents, singaporeTimestamp, type FieldErrors, type SessionDraft } from "./model";
 import type { SearchVenues } from "./transport";
 import { VenuePicker } from "./venue-picker";
 import styles from "./desktop-session-wizard.module.css";
@@ -38,24 +37,19 @@ function durationLabel(minutes: number) {
 interface Props {
   readonly store: ReturnType<typeof createSessionStore>;
   readonly search: SearchVenues;
-  readonly userId: string;
-  readonly storage?: PendingStorage;
-  readonly venueStep: boolean;
-  readonly onVenueStepChange: (venue: boolean) => void;
-  readonly duration: string;
-  readonly onDurationChange: (duration: string) => void;
   readonly onNext: () => void;
   readonly onSubmit: () => void;
   readonly formRef: RefObject<HTMLDivElement | null>;
 }
 
 /** Desktop presentation shares the mobile workflow; only booked details are split into two screens. */
-export function DesktopSessionWizard({ store, search, userId, storage, venueStep, onVenueStepChange, duration, onDurationChange, onNext, onSubmit, formRef }: Props) {
-  const { draft, step, workflow } = useStore(store);
-  const { change, back, restartAfterRecovery } = store.getState();
-  const [scheduleError, setScheduleError] = useState<string>();
-  const [saveMessage, setSaveMessage] = useState<{ text: string; error?: boolean; draft?: SessionDraft }>();
-  const stage = step === 1 ? venueStep ? 2 : 1 : step + 1;
+export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef }: Props) {
+  const state = useStore(store);
+  const { draft, workflow, saveResult } = state;
+  const { change, changeSchedule, chooseDuration, changeDuration, back, saveDraft, restartAfterRecovery } = store.getState();
+  const screen = creationScreen(state);
+  const duration = creationDuration(state);
+  const stage = screen === "schedule" ? 1 : screen === "venue" ? 2 : screen === "settings" ? 3 : 4;
   const current = steps[stage - 1]!;
   const errors: FieldErrors = workflow.status === "editing" ? workflow.errors : {};
   const locked = workflow.status !== "editing";
@@ -81,38 +75,19 @@ export function DesktopSessionWizard({ store, search, userId, storage, venueStep
     }
   }, [workflow, formRef, stage]);
 
-  function next() {
-    if (stage === 1) {
-      const found = validateDates(draft);
-      setScheduleError(found.dateTime);
-      if (found.dateTime) formRef.current?.querySelector<HTMLElement>("#startDate")?.focus();
-      else onVenueStepChange(true);
-    } else onNext();
-  }
-  function previous() {
-    if (stage === 2) onVenueStepChange(false);
-    else { onVenueStepChange(true); back(); }
-  }
-  function save() {
-    try {
-      saveDraft(storage ?? window.sessionStorage, userId, draft, stage as 1 | 2 | 3 | 4, duration);
-      setSaveMessage({ text: "Draft saved in this tab. You can come back to it later.", draft });
-    } catch { setSaveMessage({ text: "Couldn't save your draft. Enable session storage or free up space, then try again.", error: true }); }
-  }
-
   return <div className={styles.page}>
     <nav aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/sessions">My sessions</Link><span aria-hidden="true">/</span><span aria-current="page">Create booking</span></nav>
     <section aria-label="Create a session" className={styles.panel}>
       <header className={styles.header}>
         <div className={styles.titleRow}><div><h1>Create booking</h1><p>Set up your next game in four simple steps.</p></div>
-          <Button type="button" variant="ghost" onClick={save} disabled={locked} className={styles.save}><Save aria-hidden="true" />Save draft</Button>
+          <Button type="button" variant="ghost" onClick={saveDraft} disabled={locked} className={styles.save}><Save aria-hidden="true" />Save draft</Button>
         </div>
         <ol aria-label="Creation progress" className={styles.progress}>{steps.map((item, index) => <li key={item.name} aria-current={stage === index + 1 ? "step" : undefined} data-complete={stage > index + 1}>
           <span className={styles.stepNumber}>{stage > index + 1 ? <Check aria-hidden="true" size={15} /> : index + 1}</span>
           <span className={styles.stepText}><span>{item.name}</span><small>{item.detail}</small></span>
           {index < 3 && <span className={styles.connector} aria-hidden="true" />}
         </li>)}</ol>
-        {saveMessage && <p role={saveMessage.error ? "alert" : "status"} className={styles.saveMessage}>{saveMessage.draft && saveMessage.draft !== draft ? "You have unsaved changes." : saveMessage.text}</p>}
+        {workflow.status === "editing" && saveResult.status !== "idle" && <p role={saveResult.status === "error" ? "alert" : "status"} className={styles.saveMessage}>{saveResult.status === "error" ? saveResult.message : hasUnsavedDraftChanges(state) ? "You have unsaved changes." : "Draft saved in this tab. You can come back to it later."}</p>}
       </header>
       <div className={styles.columns}>
         <div ref={formRef} role="region" aria-label="Session form" className={styles.form}>
@@ -120,7 +95,7 @@ export function DesktopSessionWizard({ store, search, userId, storage, venueStep
           <h2 ref={headingRef} tabIndex={-1} className={styles.heading}>{current.title}</h2>
           <p className={styles.description}>{current.description}</p>
           <div className={styles.fields}>
-            {stage === 1 && <ScheduleFields draft={draft} duration={duration} onDurationChange={onDurationChange} disabled={locked} error={scheduleError ?? errors.dateTime} onChange={(patch) => { setScheduleError(undefined); change(patch); }} />}
+            {stage === 1 && <ScheduleFields draft={draft} duration={duration} onChooseDuration={chooseDuration} onDurationChange={changeDuration} disabled={locked} error={errors.dateTime} onChange={changeSchedule} />}
             {stage === 2 && <>
               <div className={styles.field}><label htmlFor="sport">Sport</label><Select value={draft.sport} disabled={locked} onValueChange={(sport) => change({ sport })}>
                 <SelectTrigger id="sport" aria-invalid={!!errors.sport}><SelectValue /></SelectTrigger><SelectContent>{SPORTS.map((sport) => <SelectItem key={sport} value={sport}>{sport}</SelectItem>)}</SelectContent>
@@ -164,33 +139,29 @@ export function DesktopSessionWizard({ store, search, userId, storage, venueStep
         <SessionSummary draft={draft} stage={stage} />
       </div>
       <footer className={styles.footer}>
-        {stage === 1 ? <Button asChild variant="outline"><Link href="/sessions">Cancel</Link></Button> : <Button type="button" variant="outline" disabled={locked} onClick={previous}>Back</Button>}
-        <Button type="button" disabled={submitting || completed || recoveryRequired} onClick={stage === 4 ? onSubmit : next}>{stage === 4 ? submitting ? "Creating…" : pending ? "Retry submission" : "Create session" : "Continue"}<ArrowRight aria-hidden="true" /></Button>
+        {stage === 1 ? <Button asChild variant="outline"><Link href="/sessions">Cancel</Link></Button> : <Button type="button" variant="outline" disabled={locked} onClick={() => back("desktop")}>Back</Button>}
+        <Button type="button" disabled={submitting || completed || recoveryRequired} onClick={stage === 4 ? onSubmit : onNext}>{stage === 4 ? submitting ? "Creating…" : pending ? "Retry submission" : "Create session" : "Continue"}<ArrowRight aria-hidden="true" /></Button>
       </footer>
     </section>
   </div>;
 }
 
-function ScheduleFields({ draft, duration, onDurationChange, disabled, error, onChange }: { readonly draft: SessionDraft; readonly duration: string; readonly onDurationChange: (duration: string) => void; readonly disabled: boolean; readonly error?: string; readonly onChange: (patch: Partial<SessionDraft>) => void }) {
+function ScheduleFields({ draft, duration, onChooseDuration, onDurationChange, disabled, error, onChange }: {
+  readonly draft: SessionDraft; readonly duration: DurationInput;
+  readonly onChooseDuration: (duration: PresetDuration | "custom") => void; readonly onDurationChange: (duration: string) => void;
+  readonly disabled: boolean; readonly error?: string; readonly onChange: (patch: Partial<Pick<SessionDraft, "startDate" | "startTime">>) => void;
+}) {
   const commonDurations = [30, 60, 90, 120, 180];
-  const [custom, setCustom] = useState(!commonDurations.includes(Number(duration)));
   const start = singaporeTimestamp(draft.startDate, draft.startTime);
   const date = singaporeTimestamp(draft.startDate, "00:00");
   const end = singaporeTimestamp(draft.endDate, draft.endTime);
-  function update(patch: Partial<SessionDraft>, minutes = duration) {
-    const dates = bookingDates(patch.startDate ?? draft.startDate, patch.startTime ?? draft.startTime, minutes);
-    onChange({ ...patch, ...(dates ?? { endDate: "", endTime: "" }) });
-  }
   return <>
     <div className={styles.field}><label htmlFor="startDate">Date</label><div className={styles.dateControl}><CalendarDays aria-hidden="true" /><span>{date ? longDateFormat.format(new Date(date)) : "Choose a date"}</span><ChevronDown aria-hidden="true" className={styles.dateChevron} />
-      <Input id="startDate" type="date" value={draft.startDate} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined} onChange={(event) => update({ startDate: event.target.value })} />
+      <Input id="startDate" type="date" value={draft.startDate} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined} onChange={(event) => onChange({ startDate: event.target.value })} />
     </div></div>
-    <div className={styles.pair}><div className={styles.field}><label htmlFor="startTime">Start time</label><div className={styles.iconControl}><Clock3 aria-hidden="true" /><Input id="startTime" type="time" value={draft.startTime} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined} onChange={(event) => update({ startTime: event.target.value })} /></div></div>
-      <div className={styles.field}><label htmlFor="duration">Duration</label><div className={styles.iconControl}><Clock3 aria-hidden="true" /><Select value={custom ? "custom" : duration} disabled={disabled} onValueChange={(value) => {
-        setCustom(value === "custom");
-        if (value !== "custom") { onDurationChange(value); update({}, value); }
-      }}><SelectTrigger id="duration" aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined}><SelectValue /></SelectTrigger><SelectContent>{commonDurations.map((minutes) => <SelectItem value={String(minutes)} key={minutes}>{durationLabel(minutes)}</SelectItem>)}<SelectItem value="custom">Custom duration</SelectItem></SelectContent></Select></div>
-        {custom && <><label htmlFor="custom-duration">Duration (minutes)</label><Input id="custom-duration" type="number" min={1} step={1} value={duration} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined} onChange={(event) => { onDurationChange(event.target.value); update({}, event.target.value); }} /></>}
+    <div className={styles.pair}><div className={styles.field}><label htmlFor="startTime">Start time</label><div className={styles.iconControl}><Clock3 aria-hidden="true" /><Input id="startTime" type="time" value={draft.startTime} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined} onChange={(event) => onChange({ startTime: event.target.value })} /></div></div>
+      <div className={styles.field}><label htmlFor="duration">Duration</label><div className={styles.iconControl}><Clock3 aria-hidden="true" /><Select value={duration.mode === "custom" ? "custom" : duration.value} disabled={disabled} onValueChange={onChooseDuration}><SelectTrigger id="duration" aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined}><SelectValue /></SelectTrigger><SelectContent>{commonDurations.map((minutes) => <SelectItem value={String(minutes)} key={minutes}>{durationLabel(minutes)}</SelectItem>)}<SelectItem value="custom">Custom duration</SelectItem></SelectContent></Select></div>
+        {duration.mode === "custom" && <><label htmlFor="custom-duration">Duration (minutes)</label><Input id="custom-duration" type="number" min={1} step={1} value={duration.value} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "schedule-error" : undefined} onChange={(event) => onDurationChange(event.target.value)} /></>}
       </div>
     </div>
     {error && <p id="schedule-error" role="alert" className={styles.error}>{error}</p>}

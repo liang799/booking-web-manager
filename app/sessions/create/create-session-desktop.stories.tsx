@@ -140,6 +140,49 @@ export const SavedDraftRecovery: Story = {
   },
 };
 
+export const SavedStepChanges: Story = {
+  args: { storage: memoryStorage() },
+  render: (args) => <ReloadSavedDraft {...args} />,
+  play: async ({ canvas, args }) => {
+    const key = savedDraftStorageKey("desktop-storybook");
+    await userEvent.click(await canvas.findByRole("button", { name: "Save draft" }));
+    const scheduleSnapshot = args.storage?.getItem(key);
+    await expect(canvas.getByText("Draft saved in this tab. You can come back to it later.")).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Continue" }));
+    await expect(canvas.getByRole("heading", { name: "What are you playing?" })).toHaveFocus();
+    await expect(canvas.getByText("You have unsaved changes.")).toBeVisible();
+    await expect(args.storage?.getItem(key)).toBe(scheduleSnapshot);
+    await userEvent.click(canvas.getByRole("button", { name: "Save draft" }));
+    await expect(JSON.parse(args.storage?.getItem(key) ?? "null")).toMatchObject({ desktopStep: 2 });
+    await userEvent.click(canvas.getByRole("button", { name: "Continue" }));
+    await expect(canvas.getByText("You have unsaved changes.")).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Reload saved draft" }));
+    await expect(await canvas.findByRole("heading", { name: "What are you playing?" })).toBeVisible();
+    await expect(canvas.queryByText("You have unsaved changes.")).not.toBeInTheDocument();
+    await expect(args.create).not.toHaveBeenCalled();
+  },
+};
+
+export const SavedCustomPresetDuration: Story = {
+  args: { storage: memoryStorage() },
+  render: (args) => <ReloadSavedDraft {...args} />,
+  play: async ({ canvas, args }) => {
+    await userEvent.click(await canvas.findByRole("combobox", { name: "Duration" }));
+    await userEvent.click(portal().getByRole("option", { name: "Custom duration" }));
+    await waitFor(() => expect(portal().queryByRole("listbox")).not.toBeInTheDocument());
+    const duration = canvas.getByLabelText("Duration (minutes)");
+    await userEvent.clear(duration); await userEvent.type(duration, "120");
+    await userEvent.click(canvas.getByRole("button", { name: "Save draft" }));
+    await expect(JSON.parse(args.storage?.getItem(savedDraftStorageKey("desktop-storybook")) ?? "null")).toMatchObject({
+      desktopStep: 1, duration: "120", durationMode: "custom", draft: { endTime: "21:00" },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: "Reload saved draft" }));
+    await expect(await canvas.findByRole("combobox", { name: "Duration" })).toHaveTextContent("Custom duration");
+    await expect(canvas.getByLabelText("Duration (minutes)")).toHaveValue(120);
+    await expect(args.create).not.toHaveBeenCalled();
+  },
+};
+
 export const SavedUnfinishedSchedule: Story = {
   args: { initialDraft: emptySessionDraft, storage: memoryStorage() },
   render: (args) => <ReloadSavedDraft {...args} />,
