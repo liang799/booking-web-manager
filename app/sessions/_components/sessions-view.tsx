@@ -89,12 +89,12 @@ function EmptySessions({ tab, actions }: Pick<SessionsViewProps, "tab" | "action
       <Image src={`/images/sessions/${joined ? "court" : "bench"}.webp`} alt="" fill priority sizes="(min-width: 768px) 80vw, 100vw" className={styles.photo} />
     </div>
     <div className={styles.emptyCopy}>
-      <p className={styles.emptyEyebrow}>{joined ? "No sessions yet" : "No sessions hosting yet"}</p>
+      <p className={styles.emptyEyebrow}>{joined ? "No sessions yet" : "No hosted sessions yet"}</p>
       <h2 id={`${id}-heading`}>{joined ? "Your sessions will appear here." : "You haven’t created any sessions."}</h2>
       <p className={styles.emptyDescription}>{joined ? "Join a session or create your own to start playing with others." : "Create a session to book a court, set the details, and invite others to join."}</p>
       <div className={styles.emptyActions}>
         <Link className={styles.primaryButton} href={joined ? discoverHref : createHref}><Plus size={22} strokeWidth={1.3} aria-hidden />{joined ? "Join a session" : createLabel}</Link>
-        {joined && <Link className={styles.emptySecondaryButton} href={createHref}>{createLabel}<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></Link>}
+        <Link className={styles.emptySecondaryButton} href={joined ? createHref : discoverHref}>{joined ? createLabel : "Join a session"}<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></Link>
       </div>
     </div>
     <section className={styles.emptySuggestions} aria-labelledby={`${id}-suggestions`}>

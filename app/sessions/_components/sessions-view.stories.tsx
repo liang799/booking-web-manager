@@ -204,7 +204,8 @@ export const EmptyHosting: Story = {
     await expect(canvas.getByRole("link", { name: /^Choose a court/ })).toHaveAttribute("href", "/sessions/create");
     await expect(canvas.getByRole("link", { name: /^Set session details/ })).toHaveAttribute("href", "/sessions/create");
     await expect(canvas.getByRole("link", { name: /^Invite others/ })).toHaveAttribute("href", "/groups");
-    await expect(canvas.queryByRole("link", { name: "Join a session" })).not.toBeInTheDocument();
+    await expect(canvas.getByText("No hosted sessions yet")).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
     await expectNoHorizontalOverflow();
   },
 };
@@ -241,6 +242,7 @@ export const EmptyHostingNeedsEmail: Story = {
     await expect(canvas.getByRole("link", { name: /^Set session details/ })).toHaveAttribute("href", "/profile/email");
     await expect(canvas.queryByRole("link", { name: "Create a session" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("link", { name: "New session" })).not.toBeInTheDocument();
+    await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
     await expectNoHorizontalOverflow();
   },
 };
@@ -253,6 +255,7 @@ export const EmptyHostingNeedsSetup: Story = {
     await expect(canvas.getByRole("link", { name: /^Set session details/ })).toHaveAttribute("href", "/profile");
     await expect(canvas.queryByRole("link", { name: "Create a session" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("link", { name: "New session" })).not.toBeInTheDocument();
+    await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
     await expectNoHorizontalOverflow();
   },
 };

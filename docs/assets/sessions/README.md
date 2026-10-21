@@ -9,7 +9,7 @@ Captured from the actual `Sessions/Overview` Storybook stories in Chromium on 21
 | `joined-scroll-current.webp` | 1536 × 1024 | `desktop-joined`, after scrolling to the third session |
 | `joined-mobile.webp` | 390 × 844 | `mobile-reference`: simple two-session list in the original mobile shell |
 | `empty-joined-desktop.webp` | 1536 × 1024 | `empty-joined`: court banner, discovery/creation actions and three starter links |
-| `empty-hosting-desktop.webp` | 1536 × 1024 | `empty-hosting`: bench banner, creation action and three hosting tips |
+| `empty-hosting-desktop.webp` | 1536 × 1024 | `empty-hosting`: bench banner, primary creation/secondary discovery actions and three hosting tips |
 | `empty-joined-mobile.webp` | 390 × 844, full page | `empty-joined`: stacked actions and starter links |
 | `empty-hosting-mobile.webp` | 390 × 844, full page | `empty-hosting`: responsive hosting empty state |
 | `empty-joined-dark.webp` | 1536 × 1024 | `empty-joined`, dark theme |
@@ -23,7 +23,7 @@ The sessions page owns its breadcrumb and bordered content panel. Joined alone h
 
 The current day is bold at 48px; inactive days are muted at 26px. The animated marker follows the measured center of the current numeral after selection and resizing. Historical dates retain their grey color when selected, and historical artwork is desaturated. Keyboard selection, scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
 
-Hosting has equal-width upcoming cards with dates above the artwork, venue titles, sport/region subtitles and time/player metadata. Previous/Next controls move the carousel. Past sessions use plain divider-separated rows. Both mobile views retain simple dated cards. Empty views fit their banners inside the same panel and use three starter links separated by vertical rules on desktop and stacked on mobile.
+Hosting has equal-width upcoming cards with dates above the artwork, venue titles, sport/region subtitles and time/player metadata. Previous/Next controls move the carousel. Past sessions use plain divider-separated rows. Both mobile views retain simple dated cards. Empty views fit their banners inside the same panel and use three starter links separated by vertical rules on desktop and stacked on mobile. Both use the same primary/secondary action styling: Joined leads with Join a session, while Hosting leads with Create a session and offers Join a session as its secondary action. Hosting keeps its bench artwork and uses the label “No hosted sessions yet”.
 
 Zustand keeps account-scoped guarded `browsing`/`viewingSession` modes, selected view, timeline session and remembered detail panels. Validated URL storage restores the tab, Joined session and panel, for example `/sessions?tab=joined&session=<uuid>&panel=participants`. Restoring the URL expands the timeline card without opening a dialog; the remembered panel appears when View details is opened. Account changes create fresh state and clear the session/panel URL selection. React Query retains ownership of data, loading, failures and pagination. Restoration loads further pages as needed, preserves the URL after failed requests for retry, and clears unavailable selections only after exhausting the feed.
 
@@ -46,3 +46,5 @@ Executed for the compact-layout and original-shell update:
 - Real Chromium and WebKit mouse-open/Escape-close checks at a restored session near the end of the feed retained the same selection, panel, scroll position and trigger focus.
 
 These fixtures and screenshots demonstrate local behavior, not production data.
+
+The Hosting empty-state refinement was verified separately with typecheck, lint, all 24 overview Storybook interaction/accessibility checks, and the 28 empty-view Chromium/WebKit scenarios above. Hosting screenshots were refreshed for desktop, mobile and dark mode. Account-gated stories confirm discovery remains available alongside Add email or account setup.
