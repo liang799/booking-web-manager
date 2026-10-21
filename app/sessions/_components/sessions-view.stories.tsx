@@ -13,7 +13,7 @@ const meta = {
     nextjs: { navigation: { pathname: "/sessions" } },
     docs: {
       description: {
-        component: "The signed-in sessions overview. Joined sessions use a chronological desktop agenda that opens at the next upcoming session: scroll up for older sessions and down for later ones. The active session places its title, venue, and inline metadata over a shallow photograph, with a status badge at the upper right and View details at the lower right. Other sessions pair landscape thumbnails with grouped information in compact rows. Dates sit in a dedicated timeline column, with the active date beside the upper quarter of its photograph. Upcoming and Later this week labels organize future sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
+        component: "The signed-in sessions overview. Joined sessions use a chronological desktop agenda that opens at the next upcoming session: scroll up for older sessions and down for later ones. The active session places a wide photograph above its title, venue, and inline metadata, with a status badge over the photograph and a plain View details action to the right. Other sessions use unframed text rows with venue and time on the left and participant counts on the right. Dates sit in a dedicated timeline column, with larger selected dates. Time-based labels group the sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
       },
     },
   },
@@ -102,12 +102,12 @@ function timelineDay(canvasElement: HTMLElement, date: string) {
 
 async function expectTimelineHierarchy(canvasElement: HTMLElement, activeDate: string) {
   const activeDay = timelineDay(canvasElement, activeDate);
-  await expect(getComputedStyle(activeDay).fontSize).toBe(window.innerWidth >= 1200 ? "44px" : "36px");
-  await expect(getComputedStyle(activeDay).fontWeight).toBe("500");
+  await expect(getComputedStyle(activeDay).fontSize).toBe(window.innerWidth >= 1200 ? "52px" : "40px");
+  await expect(getComputedStyle(activeDay).fontWeight).toBe("650");
   for (const day of canvasElement.querySelectorAll<HTMLElement>("[data-date-control] time strong")) {
     if (day !== activeDay) {
       await expect(getComputedStyle(day).fontSize).toBe(window.innerWidth >= 1200 ? "28px" : "24px");
-      await expect(getComputedStyle(day).fontWeight).toBe("500");
+      await expect(getComputedStyle(day).fontWeight).toBe("600");
     }
   }
   // Wait through the marker's movement, then compare actual centers so padding
@@ -156,8 +156,7 @@ export const DesktopJoined: Story = {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
-    await waitFor(() => expect(canvas.getByRole("heading", { name: "Upcoming" })).toBeVisible());
-    await expect(canvas.getByRole("heading", { name: "Later this week" })).toBeVisible();
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
     await expect(canvas.getByRole("heading", { name: "Earlier this month" })).toBeInTheDocument();
     await expect(canvas.queryByRole("tab", { name: "Details" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tab", { name: "Participants (2)" })).not.toBeInTheDocument();
@@ -179,36 +178,33 @@ export const DesktopJoined: Story = {
     await expect(Math.abs(photoBounds.left - featureBounds.left)).toBeLessThan(1);
     await expect(Math.abs(photoBounds.top - featureBounds.top)).toBeLessThan(1);
     await expect(Math.abs(photoBounds.width - featureBounds.width)).toBeLessThan(1);
-    await expect(Math.abs(photoBounds.height - featureBounds.height)).toBeLessThan(1);
-    await expect(featureBounds.height).toBeLessThan(featureBounds.width * .5);
-    await expect(featureBounds.height).toBeLessThanOrEqual(334);
+    await expect(Math.abs(photoBounds.height - Math.min(420, Math.max(240, photoBounds.width * 3 / 8)))).toBeLessThan(1);
     const activeDayBounds = timelineDay(canvasElement, "2026-10-21").getBoundingClientRect();
-    await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeGreaterThan(featureBounds.top);
-    await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeLessThan(featureBounds.top + featureBounds.height * .4);
+    await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeGreaterThan(photoBounds.top);
+    await expect(activeDayBounds.top + activeDayBounds.height / 2).toBeLessThan(photoBounds.top + photoBounds.height * .4);
     for (const text of [title, subtitle]) {
       const bounds = text.getBoundingClientRect();
-      await expect(bounds.left).toBeGreaterThan(featureBounds.left);
-      await expect(bounds.right).toBeLessThan(featureBounds.right);
-      await expect(bounds.top).toBeGreaterThan(featureBounds.top + featureBounds.height * .4);
+      await expect(Math.abs(bounds.left - photoBounds.left)).toBeLessThan(1);
+      await expect(bounds.right).toBeLessThanOrEqual(featureBounds.right);
+      await expect(bounds.top).toBeGreaterThanOrEqual(photoBounds.bottom);
       await expect(bounds.bottom).toBeLessThan(featureBounds.bottom);
     }
+    await expect(subtitle.getBoundingClientRect().top).toBeGreaterThanOrEqual(title.getBoundingClientRect().bottom);
     const featureContent = within(feature);
     const time = featureContent.getByText("Singapore time:").parentElement;
     const players = featureContent.getByText("2 / 4");
     if (!time) throw new globalThis.Error("The feature time metadata was not rendered.");
     const timeBounds = time.getBoundingClientRect();
     const playerBounds = players.getBoundingClientRect();
+    await expect(timeBounds.top).toBeGreaterThanOrEqual(subtitle.getBoundingClientRect().bottom);
     await expect(Math.abs(timeBounds.top + timeBounds.height / 2 - playerBounds.top - playerBounds.height / 2)).toBeLessThan(2);
     await expect(featureContent.getByText(/^Joined$/i)).toBeVisible();
     await expect(getComputedStyle(panel).borderWidth).toBe("0px");
     await expect(getComputedStyle(panel).boxShadow).toBe("none");
     await expect(getComputedStyle(panel).backgroundColor).toBe("rgba(0, 0, 0, 0)");
     for (const row of canvas.getAllByRole("button", { name: /^Expand / })) {
-      await expect(getComputedStyle(row).borderBottomWidth).toBe("1px");
-      const thumbnail = row.querySelector("img");
-      if (!thumbnail) throw new globalThis.Error("A collapsed session thumbnail was not rendered.");
-      await expect(thumbnail).toBeVisible();
-      await expect(thumbnail.getBoundingClientRect().width).toBeGreaterThan(thumbnail.getBoundingClientRect().height);
+      await expect(getComputedStyle(row).borderBottomWidth).toBe("0px");
+      await expect(row.querySelector("img")).toBeNull();
     }
     await expectNoHorizontalOverflow();
   },
@@ -621,7 +617,12 @@ export const ScrollReturnsToEarlierSessions: Story = {
       const next = canvasElement.querySelector(`[data-session-id="${joinedSessions[index]!.sessionId}"]`);
       if (!next) throw new globalThis.Error("The next timeline row was not rendered.");
       window.scrollTo({ top: window.scrollY + next.getBoundingClientRect().top - Math.min(window.innerHeight * 0.45, 650) + 8, behavior: "instant" });
-      await waitFor(() => expect(next).toHaveAttribute("data-current", "true"));
+      await waitFor(() => {
+        if (next.getAttribute("data-current") !== "true" && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
+          window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
+        }
+        expect(next).toHaveAttribute("data-current", "true");
+      });
       await expectTimelineHierarchy(canvasElement, joinedSessions[index]!.startAt);
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     }
@@ -660,10 +661,10 @@ export const ScrollContinuesAtBottomOfCompactTimeline: Story = {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
     const second = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
-    // The editorial agenda can fit entirely in a tall viewport, so the first
-    // downward intent may also need the boundary wheel path.
+    // The initial upcoming position can already be at the page boundary in a
+    // tall viewport, so the first downward intent also needs the wheel path.
     await waitFor(() => {
-      if (second.getAttribute("aria-expanded") !== "true" && document.documentElement.scrollHeight <= window.innerHeight) {
+      if (second.getAttribute("aria-expanded") !== "true" && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
         window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
       }
       expect(second).toHaveAttribute("aria-expanded", "true");
@@ -716,7 +717,7 @@ export const NextPageError: Story = {
   args: { hasMore: true, error: "We couldn’t load more sessions. Please try again." },
   play: async ({ canvas, args }) => {
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
-    await waitFor(() => expect(canvas.getByRole("heading", { name: "Upcoming" })).toBeVisible());
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
     await expect(canvas.getByRole("alert")).toHaveTextContent("We couldn’t load more sessions.");
     await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
     await expect(args.onRetry).toHaveBeenCalledOnce();

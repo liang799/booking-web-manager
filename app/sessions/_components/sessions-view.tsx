@@ -342,27 +342,22 @@ function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTar
     };
   }, [active, sessions, select]);
 
-  const groupLabel = (session: SessionFeedItem) => {
-    if (session.sessionId === firstUpcoming?.sessionId) return "Upcoming";
-    const group = timelineGroup(session, asOf);
-    return group === "This week" ? "Later this week" : group;
-  };
   return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline" data-timeline-entrance={entrance.phase} onPointerDownCapture={entrance.finish} onFocusCapture={entrance.finish}>
     <div className={styles.rail} data-timeline-rail aria-hidden />
     <span data-timeline-marker className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
     {sessions.map((session, index) => {
-      const label = groupLabel(session);
+      const label = timelineGroup(session, asOf);
       const artworkIndex = feedSessions.findIndex((item) => item.sessionId === session.sessionId);
       const previous = sessions[index - 1];
       const expanded = session.sessionId === active;
       return <Fragment key={session.sessionId}>
-        {(!previous || groupLabel(previous) !== label) && <h2 className={styles.groupLabel} data-upcoming={session.sessionId === firstUpcoming?.sessionId || undefined} data-timeline-reveal="label">{label}</h2>}
+        {(!previous || timelineGroup(previous, asOf) !== label) && <h2 className={styles.groupLabel} data-timeline-reveal="label">{label}</h2>}
         <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
           <button type="button" data-date-control data-timeline-reveal="date" className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
             {expanded ? <ExpandedSession session={session} index={artworkIndex} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
-              <span className={styles.collapsedThumbnail} data-crop={session.sport === "Tennis" ? ["shadow", "net", "racket"][artworkIndex % 3] : undefined}><Image src={session.sport === "Tennis" ? `/images/sessions/${artworkIndex % 3 === 2 ? "bench" : "court"}.webp` : sessionArtwork(session, artworkIndex)} alt="" fill sizes="(min-width: 1200px) 630px, (min-width: 951px) 492px, 288px" className={styles.photo} /></span>
-              <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span className={styles.collapsedVenue}>{session.sport}{session.region && <> · {session.region}</>}</span><Metadata session={session} reveal={false} /></span>
+              <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span className={styles.collapsedTime}><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span></span>
+              <span className={styles.collapsedPlayers}><UsersRound size={22} strokeWidth={1.5} aria-hidden /><span>{session.participantCount} / {session.capacity}<span className="sr-only"> players</span></span></span>
               <ChevronDown size={18} strokeWidth={1.5} aria-hidden />
             </button>}
           </article>

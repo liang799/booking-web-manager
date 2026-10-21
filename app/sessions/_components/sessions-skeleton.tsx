@@ -15,7 +15,10 @@ function FeaturePlaceholder() {
   return <div className={styles.featureCopy}>
     <Block className={styles.featureTitle} />
     <Block className={styles.featureVenue} />
-    <div className={styles.featureMetadata}><Block /><Block /></div>
+    <div className={styles.featureFooter}>
+      <div className={styles.featureMetadata}><Block /><Block /></div>
+      <div className={styles.featureAction}><Block className={styles.featureActionLabel} /><Block className={styles.featureActionArrow} /></div>
+    </div>
   </div>;
 }
 
@@ -30,21 +33,16 @@ export function SessionsSkeleton({ tab }: { readonly tab: "joined" | "hosting" }
         <div className={`${layout.timelineRow} ${styles.currentRow}`}>
           <DatePlaceholder current />
           <div className={styles.summary}>
-            <Block className={styles.hero} /><Block className={styles.featureStatus} />
-            <FeaturePlaceholder />
-            <div className={styles.featureAction}><Block className={styles.featureActionLabel} /><Block className={styles.featureActionCircle} /></div>
+            <Block className={styles.hero} /><FeaturePlaceholder />
           </div>
         </div>
-        <Block className={`${styles.group} ${styles.laterGroup}`} />
         {[0, 1].map((row) => <div className={layout.timelineRow} key={row}>
           <DatePlaceholder />
           <div className={styles.collapsed}>
-            <Block className={styles.rowThumbnail} />
             <div>
-              <Block className={styles.rowTitle} /><Block className={styles.rowSubtitle} />
-              <div className={styles.rowMetadata}><Block /><Block /></div>
+              <Block className={styles.rowTitle} /><Block className={styles.rowTime} />
             </div>
-            <Block className={styles.chevron} />
+            <Block className={styles.count} /><Block className={styles.chevron} />
           </div>
         </div>)}
       </div> : <div className={layout.hosting} data-skeleton-hosting>

@@ -244,23 +244,24 @@ states without provider dependencies.
 `/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
 creation with `?created=1` selects Hosting and announces success. Desktop Joined
 uses an editorial agenda on the grey page canvas, without an outer bordered card.
-The selected session is a full-width, shallow photograph with the session title,
-supporting subtitle and horizontal time/player metadata overlaid at the lower
-left. **View details** sits at the lower right, and the session status badge,
-including Joined, sits at the upper right. Compact sessions retain the text
-hierarchy beside a smaller thumbnail, with a chevron at the right, generous row
-spacing and subtle bottom separators. The feature title is 32px on wide desktop;
-compact titles are 20px with 16px metadata. Upcoming begins at the timeline's left
-edge, while indented labels such as Later this week separate the following rows.
+The selected session puts the photograph above its title, venue and horizontal
+time/player metadata. **View details** sits at the right of that metadata row
+with a plain arrow. The text rests directly on the page canvas below the image.
+Compact sessions show the venue and time on the left, with the player count and
+chevron at the far right; they have no thumbnail, subtitle or divider. The feature
+title is 34px and its venue line 18px on wide desktop. Group labels such as This
+week use 11px title-case text with .2em letter spacing, a 28px left inset and a
+small dot on the rail. Sessions in the same week retain one shared group label.
 
-The active date is 44px at weight 500; inactive dates are 28px at weight 500.
-Below 1200px those sizes reduce to 36px and 24px. The active date sits near the
-photograph's upper quarter; other dates are centered alongside their rows.
-Their 10px active and 7px inactive markers align with each date's numeral. The
-date column is 126px on wide desktop, 80px below 1200px and 64px below 951px.
-The photograph height scales with the viewport between 280px and 334px on wide
-desktop and is 300px below 1200px. Compact thumbnails range from 112px to 210px
-wide and are 80px tall, reducing to 96 × 76px below 951px. Scrolling selects the
+The active date is 52px at weight 650; inactive dates are 28px at weight 600.
+Below 1200px those sizes reduce to 40px and 24px. The active date control aligns
+with the top of the photograph and has a 126px minimum height; other dates are
+centered alongside their rows. Their 14px active and 12px inactive markers align
+with each date's numeral. The date column is 148px on wide desktop, 96px below
+1200px and 72px below 951px. The photograph uses an 8:3 aspect ratio, with its
+wide-desktop height bounded between 240px and 420px. The selected feature has 32px
+of space below it, while compact rows are at least 112px high with 24px vertical
+padding. Scrolling selects the
 next/previous session and moves the marker to the selected date. The desktop
 timeline sorts by actual start time, oldest above newest, including future-dated
 cancelled sessions. Entry keeps the earliest upcoming booking selected (or the
@@ -280,8 +281,8 @@ padding scales from 28px to 64px and is 48px at a 1536px viewport. This referenc
 refinement leaves the sidebar and grey canvas color unchanged.
 Below 768px both tabs use simple dated rows separated by rules, with details in a dialog.
 
-Initial loading uses matching skeletons: the Joined date rail, shallow image-led
-feature with status and text-overlay placeholders, group labels and compact thumbnail rows; Hosting's
+Initial loading uses matching skeletons: the Joined date rail, photograph above
+title/venue/metadata placeholders, group labels and simple compact rows; Hosting's
 upcoming cards and history rows; or simple dated
 rows on mobile. The host-management dialog also shows a controls skeleton while retaining its title
 and Close button. Decorative placeholders are hidden from assistive technology
