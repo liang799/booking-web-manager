@@ -26,6 +26,8 @@ export interface SessionsViewProps {
   readonly onLoadMore: () => void;
   readonly onRetry: () => void;
   readonly onOpenSession: (session: SessionFeedItem) => void;
+  readonly scrollTargetId?: string | null;
+  readonly onUrlRestored?: () => void;
 }
 
 /** A shared feed, with a scroll-led desktop timeline and a deliberately simple mobile list. */
@@ -129,7 +131,7 @@ function ExpandedSession({ session, index, onOpenSession }: { readonly session: 
 }
 
 /** Scroll selection preserves the next card's position when the previous card folds away. */
-function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
+function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRestored }: SessionsViewProps) {
   const activeSessionId = useSessionsUiStore((state) => state.activeSessionId);
   const active = sessions.some((session) => session.sessionId === activeSessionId) ? activeSessionId! : sessions[0]?.sessionId ?? "";
   const setActive = useSessionsUiStore((state) => state.selectTimelineSession);
@@ -142,7 +144,7 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
   const ignoreScroll = useRef(false);
   const lastSelection = useRef(0);
   const select = useCallback((id: string) => {
-    if (id === active) return;
+    if (id === active) { setActive(id); return; }
     const row = rows.current.get(id);
     if (row) anchor.current = { id, top: row.getBoundingClientRect().top };
     lastSelection.current = performance.now();
@@ -158,6 +160,15 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
         lastScroll.current = window.scrollY;
       }
       anchor.current = null;
+    }
+    if (scrollTargetId === active && window.matchMedia("(min-width: 768px)").matches) {
+      const target = rows.current.get(active);
+      if (target) {
+        ignoreScroll.current = true;
+        target.scrollIntoView({ block: "start", behavior: "instant" });
+        lastScroll.current = window.scrollY;
+        onUrlRestored?.();
+      }
     }
     if (pendingFocus.current) {
       rows.current.get(pendingFocus.current)?.querySelector<HTMLButtonElement>("[data-date-control]")?.focus({ preventScroll: true });
@@ -178,7 +189,7 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
     if (day) observer.observe(day);
     const frame = requestAnimationFrame(() => { ignoreScroll.current = false; });
     return () => { observer.disconnect(); cancelAnimationFrame(frame); };
-  }, [active, sessions]);
+  }, [active, sessions, scrollTargetId, onUrlRestored]);
 
   useEffect(() => {
     let frame = 0;

@@ -83,16 +83,28 @@ const meta = {
     </QueryClientProvider>
   )],
   args: { userId: "player", actions: sessionAccountActions, loadFeed, loadHosted },
-  beforeEach: () => {
+  beforeEach: ({ parameters }) => {
     client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
     requests = [];
     accountRequests = [];
     changeAccount = undefined;
     hostedCalls = 0;
     reply = async ({ tab }) => response(tab === "hosting" ? hostedSessions : joinedSessions);
+    // Next's Storybook navigation mock does not update the iframe's native URL.
+    const originalUrl = window.location.href;
+    const url = new URL(originalUrl);
+    for (const key of ["tab", "session", "panel", "created"]) {
+      url.searchParams.delete(key);
+      const value = parameters.nextjs?.navigation?.query?.[key];
+      if (typeof value === "string") url.searchParams.set(key, value);
+    }
+    window.history.replaceState(window.history.state, "", url);
     window.scrollTo({ top: 0, behavior: "instant" });
     getRouter().replace.mockClear();
-    return () => client.clear();
+    return () => {
+      client.clear();
+      window.history.replaceState(window.history.state, "", originalUrl);
+    };
   },
 } satisfies Meta<typeof SessionsController>;
 
@@ -133,7 +145,7 @@ export const AccountAndTabCaches: Story = {
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
     await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
-    await expect(getRouter().replace).toHaveBeenCalledWith("/sessions?tab=hosting", { scroll: false });
+    await expect(new URL(window.location.href).searchParams.get("tab")).toBe("hosting");
     await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
@@ -163,6 +175,82 @@ export const TimelineSelectionSurvivesTabChanges: Story = {
     await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
     await expect(canvas.getByRole("tabpanel")).toHaveTextContent("3 players have a place in this session.");
     await expect(requests.map(({ tab }) => tab)).toEqual(["joined", "hosting"]);
+  },
+};
+
+export const UrlRestoresSessionAndPanelAcrossPages: Story = {
+  parameters: { nextjs: { navigation: { query: { tab: "joined", session: joinedSessions[7]!.sessionId, panel: "participants" } } } },
+  beforeEach: () => {
+    reply = async ({ cursor }) => cursor ? response(joinedSessions.slice(6)) : response(joinedSessions.slice(0, 6), "restore-more");
+  },
+  play: async ({ canvas }) => {
+    const selected = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 10 Oct 2026" });
+    await waitFor(() => expect(selected).toHaveAttribute("aria-expanded", "true"));
+    await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more"]);
+    await expect(new URL(window.location.href).searchParams.get("session")).toBe(joinedSessions[7]!.sessionId);
+    await expect(new URL(window.location.href).searchParams.get("panel")).toBe("participants");
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
+
+export const MissingUrlSessionClearsAfterFinalPage: Story = {
+  parameters: { nextjs: { navigation: { query: { tab: "joined", session: "54000000-0000-4000-8000-000000000999", panel: "participants" } } } },
+  beforeEach: () => {
+    reply = async ({ cursor }) => cursor ? response(joinedSessions.slice(6)) : response(joinedSessions.slice(0, 6), "restore-more");
+  },
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(new URL(window.location.href).searchParams.has("session")).toBe(false));
+    await expect(new URL(window.location.href).searchParams.has("panel")).toBe(false);
+    await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more"]);
+    await expect(canvas.getByRole("status")).toHaveTextContent("This session is no longer available in your joined sessions.");
+    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
+
+export const UrlRestorationRetriesFailedPage: Story = {
+  parameters: { nextjs: { navigation: { query: { tab: "joined", session: joinedSessions[7]!.sessionId, panel: "participants" } } } },
+  beforeEach: () => {
+    let nextAttempts = 0;
+    reply = async ({ cursor }) => {
+      if (!cursor) return response(joinedSessions.slice(0, 6), "restore-more");
+      nextAttempts += 1;
+      if (nextAttempts === 1) throw new SessionFeedLoadError("NETWORK_ERROR", "unexpected", false);
+      return response(joinedSessions.slice(6));
+    };
+  },
+  play: async ({ canvas }) => {
+    await canvas.findByRole("alert");
+    await expect(new URL(window.location.href).searchParams.get("session")).toBe(joinedSessions[7]!.sessionId);
+    await expect(new URL(window.location.href).searchParams.get("panel")).toBe("participants");
+    await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more"]);
+    await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
+    const selected = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 10 Oct 2026" });
+    await waitFor(() => expect(selected).toHaveAttribute("aria-expanded", "true"));
+    await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more", "restore-more"]);
+    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
+
+export const AccountChangeClearsUrlSelection: Story = {
+  parameters: { nextjs: { navigation: { query: { tab: "joined", session: joinedSessions[0]!.sessionId, panel: "participants" } } } },
+  render: (args) => <AccountsHarness {...args} />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("tab", { name: "Participants (2)" })).toHaveAttribute("aria-selected", "true");
+    await expect(new URL(window.location.href).searchParams.get("session")).toBe(joinedSessions[0]!.sessionId);
+    await userEvent.click(canvas.getByRole("button", { name: "Use second account" }));
+    await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
+    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await expect(new URL(window.location.href).searchParams.has("session")).toBe(false);
+    await expect(new URL(window.location.href).searchParams.has("panel")).toBe(false);
+    await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
+    await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
+    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await expect(new URL(window.location.href).searchParams.has("session")).toBe(false);
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   },
 };
 
@@ -283,7 +371,8 @@ export const CreatedSessionOpensHosting: Story = {
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(navigation.getByRole("button", { name: "Hosting" })).toHaveAttribute("aria-current", "page");
     await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
-    await expect(getRouter().replace).toHaveBeenCalledWith("/sessions?tab=joined", { scroll: false });
+    await expect(new URL(window.location.href).searchParams.get("tab")).toBe("joined");
+    await expect(new URL(window.location.href).searchParams.has("created")).toBe(false);
   },
 };
 

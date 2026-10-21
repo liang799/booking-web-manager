@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Money } from "@/components/ui/money";
 import { SessionFeedLoadError, loadSessionFeed as defaultLoadFeed, type LoadSessionFeed } from "../session-feed-transport";
-import type { SessionFeedItem, SessionFeedTab } from "../session-feed-contract";
+import type { SessionFeedItem } from "../session-feed-contract";
 import type { SessionAccountAction } from "../session-actions";
 import { HostedSessionsLoadError, loadHostedSessions as defaultLoadHosted, type LoadHostedSessions } from "../hosted-sessions-transport";
 import { executeSessionCancellation, executeSessionVisibility, loadCancellationPreview } from "../session-action-transport";
@@ -20,6 +20,7 @@ import type { SessionCancellationResult } from "@/use-cases/sessions/session-can
 import { hostedSessionsQueryKey } from "./hosted-sessions-controller";
 import { SessionDetails, SessionsView } from "./sessions-view";
 import { SessionsUiProvider, useSessionsUiStore } from "./sessions-ui-provider";
+import { createSessionsUrlStorage, readSessionsUrlState } from "./sessions-url-storage";
 import { sessionArtwork, sessionStatus, sessionTitle } from "./session-display";
 import styles from "./sessions.module.css";
 
@@ -35,12 +36,25 @@ interface SessionsControllerProps {
 /** A new account gets fresh UI state; React Query owns the account-scoped feed. */
 export function SessionsController(props: SessionsControllerProps) {
   const params = useSearchParams();
-  const initialTab = params.get("tab") === "hosting" || params.get("created") === "1" ? "hosting" : "joined";
-  return <SessionsUiProvider key={props.userId} initialTab={initialTab}><SessionsContent {...props} initialTab={initialTab} /></SessionsUiProvider>;
+  const initialTab = readSessionsUrlState(params).tab;
+  const [account, setAccount] = useState({ id: props.userId, resetSelection: false });
+  if (account.id !== props.userId) setAccount({ id: props.userId, resetSelection: true });
+  const storage = useMemo(() => createSessionsUrlStorage(
+    () => new URL(window.location.href),
+    (url) => {
+      const historyState = { ...window.history.state };
+      // Let Next's history wrapper synchronize useSearchParams and reattach its
+      // routing markers, while retaining other consumers' history metadata.
+      delete historyState.__NA;
+      delete historyState._N;
+      window.history.replaceState(historyState, "", `${url.pathname}${url.search}${url.hash}`);
+    },
+  ), []);
+  return <SessionsUiProvider key={props.userId} initialTab={initialTab} persistence={{ storage, search: params.toString(), resetSelection: account.resetSelection }}><SessionsContent {...props} /></SessionsUiProvider>;
 }
 
 /** Loading another page retains already loaded cards. */
-function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHosted = defaultLoadHosted, initialTab }: SessionsControllerProps & { readonly initialTab: SessionFeedTab }) {
+function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHosted = defaultLoadHosted }: SessionsControllerProps) {
   const params = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -49,10 +63,17 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
   const mode = useSessionsUiStore((state) => state.mode);
   const openSession = useSessionsUiStore((state) => state.openSession);
   const closeSession = useSessionsUiStore((state) => state.closeSession);
+  const activeSessionId = useSessionsUiStore((state) => state.activeSessionId);
+  const scrollTargetId = useSessionsUiStore((state) => state.scrollTargetId);
+  const clearTimelineSession = useSessionsUiStore((state) => state.clearTimelineSession);
+  const finishUrlRestoration = useSessionsUiStore((state) => state.finishUrlRestoration);
+  const [missingSelection, setMissingSelection] = useState(false);
+  useEffect(() => {
+    if (activeSessionId !== null || tab === "hosting") setMissingSelection(false);
+  }, [activeSessionId, tab]);
   const [cancelling, setCancelling] = useState<HostedSessionItem | null>(null);
   const [cancelled, setCancelled] = useState<SessionCancellationResult | null>(null);
   const cancellationTrigger = useRef<HTMLButtonElement | null>(null);
-  useEffect(() => { setTab(initialTab); }, [initialTab, setTab]);
   const feed = useInfiniteQuery({
     queryKey: [...sessionFeedQueryKey, userId, tab],
     initialPageParam: null as string | null,
@@ -66,6 +87,16 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
     for (const page of feed.data?.pages ?? []) for (const session of page.sessions) unique.set(session.sessionId, session);
     return Array.from(unique.values());
   }, [feed.data]);
+  const restoringSelection = tab === "joined" && activeSessionId !== null && !sessions.some((session) => session.sessionId === activeSessionId);
+  useEffect(() => {
+    if (!restoringSelection || !feed.isSuccess || feed.isFetching) return;
+    if (feed.hasNextPage) {
+      void feed.fetchNextPage();
+    } else {
+      setMissingSelection(true);
+      clearTimelineSession();
+    }
+  }, [restoringSelection, feed.isSuccess, feed.isFetching, feed.hasNextPage, feed.fetchNextPage, clearTimelineSession]);
   const selected = mode.status === "viewingSession" ? sessions.find((session) => session.sessionId === mode.sessionId) ?? null : null;
   useEffect(() => {
     // A completed refresh can remove a session. Pending/failed requests must not
@@ -86,14 +117,14 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
   return <>
     {params.get("created") === "1" && <p role="status" className="px-6 pt-4 text-sm text-success md:px-10">Your session was created successfully.</p>}
     {cancelled && <p role="status" className="px-6 pt-4 text-sm md:px-10">Session cancelled. <Money cents={cancelled.totalRefundCents} /> refunded to {cancelled.refundRecipientCount} participants.</p>}
+    {restoringSelection && <p role="status" className="px-6 pt-4 text-sm md:px-10">{feed.isError ? "The selected session could not be loaded." : "Loading the selected session…"} <button type="button" className="underline" onClick={clearTimelineSession}>Show all sessions</button></p>}
+    {missingSelection && <p role="status" className="px-6 pt-4 text-sm md:px-10">This session is no longer available in your joined sessions.</p>}
     <SessionsView tab={tab} onTabChange={(next) => {
       setTab(next);
-      const search = new URLSearchParams(params.toString());
-      search.set("tab", next);
-      search.delete("created");
-      router.replace(`/sessions?${search}`, { scroll: false });
-    }} sessions={sessions} asOf={first?.asOf ?? new Date().toISOString()} upcomingCount={first?.upcomingCount ?? 0} pastCount={first?.pastCount ?? 0} actions={actions}
-      loading={feed.isPending || signIn} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
+      setMissingSelection(false);
+    }} sessions={restoringSelection && feed.isError ? [] : sessions} asOf={first?.asOf ?? new Date().toISOString()} upcomingCount={first?.upcomingCount ?? 0} pastCount={first?.pastCount ?? 0} actions={actions}
+      scrollTargetId={scrollTargetId} onUrlRestored={finishUrlRestoration}
+      loading={feed.isPending || signIn || (restoringSelection && !feed.isError)} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
       loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => openSession(session.sessionId)} />
     <Dialog open={mode.status === "viewingSession" && selected !== null} onOpenChange={(open) => { if (!open) closeSession(); }}>
       <DialogContent className={`${styles.dialogContent} sm:max-w-[680px]`}>
