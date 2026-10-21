@@ -131,7 +131,7 @@ test("mobile search preserves drafts and history, disables pending actions, and 
     await page.reload();
     await page.getByRole("link", { name: "Back to previous page", exact: true }).click();
     await expectLocation(page, origin);
-    await expect(page.getByRole("heading", { name: "Upcoming bookings", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Upcoming Bookings", level: 1, exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Home", exact: true })).toHaveAttribute("aria-current", "page");
   } finally {
     releaseRequest?.();
