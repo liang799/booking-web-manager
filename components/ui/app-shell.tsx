@@ -141,6 +141,7 @@ function SidebarContents({
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const creationLayout = pathname === "/sessions/create";
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const origins = searchParams.getAll("returnTo");
@@ -156,7 +157,9 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
   return (
     <div className="flex min-h-screen bg-card md:bg-background">
       {/* Desktop sidebar (hidden below 768px) */}
-      <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
+      <aside className={cn("sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64",
+        creationLayout && "md:border-0 md:shadow-none lg:w-64",
+      )}>
         <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} />
       </aside>
 

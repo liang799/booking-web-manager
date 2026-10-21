@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useStore } from "zustand";
 import { SPORTS } from "@/app/(auth)/schemas";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,10 @@ import { DateTimeEditor } from "./date-time-editor";
 import { VenuePicker } from "./venue-picker";
 import { createSessionStore } from "./create-session-store";
 import { connectSessionDevtools } from "./create-session-devtools";
-import { decimalCents, draftPricing, parseSgdCents, type FieldErrors, type SessionDraft } from "./model";
+import { decimalCents, draftPricing, durationMinutes, parseSgdCents, type FieldErrors, type SessionDraft } from "./model";
 import type { CreateSession, SearchVenues } from "./transport";
+import { DesktopSessionWizard } from "./desktop-session-wizard";
+import { clearSavedDraft, readSavedDraft } from "./saved-session-draft";
 
 export interface CreateSessionWizardProps {
   readonly userId: string; readonly create: CreateSession; readonly search: SearchVenues; readonly onCreated: () => void;
@@ -29,6 +31,14 @@ const headings = ["Booked Venue Details", "Booked Venue Settings", "Auto-Generat
 const descriptions = ["Tell us where and when you want to play.", "Set access, group size, and player reliability preferences.", "A suggested price based on your booking cost and number of slots."];
 
 const noErrors: FieldErrors = {};
+const desktopQuery = "(min-width: 768px)";
+function subscribeViewport(notify: () => void) {
+  const media = window.matchMedia(desktopQuery);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+}
+const isDesktop = () => window.matchMedia(desktopQuery).matches;
+const serverViewport = () => false;
 
 export function CreateSessionWizard(props: CreateSessionWizardProps) {
   return <SessionWizard key={props.userId} {...props} />;
@@ -36,9 +46,20 @@ export function CreateSessionWizard(props: CreateSessionWizardProps) {
 
 function SessionWizard(props: CreateSessionWizardProps) {
   const { userId, create, search, onCreated, initialDraft, initialStep, storage } = props;
+  const desktop = useSyncExternalStore(subscribeViewport, isDesktop, serverViewport);
+  const [saved] = useState(() => {
+    try {
+      return typeof window !== "undefined" && isDesktop() && !initialDraft
+        ? readSavedDraft(storage ?? window.sessionStorage, userId) : undefined;
+    } catch { return undefined; }
+  });
+  const [desktopVenue, setDesktopVenue] = useState(saved ? saved.desktopStep > 1 : false);
   const [store] = useState(() => createSessionStore({
-    userId, initialDraft, initialStep, getStorage: () => storage ?? window.sessionStorage,
+    userId, initialDraft: initialDraft ?? saved?.draft,
+    initialStep: initialStep ?? (saved ? saved.desktopStep > 2 ? saved.desktopStep === 3 ? 2 : 3 : 1 : undefined),
+    getStorage: () => storage ?? window.sessionStorage,
   }));
+  const [desktopDuration, setDesktopDuration] = useState(() => saved?.duration ?? String(durationMinutes(store.getState().draft) ?? 60));
   const draft = useStore(store, (state) => state.draft);
   const step = useStore(store, (state) => state.step);
   const workflow = useStore(store, (state) => state.workflow);
@@ -68,7 +89,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
   const range = draftPricing(draft);
   const price = parseSgdCents(draft.price);
   function showErrors(found: FieldErrors) {
-    const field = Object.keys(found)[0];
+    const field = desktop && found.dateTime ? "startDate" : Object.keys(found)[0];
     if (field) requestAnimationFrame(() => {
       if (mounted.current) body.current?.querySelector<HTMLElement>(`[id="${field}"]`)?.focus();
     });
@@ -76,14 +97,27 @@ function SessionWizard(props: CreateSessionWizardProps) {
   async function submit() {
     const result = await store.getState().submit(create);
     if (!mounted.current) return;
-    if (result.status === "invalid") showErrors(result.errors);
+    if (result.status === "invalid") {
+      setDesktopVenue(!result.errors.dateTime);
+      showErrors(result.errors);
+    }
     // Navigation failures must never turn a confirmed creation into an unknown result.
-    if (result.status === "created") onCreated();
+    if (result.status === "created") {
+      try { clearSavedDraft(storage ?? window.sessionStorage, userId); } catch { /* Creation is confirmed even if draft cleanup fails. */ }
+      onCreated();
+    }
   }
   function next() {
     const found = advance();
-    if (found) showErrors(found);
+    if (found) {
+      if (found.dateTime) setDesktopVenue(false);
+      showErrors(found);
+    }
   }
+  if (desktop) return <DesktopSessionWizard store={store} search={search} userId={userId}
+    storage={storage} venueStep={desktopVenue} onVenueStepChange={setDesktopVenue}
+    duration={durationMinutes(draft) ? String(durationMinutes(draft)) : desktopDuration} onDurationChange={setDesktopDuration}
+    onNext={next} onSubmit={() => void submit()} formRef={body} />;
   return <section aria-label="Create a session" className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-card md:my-8 md:h-[calc(100svh-4rem)] md:max-w-xl md:rounded-xl md:border md:shadow-sm">
     <header className="shrink-0 bg-foreground px-6 pb-7 pt-5 text-background md:px-8">
       <div className="mb-8 flex items-center gap-5">
