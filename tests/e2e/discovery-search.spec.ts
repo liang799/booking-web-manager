@@ -161,17 +161,27 @@ test("search pagination preserves the query and return destination while sport c
     await input.fill(tag);
     await input.press("Enter");
     await expect(page).toHaveURL(new RegExp(`q=${tag}`));
+    await expect(results).toHaveAttribute("aria-busy", "false");
     await expect(results.getByRole("listitem")).toHaveCount(20);
-    await page.getByRole("button", { name: "Filters", exact: true }).click();
+    const filterButton = page.getByRole("button", { name: "Filters", exact: true });
+    await expect(filterButton).toBeEnabled();
+    await filterButton.click();
     await page.getByLabel("Date", { exact: true }).fill("2043-04-02");
     await page.getByLabel("Region", { exact: true }).selectOption("West");
-    await page.getByRole("button", { name: "Apply filters", exact: true }).click();
-    await expect(page).toHaveURL(/region=West/, { timeout: 15_000 });
-    // Wait for the filtered results to render before clicking Next page.
-    // The transition must complete, otherwise the pending guard discards the click.
-    await expect(results.getByRole("listitem")).toHaveCount(20, { timeout: 15_000 });
-    await page.getByRole("button", { name: "Next page", exact: true }).click();
-    await expect(page).toHaveURL(/cursor=/, { timeout: 15_000 });
+    const applyButton = page.getByRole("button", { name: "Apply filters", exact: true });
+    await expect(applyButton).toBeEnabled();
+    await applyButton.click();
+    await expect(page).toHaveURL(/region=West/);
+    await expect(filterButton).toHaveAttribute("aria-expanded", "false");
+    await expect(results).toHaveAttribute("aria-busy", "false");
+    await expect(page.locator('[aria-label="Applied filters"]')).toContainText("West");
+    await expect(results.getByRole("listitem")).toHaveCount(20);
+    const nextButton = page.getByRole("button", { name: "Next page", exact: true });
+    await expect(nextButton).toBeVisible();
+    await expect(nextButton).toBeEnabled();
+    await nextButton.click();
+    await expect(page).toHaveURL(/cursor=/);
+    await expect(results).toHaveAttribute("aria-busy", "false");
     const params = new URL(page.url()).searchParams;
     expect(params.get("q")).toBe(tag);
     expect(params.get("date")).toBe("2043-04-02");
@@ -185,7 +195,11 @@ test("search pagination preserves the query and return destination while sport c
     await expect(results.getByText(`${tag} row 01`, { exact: false })).toBeVisible();
     await page.goForward();
     await expect(results.getByText(`${tag} row 21`, { exact: false })).toBeVisible();
-    await page.getByRole("group", { name: "Choose a sport", exact: true }).getByRole("button", { name: "Tennis", exact: true }).click();
+    await expect(results).toHaveAttribute("aria-busy", "false");
+    const tennisButton = page.getByRole("group", { name: "Choose a sport", exact: true }).getByRole("button", { name: "Tennis", exact: true });
+    await expect(tennisButton).toBeEnabled();
+    await tennisButton.click();
+    await expect(results).toHaveAttribute("aria-busy", "false");
     await expect(page.getByText("No sessions found", { exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.has("cursor")).toBe(false);
     expect(new URL(page.url()).searchParams.get("q")).toBe(tag);
