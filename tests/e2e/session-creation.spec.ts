@@ -88,12 +88,9 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
       await expect(createButton(page)).toBeInViewport();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       const photo = page.locator('section[aria-label="Create a session"] img');
-      if (width === 768) await expect(photo).not.toBeVisible();
-      else {
-        await expect(photo).toBeVisible();
-        const bounds = await photo.boundingBox();
-        expect(bounds!.width / bounds!.height).toBeCloseTo(width < 768 ? 1.5 : 16 / 9, 1);
-      }
+      await expect(photo).toBeVisible();
+      const bounds = await photo.boundingBox();
+      expect(bounds!.width / bounds!.height).toBeCloseTo(width < 768 ? 1.5 : 4 / 3, 1);
       await page.screenshot({ path: testInfo.outputPath(`pricing-${width}.png`), fullPage: true });
     }
     await page.getByLabel("Price per slot slider").focus();

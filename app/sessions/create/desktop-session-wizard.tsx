@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Minus, Plus, Save } from "lucide-react";
-import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, Clock3, Minus, Plus } from "lucide-react";
+import { useCallback, useEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { useStore } from "zustand";
 import { SPORTS } from "@/app/(auth)/schemas";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,10 @@ import { VenuePicker } from "./venue-picker";
 import styles from "./desktop-session-wizard.module.css";
 
 const steps = [
-  { name: "Schedule", detail: "Date & time", title: "When do you want to play?", description: "Choose a date, start time and duration. All times are in Singapore (SGT)." },
-  { name: "Venue details", detail: "Sport & location", title: "What are you playing?", description: "Tell us what you're playing and where you've booked." },
-  { name: "Session settings", detail: "Players & access", title: "Make it your kind of game.", description: "Choose who can join and when the session can go ahead." },
-  { name: "Pricing", detail: "Set your price", title: "Set your price.", description: "Choose what each player pays." },
+  { name: "Schedule", title: "When do you want to play?", description: "Choose a date, start time and duration. All times are in Singapore (SGT)." },
+  { name: "Venue", title: "What are you playing?", description: "Tell us what you're playing and where you've booked." },
+  { name: "Settings", title: "Make it your kind of game.", description: "Choose who can join and when the session can go ahead." },
+  { name: "Pricing", title: "Set your price.", description: "Choose what each player pays." },
 ] as const;
 const dateFormat = new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", weekday: "short", day: "numeric", month: "short", year: "numeric" });
 const longDateFormat = new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -77,21 +77,18 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
   }, [workflow, formRef, stage]);
 
   return <div className={styles.page}>
-    <nav aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/sessions">My sessions</Link><span aria-hidden="true">/</span><span aria-current="page">Create booking</span></nav>
     <section aria-label="Create a session" className={styles.panel}>
-      <header className={styles.header}>
-        <div className={styles.titleRow}><div><h1>Create booking</h1></div>
-          <Button type="button" variant="ghost" onClick={saveDraft} disabled={locked} className={styles.save}><Save aria-hidden="true" />Save draft</Button>
+      <header>
+        <div className={styles.titleRow}><h1>Create booking</h1>
+          <Button type="button" variant="ghost" onClick={saveDraft} disabled={locked} className={styles.save}>Save draft</Button>
         </div>
-        <ol aria-label="Creation progress" className={styles.progress}>{steps.map((item, index) => <li key={item.name} aria-current={stage === index + 1 ? "step" : undefined} data-complete={stage > index + 1}>
-          <span className={styles.stepNumber}>{stage > index + 1 ? <Check aria-hidden="true" size={15} /> : index + 1}</span>
-          <span className={styles.stepText}><span>{item.name}</span><small>{item.detail}</small></span>
-          {index < 3 && <span className={styles.connector} aria-hidden="true" />}
+        <ol aria-label="Creation progress" className={styles.progress} style={{ "--active-step": stage - 1 } as CSSProperties}>{steps.map((item, index) => <li key={item.name} aria-current={stage === index + 1 ? "step" : undefined} data-complete={stage > index + 1}>
+          <span className={styles.stepText}><span className={styles.stepNumber} aria-hidden="true">0{index + 1}</span>{item.name}</span>
         </li>)}</ol>
         {workflow.status === "editing" && saveResult.status !== "idle" && <p role={saveResult.status === "error" ? "alert" : "status"} className={styles.saveMessage}>{saveResult.status === "error" ? saveResult.message : hasUnsavedDraftChanges(state) ? "You have unsaved changes." : "Draft saved in this tab. You can come back to it later."}</p>}
       </header>
       <div className={styles.columns}>
-        <div ref={formRef} role="region" aria-label="Session form" className={styles.form}>
+        <div key={stage} ref={formRef} role="region" aria-label="Session form" className={styles.form}>
           <p className={styles.eyebrow}>0{stage} / {current.name}</p>
           <h2 ref={headingRef} tabIndex={-1} className={styles.heading}>{current.title}</h2>
           <p className={styles.description}>{current.description}</p>
@@ -117,8 +114,10 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
               </Select>{errors.reliability && <p role="alert" className={styles.error}>{errors.reliability}</p>}</div>
             </>}
             {stage === 4 && <>
-              <div className={styles.suggestion}><p className={styles.eyebrow}>Suggested price per slot</p><p className={styles.suggestedPrice}><Money cents={range?.suggestedCents ?? 0} /></p></div>
-              <CurrencyField id="price" label="Price per slot (SGD)" value={draft.price} disabled={locked} error={errors.price} onChange={(value) => change({ price: value })} />
+              <div className={styles.priceField}>
+                <CurrencyField id="price" label="Price per slot (SGD)" value={draft.price} disabled={locked} error={errors.price} onChange={(value) => change({ price: value })} />
+                {range && <p className={styles.help}>Suggested <Money cents={range.suggestedCents} /> · based on your venue cost and {draft.totalSlots} slots.</p>}
+              </div>
               {range && <div className={styles.slider}><input aria-label="Price per slot slider" aria-describedby="price-range" type="range" min={range.minimumCents} max={range.maximumCents} step={1} value={Math.max(range.minimumCents, Math.min(range.maximumCents, price ?? range.suggestedCents))} disabled={locked}
                 onChange={(event) => change({ price: decimalCents(Number(event.target.value)) })}
                 onKeyDown={(event) => {
@@ -128,7 +127,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
                   if (target !== undefined) { event.preventDefault(); change({ price: decimalCents(Math.max(range.minimumCents, Math.min(range.maximumCents, target))) }); }
                 }} />
                 <p id="price-range"><Money cents={range.minimumCents} /><Money cents={range.maximumCents} /></p></div>}
-              <div><div className={styles.revenue}><p>Revenue at full capacity ({draft.totalSlots} slots)</p><output aria-live="polite"><Money cents={range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents ? price * draft.totalSlots : 0} /></output></div><p className={styles.help}>Based on paid bookings.</p></div>
+              <div className={styles.revenue}><p>Revenue at full capacity ({draft.totalSlots} slots)</p><output aria-live="polite"><Money cents={range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents ? price * draft.totalSlots : 0} /></output><p className={styles.help}>Based on paid bookings.</p></div>
             </>}
             {failure && <div key={`${failure.code}:${failure.message}`} ref={failureRef} tabIndex={-1} className={styles.failure}><ErrorMessage>{failure.message}</ErrorMessage>
               {recoveryRequired && <><Button asChild variant="link"><Link href="/sessions" target="_blank" rel="noopener noreferrer">Check hosted sessions (new tab)</Link></Button><p className={styles.help}>Starting again keeps a backup of the saved details. Only continue if you have confirmed the session was not created.</p><Button type="button" variant="outline" onClick={restartAfterRecovery}>I checked my sessions; start again</Button></>}
@@ -140,7 +139,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
         <SessionSummary draft={draft} stage={stage} />
       </div>
       <footer className={styles.footer}>
-        {stage === 1 ? <Button asChild variant="outline"><Link href="/sessions">Cancel</Link></Button> : <Button type="button" variant="outline" disabled={locked} onClick={() => back("desktop")}>Back</Button>}
+        {stage === 1 ? <Button asChild variant="ghost"><Link href="/sessions"><ArrowLeft aria-hidden="true" />Cancel</Link></Button> : <Button type="button" variant="ghost" disabled={locked} onClick={() => back("desktop")}><ArrowLeft aria-hidden="true" />Back</Button>}
         <Button type="button" disabled={submitting || completed || recoveryRequired} onClick={stage === 4 ? onSubmit : onNext}>{stage === 4 ? submitting ? "Creating…" : pending ? "Retry submission" : "Create session" : "Continue"}<ArrowRight aria-hidden="true" /></Button>
       </footer>
     </section>
@@ -184,25 +183,18 @@ function CountField({ id, label, value, min, max, disabled, help, error, onChang
 function SessionSummary({ draft, stage }: { readonly draft: SessionDraft; readonly stage: number }) {
   const start = singaporeTimestamp(draft.startDate, draft.startTime);
   const end = singaporeTimestamp(draft.endDate, draft.endTime);
-  const cost = parseSgdCents(draft.cost);
-  const range = draftPricing(draft);
-  const price = parseSgdCents(draft.price);
-  const validPrice = range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents;
   const period = draft.startTime < "12:00" ? "morning" : draft.startTime < "17:00" ? "afternoon" : "evening";
   const weekday = start ? new Intl.DateTimeFormat("en-SG", { weekday: "long", timeZone: "Asia/Singapore" }).format(new Date(start)) : undefined;
   const title = stage === 1 ? weekday ? `${weekday} ${period}` : "Your next game starts here" : draft.venueName.trim() || "Your venue";
-  const subtitle = `${draft.sport} · ${draft.visibility === "PRIVATE" ? "Private" : "Public"}`;
-  const rows = [
-    { label: "Date", value: start ? dateFormat.format(new Date(start)) : "Choose a date" },
-    { label: "Time", value: start && end ? <>{compactTimeLabel(start)} – {compactTimeLabel(end)} <span className={styles.summaryDetail}>SGT</span>
-      {draft.endDate !== draft.startDate && <span className={styles.summaryDetail}>Ends {dateFormat.format(new Date(end))}</span>}</> : "Choose a time" },
-    ...(stage >= 2 ? [{ label: "Venue cost", value: cost === undefined ? "—" : <Money cents={cost} /> }] : []),
-    ...(stage >= 3 ? [{ label: "Players", value: `${draft.totalSlots} slots · minimum ${draft.minimumHeadcount}` }] : []),
-    ...(stage === 4 ? [{ label: "Price per slot", value: validPrice ? <Money cents={price} /> : "—" }] : []),
-  ];
   return <aside className={styles.summary} aria-label="Your session at a glance">
-    <div className={styles.photo}><Image src={draft.sport === "Tennis" ? "/images/session-court.webp" : sportImage(draft.sport)} alt="" fill priority sizes="(min-width: 1280px) 30vw, (min-width: 1100px) 32vw, 1px" className="object-cover" /></div>
-    <p className={styles.eyebrow}>Your session at a glance</p><h2>{title}</h2><p className={styles.summarySubtitle}>{subtitle}</p>
-    <dl>{rows.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    <div key={draft.sport} className={styles.photo}><Image src={draft.sport === "Tennis" ? "/images/session-court.webp" : sportImage(draft.sport)} alt="" fill priority sizes="(min-width: 1600px) 540px, (min-width: 1100px) 40vw, (min-width: 768px) 65vw, 1px" className="object-cover" /></div>
+    <p className={styles.eyebrow}>{draft.sport} / {draft.visibility === "PRIVATE" ? "Private session" : "Public session"}</p>
+    <h2>{title}</h2>
+    <div className={styles.summaryDetails}>
+      <p>{start ? dateFormat.format(new Date(start)) : "Choose a date"}{start && end && <> · {compactTimeLabel(start)} – {compactTimeLabel(end)} SGT</>}</p>
+      {start && end && draft.endDate !== draft.startDate && <p>Ends {dateFormat.format(new Date(end))}</p>}
+      {stage >= 3 && <p>{draft.totalSlots} slots · Minimum {draft.minimumHeadcount}</p>}
+      {stage === 2 && draft.selectedVenue && <p>{draft.selectedVenue.address}</p>}
+    </div>
   </aside>;
 }

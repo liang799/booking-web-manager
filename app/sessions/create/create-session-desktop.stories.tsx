@@ -232,7 +232,7 @@ export const FourStepCreation: Story = {
     slider.focus();
     await userEvent.keyboard("{ArrowRight}");
     await expect(price).toHaveValue("12.02");
-    await expect(within(canvas.getByRole("complementary", { name: "Your session at a glance" })).getByText("S$96.16")).toBeVisible();
+    await expect(within(canvas.getByRole("region", { name: "Session form" })).getByRole("status")).toHaveTextContent("S$96.16");
     await userEvent.click(canvas.getByRole("button", { name: "Create session" }));
     await expect(args.create).toHaveBeenCalledOnce();
     await expect(args.create).toHaveBeenCalledWith(expect.objectContaining({
