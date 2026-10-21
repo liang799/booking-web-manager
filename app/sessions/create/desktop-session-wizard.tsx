@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { sportImage } from "@/lib/sessions/sport-image";
 import { creationDuration, creationScreen, hasUnsavedDraftChanges, type createSessionStore, type DurationInput, type PresetDuration } from "./create-session-store";
-import { decimalCents, draftPricing, durationMinutes, parseSgdCents, singaporeTimestamp, type FieldErrors, type SessionDraft } from "./model";
+import { decimalCents, draftPricing, parseSgdCents, singaporeTimestamp, type FieldErrors, type SessionDraft } from "./model";
 import type { SearchVenues } from "./transport";
 import { VenuePicker } from "./venue-picker";
 import styles from "./desktop-session-wizard.module.css";
@@ -184,7 +184,6 @@ function CountField({ id, label, value, min, max, disabled, help, error, onChang
 function SessionSummary({ draft, stage }: { readonly draft: SessionDraft; readonly stage: number }) {
   const start = singaporeTimestamp(draft.startDate, draft.startTime);
   const end = singaporeTimestamp(draft.endDate, draft.endTime);
-  const duration = durationMinutes(draft);
   const cost = parseSgdCents(draft.cost);
   const range = draftPricing(draft);
   const price = parseSgdCents(draft.price);
@@ -196,8 +195,7 @@ function SessionSummary({ draft, stage }: { readonly draft: SessionDraft; readon
   const rows = [
     { label: "Date", value: start ? dateFormat.format(new Date(start)) : "Choose a date" },
     { label: "Time", value: start && end ? <>{compactTimeLabel(start)} – {compactTimeLabel(end)} <span className={styles.summaryDetail}>SGT</span>
-      {draft.endDate !== draft.startDate && <span className={styles.summaryDetail}>Ends {dateFormat.format(new Date(end))}</span>}
-      {duration && <span className={styles.summaryDetail}>{durationLabel(duration)}</span>}</> : "Choose a time" },
+      {draft.endDate !== draft.startDate && <span className={styles.summaryDetail}>Ends {dateFormat.format(new Date(end))}</span>}</> : "Choose a time" },
     ...(stage >= 2 ? [{ label: "Venue cost", value: cost === undefined ? "—" : <Money cents={cost} /> }] : []),
     ...(stage >= 3 ? [{ label: "Players", value: `${draft.totalSlots} slots · minimum ${draft.minimumHeadcount}` }] : []),
     ...(stage === 4 ? [{ label: "Price per slot", value: validPrice ? <Money cents={price} /> : "—" }, { label: "Revenue at capacity", value: validPrice ? <Money cents={price * draft.totalSlots} /> : "—" }] : []),

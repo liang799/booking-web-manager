@@ -145,7 +145,7 @@ test("desktop creation restores a saved draft and creates a custom-duration sess
     await expect(page.getByRole("combobox", { name: "Venue", exact: true })).toHaveValue(venue);
     await expect(page.getByLabel("Booked venue cost (SGD)", { exact: true })).toHaveValue("60.00");
     const summary = page.getByRole("complementary", { name: "Your session at a glance", exact: true });
-    await expect(summary.getByText("1 hour 15 min", { exact: true })).toBeVisible();
+    await expect(summary).toContainText("11pm – 12:15am");
     await page.screenshot({ path: testInfo.outputPath("desktop-venue.png"), fullPage: true });
     await nextButton(page).click();
     await expect(page.getByRole("heading", { name: "Make it your kind of game.", exact: true })).toBeFocused();
