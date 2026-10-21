@@ -10,7 +10,7 @@ const meta = {
   parameters: {
     layout: "fullscreen",
     nextjs: { navigation: { pathname: "/discover" } },
-    docs: { description: { component: "Desktop Discover keeps the Booking sidebar and a distinct active Discover destination. From 768px the view follows the SC2006 Desktop Home frame: a dark court banner, sport chips, the search bar directly above a bold results heading, and two photo cards per row when the results column has room. It shares the mobile form, disclosure, state transitions and labels. Home shows only personal upcoming bookings or the weather fallback." } },
+    docs: { description: { component: "Desktop Discover keeps the Booking sidebar and a distinct active Discover destination. From 768px the view follows the reviewed mock-up: “Upcoming sessions” as the page heading, the search bar beneath it, sport chips, then two photo cards per row when the results column has room. The mobile court hero and back arrow are not shown; the hero's h1 remains as the page title for screen readers. It shares the mobile form, disclosure, state transitions and labels. Home shows only personal upcoming bookings or the weather fallback." } },
   },
   globals: { viewport: { value: "desktop", isRotated: false } },
   decorators: [(Story) => <AppShell mobileVariant="focused" user={{ name: "Marcus Lim", reliabilityScore: 96 }} logoutAction={fn()}><Story /></AppShell>],
@@ -23,13 +23,15 @@ type Story = StoryObj<typeof meta>;
 export const Populated: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("navigation", { name: "Main" }).querySelector('[aria-current="page"]')).toHaveTextContent("Discover");
-    await expect(canvas.getByRole("heading", { name: "Find Your Next Game" })).toBeVisible();
+    await expect(canvas.queryByRole("link", { name: "Back to previous page" })).not.toBeInTheDocument();
     await expect(canvas.getByRole("heading", { name: "Badminton session" })).toBeVisible();
-    const chips = canvas.getByRole("group", { name: "Choose a sport" }).getBoundingClientRect();
+    const heading = canvas.getByRole("heading", { name: "Upcoming sessions" }).getBoundingClientRect();
     const search = canvas.getByRole("searchbox", { name: "Search sessions by sport or venue" }).getBoundingClientRect();
+    const chips = canvas.getByRole("group", { name: "Choose a sport" }).getBoundingClientRect();
     const results = canvas.getByRole("region", { name: "Upcoming sessions" }).getBoundingClientRect();
-    await expect(chips.bottom).toBeLessThanOrEqual(search.top);
-    await expect(search.bottom).toBeLessThanOrEqual(results.top);
+    await expect(heading.bottom).toBeLessThanOrEqual(search.top);
+    await expect(search.bottom).toBeLessThanOrEqual(chips.top);
+    await expect(chips.bottom).toBeLessThanOrEqual(results.top);
     const [first, second] = within(canvas.getByRole("region", { name: "Upcoming sessions" })).getAllByRole("listitem").map((card) => card.getBoundingClientRect());
     await expect(Math.abs(first!.top - second!.top)).toBeLessThan(2);
     await expect(first!.right).toBeLessThanOrEqual(second!.left);

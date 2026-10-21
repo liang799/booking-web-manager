@@ -224,7 +224,7 @@ test("Discover returns to another app page and uses Home for direct or rejected 
     const navigation = page.getByRole("navigation", { name: "Main", exact: true });
     await expect(navigation.getByRole("link", { name: "Discover", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByRole("link", { name: "Home", exact: true })).not.toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Upcoming sessions", exact: true })).toBeVisible();
     await expect(page.getByRole("searchbox", { name: "Search sessions by sport or venue" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Upcoming sessions" })).toHaveAttribute("aria-busy", "false");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

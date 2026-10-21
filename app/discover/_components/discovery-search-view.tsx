@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft, CalendarDays, CircleDot, Clock3, Feather, Grid2X2, MapPin, Search, SlidersHorizontal, Users, Volleyball } from "lucide-react";
+import { ArrowLeft, CalendarDays, CircleDot, Clock3, Grid2X2, MapPin, Search, SlidersHorizontal, Users, Volleyball } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useId } from "react";
+import { useId, type ComponentType, type SVGProps } from "react";
 import { REGIONS, SPORTS } from "@/app/(auth)/schemas";
 import { JoinSessionButton } from "@/app/commit/_components/join-session-button";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import type { DiscoveryPage } from "../contracts";
 import type { DiscoveryFieldErrors, DiscoveryFilters } from "../query";
 import type { DiscoveryState, FilterPanelState } from "./discovery-state";
 import styles from "./discovery-search-view.module.css";
+import { BadmintonIcon, BasketballIcon, FootballIcon, FutsalIcon, TennisIcon } from "./sport-icons";
 
 export interface DiscoverySearchViewProps {
   readonly filters: DiscoveryFilters;
@@ -46,21 +47,18 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
 
   return (
     <div className={cn(styles.view, "relative isolate mx-auto min-h-full w-full max-w-4xl px-6 pb-10 pt-4")}>
-      <header className={styles.hero}>
-        {/* Mobile fades the court into the page; desktop darkens it into the Desktop Home banner. */}
+      <header>
+        {/* Mobile shows the court hero; desktop keeps only the page title, for screen readers. */}
         <div className={cn(styles.heroArt, "pointer-events-none absolute inset-x-0 top-0 -z-10 h-[270px] overflow-hidden")} aria-hidden="true">
-          <Image src="/images/mobile-hero.png" alt="" fill sizes="(max-width: 767px) 100vw, 1120px" priority className={cn(styles.heroImage, "object-cover object-[65%_center] opacity-90 dark:opacity-[0.35]")} />
-          <div className={cn(styles.lightFade, "absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--card))_0%,hsl(var(--card)/0.96)_18%,hsl(var(--card)/0.2)_65%,hsl(var(--card)/0)_100%)]")} />
-          <div className={cn(styles.lightFade, "absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--card)/0)_65%,hsl(var(--card))_100%)]")} />
-          <div className={styles.darkFade} />
+          <Image src="/images/mobile-hero.png" alt="" fill sizes="(max-width: 767px) 100vw, 1px" priority className="object-cover object-[65%_center] opacity-90 dark:opacity-[0.35]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--card))_0%,hsl(var(--card)/0.96)_18%,hsl(var(--card)/0.2)_65%,hsl(var(--card)/0)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--card)/0)_65%,hsl(var(--card))_100%)]" />
         </div>
         <Button asChild variant="outline" size="icon" className={cn(styles.backLink, "h-11 w-11 rounded-full border-border/60 bg-card/90 shadow-sm")}>
           <Link href={returnTo} replace aria-label="Back to previous page"><ArrowLeft aria-hidden="true" /></Link>
         </Button>
-        <div className={styles.heroCopy}>
-          <h1 className={cn(styles.heroTitle, "mt-7 max-w-[190px] text-[28px] font-bold leading-[1.08] tracking-tight")}>Find Your <br />Next Game</h1>
-          <p className={cn(styles.heroIntro, "mt-2 max-w-[175px] text-xs leading-relaxed text-muted-foreground")}>Discover public sports sessions near you.</p>
-        </div>
+        <h1 className={cn(styles.heroTitle, "mt-7 max-w-[190px] text-[28px] font-bold leading-[1.08] tracking-tight")}>Find Your <br />Next Game</h1>
+        <p className={cn(styles.heroIntro, "mt-2 max-w-[175px] text-xs leading-relaxed text-muted-foreground")}>Discover public sports sessions near you.</p>
       </header>
 
       <form
@@ -73,24 +71,7 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
           onApply(new FormData(event.currentTarget));
         }}
       >
-        {/* Sport chips come first but are plain buttons, so Enter in a field still submits through Search. */}
-        <section aria-labelledby={`${id}-sports-heading`} className={styles.sports}>
-          <h2 id={`${id}-sports-heading`} className="text-sm font-semibold">Explore sports</h2>
-          <div className={cn(styles.sportChoices, "-mx-1 mt-2 flex gap-2 overflow-x-auto rounded-md px-1 pb-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring")} role="group" aria-label="Choose a sport" tabIndex={0}>
-            {["", ...sportChoices].map((sport) => (
-              <Button key={sport} type="button" disabled={busy} variant={filters.sport === sport ? "default" : "outline"} aria-pressed={filters.sport === sport} className="h-11 shrink-0 gap-2 px-3 text-xs" onClick={(event) => {
-                const form = event.currentTarget.form;
-                if (busy || form === null) return;
-                const formData = new FormData(form);
-                formData.set("sport", sport);
-                onApply(formData);
-              }}>
-                <SportIcon sport={sport} />{sport || "All sports"}
-              </Button>
-            ))}
-          </div>
-        </section>
-        <fieldset disabled={busy} className={cn(styles.searchFields, "mt-4 min-w-0 [color-scheme:light] dark:[color-scheme:dark]")}>
+        <fieldset disabled={busy} className="min-w-0 [color-scheme:light] dark:[color-scheme:dark]">
           <legend className="sr-only">Search and filter sessions</legend>
           <div className={cn(styles.searchBar, "flex min-h-[52px] items-center rounded-lg border border-border/70 bg-card p-1 shadow-[0_3px_10px_hsl(var(--foreground)/0.08)] focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2")}>
             <Button type="submit" variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Search"><Search aria-hidden="true" /></Button>
@@ -138,21 +119,45 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
             </div>
           </section>
         </fieldset>
+        {/* Chips are plain buttons that apply the drafts with their sport; Search stays the default (Enter) button. */}
+        <section aria-labelledby={`${id}-sports-heading`} className={cn(styles.sports, "mt-6")}>
+          <h2 id={`${id}-sports-heading`} className="text-sm font-semibold">Explore sports</h2>
+          <div className={cn(styles.sportChoices, "-mx-1 mt-2 flex gap-2 overflow-x-auto rounded-md px-1 pb-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring")} role="group" aria-label="Choose a sport" tabIndex={0}>
+            {["", ...sportChoices].map((sport) => (
+              <Button key={sport} type="button" disabled={busy} variant={filters.sport === sport ? "default" : "outline"} aria-pressed={filters.sport === sport} className="h-11 shrink-0 gap-2 px-3 text-xs" onClick={(event) => {
+                const form = event.currentTarget.form;
+                if (busy || form === null) return;
+                const formData = new FormData(form);
+                formData.set("sport", sport);
+                onApply(formData);
+              }}>
+                <SportIcon sport={sport} />{sport || "All sports"}
+              </Button>
+            ))}
+          </div>
+        </section>
       </form>
 
-      <section aria-label="Upcoming sessions" aria-busy={busy} className={cn(styles.results, "mt-5 space-y-3")}>
-        <div className={cn(styles.resultsHeading, "border-b pb-3")}>
-          <h2 className={cn(styles.resultsTitle, "text-sm font-semibold")}>Upcoming sessions</h2>
-          <p aria-label="Applied filters" className={cn(styles.resultsSummary, "mt-1 break-words text-xs leading-relaxed text-muted-foreground")}>{summarizeFilters(filters) || "All upcoming public sessions"}</p>
-        </div>
+      {/* Below the chips on mobile; desktop moves this heading to the top of the page (it is not focusable). */}
+      <div className={cn(styles.resultsHeading, "mt-5 border-b pb-3")}>
+        <h2 className={cn(styles.resultsTitle, "text-sm font-semibold")}>Upcoming sessions</h2>
+        <p aria-label="Applied filters" className={cn(styles.resultsSummary, "mt-1 break-words text-xs leading-relaxed text-muted-foreground")}>{summarizeFilters(filters) || "All upcoming public sessions"}</p>
+      </div>
+      <section aria-label="Upcoming sessions" aria-busy={busy} className={cn(styles.results, "mt-3 space-y-3")}>
         <SearchResults state={state} onNext={onNext} onRetry={onRetry} />
       </section>
     </div>
   );
 }
 
+const SPORT_ICONS = new Map<string, ComponentType<SVGProps<SVGSVGElement>>>([
+  ["", Grid2X2], ["Tennis", TennisIcon], ["Badminton", BadmintonIcon], ["Basketball", BasketballIcon],
+  ["Football", FootballIcon], ["Futsal", FutsalIcon], ["Volleyball", Volleyball],
+]);
+
 function SportIcon({ sport }: { readonly sport: string }) {
-  const Icon = sport === "" ? Grid2X2 : sport === "Badminton" ? Feather : sport === "Volleyball" ? Volleyball : CircleDot;
+  // A sport added later falls back to a neutral icon until it has its own.
+  const Icon = SPORT_ICONS.get(sport) ?? CircleDot;
   return <Icon aria-hidden="true" />;
 }
 

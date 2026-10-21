@@ -157,18 +157,23 @@ and informational session data. Photo sources and credits are in
 
 The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus a Search
 button alongside the account menu. Search opens the focused `/discover` view with
-a back arrow, tennis hero, sport chips, then the mounted search/filter form directly
-above the compact cards it searches. The search field is labelled "Search sessions by
-sport or venue". The desktop sidebar has separate Home and Discover destinations.
+a back arrow, tennis hero, mounted search/filter form, sport chips and compact cards.
+The search field is labelled "Search sessions by sport or venue". The desktop sidebar
+has separate Home and Discover destinations.
 
-From 768px the same view follows the SC2006 Figma "Desktop Home" frame:
-the court image becomes a dark banner with white copy, Filters is a filled square,
-"Upcoming sessions" is a bold section heading, and results are photo-top cards,
-two per row when the results column is at least 600px wide (a container query).
-The styles live in [`discovery-search-view.module.css`](./_components/discovery-search-view.module.css)
-and apply only at that width; below it the mobile styling is kept. Labels, order,
-form behavior, polling and the shared join confirmation are the same at every width.
-Only the decorative banner photograph fades in, and not under reduced motion.
+From 768px the same view follows the layout reviewed on PR #108: "Upcoming sessions"
+is the page heading, the search bar sits directly beneath it, then the sport chips,
+then photo-top cards, two per row when the results column is at least 600px wide
+(a container query). The court hero and back arrow are mobile-only; on desktop the
+hero's "Find Your Next Game" heading stays as a visually hidden page title, and the
+sidebar provides navigation. The heading block is not focusable, so moving it to the
+top with CSS `order` keeps the keyboard order (search, then chips, then results) the
+same at every width. The styles live in
+[`discovery-search-view.module.css`](./_components/discovery-search-view.module.css)
+and apply only from 768px. Labels, form behavior, polling and the shared join
+confirmation are the same at every width. Each sport chip has its own icon:
+Lucide has no tennis, badminton, basketball, football or futsal icons, so
+[`sport-icons.tsx`](./_components/sport-icons.tsx) draws them in the same style.
 Before/after captures are in [`docs/assets/discover`](../../docs/assets/discover/README.md).
 
 A UI-only `returnTo` URL value records the originating page and its query. Apply,
