@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Info, Minus, Plus, Save } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Minus, Plus, Save } from "lucide-react";
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { useStore } from "zustand";
 import { SPORTS } from "@/app/(auth)/schemas";
@@ -20,15 +20,16 @@ import { VenuePicker } from "./venue-picker";
 import styles from "./desktop-session-wizard.module.css";
 
 const steps = [
-  { name: "Schedule", detail: "Date & time", title: "When do you want to play?", description: "Choose a date, start time and duration. All times are in Singapore (SGT).", next: "Choose your sport, venue and booking cost." },
-  { name: "Venue details", detail: "Sport & location", title: "What are you playing?", description: "Tell us what you're playing and where you've booked.", next: "Set visibility, player slots and reliability preferences." },
-  { name: "Session settings", detail: "Players & access", title: "Make it your kind of game.", description: "Choose who can join and when the session can go ahead.", next: "Review the suggested price and choose what players pay." },
-  { name: "Pricing", detail: "Set your price", title: "Set your price.", description: "Review the suggested price, then choose what each player pays.", next: "Review your settings before creating the session." },
+  { name: "Schedule", detail: "Date & time", title: "When do you want to play?", description: "Choose a date, start time and duration. All times are in Singapore (SGT)." },
+  { name: "Venue details", detail: "Sport & location", title: "What are you playing?", description: "Tell us what you're playing and where you've booked." },
+  { name: "Session settings", detail: "Players & access", title: "Make it your kind of game.", description: "Choose who can join and when the session can go ahead." },
+  { name: "Pricing", detail: "Set your price", title: "Set your price.", description: "Choose what each player pays." },
 ] as const;
 const dateFormat = new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", weekday: "short", day: "numeric", month: "short", year: "numeric" });
 const longDateFormat = new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const timeFormat = new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", hour: "numeric", minute: "2-digit", hour12: true });
 const timeLabel = (timestamp: string) => timeFormat.format(new Date(timestamp)).toUpperCase();
+const compactTimeLabel = (timestamp: string) => timeFormat.format(new Date(timestamp)).toLowerCase().replace(":00", "").replace(/\s/g, "");
 function durationLabel(minutes: number) {
   const hours = Math.floor(minutes / 60), rest = minutes % 60;
   return [hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "", rest ? `${rest} min` : ""].filter(Boolean).join(" ");
@@ -79,7 +80,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
     <nav aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/sessions">My sessions</Link><span aria-hidden="true">/</span><span aria-current="page">Create booking</span></nav>
     <section aria-label="Create a session" className={styles.panel}>
       <header className={styles.header}>
-        <div className={styles.titleRow}><div><h1>Create booking</h1><p>Set up your next game in four simple steps.</p></div>
+        <div className={styles.titleRow}><div><h1>Create booking</h1></div>
           <Button type="button" variant="ghost" onClick={saveDraft} disabled={locked} className={styles.save}><Save aria-hidden="true" />Save draft</Button>
         </div>
         <ol aria-label="Creation progress" className={styles.progress}>{steps.map((item, index) => <li key={item.name} aria-current={stage === index + 1 ? "step" : undefined} data-complete={stage > index + 1}>
@@ -116,7 +117,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
               </Select>{errors.reliability && <p role="alert" className={styles.error}>{errors.reliability}</p>}</div>
             </>}
             {stage === 4 && <>
-              <div className={styles.suggestion}><p className={styles.eyebrow}>Suggested price per slot</p><p className={styles.suggestedPrice}><Money cents={range?.suggestedCents ?? 0} /></p><p className={styles.help}>Use this as a starting point. You're in control of the final price.</p></div>
+              <div className={styles.suggestion}><p className={styles.eyebrow}>Suggested price per slot</p><p className={styles.suggestedPrice}><Money cents={range?.suggestedCents ?? 0} /></p></div>
               <CurrencyField id="price" label="Price per slot (SGD)" value={draft.price} disabled={locked} error={errors.price} onChange={(value) => change({ price: value })} />
               {range && <div className={styles.slider}><input aria-label="Price per slot slider" aria-describedby="price-range" type="range" min={range.minimumCents} max={range.maximumCents} step={1} value={Math.max(range.minimumCents, Math.min(range.maximumCents, price ?? range.suggestedCents))} disabled={locked}
                 onChange={(event) => change({ price: decimalCents(Number(event.target.value)) })}
@@ -127,7 +128,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
                   if (target !== undefined) { event.preventDefault(); change({ price: decimalCents(Math.max(range.minimumCents, Math.min(range.maximumCents, target))) }); }
                 }} />
                 <p id="price-range"><Money cents={range.minimumCents} /><Money cents={range.maximumCents} /></p></div>}
-              <div><div className={styles.revenue}><p>Estimated revenue if all {draft.totalSlots} slots are filled</p><output aria-live="polite"><Money cents={range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents ? price * draft.totalSlots : 0} /></output></div><p className={styles.help}>Estimate only. Actual earnings depend on paid bookings.</p></div>
+              <div><div className={styles.revenue}><p>Revenue at full capacity ({draft.totalSlots} slots)</p><output aria-live="polite"><Money cents={range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents ? price * draft.totalSlots : 0} /></output></div><p className={styles.help}>Based on paid bookings.</p></div>
             </>}
             {failure && <div key={`${failure.code}:${failure.message}`} ref={failureRef} tabIndex={-1} className={styles.failure}><ErrorMessage>{failure.message}</ErrorMessage>
               {recoveryRequired && <><Button asChild variant="link"><Link href="/sessions" target="_blank" rel="noopener noreferrer">Check hosted sessions (new tab)</Link></Button><p className={styles.help}>Starting again keeps a backup of the saved details. Only continue if you have confirmed the session was not created.</p><Button type="button" variant="outline" onClick={restartAfterRecovery}>I checked my sessions; start again</Button></>}
@@ -191,20 +192,19 @@ function SessionSummary({ draft, stage }: { readonly draft: SessionDraft; readon
   const period = draft.startTime < "12:00" ? "morning" : draft.startTime < "17:00" ? "afternoon" : "evening";
   const weekday = start ? new Intl.DateTimeFormat("en-SG", { weekday: "long", timeZone: "Asia/Singapore" }).format(new Date(start)) : undefined;
   const title = stage === 1 ? weekday ? `${weekday} ${period}` : "Your next game starts here" : draft.venueName.trim() || "Your venue";
-  const subtitle = stage === 1 ? "Your schedule is taking shape." : stage === 2 ? `${draft.sport} · venue details` : stage === 3 ? `${draft.totalSlots} slots · ${draft.visibility.toLowerCase()} session` : `${draft.sport} · ${draft.totalSlots} available slots`;
+  const subtitle = `${draft.sport} · ${draft.visibility === "PRIVATE" ? "Private" : "Public"}`;
   const rows = [
     { label: "Date", value: start ? dateFormat.format(new Date(start)) : "Choose a date" },
-    { label: "Start time", value: start ? timeLabel(start) : "Choose a time" },
-    { label: "Duration", value: duration ? durationLabel(duration) : "—" },
-    { label: "Finishes", value: end ? `${timeLabel(end)} (SGT)${draft.endDate !== draft.startDate ? ` · ${dateFormat.format(new Date(end))}` : ""}` : "—" },
-    ...(stage >= 2 ? [{ label: "Sport", value: draft.sport }, { label: "Venue cost", value: cost === undefined ? "—" : <Money cents={cost} /> }] : []),
-    ...(stage >= 3 ? [{ label: "Visibility", value: draft.visibility === "PRIVATE" ? "Private" : "Public" }, { label: "Players", value: `${draft.totalSlots} slots · minimum ${draft.minimumHeadcount}` }] : []),
-    ...(stage === 4 ? [{ label: "Price per slot", value: validPrice ? <Money cents={price} /> : "—" }, { label: "Potential revenue", value: validPrice ? <Money cents={price * draft.totalSlots} /> : "—" }] : []),
+    { label: "Time", value: start && end ? <>{compactTimeLabel(start)} – {compactTimeLabel(end)} <span className={styles.summaryDetail}>SGT</span>
+      {draft.endDate !== draft.startDate && <span className={styles.summaryDetail}>Ends {dateFormat.format(new Date(end))}</span>}
+      {duration && <span className={styles.summaryDetail}>{durationLabel(duration)}</span>}</> : "Choose a time" },
+    ...(stage >= 2 ? [{ label: "Venue cost", value: cost === undefined ? "—" : <Money cents={cost} /> }] : []),
+    ...(stage >= 3 ? [{ label: "Players", value: `${draft.totalSlots} slots · minimum ${draft.minimumHeadcount}` }] : []),
+    ...(stage === 4 ? [{ label: "Price per slot", value: validPrice ? <Money cents={price} /> : "—" }, { label: "Revenue at capacity", value: validPrice ? <Money cents={price * draft.totalSlots} /> : "—" }] : []),
   ];
   return <aside className={styles.summary} aria-label="Your session at a glance">
     <div className={styles.photo}><Image src={draft.sport === "Tennis" ? "/images/session-court.webp" : sportImage(draft.sport)} alt="" fill priority sizes="(min-width: 1280px) 30vw, (min-width: 1100px) 32vw, 1px" className="object-cover" /></div>
     <p className={styles.eyebrow}>Your session at a glance</p><h2>{title}</h2><p className={styles.summarySubtitle}>{subtitle}</p>
     <dl>{rows.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-    <div className={styles.upNext}><Info aria-hidden="true" /><div><p>{stage === 4 ? "Ready to create" : `Up next: ${steps[stage]!.name}`}</p><span>{steps[stage - 1]!.next}</span></div></div>
   </aside>;
 }
