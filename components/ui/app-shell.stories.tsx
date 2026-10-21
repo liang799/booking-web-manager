@@ -178,14 +178,22 @@ async function expectMobileNavigation(nav: HTMLElement, activeLabel: string) {
   for (const { label, href } of mobileDestinations) {
     const link = navigation.getByRole("link", { name: label });
     const text = within(link).getByText(label, { exact: true });
+    const visualLabel = text.closest('[aria-hidden="true"]')!;
     await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAccessibleName(label);
     await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await expect(link.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
+    await waitFor(async () => {
+      await expect(getComputedStyle(visualLabel).opacity).toBe(label === activeLabel ? "1" : "0");
+      if (label === activeLabel) {
+        await expect(visualLabel.getBoundingClientRect().width).toBeGreaterThan(20);
+      } else {
+        await expect(visualLabel.getBoundingClientRect().width).toBeLessThan(0.5);
+      }
+    });
     if (label === activeLabel) {
-      await expect(text).not.toHaveClass("sr-only");
       await expect(text).toBeVisible();
     } else {
-      await expect(text).toHaveClass("sr-only");
       await expect(link).not.toHaveAttribute("aria-current");
       await expect(activeLink.getBoundingClientRect().width).toBeGreaterThan(link.getBoundingClientRect().width);
     }

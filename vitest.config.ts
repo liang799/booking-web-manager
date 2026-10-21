@@ -50,6 +50,7 @@ export default defineConfig({
             "clsx",
             "lucide-react",
             "next-themes",
+            "react-dom",
             "sonner",
             "tailwind-merge",
             "zustand",

@@ -4,11 +4,12 @@ import { LogOut, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookingLogo } from "@/components/ui/booking-logo";
 import { initials } from "@/components/ui/initials";
 import { NavigationIcon } from "@/components/ui/navigation-icon";
+import { MobileNavigation } from "@/components/ui/mobile-navigation";
 import { toFivePoint } from "@/components/ui/reliability-badge";
 import {
   Sheet,
@@ -26,13 +27,6 @@ const NAV_LINKS = [
   { href: "/sessions", label: "My sessions", icon: "sessions" },
   { href: "/wallet", label: "Wallet", icon: "wallet" },
   { href: "/groups", label: "Groups", icon: "groups" },
-  { href: "/profile", label: "Settings", icon: "settings" },
-] as const;
-
-const MOBILE_NAV_LINKS = [
-  { href: "/", label: "Home", icon: "home" },
-  { href: "/sessions", label: "Sessions", icon: "sessions" },
-  { href: "/wallet", label: "Wallet", icon: "wallet" },
   { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
@@ -143,10 +137,6 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
     ? discoveryReturnTo(origins.length === 1 ? origins[0] : undefined)
     : `${pathname}${query ? `?${query}` : ""}`;
   const searchHref = discoveryHref("", searchOrigin);
-  const activeMobileIndex = MOBILE_NAV_LINKS.findIndex(({ href }) =>
-    pathname === href || pathname.startsWith(`${href}/`)
-    || (href === "/sessions" && (pathname === "/groups" || pathname.startsWith("/groups/"))),
-  );
 
   return (
     <div className="flex min-h-screen bg-card md:bg-background">
@@ -239,39 +229,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             </div>
           </div>
 
-          <nav
-            className="flex items-center rounded-md bg-card p-2.5 shadow-[0_0_1px_0_hsl(var(--foreground)/0.3),0_4px_8px_0_hsl(var(--foreground)/0.1)]"
-            aria-label="Main"
-          >
-            {MOBILE_NAV_LINKS.map(({ href, label, icon }, index) => {
-              const active = index === activeMobileIndex;
-              return (
-                <Fragment key={href}>
-                  <Link
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    title={active ? undefined : label}
-                    className={cn(
-                      "flex min-h-11 min-w-[44px] items-center justify-center gap-2 whitespace-nowrap rounded px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                      active ? "flex-[2] bg-accent font-medium text-foreground" : "flex-1 text-foreground",
-                    )}
-                  >
-                    <NavigationIcon name={icon} active={active} />
-                    <span className={active ? undefined : "sr-only"}>{label}</span>
-                  </Link>
-                  {index < MOBILE_NAV_LINKS.length - 1 && (
-                    <Image
-                      src="/images/navigation/separator.svg"
-                      width={1}
-                      height={20}
-                      alt=""
-                      className={cn("mx-1.5 shrink-0 dark:invert", (active || activeMobileIndex === index + 1) && "invisible")}
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
-          </nav>
+          <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} />
         </header>
 
         {/* Page content */}

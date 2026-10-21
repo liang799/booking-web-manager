@@ -49,6 +49,22 @@ animation when it becomes active or mounts, then settles. The shared CSS
 disables motion for `prefers-reduced-motion: reduce`. Preserve that behavior
 when extending the mapping; keep motion in the shared component and stylesheet.
 
+### Mobile selection transitions
+
+`AppShell` uses [`MobileNavigation`](./mobile-navigation.tsx) for its four mobile
+destinations. One background pill slides to the selected link while its label
+expands and the old label collapses. Press feedback and fading dividers share
+the existing theme tokens. Each link retains a 44px minimum touch target.
+
+`MobileNavigationProvider` lives in the root layout so this decorative motion
+continues when a different signed-in area mounts its shell. Interrupted transitions
+resume from their current rendered positions. Selection semantics
+always follow the current route; navigation never waits for an animation.
+Focused pages, desktop navigation and unrelated routes clear the saved origin.
+Reduced motion disables both the travel and the visual rewind on arrival.
+Use **Design system / Mobile navigation** to try route remounts, quick switches
+and Back/Forward; the compact story also checks the 320px layout.
+
 ### Icons in other controls
 
 - Import Lucide components directly for other UI roles. Reuse the owning
