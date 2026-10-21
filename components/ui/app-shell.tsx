@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
+import styles from "./app-shell.module.css";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", image: "home" },
@@ -141,6 +142,7 @@ function SidebarContents({
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const homeLayout = pathname === "/";
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const origins = searchParams.getAll("returnTo");
@@ -154,15 +156,18 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
   );
 
   return (
-    <div className="flex min-h-screen bg-card md:bg-background">
+    <div className={cn("flex min-h-screen bg-card md:bg-background", homeLayout && styles.home)}>
       {/* Desktop sidebar (hidden below 768px) */}
-      <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
+      <aside className={cn(
+        "sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64",
+        homeLayout && styles.homeSidebar,
+      )}>
         <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} />
       </aside>
 
       <div className="relative isolate flex min-w-0 flex-1 flex-col">
         {/* The desktop court fades behind the page introduction without competing with its content. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && "md:block")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !homeLayout && "md:block")} aria-hidden="true">
           <Image
             src="/images/mobile-hero.png"
             alt=""
@@ -174,7 +179,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0)_0%,hsl(var(--background)/0.2)_45%,hsl(var(--background))_100%)]" />
         </div>
         {/* Figma's hero: an oversized image at 50%, with left and bottom fades into the page. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", mobileVariant === "focused" && "hidden")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", (mobileVariant === "focused" || homeLayout) && "hidden")} aria-hidden="true">
           <div className="absolute -top-2.5 left-1/2 h-[295px] w-[calc(100%+148px)] -translate-x-1/2">
             <Image
               src="/images/mobile-hero.png"

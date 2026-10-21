@@ -1,0 +1,14 @@
+.home {
+  background: hsl(var(--card));
+}
+
+.homeSidebar {
+  z-index: 10;
+  margin: 12px 0 12px 12px;
+  top: 12px;
+  height: calc(100dvh - 24px);
+  border: 0;
+  border-radius: 20px;
+  background: hsl(var(--card));
+  box-shadow: 0 0 0 12px hsl(var(--background));
+}

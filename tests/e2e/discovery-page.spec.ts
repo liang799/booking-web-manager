@@ -8,7 +8,7 @@ async function login(page: Page, identity: { email: string; password: string }, 
   await page.getByLabel("Email", { exact: true }).fill(identity.email);
   await page.getByLabel("Password", { exact: true }).fill(identity.password);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Upcoming Bookings", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Upcoming bookings", exact: true })).toBeVisible();
 }
 
 async function insertSession(context: SessionTestContext, bookerId: string, name: string, visibility = "PRIVATE") {
@@ -56,7 +56,7 @@ test("Home shows only owned or confirmed bookings without filters on mobile and 
     const origin = `/?date=invalid&sport=Football&userId=${other.userId}`;
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, user, origin);
-    const bookings = page.getByRole("region", { name: "Upcoming Bookings", exact: true });
+    const bookings = page.getByRole("region", { name: "Upcoming bookings", exact: true });
     await expect(bookings.getByRole("listitem")).toHaveCount(2);
     await expect(bookings.getByText("My private hosted court", { exact: true })).toBeVisible();
     await expect(bookings.getByText("My confirmed private court", { exact: true })).toBeVisible();
@@ -117,18 +117,31 @@ test("an empty Home offers weather and search on both layouts, and account logou
     for (const width of [390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       await expect(page.getByText("You have no upcoming bookings.", { exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Singapore weather", exact: true })).toBeVisible();
-      await expect(page.getByText("24-hour forecast", { exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Singapore weather", exact: true })).toHaveCount(1);
       // Real forecast availability must not make the authenticated browser suite flaky.
-      await expect(page.getByText("Forecast period (SGT)", { exact: true }).or(
-        page.getByText("Weather is unavailable right now. You can still find a session for your next game.", { exact: true }),
-      )).toBeVisible();
-      await expect(page.getByRole("region", { name: "Upcoming Bookings", exact: true }).getByRole("listitem")).toHaveCount(0);
+      const forecastDetails = page.getByText("Forecast details", { exact: true });
+      const forecastPeriod = page.getByText("Forecast period (SGT)", { exact: true });
+      if (await forecastDetails.count() > 0) {
+        if (!await forecastPeriod.isVisible()) await forecastDetails.click();
+        await expect(forecastPeriod).toBeVisible();
+        await expect(page.getByRole("link", { name: /Source: NEA/ })).toHaveAttribute("href", "https://data.gov.sg/datasets/d_ce2eb1e307bda31993c533285834ef2b/view");
+      } else {
+        await expect(page.getByText(/Weather is unavailable right now/)).toBeVisible();
+      }
+      const findLinks = page.getByRole("link", { name: "Find a session", exact: true });
+      const hostLinks = page.getByRole("link", { name: "Host a session", exact: true });
+      await expect(findLinks).toHaveCount(2);
+      await expect(hostLinks).toHaveCount(2);
+      for (let index = 0; index < 2; index += 1) {
+        await expect(findLinks.nth(index)).toHaveAttribute("href", "/discover?returnTo=%2F");
+        await expect(hostLinks.nth(index)).toHaveAttribute("href", "/sessions/create");
+      }
+      await expect(page.getByRole("region", { name: "Upcoming bookings", exact: true }).getByRole("listitem")).toHaveCount(0);
       await expectNoHomeFilters(page);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await page.screenshot({ path: testInfo.outputPath(`home-weather-${width}.png`), fullPage: true });
     }
-    await page.getByRole("link", { name: "Find a session", exact: true }).click();
+    await page.getByRole("link", { name: "Find a session", exact: true }).first().click();
     await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Back to previous page", exact: true }).click();
     await expect(page.getByText("You have no upcoming bookings.", { exact: true })).toBeVisible();
@@ -140,7 +153,7 @@ test("an empty Home offers weather and search on both layouts, and account logou
     const signIn = page.getByRole("navigation", { name: "Mobile navigation", exact: true }).getByRole("link", { name: "Sign in", exact: true });
     await expect(signIn).toBeVisible();
     await expect(signIn).toHaveAttribute("href", "/login");
-    await expect(page.getByRole("heading", { name: "Upcoming Bookings", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Upcoming bookings", exact: true })).toHaveCount(0);
     await page.goto("/discover");
     await expect(page).toHaveURL(/\/discover$/);
     await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();

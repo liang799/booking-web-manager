@@ -1,0 +1,354 @@
+{
+  "capturedAt": "2026-10-21T11:45:38.981Z",
+  "environment": "Local Storybook 6008; Chromium; deterministic Home stories; no authenticated backend",
+  "base": "origin/main at 7aacdc9",
+  "widths": [
+    320,
+    390,
+    768,
+    1024,
+    1440,
+    1750
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "states": [
+    "empty",
+    "long-venue"
+  ],
+  "total": 24,
+  "passed": 24,
+  "failed": 0,
+  "browserErrors": [],
+  "checks": [
+    "Horizontal document overflow",
+    "Visible controls fit viewport width",
+    "Hero copy does not overlap weather",
+    "Weather disclosure fits viewport",
+    "Home court image decoded",
+    "Exact light/dark class settled before capture",
+    "Reduced-motion disables action transitions"
+  ],
+  "baseline": {
+    "source": "origin/main HomeView and AppShell; temporary story using exampleWeather; fresh Tailwind compile",
+    "desktopHeader": {
+      "display": "flex",
+      "height": 224
+    },
+    "mobileHeader": {
+      "display": "none",
+      "height": 0
+    },
+    "temporarySourcesRemoved": true
+  },
+  "screenshots": [
+    {
+      "filename": "before-light-1440.webp",
+      "width": 1440,
+      "theme": "light",
+      "bytes": 32988
+    },
+    {
+      "filename": "before-light-390.webp",
+      "width": 390,
+      "theme": "light",
+      "bytes": 18482
+    },
+    {
+      "filename": "after-light-390.webp",
+      "width": 390,
+      "height": 993,
+      "theme": "light",
+      "bytes": 26460
+    },
+    {
+      "filename": "after-dark-390.webp",
+      "width": 390,
+      "height": 993,
+      "theme": "dark",
+      "bytes": 25502
+    },
+    {
+      "filename": "after-light-1440.webp",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "bytes": 67396
+    },
+    {
+      "filename": "after-dark-1440.webp",
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "bytes": 43548
+    }
+  ],
+  "results": [
+    {
+      "width": 320,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 320,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 320,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 320,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 320,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 320,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 390,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 390,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 390,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 390,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 768,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 768,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 768,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 768,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 1024,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 1024,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 1024,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 1024,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 1440,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 1440,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 1440,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 1440,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1750,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 1750,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1750,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 1750,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1750,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "documentWidth": 1750,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": true,
+      "reducedMotionTransitionDuration": "0s"
+    },
+    {
+      "width": 1750,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "documentWidth": 1750,
+      "offscreenControlCount": 0,
+      "heroWeatherOverlapCount": 0,
+      "disclosureWithinViewport": null,
+      "reducedMotionTransitionDuration": "0s"
+    }
+  ]
+}
