@@ -30,10 +30,16 @@ function sessionUrl(sessionId: string, panel: "details" | "participants" = "part
   return `/sessions?${search}#timeline-test`;
 }
 
-async function expectExpandedSession(page: Page, session: { sessionId: string; venueName: string }, panel: "details" | "participants") {
+async function expectSelectedSummary(page: Page, session: { sessionId: string; venueName: string }, panel: "details" | "participants") {
   const row = page.locator(`[data-session-id="${session.sessionId}"]`);
   await expect(row).toHaveAttribute("data-current", "true");
-  await expect(row.getByRole("tab", { name: panel === "details" ? "Details" : /^Participants/ })).toHaveAttribute("aria-selected", "true");
+  await expect(row.getByRole("tablist")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  // Restored panel preferences become visible only after an explicit user action.
+  await row.getByRole("button", { name: "View details", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Tennis Court Booking", exact: true });
+  await expect(dialog.getByRole("tab", { name: panel === "details" ? "Details" : /^Participants/ })).toHaveAttribute("aria-selected", "true");
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
@@ -86,6 +92,10 @@ test("personal sessions authenticate pagination and restore URL selections witho
     expect(firstPage.sessions.some((session) => unrelated.includes(session.sessionId) || session.sessionId === hostedId)).toBe(false);
 
     const tabs = page.getByRole("navigation", { name: "Session views", exact: true });
+    const navigation = page.getByRole("navigation", { name: "Main", exact: true });
+    await expect(navigation.getByRole("link", { name: "My sessions", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("link", { name: "Discover", exact: true })).toBeVisible();
+    await expect(navigation.getByRole("link", { name: "Settings", exact: true })).toHaveAttribute("href", "/profile");
     await expect(tabs.getByRole("button", { name: "Joined", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("article", { name: `Tennis Court Booking at ${joined[0]?.venueName}`, exact: true })).toBeVisible();
     // page.request shares the browser's real login cookies and supplies no bearer header.
@@ -106,32 +116,36 @@ test("personal sessions authenticate pagination and restore URL selections witho
     const target = joined[12]!;
     await test.step("a deep link loads the thirteenth session and restores its panel after reload", async () => {
       await page.goto(sessionUrl(target.sessionId));
-      await expectExpandedSession(page, target, "participants");
+      await expectSelectedSummary(page, target, "participants");
       await expect(page.getByRole("region", { name: "Joined session timeline" }).getByRole("article")).toHaveCount(14);
       const article = page.getByRole("article", { name: `Tennis Court Booking at ${target.venueName}`, exact: true });
-      await article.getByRole("button", { name: "View session", exact: true }).click();
+      await article.getByRole("button", { name: "View details", exact: true }).click();
       await expect(page.getByRole("dialog", { name: "Tennis Court Booking", exact: true })).toBeVisible();
       await expect(page).toHaveURL((url) => url.searchParams.get("session") === target.sessionId && url.searchParams.get("panel") === "participants");
       await page.reload();
-      await expectExpandedSession(page, target, "participants");
+      await expectSelectedSummary(page, target, "participants");
 
-      await article.getByRole("tab", { name: "Details", exact: true }).click();
+      await article.getByRole("button", { name: "View details", exact: true }).click();
+      const dialog = page.getByRole("dialog", { name: "Tennis Court Booking", exact: true });
+      await dialog.getByRole("tab", { name: "Details", exact: true }).click();
       await expect(page).toHaveURL((url) => url.searchParams.get("session") === target.sessionId && !url.searchParams.has("panel"));
-      await article.getByRole("tab", { name: /^Participants/ }).click();
+      await dialog.getByRole("tab", { name: /^Participants/ }).click();
       await expect(page).toHaveURL((url) => url.searchParams.get("panel") === "participants"
         && url.searchParams.get("source") === "overview-test" && url.hash === "#timeline-test");
+      await dialog.getByRole("button", { name: "Close", exact: true }).click();
+      await expect(dialog).toHaveCount(0);
     });
 
     await test.step("native Back and Forward restore the expanded card and its panel", async () => {
       // These are separate history entries; normal UI changes replace the current entry.
       await page.evaluate((href) => window.history.pushState({ overviewTest: true }, "", href), sessionUrl(joined[0]!.sessionId, "details"));
-      await expectExpandedSession(page, joined[0]!, "details");
+      await expectSelectedSummary(page, joined[0]!, "details");
       await page.evaluate((href) => window.history.pushState({ overviewTest: true }, "", href), sessionUrl(joined[1]!.sessionId));
-      await expectExpandedSession(page, joined[1]!, "participants");
+      await expectSelectedSummary(page, joined[1]!, "participants");
       await page.goBack();
-      await expectExpandedSession(page, joined[0]!, "details");
+      await expectSelectedSummary(page, joined[0]!, "details");
       await page.goForward();
-      await expectExpandedSession(page, joined[1]!, "participants");
+      await expectSelectedSummary(page, joined[1]!, "participants");
     });
 
     const hostingRead = page.waitForResponse((candidate) => {
@@ -152,14 +166,18 @@ test("personal sessions authenticate pagination and restore URL selections witho
       && url.searchParams.get("source") === "overview-test" && url.hash === "#timeline-test");
     expect(await page.evaluate(() => window.history.state.overviewTest)).toBe(true);
     await tabs.getByRole("button", { name: "Joined", exact: true }).click();
-    await expectExpandedSession(page, joined[1]!, "participants");
+    await expectSelectedSummary(page, joined[1]!, "participants");
     await expect(page).toHaveURL((url) => url.searchParams.get("session") === joined[1]!.sessionId && url.searchParams.get("panel") === "participants");
 
     await test.step("malformed state falls back safely and an inaccessible selection is removed only after exhaustion", async () => {
       await page.goto("/sessions?tab=invalid&session=not-a-uuid&panel=invalid&source=overview-test#timeline-test");
-      await expectExpandedSession(page, joined[0]!, "details");
       await expect(tabs.getByRole("button", { name: "Joined", exact: true })).toHaveAttribute("aria-current", "page");
       await expect(page).toHaveURL((url) => url.searchParams.get("session") === "not-a-uuid" && url.searchParams.get("panel") === "invalid");
+      await expectSelectedSummary(page, joined[0]!, "details");
+      // Explicitly viewing the implicit first card records its valid selection.
+      await expect(page).toHaveURL((url) => url.searchParams.get("tab") === "joined"
+        && url.searchParams.get("session") === joined[0]!.sessionId && !url.searchParams.has("panel")
+        && url.searchParams.get("source") === "overview-test" && url.hash === "#timeline-test");
       await page.locator(`[data-session-id="${joined[0]!.sessionId}"] [data-date-control]`).click();
       await expect(page).toHaveURL((url) => url.searchParams.get("tab") === "joined"
         && url.searchParams.get("session") === joined[0]!.sessionId && !url.searchParams.has("panel")
@@ -190,7 +208,7 @@ test("personal sessions authenticate pagination and restore URL selections witho
         await expect(feedError).toBeVisible();
         await expect(page).toHaveURL((url) => url.searchParams.get("session") === target.sessionId && url.searchParams.get("panel") === "participants");
         await page.getByRole("button", { name: "Try again", exact: true }).click();
-        await expectExpandedSession(page, target, "participants");
+        await expectSelectedSummary(page, target, "participants");
         await expect(feedError).toHaveCount(0);
       } finally {
         await page.unroute("**/api/sessions/mine?**");

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CalendarDays, ChevronDown, ChevronRight, Clock3, ExternalLink, MapPin, Plus, UsersRound } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, ExternalLink, MapPin, Plus, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
@@ -36,15 +36,17 @@ export function SessionsView(props: SessionsViewProps) {
   const creation = actions.find((action) => action.name === "create-session");
   const email = actions.find((action) => action.name === "add-email");
   return <div className={styles.page} data-view={tab} data-empty={!loading && !error && sessions.length === 0 || undefined}>
+    <h1 id="sessions-heading" tabIndex={-1} className="sr-only">Sessions</h1>
+    <div className={styles.breadcrumb} aria-hidden>My sessions <span>/</span></div>
+    <div className={styles.panel}>
     <header className={styles.header}>
-      <h1 id="sessions-heading" tabIndex={-1}>Sessions</h1>
-      {creation && <Link href={creation.href} className={styles.primaryButton}><Plus size={20} strokeWidth={1.4} aria-hidden />New session</Link>}
+      <nav className={styles.tabs} aria-label="Session views">
+        <button type="button" aria-current={tab === "joined" ? "page" : undefined} onClick={() => onTabChange("joined")}>Joined</button>
+        <button type="button" aria-current={tab === "hosting" ? "page" : undefined} onClick={() => onTabChange("hosting")}>Hosting</button>
+        <Link href="/groups" className={styles.mobileGroups}>Groups</Link>
+      </nav>
+      {creation && <Link href={creation.href} className={styles.primaryButton} aria-label="New session"><Plus size={20} strokeWidth={1.4} aria-hidden /><span>New session</span></Link>}
     </header>
-    <nav className={styles.tabs} aria-label="Session views">
-      <button type="button" aria-current={tab === "joined" ? "page" : undefined} onClick={() => onTabChange("joined")}>Joined</button>
-      <button type="button" aria-current={tab === "hosting" ? "page" : undefined} onClick={() => onTabChange("hosting")}>Hosting</button>
-      <Link href="/groups" className={styles.mobileGroups}>Groups</Link>
-    </nav>
     {email && <p className={styles.notice}>Add an email address to host a session. <Link href={email.href}>Add email</Link></p>}
     {loading ? <div className={styles.skeleton} role="status"><span className="sr-only">Loading your sessions…</span><div /><div /><div /></div>
       : error && sessions.length === 0 ? <div className={styles.empty}><p role="alert">{error}</p><button className={styles.secondaryButton} onClick={onRetry}>Try again</button></div>
@@ -54,13 +56,14 @@ export function SessionsView(props: SessionsViewProps) {
           {tab === "joined" ? <JoinedTimeline key={tab} {...props} /> : <HostingSessions {...props} />}
         </div>
         <ul className={styles.mobileList} aria-label={`${tab === "joined" ? "Joined" : "Hosting"} sessions`}>
-          {sessions.map((session) => <li key={session.sessionId}><button type="button" className={styles.mobileCard} onClick={() => props.onOpenSession(session)} aria-label={`View ${sessionTitle(session)} at ${session.venueName}, ${sessionDate(session.startAt).full}`}>
+          {sessions.map((session) => <li key={session.sessionId}><button type="button" className={styles.mobileCard} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); props.onOpenSession(session); }} aria-label={`View ${sessionTitle(session)} at ${session.venueName}, ${sessionDate(session.startAt).full}`}>
             <DateStamp value={session.startAt} />
             <span className={styles.mobileCopy}><strong>{sessionTitle(session)}</strong><span>{session.venueName}</span><span>{sessionTime(session)}</span>{sessionStatus(session) !== "Joined" && sessionStatus(session) !== "Hosting" && <span className={styles.mobileStatus}>{sessionStatus(session)}</span>}</span>
           </button></li>)}
         </ul>
         <FeedPagination {...props} />
       </>}
+    </div>
   </div>;
 }
 
@@ -127,11 +130,10 @@ function Players({ count, large = false }: { readonly count: number; readonly la
   </span>;
 }
 
-function Metadata({ session, location = false }: { readonly session: SessionFeedItem; readonly location?: boolean }) {
+function Metadata({ session }: { readonly session: SessionFeedItem }) {
   return <span className={styles.metadata}>
     <span><Clock3 aria-hidden /><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span>
-    <span><UsersRound aria-hidden />{session.participantCount} / {session.capacity}</span>
-    {location && <span className={styles.location}><MapPin aria-hidden />{session.venueName}</span>}
+    <span><UsersRound aria-hidden />{session.participantCount} / {session.capacity} players</span>
   </span>;
 }
 
@@ -163,15 +165,20 @@ export function SessionDetails({ session, footer = true, onOpenSession }: { read
     </div>
     <footer className={styles.cardFooter}>
       <a className={styles.secondaryButton} href={sessionCalendarHref(session)} target="_blank" rel="noreferrer"><CalendarDays size={18} aria-hidden />View in calendar<ExternalLink size={14} aria-hidden /><span className="sr-only"> (opens in a new tab)</span></a>
-      {footer && onOpenSession && <button type="button" className={styles.primaryButton} onClick={() => onOpenSession(session)}>View session<ArrowRight size={17} aria-hidden /></button>}
+      {footer && onOpenSession && <button type="button" className={styles.primaryButton} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpenSession(session); }}>View session<ArrowRight size={17} aria-hidden /></button>}
     </footer>
   </>;
 }
 
 function ExpandedSession({ session, index, onOpenSession }: { readonly session: SessionFeedItem; readonly index: number; readonly onOpenSession: SessionsViewProps["onOpenSession"] }) {
+  const selectTimelineSession = useSessionsUiStore((state) => state.selectTimelineSession);
   return <div className={styles.expandedCard}>
-    <div className={styles.hero}><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1280px) 850px, 70vw" className={styles.photo} priority={index === 0} /><Status session={session} /></div>
-    <div className={styles.cardBody}><h2>{sessionTitle(session)}</h2><p className={styles.venue}>{session.venueName}{session.region && <> <span>·</span> {session.region}</>}</p><Metadata session={session} location /><Players count={session.participantCount} large /><SessionDetails session={session} onOpenSession={onOpenSession} /></div>
+    <div className={styles.hero}><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1280px) 1000px, 70vw" className={styles.photo} priority={index === 0} /><Status session={session} /></div>
+    <div className={styles.cardBody}>
+      <h2>{sessionTitle(session)}</h2>
+      <p className={styles.venue}>{session.venueName}{session.region && <> <span>·</span> {session.region}</>}</p>
+      <div className={styles.summaryFooter}><Metadata session={session} /><button type="button" className={styles.viewDetails} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); selectTimelineSession(session.sessionId); onOpenSession(session); }}>View details<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></button></div>
+    </div>
   </div>;
 }
 
@@ -240,11 +247,14 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
     let frame = 0;
     lastScroll.current = window.scrollY;
     const onScroll = () => {
+      // Dialog focus/scroll locking must not fold away the control that opened it.
+      if (document.querySelector('[role="dialog"]')) { lastScroll.current = window.scrollY; return; }
       if (frame || ignoreScroll.current || !window.matchMedia("(min-width: 768px)").matches) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
         const direction = window.scrollY - lastScroll.current;
         lastScroll.current = window.scrollY;
+        if (document.querySelector('[role="dialog"]')) return;
         if (Math.abs(direction) < 2 || (list.current?.contains(document.activeElement) && document.activeElement?.matches(":focus-visible"))) return;
         const index = sessions.findIndex((session) => session.sessionId === active);
         const next = sessions[index + (direction > 0 ? 1 : -1)];
@@ -258,23 +268,28 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    // Folding a tall card can use all available scroll above the next card. Keep
-    // upward scrolling usable at that boundary, where browsers emit no scroll event.
-    const previousAtTop = () => {
-      if (window.scrollY > 1 || performance.now() - lastSelection.current < 550 || !window.matchMedia("(min-width: 768px)").matches) return;
+    // A folded card can exhaust the page's scroll range. Continue selection at
+    // either boundary, where additional wheel/key/touch input emits no scroll event.
+    const selectAtBoundary = (direction: 1 | -1) => {
+      const atBoundary = direction < 0 ? window.scrollY <= 1 : window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
+      if (!atBoundary || performance.now() - lastSelection.current < 550 || !window.matchMedia("(min-width: 768px)").matches) return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
       if (list.current?.contains(document.activeElement) && document.activeElement?.matches(":focus-visible")) return;
-      const previous = sessions[sessions.findIndex((session) => session.sessionId === active) - 1];
-      if (previous) select(previous.sessionId);
+      const adjacent = sessions[sessions.findIndex((session) => session.sessionId === active) + direction];
+      if (adjacent) select(adjacent.sessionId);
     };
-    const onWheel = (event: WheelEvent) => { if (event.deltaY < -8) previousAtTop(); };
+    const onWheel = (event: WheelEvent) => { if (Math.abs(event.deltaY) > 8) selectAtBoundary(event.deltaY > 0 ? 1 : -1); };
     const onKey = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLElement && event.target.matches("input,textarea,select,[contenteditable=true]")) return;
-      if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home") previousAtTop();
+      if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home") selectAtBoundary(-1);
+      if (event.key === "PageDown" || event.key === "ArrowDown" || event.key === "End") selectAtBoundary(1);
     };
     let touchY = 0;
     const onTouchStart = (event: TouchEvent) => { touchY = event.touches[0]?.clientY ?? 0; };
-    const onTouchMove = (event: TouchEvent) => { if ((event.touches[0]?.clientY ?? 0) - touchY > 40) previousAtTop(); };
+    const onTouchMove = (event: TouchEvent) => {
+      const distance = (event.touches[0]?.clientY ?? 0) - touchY;
+      if (Math.abs(distance) > 40) selectAtBoundary(distance < 0 ? 1 : -1);
+    };
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("keydown", onKey);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -299,10 +314,8 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
           <button type="button" data-date-control className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
             {expanded ? <ExpandedSession session={session} index={index} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
-              <span className={styles.thumbnail}><Image src={sessionArtwork(session, index)} alt="" fill sizes="100px" className={styles.photo} /></span>
-              <span className={styles.collapsedCopy}><strong>{sessionTitle(session)}</strong><span>{session.venueName}{session.region && <> · {session.region}</>}</span></span>
+              <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span>{sessionTime(session)}</span></span>
               <span className={styles.collapsedPlayers}><UsersRound size={18} aria-hidden />{session.participantCount} / {session.capacity}</span>
-              <span className={styles.collapsedTime}>{sessionTime(session)}</span>
               <ChevronDown size={18} strokeWidth={1.5} aria-hidden />
             </button>}
           </article>
@@ -314,26 +327,46 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
 
 function HostingSessions({ sessions, upcomingCount, pastCount, onOpenSession, onLoadMore, hasMore, loadingMore }: SessionsViewProps) {
   const carousel = useRef<HTMLUListElement>(null);
-  const [atEnd, setAtEnd] = useState(false);
+  const [edges, setEdges] = useState({ start: true, end: false });
+  const advanceAfterLoad = useRef(false);
   const upcoming = sessions.filter((session) => session.section === "upcoming");
   const past = sessions.filter((session) => session.section === "past");
+  const scrollCards = (direction: number) => {
+    const el = carousel.current;
+    if (el) el.scrollBy({ left: direction * el.clientWidth, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  };
+  useLayoutEffect(() => {
+    const el = carousel.current;
+    if (!el) return;
+    if (advanceAfterLoad.current) { advanceAfterLoad.current = false; scrollCards(1); }
+    const measure = () => setEdges({ start: el.scrollLeft <= 8, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 8 });
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => { el.removeEventListener("scroll", measure); observer.disconnect(); };
+  }, [upcoming.length]);
   return <div className={styles.hosting}>
-    <section aria-labelledby="upcoming-heading"><h2 id="upcoming-heading" className={styles.sectionHeading}>Upcoming <span>({upcomingCount})</span></h2>
-      {upcoming.length === 0 ? <p className={styles.sectionEmpty}>No upcoming sessions. Your next game is yours to plan.</p> : <div className={styles.carousel}>
-        <ul ref={carousel} className={styles.upcomingCards} onScroll={(event) => { const el = event.currentTarget; setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 8); }}>
-          {upcoming.map((session, index) => <li key={session.sessionId} className={styles.hostingCard}>
-            <button type="button" onClick={() => onOpenSession(session)} aria-label={`Manage ${sessionTitle(session)} at ${session.venueName}`}>
-              <span className={styles.hostingHero}><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1400px) 400px, 40vw" className={styles.photo} /><DateStamp value={session.startAt} /></span>
-              <span className={styles.hostingBody}><span className={styles.hostingTitle}><strong>{sessionTitle(session)}</strong><Status session={session} /></span><span className={styles.venue}>{session.venueName}{session.region && <> · {session.region}</>}</span><span className={styles.hostingMeta}><Metadata session={session} /><Players count={session.participantCount} /></span></span>
-            </button>
-          </li>)}
-        </ul>
-        {(upcoming.length > 2 || upcomingCount > upcoming.length) && (!atEnd || upcomingCount > upcoming.length) && <button type="button" className={styles.carouselNext} aria-label="Next upcoming sessions" onClick={() => { if (atEnd && hasMore && !loadingMore) onLoadMore(); carousel.current?.scrollBy({ left: carousel.current.clientWidth * .7, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" }); }}><ChevronRight size={23} strokeWidth={1.5} aria-hidden /></button>}
-      </div>}
+    <section aria-labelledby="upcoming-heading">
+      <div className={styles.hostingSectionHeader}><h2 id="upcoming-heading" className={styles.sectionHeading}>Upcoming <span>({upcomingCount})</span></h2>
+        {upcoming.length > 0 && <div className={styles.carouselControls}>
+          <button type="button" aria-label="Previous upcoming sessions" disabled={edges.start} onClick={() => scrollCards(-1)}><ChevronLeft size={19} strokeWidth={1.5} aria-hidden /></button>
+          <button type="button" aria-label="Next upcoming sessions" disabled={edges.end && (upcomingCount <= upcoming.length || !hasMore || loadingMore)} onClick={() => { if (edges.end && hasMore && !loadingMore) { advanceAfterLoad.current = true; onLoadMore(); } else scrollCards(1); }}><ChevronRight size={19} strokeWidth={1.5} aria-hidden /></button>
+        </div>}
+      </div>
+      {upcoming.length === 0 ? <p className={styles.sectionEmpty}>No upcoming sessions. Your next game is yours to plan.</p> : <ul ref={carousel} className={styles.upcomingCards}>
+        {upcoming.map((session, index) => <li key={session.sessionId} className={styles.hostingCard}>
+          <button type="button" onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpenSession(session); }} aria-label={`Manage ${sessionTitle(session)} at ${session.venueName}`}>
+            <time className={styles.hostingDate} dateTime={session.startAt}>{sessionDate(session.startAt).weekday} {sessionDate(session.startAt).day} {sessionDate(session.startAt).month}</time>
+            <span className={styles.hostingHero}><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1400px) 400px, 40vw" className={styles.photo} /></span>
+            <span className={styles.hostingBody}><span className={styles.hostingTitle}><strong>{session.venueName}</strong><ChevronRight size={18} strokeWidth={1.4} aria-hidden /></span><span className={styles.venue}>{session.sport}{session.region && <> · {session.region}</>}</span><span className={styles.hostingMeta}><span>{sessionTime(session)}</span><span>{session.participantCount} / {session.capacity} players</span></span></span>
+          </button>
+        </li>)}
+      </ul>}
     </section>
     <section className={styles.past} aria-labelledby="past-heading"><h2 id="past-heading" className={styles.sectionHeading}>Past <span>({pastCount})</span></h2>
-      {past.length === 0 ? <p className={styles.sectionEmpty}>{pastCount > 0 ? "Keep scrolling to load your past sessions." : "Your past sessions will appear here."}</p> : <ul className={styles.pastList}>{past.map((session, index) => <li key={session.sessionId}><button type="button" className={styles.pastRow} onClick={() => onOpenSession(session)} aria-label={`View ${sessionTitle(session)} at ${session.venueName}, ${sessionDate(session.startAt).full}`}>
-        <DateStamp value={session.startAt} /><span className={styles.pastThumbnail}><Image src={sessionArtwork(session, index)} alt="" fill sizes="160px" className={styles.photo} /></span><span className={styles.pastCopy}><strong>{sessionTitle(session)}</strong><span>{session.venueName}{session.region && <> · {session.region}</>}</span></span><Metadata session={session} /><Players count={session.participantCount} /><Status session={session} /><ChevronRight size={19} strokeWidth={1.4} aria-hidden />
+      {past.length === 0 ? <p className={styles.sectionEmpty}>{pastCount > 0 ? "Keep scrolling to load your past sessions." : "Your past sessions will appear here."}</p> : <ul className={styles.pastList}>{past.map((session, index) => <li key={session.sessionId}><button type="button" className={styles.pastRow} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpenSession(session); }} aria-label={`View ${sessionTitle(session)} at ${session.venueName}, ${sessionDate(session.startAt).full}`}>
+        <DateStamp value={session.startAt} /><span className={styles.pastThumbnail}><Image src={sessionArtwork(session, index)} alt="" fill sizes="140px" className={styles.photo} /></span><span className={styles.pastCopy}><strong>{session.venueName}</strong><span>{session.sport}{session.region && <> · {session.region}</>}</span></span><span className={styles.pastTime}>{sessionTime(session)}</span><span className={styles.pastCount}>{session.participantCount} / {session.capacity}</span><Status session={session} /><ChevronRight size={19} strokeWidth={1.4} aria-hidden />
       </button></li>)}</ul>}
     </section>
   </div>;

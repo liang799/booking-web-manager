@@ -44,6 +44,9 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, booker);
     await expect(page.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
+    const navigation = page.getByRole("navigation", { name: "Main", exact: true });
+    await expect(navigation.getByRole("link", { name: "Sessions", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("link", { name: "Settings", exact: true })).toHaveAttribute("href", "/profile");
     await page.getByRole("link", { name: "New session", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Booked Venue Details" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main", exact: true })).not.toBeVisible();

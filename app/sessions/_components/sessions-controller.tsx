@@ -74,6 +74,7 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
   const [cancelling, setCancelling] = useState<HostedSessionItem | null>(null);
   const [cancelled, setCancelled] = useState<SessionCancellationResult | null>(null);
   const cancellationTrigger = useRef<HTMLButtonElement | null>(null);
+  const sessionTrigger = useRef<HTMLElement | null>(null);
   const feed = useInfiniteQuery({
     queryKey: [...sessionFeedQueryKey, userId, tab],
     initialPageParam: null as string | null,
@@ -125,9 +126,13 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
     }} sessions={restoringSelection && feed.isError ? [] : sessions} asOf={first?.asOf ?? new Date().toISOString()} upcomingCount={first?.upcomingCount ?? 0} pastCount={first?.pastCount ?? 0} actions={actions}
       scrollTargetId={scrollTargetId} onUrlRestored={finishUrlRestoration}
       loading={feed.isPending || signIn || (restoringSelection && !feed.isError)} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
-      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => openSession(session.sessionId)} />
+      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => { sessionTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; openSession(session.sessionId); }} />
     <Dialog open={mode.status === "viewingSession" && selected !== null} onOpenChange={(open) => { if (!open) closeSession(); }}>
-      <DialogContent className={`${styles.dialogContent} sm:max-w-[680px]`}>
+      <DialogContent className={`${styles.dialogContent} sm:max-w-[680px]`} onCloseAutoFocus={(event) => {
+        event.preventDefault();
+        if (sessionTrigger.current?.isConnected) sessionTrigger.current.focus({ preventScroll: true });
+        else document.getElementById("sessions-heading")?.focus({ preventScroll: true });
+      }}>
         {selected && <>
           <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(selected)}</DialogTitle><DialogDescription>{selected.venueName} · {selected.role === "HOST" ? "Manage your session" : sessionStatus(selected)}</DialogDescription></DialogHeader>
           {selected.role === "HOST" ? <HostedSessionManagement userId={userId} session={selected} loadHosted={loadHosted} onRefresh={refresh} onCancel={(session, trigger) => { cancellationTrigger.current = trigger; setCancelling(session); }} /> : <>

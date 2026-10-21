@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, LogOut, Plus, Search, UserRound, UsersRound } from "lucide-react";
+import { LogOut, Search, UserRound, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
-import sessionStyles from "./app-shell-sessions.module.css";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", image: "home" },
@@ -36,13 +35,6 @@ const MOBILE_NAV_LINKS = [
   { href: "/profile", label: "Settings", image: "settings" },
 ] as const;
 
-const SESSION_NAV_LINKS = [
-  { href: "/", label: "Home", image: "home" },
-  { href: "/sessions", label: "Sessions", image: "sessions" },
-  { href: "/wallet", label: "Wallet", image: "wallet" },
-  { href: "/groups", label: "Groups", image: null },
-] as const;
-
 export interface ShellUser {
   readonly name: string;
   
@@ -55,141 +47,6 @@ interface AppShellProps {
   readonly logoutAction?: () => Promise<void>;
   readonly children: React.ReactNode;
   readonly mobileVariant?: "standard" | "focused";
-}
-
-/** Keeps the quieter sessions navigation connected to discovery and account actions. */
-function SessionsAccountMenu({
-  user,
-  logoutAction,
-  searchHref,
-}: {
-  readonly user: ShellUser;
-  readonly logoutAction?: () => Promise<void>;
-  readonly searchHref: string;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button type="button" className={sessionStyles.accountButton} aria-label="Open account menu">
-          <span className={sessionStyles.accountAvatar}>{initials(user.name)}</span>
-          <span className={sessionStyles.accountName}>{user.name}</span>
-          <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
-        </button>
-      </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="w-72 bg-card p-6 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center"
-      >
-        <SheetTitle className="pr-10">Your account</SheetTitle>
-        <SheetDescription className="sr-only">Account details, discovery, settings, and logout</SheetDescription>
-        <div className="mt-8 flex items-center gap-3">
-          <span className={sessionStyles.accountAvatar}>{initials(user.name)}</span>
-          <div className="min-w-0">
-            <p className="break-words text-sm font-medium">{user.name}</p>
-            <p className="text-xs text-muted-foreground">Reliability {toFivePoint(user.reliabilityScore)}</p>
-          </div>
-        </div>
-        <Button asChild variant="outline" className="mt-6 min-h-11 w-full">
-          <Link href={searchHref} onClick={() => setOpen(false)}>
-            <Search size={16} className="mr-2" aria-hidden="true" />
-            Search sessions
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="mt-3 min-h-11 w-full">
-          <Link href="/profile" onClick={() => setOpen(false)}>Account settings</Link>
-        </Button>
-        {logoutAction !== undefined && (
-          <form action={logoutAction} className="mt-3">
-            <Button type="submit" variant="ghost" className="min-h-11 w-full">
-              <LogOut size={16} className="mr-2" aria-hidden="true" />
-              Log out
-            </Button>
-          </form>
-        )}
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-/** The sessions overview has a flat desktop rail and the compact four-destination mobile header. */
-function SessionsShell({
-  user,
-  logoutAction,
-  children,
-  searchHref,
-}: AppShellProps & { readonly searchHref: string }) {
-  const account = <SessionsAccountMenu user={user} logoutAction={logoutAction} searchHref={searchHref} />;
-
-  return (
-    <div className={sessionStyles.shell}>
-      <aside className={sessionStyles.sidebar}>
-        <Link href="/" className={sessionStyles.desktopBrand}><BookingLogo className="text-[28px]" /></Link>
-        <nav className={sessionStyles.desktopNav} aria-label="Main">
-          {SESSION_NAV_LINKS.map(({ href, label, image }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={href === "/sessions" ? "page" : undefined}
-              className={sessionStyles.desktopNavLink}
-            >
-              {image === null
-                ? <UsersRound size={22} strokeWidth={1.6} aria-hidden="true" />
-                : <Image src={`/images/navigation/${image}.svg`} width={22} height={22} alt="" className="dark:invert" />}
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className={sessionStyles.sidebarRule} />
-        <div className={sessionStyles.desktopAccount}>{account}</div>
-      </aside>
-      <div className={sessionStyles.body}>
-        <div className={sessionStyles.pageFrame}>
-          <header className={sessionStyles.mobileHeader}>
-            <div className={sessionStyles.mobileHero} aria-hidden="true">
-              <Image
-                src="/images/mobile-hero.png"
-                alt=""
-                fill
-                sizes="(max-width: 767px) 100vw, 1px"
-                className="object-cover object-top opacity-30 dark:opacity-[0.12]"
-              />
-            </div>
-            <div className={sessionStyles.mobileTopRow}>
-              <Link href="/" className={sessionStyles.mobileBrand}><BookingLogo /></Link>
-              <Link href="/sessions/create" className={sessionStyles.createSession} aria-label="New session">
-                <span><Plus size={18} strokeWidth={1.8} aria-hidden="true" /></span>
-              </Link>
-            </div>
-            <nav className={sessionStyles.mobileNav} aria-label="Main">
-              {SESSION_NAV_LINKS.map(({ href, label, image }, index) => {
-                const active = href === "/sessions";
-                return (
-                  <Fragment key={href}>
-                    <Link
-                      href={href}
-                      aria-current={active ? "page" : undefined}
-                      className={sessionStyles.mobileNavLink}
-                      title={active ? undefined : label}
-                    >
-                      {image === null
-                        ? <UsersRound size={20} strokeWidth={1.8} aria-hidden="true" />
-                        : <Image src={`/images/navigation/${image}.svg`} width={20} height={20} alt="" className="dark:invert" />}
-                      <span className={active ? undefined : "sr-only"}>{label}</span>
-                    </Link>
-                    {index === 2 && <span className={sessionStyles.mobileNavRule} aria-hidden="true" />}
-                  </Fragment>
-                );
-              })}
-            </nav>
-          </header>
-          <main className={sessionStyles.main}>{children}</main>
-        </div>
-        <footer className={sessionStyles.mobileAccount}>{account}</footer>
-      </div>
-    </div>
-  );
 }
 
 
@@ -295,10 +152,6 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
     pathname === href || pathname.startsWith(`${href}/`)
     || (href === "/sessions" && (pathname === "/groups" || pathname.startsWith("/groups/"))),
   );
-
-  if (pathname === "/sessions") {
-    return <SessionsShell user={user} logoutAction={logoutAction} searchHref={searchHref}>{children}</SessionsShell>;
-  }
 
   return (
     <div className="flex min-h-screen bg-card md:bg-background">

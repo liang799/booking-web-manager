@@ -111,6 +111,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+async function openSessionDetails(trigger: HTMLElement) {
+  await userEvent.click(trigger);
+  return within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
+}
+
+async function closeSessionDetails() {
+  await userEvent.click(within(screen.getByRole("dialog", { name: "Tennis Court Booking" })).getByRole("button", { name: "Close" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+}
+
 export const CursorPagination: Story = {
   beforeEach: () => {
     reply = async ({ cursor }) => cursor ? response(joinedSessions.slice(5)) : response(joinedSessions.slice(0, 6), "next-six");
@@ -136,12 +146,16 @@ export const AccountAndTabCaches: Story = {
   render: (args) => <AccountsHarness {...args} />,
   play: async ({ canvas }) => {
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
-    await userEvent.click(canvas.getByRole("tab", { name: "Participants (2)" }));
-    await expect(canvas.getByRole("tab", { name: "Participants (2)" })).toHaveAttribute("aria-selected", "true");
+    const firstDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await userEvent.click(firstDialog.getByRole("tab", { name: "Participants (2)" }));
+    await expect(firstDialog.getByRole("tab", { name: "Participants (2)" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
     await userEvent.click(canvas.getByRole("button", { name: "Use second account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
-    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await expect(canvas.queryByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" })).not.toBeInTheDocument();
+    const secondDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(secondDialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
     await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
@@ -150,7 +164,9 @@ export const AccountAndTabCaches: Story = {
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
-    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    const resetDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(resetDialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
     await expect(accountRequests).toEqual([
       { userId: "first-account", tab: "joined" },
       { userId: "second-account", tab: "joined" },
@@ -166,14 +182,19 @@ export const TimelineSelectionSurvivesTabChanges: Story = {
   play: async ({ canvas }) => {
     const second = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
     await userEvent.click(second);
-    await userEvent.click(canvas.getByRole("tab", { name: "Participants (3)" }));
+    const dialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await userEvent.click(dialog.getByRole("tab", { name: "Participants (3)" }));
+    await closeSessionDetails();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
     await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
     await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
     await expect(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
-    await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
-    await expect(canvas.getByRole("tabpanel")).toHaveTextContent("3 players have a place in this session.");
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const restoredDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(restoredDialog.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await expect(restoredDialog.getByRole("tabpanel")).toHaveTextContent("3 players have a place in this session.");
+    await closeSessionDetails();
     await expect(requests.map(({ tab }) => tab)).toEqual(["joined", "hosting"]);
   },
 };
@@ -186,11 +207,14 @@ export const UrlRestoresSessionAndPanelAcrossPages: Story = {
   play: async ({ canvas }) => {
     const selected = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 10 Oct 2026" });
     await waitFor(() => expect(selected).toHaveAttribute("aria-expanded", "true"));
-    await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
     await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more"]);
     await expect(new URL(window.location.href).searchParams.get("session")).toBe(joinedSessions[7]!.sessionId);
     await expect(new URL(window.location.href).searchParams.get("panel")).toBe("participants");
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("tablist")).not.toBeInTheDocument();
+    const dialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(dialog.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
   },
 };
 
@@ -228,10 +252,12 @@ export const UrlRestorationRetriesFailedPage: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
     const selected = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 10 Oct 2026" });
     await waitFor(() => expect(selected).toHaveAttribute("aria-expanded", "true"));
-    await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
     await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more", "restore-more"]);
     await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const dialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(dialog.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
   },
 };
 
@@ -239,18 +265,24 @@ export const AccountChangeClearsUrlSelection: Story = {
   parameters: { nextjs: { navigation: { query: { tab: "joined", session: joinedSessions[0]!.sessionId, panel: "participants" } } } },
   render: (args) => <AccountsHarness {...args} />,
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole("tab", { name: "Participants (2)" })).toHaveAttribute("aria-selected", "true");
+    const firstDialog = await openSessionDetails(await canvas.findByRole("button", { name: "View details" }));
+    await expect(firstDialog.getByRole("tab", { name: "Participants (2)" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
     await expect(new URL(window.location.href).searchParams.get("session")).toBe(joinedSessions[0]!.sessionId);
     await userEvent.click(canvas.getByRole("button", { name: "Use second account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
-    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await expect(new URL(window.location.href).searchParams.has("session")).toBe(false);
     await expect(new URL(window.location.href).searchParams.has("panel")).toBe(false);
+    const secondDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(secondDialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
-    await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await expect(new URL(window.location.href).searchParams.has("session")).toBe(false);
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const restoredDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
+    await expect(restoredDialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await closeSessionDetails();
   },
 };
 
@@ -258,7 +290,7 @@ export const AccountChangeClosesOpenSession: Story = {
   render: (args) => <AccountsHarness {...args} />,
   play: async ({ canvas }) => {
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
-    await userEvent.click(first.getByRole("button", { name: "View session" }));
+    await userEvent.click(first.getByRole("button", { name: "View details" }));
     await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     // Authentication can change while a modal is open, without using inert background controls.
     if (!changeAccount) throw new Error("The account harness has not mounted.");
@@ -268,10 +300,37 @@ export const AccountChangeClosesOpenSession: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole("button", { name: "View session" }));
+    await userEvent.click(canvas.getByRole("button", { name: "View details" }));
     await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const JoinedSessionDetailsDialog: Story = {
+  play: async ({ canvas }) => {
+    const second = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
+    second.focus();
+    await userEvent.keyboard("{Enter}");
+    await expect(second).toHaveAttribute("aria-expanded", "true");
+    await expect(canvas.queryByRole("tablist")).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: /View in calendar/ })).not.toBeInTheDocument();
+    const trigger = canvas.getByRole("button", { name: "View details" });
+    const dialog = await openSessionDetails(trigger);
+    const details = dialog.getByRole("tab", { name: "Details" });
+    details.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(dialog.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
+    await expect(dialog.getByRole("tabpanel")).toHaveTextContent("3 players have a place in this session.");
+    await expect(dialog.getByRole("tabpanel")).toHaveTextContent("You have a place. See you on court.");
+    await userEvent.keyboard("{Home}");
+    await expect(details).toHaveAttribute("aria-selected", "true");
+    const destination = new URL(dialog.getByRole("link", { name: /View in calendar/ }).getAttribute("href")!);
+    await expect(destination.searchParams.get("dates")).toBe("20261022T230000Z/20261023T000000Z");
+    await expect(destination.searchParams.get("ctz")).toBe("Asia/Singapore");
+    await closeSessionDetails();
+    await waitFor(() => expect(trigger).toHaveFocus());
+    await expect(canvas.queryByRole("tablist")).not.toBeInTheDocument();
   },
 };
 
@@ -280,7 +339,7 @@ export const ViewedSessionSurvivesPendingAndFailedRefresh: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
-    await userEvent.click(first.getByRole("button", { name: "View session" }));
+    await userEvent.click(first.getByRole("button", { name: "View details" }));
     const dialog = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     // Finding the dialog can precede its opening animation becoming visible.
     await waitFor(() => expect(dialog).toBeVisible());
@@ -309,7 +368,7 @@ export const SuccessfulRefreshClosesMissingViewedSession: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
-    await userEvent.click(first.getByRole("button", { name: "View session" }));
+    await userEvent.click(first.getByRole("button", { name: "View details" }));
     await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     const queryKey = [...sessionFeedQueryKey, "player", "joined"];
     reply = async () => response(joinedSessions.slice(1, 2));
@@ -322,7 +381,7 @@ export const SuccessfulRefreshClosesMissingViewedSession: Story = {
     const restored = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
-    await userEvent.click(restored.getByRole("button", { name: "View session" }));
+    await userEvent.click(restored.getByRole("button", { name: "View details" }));
     const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
     await userEvent.click(dialog.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

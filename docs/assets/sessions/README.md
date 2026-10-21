@@ -1,50 +1,48 @@
 # Sessions revamp visual evidence
 
-Captured from the actual `Sessions/Overview` Storybook stories in Chromium on 21 October 2026. The screenshots use the signed-in `AppShell`, locally bundled fonts and session artwork, and the same responsive styles as the application. The fixtures are fictional and fixed at 21 October 2026 in Singapore time.
+Captured from the actual `Sessions/Overview` Storybook stories in Chromium on 21 October 2026. The fixtures are fictional, fixed at 21 October 2026 in Singapore time, and use bundled fonts and decorative artwork. The production `AppShell` is byte-identical to `origin/main` at `7aacdc97e2ab7d72724429b13eb7f17ee398010b`: its sidebar, six desktop links, account controls and mobile navigation are preserved.
 
-| Screenshot | Viewport | Story / state | Reference |
-| --- | --- | --- | --- |
-| `hosting-desktop.webp` | 1536 × 1024 | `desktop-hosting` | User reference 1: upcoming cards and compact past rows |
-| `joined-desktop.webp` | 1024 × 1536 | `desktop-joined` | User reference 2: joined timeline with its first session expanded |
-| `joined-mobile.webp` | 390 × 844 | `mobile-reference` | User reference 3: simple two-session mobile list |
-| `joined-scroll-current.webp` | 1024 × 900 | `desktop-joined`, after scrolling to the third session | The black current marker and expanded card move together |
-| `empty-joined-desktop.webp` | 1536 × 1024 | `empty-joined` | Court banner, discovery/creation actions and three starter cards |
-| `empty-hosting-desktop.webp` | 1536 × 1024 | `empty-hosting` | Bench banner, creation action and three hosting tips |
-| `empty-joined-mobile.webp` | 390 × 844, full page | `empty-joined` | Stacked actions and starter cards |
-| `empty-hosting-mobile.webp` | 390 × 844, full page | `empty-hosting` | Responsive hosting empty state |
-| `empty-joined-dark.webp` | 1536 × 1024 | `empty-joined`, dark theme | Dark appearance and readable actions |
-| `empty-hosting-dark.webp` | 1536 × 1024 | `empty-hosting`, dark theme | Dark appearance and readable tips |
+| Screenshot | Viewport | Story / state |
+| --- | --- | --- |
+| `hosting-desktop.webp` | 1536 × 1024 | `desktop-hosting`: equal-width upcoming cards and divider-separated past rows; no timeline |
+| `joined-desktop.webp` | 1536 × 1024 | `desktop-joined`: first session expanded with compact summary and View details |
+| `joined-scroll-current.webp` | 1536 × 1024 | `desktop-joined`, after scrolling to the third session |
+| `joined-mobile.webp` | 390 × 844 | `mobile-reference`: simple two-session list in the original mobile shell |
+| `empty-joined-desktop.webp` | 1536 × 1024 | `empty-joined`: court banner, discovery/creation actions and three starter links |
+| `empty-hosting-desktop.webp` | 1536 × 1024 | `empty-hosting`: bench banner, creation action and three hosting tips |
+| `empty-joined-mobile.webp` | 390 × 844, full page | `empty-joined`: stacked actions and starter links |
+| `empty-hosting-mobile.webp` | 390 × 844, full page | `empty-hosting`: responsive hosting empty state |
+| `empty-joined-dark.webp` | 1536 × 1024 | `empty-joined`, dark theme |
+| `empty-hosting-dark.webp` | 1536 × 1024 | `empty-hosting`, dark theme |
 
-The screenshots were captured at device scale 1 after fonts and images loaded, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. Populated screenshots show the viewport; empty mobile screenshots include the full page so every starter card is visible.
+Screenshots were captured at device scale 1 after fonts, images and finite animations settled, with incidental pointer focus cleared. They were encoded to WebP at quality 88 without changing the rendered content. Populated screenshots show the viewport; mobile empty-state screenshots show the full page.
 
-## Reproduce
+## Current behavior
 
-Start Storybook with `npm run storybook -- --ci --no-open`, then open `/iframe.html?id=sessions-overview--<story>&viewMode=story` at the viewport listed above. `desktop-joined` and `desktop-hosting` use four upcoming and six past sessions. `mobile-reference` uses the first two upcoming sessions to reproduce the reference composition; separate mobile stories exercise the full ten-session list.
+The sessions page owns its breadcrumb and bordered content panel. Joined alone has the scroll-driven timeline. Its compact expanded card shows artwork, status, title, venue, time, player count and **View details**. Collapsed rows show venue, time and player count. Details/Participants, map and calendar actions appear in the transient session dialog; closing it restores keyboard focus to its trigger.
 
-Run the browser interaction and accessibility checks with:
+The current day is bold at 48px; inactive days are muted at 26px. The animated marker follows the measured center of the current numeral after selection and resizing. Historical dates retain their grey color when selected, and historical artwork is desaturated. Keyboard selection, scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
 
-```sh
-npm run test:storybook -- app/sessions/_components/sessions-view.stories.tsx
-```
+Hosting has equal-width upcoming cards with dates above the artwork, venue titles, sport/region subtitles and time/player metadata. Previous/Next controls move the carousel. Past sessions use plain divider-separated rows. Both mobile views retain simple dated cards. Empty views fit their banners inside the same panel and use three starter links separated by vertical rules on desktop and stacked on mobile.
 
-All 23 overview stories passed, including accessibility checks. They cover responsive views, dark appearance, empty/loading/error states, keyboard expansion, participant details and calendar links, controlled tab and session actions, forward and reverse scroll selection, infinite-scroll requests, and duplicate-load prevention during loading or error states. The `desktop-current-session-hierarchy` story reproduces the reference with the third session selected and checks its date emphasis and marker alignment.
+Zustand keeps account-scoped guarded `browsing`/`viewingSession` modes, selected view, timeline session and remembered detail panels. Validated URL storage restores the tab, Joined session and panel, for example `/sessions?tab=joined&session=<uuid>&panel=participants`. Restoring the URL expands the timeline card without opening a dialog; the remembered panel appears when View details is opened. Account changes create fresh state and clear the session/panel URL selection. React Query retains ownership of data, loading, failures and pagination. Restoration loads further pages as needed, preserves the URL after failed requests for retry, and clears unavailable selections only after exhausting the feed.
 
-Direct Playwright checks also verified forward selection through three sessions and native wheel navigation back to the first in Chromium at 1024 × 900 and 1024 × 1536, and in WebKit at 1024 × 900. The current marker remained aligned with its date. Chromium's reduced-motion mode preserved selection without running animations. Both layouts had no horizontal page overflow at widths 320, 390, 767, 768, 1024, 1280 and 1536; WebKit's 390px mobile rendering also had no overflow.
+The feed supplies real sport, venue, region, dates, attendance counts and session status. The UI does not invent court numbers, notes, names or portraits from the mockups. Creation links respect the account's available actions, including email/account setup requirements. Existing hosting management and cancellation recovery remain connected.
 
-The feed supplies sport, venue, region, dates, aggregate attendance and actual session status. The page therefore uses those facts rather than inventing session titles, court numbers, notes, participant names or portraits from the reference mockups.
+## Validation
 
-The joined desktop captures include the refined history treatment: past dates are grey, thumbnails are desaturated, and session titles remain readable. Timeline typography, the date gutter, and the gaps after expanded cards and before history follow the reference more closely. Chromium checks covered 320, 390, 767, 768, 950, 1024, 1280 and 1536px; WebKit checks covered 390 and 1024px. Past sessions remain expandable and actionable.
+Run Storybook with `npm run storybook -- --ci`, then open `/iframe.html?id=sessions-overview--<story>&viewMode=story` at the viewport above. `desktop-joined` and `desktop-hosting` have four upcoming and six past sessions; `mobile-reference` uses two upcoming sessions. `desktop-current-session-hierarchy` starts the third session selection through its interaction check.
 
-The Joined date hierarchy uses a bold 48px current day and muted 26px inactive days. A selected historical date grows while retaining its grey color. The marker follows the measured center of the current numeral rather than a fixed row offset. Chromium and WebKit checks passed at desktop widths 768, 950, 1024, 1280, 1440 and 1536px, and mobile widths 320, 390 and 767px. Checks covered resize alignment, forward and native reverse scrolling, keyboard selection, historical colors, dark mode, reduced motion, and horizontal overflow. Chromium comparisons confirmed unchanged mobile and Hosting rendering within 1/255 channel rounding after matching focus state. Both Joined desktop screenshots were refreshed with this hierarchy.
+Executed for the compact-layout and original-shell update:
 
-Zustand owns the selected view, current timeline session, per-session detail tab, and a discriminated dialog mode: `browsing` or `viewingSession` with a required session ID. Guarded open/close transitions replace the complete mode, and the store is scoped to the mounted account. React Query owns the session data and infinite pagination. A successful refresh that removes the viewed session returns to browsing; pending or failed requests preserve the selection.
+- Typecheck and lint passed.
+- Unit tests: 2,498 passed, 33 skipped and 2 todo.
+- Five focused sessions Storybook suites: 62 interaction/accessibility checks passed. Coverage includes compact summary actions, dialog keyboard tabs/calendar links/focus restoration, account resets, URL panel memory, unavailable-session refreshes, pagination, timeline scrolling and marker alignment, including selection at the bottom of a tall viewport. Hosting explicitly asserts that no timeline or marker is rendered.
+- Shared-shell Storybook suite: 21 checks passed, including original desktop navigation/account controls and mobile Settings navigation.
+- Chromium and WebKit: 26 populated-view checks passed. Desktop widths were 768, 950, 1024, 1280, 1440 and 1536px; mobile widths were 320, 390 and 767px. Checks covered marker alignment after resizing, forward/native reverse scrolling, keyboard selection, historical color, dark mode, reduced motion, and overflow. Hosting was also checked at narrow-desktop widths with no timeline present.
+- Both empty views: 28 Chromium/WebKit scenarios passed at 320, 390, 768, 1024, 1280 and 1536px, plus dark appearance and reduced motion, with working keyboard focus and no horizontal overflow.
 
-A custom Zustand `persist` storage keeps the tab, selected Joined timeline session and its Details/Participants panel in readable URL parameters, for example `/sessions?tab=joined&session=<uuid>&panel=participants`. Reloading or revisiting the URL restores that selection; dialogs remain transient. Hosting omits the timeline parameters, while the existing `created=1` Hosting handoff still works. URL updates preserve unrelated query parameters, the hash and browser history metadata.
+- Authenticated browser tests: all 43 passed, including pagination and URL restoration, cookie authentication, account/tab cursor isolation and existing hosting workflows. The disposable integration runner also built production Storybook and Next.js successfully.
+- Real Chromium and WebKit mouse-open/Escape-close checks at a restored session near the end of the feed retained the same selection, panel, scroll position and trigger focus.
 
-Restoring a session beyond the first feed page loads subsequent pages until the session is found. A failed request preserves the URL for retry. Exhausting the feed without finding the session clears its URL selection and shows an explanatory notice. Switching accounts clears the URL session/panel and creates fresh UI state. The controller stories verify each of these paths, including restoring the Participants panel without opening a dialog. Two provider browser regressions verify that delayed actions from an old account or unmounted page cannot overwrite the current URL.
-
-Typecheck, lint, all 2,498 unit tests and 55 focused Storybook interaction/accessibility checks across five suites passed for URL persistence, including the provider lifecycle cleanup regressions. Store and URL-storage tests cover guarded modes, validation, no-op writes, remembered context, account isolation and restoration. All 43 authenticated browser tests passed, including pagination and URL restoration; the integration runner also built production Storybook and Next.js successfully. The screenshots above are unchanged by URL persistence.
-
-The default Joined and Hosting empty states now follow the supplied references: a wide decorative banner, left-aligned eyebrow and headline, clear actions, and three linked starter cards below a divider. They reuse the existing court/bench artwork. Creation links respect the account's available actions, offering Add email or account setup when needed. Loading and error states retain their existing presentation.
-
-The empty-state pass verified both views in Chromium and WebKit at widths 320, 390, 768, 1024, 1280 and 1536px, plus dark appearance and reduced motion: 28 browser scenarios passed with no horizontal overflow and working keyboard focus. Five additional stories cover mobile layouts and account-gated actions, bringing the five focused suites to 60 passing interaction/accessibility checks. Typecheck, lint, all 2,498 unit tests and all 43 authenticated browser tests also passed after the empty-state changes, with production Storybook and Next.js builds verified by the authenticated runner.
+These fixtures and screenshots demonstrate local behavior, not production data.

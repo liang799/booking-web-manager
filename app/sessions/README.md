@@ -244,16 +244,26 @@ states without provider dependencies.
 `/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
 creation with `?created=1` selects Hosting and announces success. Desktop Joined
 uses a dated timeline: scrolling selects the next/previous card, moves the black
-marker, and reveals the card's details. Date buttons and collapsed cards provide
+marker, and reveals a compact image, title, venue, time and player-count summary.
+**View details** opens Details/Participants and calendar/map actions in a transient
+dialog. Closing it returns keyboard focus to its trigger. Date buttons and collapsed cards provide
 keyboard alternatives; keyboard focus within a card prevents scroll selection
 from removing that control. Reduced-motion preferences remove transitions.
-Desktop Hosting has a horizontal upcoming carousel and compact history rows.
+Desktop Hosting has equal-width upcoming carousel cards and compact history rows;
+it has no timeline. Both views use the original shared sidebar from `main`, with
+the sessions breadcrumb and bordered content panel inside the page.
 Below 768px both tabs use simple date/title cards, with details in a dialog.
 
 `SessionsController` uses React Query `useInfiniteQuery`, with account/tab-scoped
 caches and the server's cursor. An intersection observer requests the next page;
 an accessible Load more button provides the same action. Pagination errors retain
 loaded records and expose a retry. A different account remounts the controller.
+An account-scoped Zustand store keeps guarded browsing/viewing-session modes,
+timeline selection and remembered detail panels. Its validated URL storage persists
+the selected tab, Joined session ID and Details/Participants panel. Reloading a link
+expands the timeline card; the remembered panel appears when View details is opened.
+Dialogs remain transient, and changing accounts clears the account-specific selection.
+
 Hosting cards open the existing visibility, invitations, cancellation and
 attendance workflows. Cancellation recovery stays mounted at page scope, so a
 saved request can be retried after reload even when its card has moved to history.

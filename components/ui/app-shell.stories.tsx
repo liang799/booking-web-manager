@@ -18,8 +18,6 @@ const meta = {
           "Below that, it shows a Booking. header, decorative sport photo and floating Home / Sessions / Wallet / Settings navigation. " +
           "Only the active mobile destination shows its label; the other icons retain accessible names. Groups belongs to the Sessions area " +
           "and remains reachable from the account sheet. The account button opens that accessible sheet with account details, settings and logout. " +
-          "The sessions overview uses a flat full-height desktop sidebar and Home / Sessions / Wallet / Groups navigation, with discovery and settings in its account sheet. " +
-          "Its mobile header has a compact New session action and the account menu follows the page content. " +
           "The current page is highlighted and marked `aria-current=\"page\"`. Mobile links and controls have 44px touch targets. Change the page with the " +
           "`nextjs.navigation.pathname` parameter and the user with the `user` control.",
       },
@@ -59,6 +57,30 @@ export const Desktop: Story = {
     await expect(within(nav).getAllByRole("link")).toHaveLength(6);
     await expect(canvas.getByRole("link", { name: "Booking." })).toHaveAttribute("href", "/");
     await expect(canvas.queryByRole("link", { name: "+ Create session" })).not.toBeInTheDocument();
+  },
+};
+
+/** The sessions page uses the same shared sidebar as the other signed-in pages. */
+export const DesktopSessions: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  parameters: { nextjs: { navigation: { pathname: "/sessions" } } },
+  args: {
+    children: <div className="p-8">Sessions page content</div>,
+    logoutAction: fn().mockResolvedValue(undefined),
+  },
+  play: async ({ canvas }) => {
+    const sidebar = within(canvas.getByRole("complementary"));
+    const nav = sidebar.getByRole("navigation", { name: "Main" });
+    const links = within(nav);
+    await expect(links.getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
+      "Home", "Discover", "My sessions", "Wallet", "Groups", "Settings",
+    ]);
+    await expect(links.getByRole("link", { name: "My sessions" })).toHaveAttribute("aria-current", "page");
+    await expect(links.getByRole("link", { name: "Discover" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
+    await expect(links.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/profile");
+    await expect(sidebar.getByText("Marcus Lim")).toBeVisible();
+    await expect(sidebar.getByText("Reliability 4.8")).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Log out" })).toBeVisible();
   },
 };
 
@@ -119,18 +141,14 @@ const mobileDestinations = [
   { label: "Settings", href: "/profile" },
 ] as const;
 
-async function expectMobileNavigation(
-  nav: HTMLElement,
-  activeLabel: string,
-  destinations: readonly { readonly label: string; readonly href: string }[] = mobileDestinations,
-) {
+async function expectMobileNavigation(nav: HTMLElement, activeLabel: string) {
   const navigation = within(nav);
   await expect(navigation.getAllByRole("link")).toHaveLength(4);
   await expect(nav.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   const activeLink = navigation.getByRole("link", { name: activeLabel });
   await expect(activeLink).toHaveAttribute("aria-current", "page");
 
-  for (const { label, href } of destinations) {
+  for (const { label, href } of mobileDestinations) {
     const link = navigation.getByRole("link", { name: label });
     const text = within(link).getByText(label, { exact: true });
     await expect(link).toHaveAttribute("href", href);
@@ -191,53 +209,8 @@ export const PhoneSessions: Story = {
   parameters: { nextjs: { navigation: { pathname: "/sessions" } } },
   args: { children: <div className="px-6 pb-6">Sessions page content</div> },
   play: async ({ canvas }) => {
-    await expectMobileNavigation(canvas.getByRole("navigation", { name: "Main" }), "Sessions", [
-      ...mobileDestinations.slice(0, 3),
-      { label: "Groups", href: "/groups" },
-    ]);
-    const createSession = canvas.getByRole("link", { name: "New session" });
-    await expect(createSession).toHaveAttribute("href", "/sessions/create");
-    await expect(createSession.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-    await expect(canvas.getByRole("button", { name: "Open account menu" })).toBeInTheDocument();
+    await expectMobileNavigation(canvas.getByRole("navigation", { name: "Main" }), "Sessions");
   },
-};
-
-export const DesktopSessions: Story = {
-  globals: { viewport: { value: "desktop", isRotated: false } },
-  parameters: { nextjs: { navigation: { pathname: "/sessions" } } },
-  args: {
-    children: <div className="px-10 py-6"><h1 className="text-[44px] font-bold tracking-tight">Sessions</h1></div>,
-  },
-  play: async ({ canvas }) => {
-    const sidebar = within(canvas.getByRole("complementary"));
-    const nav = sidebar.getByRole("navigation", { name: "Main" });
-    await expect(within(nav).getAllByRole("link")).toHaveLength(4);
-    await expect(within(nav).getByRole("link", { name: "Sessions" })).toHaveAttribute("aria-current", "page");
-    await expect(sidebar.getByRole("button", { name: "Open account menu" })).toBeVisible();
-  },
-};
-
-export const DesktopSessionsAccount: Story = {
-  ...DesktopSessions,
-  args: { ...DesktopSessions.args, logoutAction: fn().mockResolvedValue(undefined) },
-  play: async ({ canvas, args }) => {
-    const accountButton = canvas.getByRole("button", { name: "Open account menu" });
-    await userEvent.click(accountButton);
-    const menu = await screen.findByRole("dialog", { name: "Your account" });
-    await expect(within(menu).getByText("Reliability 4.8")).toBeVisible();
-    await expect(within(menu).getByRole("link", { name: "Search sessions" }))
-      .toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
-    await expect(within(menu).getByRole("link", { name: "Account settings" })).toHaveAttribute("href", "/profile");
-    await userEvent.click(within(menu).getByRole("button", { name: "Log out" }));
-    await expect(args.logoutAction).toHaveBeenCalledOnce();
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(accountButton).toHaveFocus());
-  },
-};
-
-export const PhoneSessionsDark: Story = {
-  ...PhoneSessions,
-  globals: { theme: "dark", viewport: { value: "phone", isRotated: false } },
 };
 
 export const PhoneWallet: Story = {
