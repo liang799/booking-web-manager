@@ -166,9 +166,12 @@ test("search pagination preserves the query and return destination while sport c
     await page.getByLabel("Date", { exact: true }).fill("2043-04-02");
     await page.getByLabel("Region", { exact: true }).selectOption("West");
     await page.getByRole("button", { name: "Apply filters", exact: true }).click();
-    await expect(page).toHaveURL(/region=West/);
+    await expect(page).toHaveURL(/region=West/, { timeout: 15_000 });
+    // Wait for the filtered results to render before clicking Next page.
+    // The transition must complete, otherwise the pending guard discards the click.
+    await expect(results.getByRole("listitem")).toHaveCount(20, { timeout: 15_000 });
     await page.getByRole("button", { name: "Next page", exact: true }).click();
-    await expect(page).toHaveURL(/cursor=/);
+    await expect(page).toHaveURL(/cursor=/, { timeout: 15_000 });
     const params = new URL(page.url()).searchParams;
     expect(params.get("q")).toBe(tag);
     expect(params.get("date")).toBe("2043-04-02");
