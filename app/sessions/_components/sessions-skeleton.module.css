@@ -1,25 +1,30 @@
 .graphics { animation: pulse 1.6s ease-in-out infinite alternate; }
 .block { display: block; max-width: 100%; height: 14px; border-radius: 4px; background: hsl(var(--muted-foreground) / .13); }
-.timeline { position: relative; margin-top: 26px; padding: 0 4px 12px; }
+.timeline { --date-column: 104px; position: relative; margin-top: 32px; padding: 0 0 12px; }
 .rail { position: absolute; left: 5px; top: 32px; bottom: 0; width: 1px; background: hsl(var(--border)); }
-.group { width: 98px; height: 12px; margin: 0 0 18px 20px; }
-.date { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 10px; }
-.date::before { content: ""; position: absolute; left: -5px; top: 34px; width: 13px; height: 13px; border-radius: 50%; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+.group { width: 98px; height: 12px; margin: 0 0 20.5px 104px; }
+.date { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 24px; }
+.date::before { content: ""; position: absolute; left: 1px; top: 50.5px; width: 9px; height: 9px; border-radius: 50%; border: 1px solid hsl(var(--border)); background: hsl(var(--background)); }
 .weekday { width: 27px; height: 10px; }
 .day { width: 30px; height: 26px; }
 .month { width: 26px; height: 10px; }
-.currentDate { padding-top: 16px; }
-.currentDate .day { width: 46px; height: 48px; }
-.currentDate::before { top: 49px; background: hsl(var(--muted-foreground) / .3); }
-.currentRow { margin-bottom: 32px; }
-.summary { min-width: 0; }
-.hero { width: 100%; height: auto; aspect-ratio: 2.65 / 1; border-radius: 6px; }
+.currentDate .day { width: 40px; height: 40px; }
+.currentDate::before { top: 58px; background: hsl(var(--muted-foreground) / .3); }
+.currentRow { margin-bottom: 12px; }
+.summary { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(180px,36%); gap: 32px; padding: 24px 0 28px; border-top: 1px solid hsl(var(--foreground) / .65); border-bottom: 1px solid hsl(var(--border)); }
+.featureCopy { min-width: 0; min-height: 240px; display: flex; flex-direction: column; align-items: flex-start; }
+.featureStatus { width: 58px; height: 11px; margin-bottom: 20px; }
+.featureTitle { width: 88%; height: 30px; }
+.featureVenue { width: 75%; height: 16px; margin-top: 12px; }
+.featureMetadata { display: grid; gap: 12px; width: 100%; margin-top: 24px; }
+.featureMetadata > .block { width: 160px; height: 16px; }
+.featureAction { width: 110px; height: 16px; margin-top: auto; margin-bottom: 14px; }
+.hero { width: 100%; height: 240px; border-radius: 3px; }
 .title { width: 52%; height: 30px; margin-top: 22px; }
 .subtitle { width: 62%; height: 16px; margin-top: 12px; }
 .metadata { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 38px; margin-top: 24px; min-height: 44px; }
 .metadata > .block { width: 160px; height: 16px; }
-.metadata > .action { width: 110px; margin-left: auto; }
-.collapsed { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 90px; padding: 12px 10px 12px 2px; }
+.collapsed { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 104px; padding: 20px 0; border-bottom: 1px solid hsl(var(--border)); }
 .collapsed > div { flex: 1; min-width: 0; }
 .rowTitle { width: 240px; height: 18px; }
 .rowSubtitle { width: 165px; height: 13px; margin-top: 10px; }
@@ -36,8 +41,8 @@
 .thumbnail { width: 126px; height: 66px; flex-shrink: 0; }
 .pastCopy { flex: 1; min-width: 0; }
 .pastTime { width: 140px; }
-.mobileDate { flex: 0 0 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid hsl(var(--border)); }
-.mobileCopy { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 6px 15px 6px 30px; }
+.mobileDate { flex: 0 0 60px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px; }
+.mobileCopy { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 0 0 20px; }
 .mobileCopy .rowTitle { width: 170px; height: 12px; }
 .mobileCopy .rowSubtitle { width: 100px; height: 9px; margin-top: 14px; }
 .mobileTime { width: 85px; height: 9px; margin-top: 6px; }
@@ -52,12 +57,26 @@
 .invitation { width: 160px; height: 44px; margin-top: 16px; }
 @keyframes pulse { to { opacity: .5; } }
 @media (max-width: 1199px) {
+  .timeline { --date-column: 84px; }
+  .group { margin-left: 84px; }
+  .summary { gap: 24px; }
+  .featureCopy { min-height: 220px; }
+  .hero { height: 220px; }
   .metadata { gap: 14px 24px; }
   .metadata > .block { width: 130px; }
   .pastRow { gap: 16px; }
   .thumbnail { width: 90px; }
 }
 @media (max-width: 950px) {
+  .timeline { --date-column: 76px; }
+  .group { margin-left: 76px; }
+  .summary { grid-template-columns: minmax(0,1fr) minmax(140px,34%); gap: 20px; }
+  .featureCopy { min-height: 200px; }
+  .featureStatus { margin-bottom: 16px; }
+  .featureTitle { height: 26px; }
+  .featureMetadata { margin-top: 18px; }
+  .featureAction { margin-bottom: 8px; }
+  .hero { height: 200px; }
   .pastRow { gap: 12px; }
   .thumbnail { width: 64px; }
   .pastTime { display: none; }
@@ -65,7 +84,7 @@
 }
 @media (max-width: 767px) { .controls { padding: 16px; } }
 @media (max-width: 360px) {
-  .mobileDate { flex-basis: 70px; }
+  .mobileDate { flex-basis: 52px; }
   .mobileCopy { padding-left: 20px; padding-right: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .graphics { animation: none; } }

@@ -243,20 +243,25 @@ states without provider dependencies.
 
 `/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
 creation with `?created=1` selects Hosting and announces success. Desktop Joined
-uses a dated timeline: scrolling selects the next/previous card, moves the black
-marker, and reveals a compact image, title, venue, time and player-count summary.
+uses an editorial agenda on the grey page canvas, without an outer bordered card.
+The selected session is a horizontal feature: status, title, venue, time, player
+count and **View details** sit on the left, with a smaller photograph on the right.
+Its active date is bold at 40px; inactive dates are 26px. Dates and markers align
+with each session, and the remaining sessions use compact, full-width rows
+separated by subtle rules. Scrolling selects the next/previous session and moves
+the marker to the selected date.
 **View details** opens Details/Participants and calendar/map actions in a transient
-dialog. Closing it returns keyboard focus to its trigger. Date buttons and collapsed cards provide
-keyboard alternatives; keyboard focus within a card prevents scroll selection
+dialog. Closing it returns keyboard focus to its trigger. Date buttons and compact
+rows provide keyboard alternatives; keyboard focus within a session prevents scroll selection
 from removing that control. Reduced-motion preferences remove transitions.
 Desktop Hosting has equal-width upcoming carousel cards and compact history rows;
 it has no timeline. Both views use the original shared sidebar from `main`, with
-the sessions breadcrumb and bordered content panel inside the page.
-Below 768px both tabs use simple date/title cards, with details in a dialog.
+the sessions breadcrumb and header directly on the page canvas.
+Below 768px both tabs use simple dated rows separated by rules, with details in a dialog.
 
-Initial loading uses matching skeletons: the Joined date rail and expanded card,
-Hosting's upcoming cards and history rows, or simple dated cards on mobile. The
-host-management dialog also shows a controls skeleton while retaining its title
+Initial loading uses matching skeletons: the Joined date rail, horizontal active
+feature and compact rows; Hosting's upcoming cards and history rows; or simple dated
+rows on mobile. The host-management dialog also shows a controls skeleton while retaining its title
 and Close button. Decorative placeholders are hidden from assistive technology
 behind one loading status, and their pulse respects reduced motion. Background
 refreshes and pagination keep existing content visible.
@@ -266,7 +271,7 @@ the selected date, then the dates, artwork, title, venue, metadata, action and
 neighboring rows reveal individually. The visible rail draws for 560ms, the dot
 travels for 380ms, and details fade in over 420ms with a bounded 70ms stagger.
 The sequence waits for URL restoration and reserves the final layout to avoid
-shifts. Offscreen history does not delay the selected card. It runs once per overview/account visit, including when arriving from
+shifts. Offscreen history does not delay the selected session. It runs once per overview/account visit, including when arriving from
 Hosting. Interaction, resizing or a motion-preference change finishes it
 immediately; mobile and reduced-motion users see the final state directly.
 
@@ -277,7 +282,7 @@ loaded records and expose a retry. A different account remounts the controller.
 An account-scoped Zustand store keeps guarded browsing/viewing-session modes,
 timeline selection and remembered detail panels. Its validated URL storage persists
 the selected tab, Joined session ID and Details/Participants panel. Reloading a link
-expands the timeline card; the remembered panel appears when View details is opened.
+expands the timeline feature; the remembered panel appears when View details is opened.
 Dialogs remain transient, and changing accounts clears the account-specific selection.
 
 Hosting cards open the existing visibility, invitations, cancellation and

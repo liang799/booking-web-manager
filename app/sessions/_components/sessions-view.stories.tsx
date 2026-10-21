@@ -13,7 +13,7 @@ const meta = {
     nextjs: { navigation: { pathname: "/sessions" } },
     docs: {
       description: {
-        component: "The signed-in sessions overview. Joined sessions use a scroll-driven desktop timeline with one compact current-session summary and a View details action. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
+        component: "The signed-in sessions overview. Joined sessions use an editorial desktop agenda: the active session pairs its summary and View details action with a smaller photograph, while other sessions form compact rows along the timeline. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
       },
     },
   },
@@ -102,7 +102,7 @@ function timelineDay(canvasElement: HTMLElement, index: number) {
 
 async function expectTimelineHierarchy(canvasElement: HTMLElement, activeIndex: number) {
   const activeDay = timelineDay(canvasElement, activeIndex);
-  await expect(getComputedStyle(activeDay).fontSize).toBe("48px");
+  await expect(getComputedStyle(activeDay).fontSize).toBe("40px");
   await expect(getComputedStyle(activeDay).fontWeight).toBe("700");
   for (const [index] of joinedSessions.entries()) {
     if (index !== activeIndex) await expect(getComputedStyle(timelineDay(canvasElement, index)).fontSize).toBe("26px");
@@ -138,6 +138,19 @@ export const DesktopJoined: Story = {
     await expect(args.onOpenSession).toHaveBeenCalledWith(joinedSessions[0]);
     await expect(canvas.getByRole("link", { name: /^New session$/ })).toHaveAttribute("href", "/sessions/create");
     await expectTimelineHierarchy(canvasElement, 0);
+    const feature = overview.querySelector<HTMLElement>("[data-timeline-expanded]");
+    const photo = feature?.querySelector<HTMLElement>('[data-timeline-reveal="hero"]');
+    const title = feature?.querySelector<HTMLElement>('[data-timeline-reveal="title"]');
+    const panel = overview.querySelector("header")?.parentElement;
+    if (!feature || !photo || !title || !panel) throw new globalThis.Error("The editorial agenda was not rendered.");
+    await expect(title.getBoundingClientRect().right).toBeLessThanOrEqual(photo.getBoundingClientRect().left);
+    await expect(photo.getBoundingClientRect().width).toBeLessThanOrEqual(feature.getBoundingClientRect().width * .4);
+    await expect(getComputedStyle(panel).borderWidth).toBe("0px");
+    await expect(getComputedStyle(panel).boxShadow).toBe("none");
+    await expect(getComputedStyle(panel).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    for (const row of canvas.getAllByRole("button", { name: /^Expand / })) {
+      await expect(getComputedStyle(row).borderBottomWidth).toBe("1px");
+    }
     await expectNoHorizontalOverflow();
   },
 };
@@ -245,7 +258,7 @@ export const ReducedMotionSkipsEntrance: Story = {
   },
 };
 
-/** Matches the reference composition: two quiet rows precede the current session. */
+/** Selecting a later session keeps preceding rows compact and the active date distinct. */
 export const DesktopCurrentSessionHierarchy: Story = {
   play: async ({ canvas, canvasElement }) => {
     const third = canvasElement.querySelector<HTMLElement>(`#timeline-card-${joinedSessions[2]!.sessionId}`);
@@ -569,7 +582,14 @@ export const ScrollContinuesAtBottomOfCompactTimeline: Story = {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
     const second = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" });
-    await waitFor(() => expect(second).toHaveAttribute("aria-expanded", "true"));
+    // The editorial agenda can fit entirely in a tall viewport, so the first
+    // downward intent may also need the boundary wheel path.
+    await waitFor(() => {
+      if (second.getAttribute("aria-expanded") !== "true" && document.documentElement.scrollHeight <= window.innerHeight) {
+        window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
+      }
+      expect(second).toHaveAttribute("aria-expanded", "true");
+    });
     // Folding the previous card can move the page up. Pause automatic selection
     // while positioning at the boundary, then release focus for wheel navigation.
     second.focus();

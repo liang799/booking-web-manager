@@ -11,10 +11,13 @@ function DatePlaceholder({ current = false }: { readonly current?: boolean }) {
   </div>;
 }
 
-function SummaryPlaceholder() {
-  return <><Block className={styles.title} /><Block className={styles.subtitle} />
-    <div className={styles.metadata}><Block /><Block /><Block className={styles.action} /></div>
-  </>;
+function FeaturePlaceholder() {
+  return <div className={styles.featureCopy}>
+    <Block className={styles.featureStatus} /><Block className={styles.featureTitle} />
+    <Block className={styles.featureVenue} />
+    <div className={styles.featureMetadata}><Block /><Block /></div>
+    <Block className={styles.featureAction} />
+  </div>;
 }
 
 /** Mirrors the feed's geometry without exposing fake session facts or controls. */
@@ -27,7 +30,7 @@ export function SessionsSkeleton({ tab }: { readonly tab: "joined" | "hosting" }
         <Block className={styles.group} />
         <div className={`${layout.timelineRow} ${styles.currentRow}`}>
           <DatePlaceholder current />
-          <div className={styles.summary}><Block className={styles.hero} /><SummaryPlaceholder /></div>
+          <div className={styles.summary}><FeaturePlaceholder /><Block className={styles.hero} /></div>
         </div>
         {[0, 1].map((row) => <div className={layout.timelineRow} key={row}>
           <DatePlaceholder />
