@@ -53,7 +53,7 @@ test("mobile search preserves drafts and history, disables pending actions, and 
     expect(new URL(page.url()).searchParams.get("returnTo")).toBe(origin);
     await expect(page.getByRole("navigation", { name: "Main", exact: true })).toBeHidden();
 
-    const input = page.getByRole("searchbox", { name: "Search sports or venues", exact: true });
+    const input = page.getByRole("searchbox", { name: "Search sessions by sport or venue", exact: true });
     const filters = page.getByRole("button", { name: "Filters", exact: true });
     const sports = page.getByRole("group", { name: "Choose a sport", exact: true });
     const results = page.getByRole("region", { name: "Upcoming sessions", exact: true });
@@ -156,7 +156,7 @@ test("search pagination preserves the query and return destination while sport c
     const origin = "/?date=2043-04-02";
     await login(page, user, origin);
     await page.getByRole("link", { name: "Search sessions", exact: true }).click();
-    const input = page.getByRole("searchbox", { name: "Search sports or venues", exact: true });
+    const input = page.getByRole("searchbox", { name: "Search sessions by sport or venue", exact: true });
     const results = page.getByRole("region", { name: "Upcoming sessions", exact: true });
     await input.fill(tag);
     await input.press("Enter");
@@ -225,7 +225,7 @@ test("Discover returns to another app page and uses Home for direct or rejected 
     await expect(navigation.getByRole("link", { name: "Discover", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByRole("link", { name: "Home", exact: true })).not.toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
-    await expect(page.getByRole("searchbox", { name: "Search sports or venues" })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Search sessions by sport or venue" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Upcoming sessions" })).toHaveAttribute("aria-busy", "false");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("discover-search-desktop.png") });

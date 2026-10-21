@@ -70,20 +70,32 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
         onSubmit={(event) => {
           event.preventDefault();
           if (busy) return;
-          const formData = new FormData(event.currentTarget);
-          const submitter = (event.nativeEvent as SubmitEvent).submitter;
-          if (submitter instanceof HTMLButtonElement && submitter.dataset.sport !== undefined) {
-            formData.set("sport", submitter.dataset.sport);
-          }
-          onApply(formData);
+          onApply(new FormData(event.currentTarget));
         }}
       >
-        <fieldset disabled={busy} className="min-w-0 [color-scheme:light] dark:[color-scheme:dark]">
+        {/* Sport chips come first but are plain buttons, so Enter in a field still submits through Search. */}
+        <section aria-labelledby={`${id}-sports-heading`} className={styles.sports}>
+          <h2 id={`${id}-sports-heading`} className="text-sm font-semibold">Explore sports</h2>
+          <div className={cn(styles.sportChoices, "-mx-1 mt-2 flex gap-2 overflow-x-auto rounded-md px-1 pb-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring")} role="group" aria-label="Choose a sport" tabIndex={0}>
+            {["", ...sportChoices].map((sport) => (
+              <Button key={sport} type="button" disabled={busy} variant={filters.sport === sport ? "default" : "outline"} aria-pressed={filters.sport === sport} className="h-11 shrink-0 gap-2 px-3 text-xs" onClick={(event) => {
+                const form = event.currentTarget.form;
+                if (busy || form === null) return;
+                const formData = new FormData(form);
+                formData.set("sport", sport);
+                onApply(formData);
+              }}>
+                <SportIcon sport={sport} />{sport || "All sports"}
+              </Button>
+            ))}
+          </div>
+        </section>
+        <fieldset disabled={busy} className={cn(styles.searchFields, "mt-4 min-w-0 [color-scheme:light] dark:[color-scheme:dark]")}>
           <legend className="sr-only">Search and filter sessions</legend>
           <div className={cn(styles.searchBar, "flex min-h-[52px] items-center rounded-lg border border-border/70 bg-card p-1 shadow-[0_3px_10px_hsl(var(--foreground)/0.08)] focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2")}>
             <Button type="submit" variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Search"><Search aria-hidden="true" /></Button>
-            <Label htmlFor={`${id}-q`} className="sr-only">Search sports or venues</Label>
-            <input id={`${id}-q`} name="q" type="search" maxLength={100} defaultValue={filters.q ?? ""} placeholder="Search sports or venues" className={cn(styles.searchInput, "h-11 min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground disabled:opacity-50")} {...fieldAccessibility(id, "q", errors)} />
+            <Label htmlFor={`${id}-q`} className="sr-only">Search sessions by sport or venue</Label>
+            <input id={`${id}-q`} name="q" type="search" maxLength={100} defaultValue={filters.q ?? ""} placeholder="Search sessions by sport or venue" className={cn(styles.searchInput, "h-11 min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-[13px] placeholder:text-muted-foreground disabled:opacity-50")} {...fieldAccessibility(id, "q", errors)} />
             <Button variant="ghost" size="icon" className={cn(styles.filterToggle, "h-11 w-11 shrink-0")} aria-label="Filters" aria-expanded={expanded} aria-controls={`${id}-filter-panel`} onClick={onToggleFilters} disabled={busy || state.status === "invalid"}><SlidersHorizontal aria-hidden="true" /></Button>
           </div>
           {errors.q && <p id={`${id}-q-error`} className="mt-2 text-sm text-destructive">{errors.q.join(" ")}</p>}
@@ -126,16 +138,6 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
             </div>
           </section>
         </fieldset>
-        <section aria-labelledby={`${id}-sports-heading`} className={cn(styles.sports, "mt-6")}>
-          <h2 id={`${id}-sports-heading`} className="text-sm font-semibold">Explore sports</h2>
-          <div className={cn(styles.sportChoices, "-mx-1 mt-2 flex gap-2 overflow-x-auto rounded-md px-1 pb-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring")} role="group" aria-label="Choose a sport" tabIndex={0}>
-            {["", ...sportChoices].map((sport) => (
-              <Button key={sport} type="submit" data-sport={sport} disabled={busy} variant={filters.sport === sport ? "default" : "outline"} aria-pressed={filters.sport === sport} className="h-11 shrink-0 gap-2 px-3 text-xs">
-                <SportIcon sport={sport} />{sport || "All sports"}
-              </Button>
-            ))}
-          </div>
-        </section>
       </form>
 
       <section aria-label="Upcoming sessions" aria-busy={busy} className={cn(styles.results, "mt-5 space-y-3")}>

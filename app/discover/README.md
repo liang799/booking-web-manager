@@ -157,15 +157,16 @@ and informational session data. Photo sources and credits are in
 
 The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus a Search
 button alongside the account menu. Search opens the focused `/discover` view with
-a back arrow, tennis hero, mounted search/filter form, sport chips and compact cards.
-The desktop sidebar has separate Home and Discover destinations.
+a back arrow, tennis hero, sport chips, then the mounted search/filter form directly
+above the compact cards it searches. The search field is labelled "Search sessions by
+sport or venue". The desktop sidebar has separate Home and Discover destinations.
 
 From 768px the same view follows the SC2006 Figma "Desktop Home" frame:
 the court image becomes a dark banner with white copy, Filters is a filled square,
 "Upcoming sessions" is a bold section heading, and results are photo-top cards,
 two per row when the results column is at least 600px wide (a container query).
 The styles live in [`discovery-search-view.module.css`](./_components/discovery-search-view.module.css)
-and apply only at that width, so the mobile composition above is unchanged. Labels,
+and apply only at that width; below it the mobile styling is kept. Labels, order,
 form behavior, polling and the shared join confirmation are the same at every width.
 Only the decorative banner photograph fades in, and not under reduced motion.
 Before/after captures are in [`docs/assets/discover`](../../docs/assets/discover/README.md).
@@ -175,8 +176,9 @@ Clear and Next preserve it; it never reaches the API or reader. The back arrow
 replaces the current location with the validated destination, falling back to `/`
 for direct entry or invalid destinations. Browser Back/Forward still traverses
 filter changes. Search and sport-chip submissions include current form drafts,
-validate before navigating, and reset the cursor. Editing search does not open
-advanced filters.
+validate before navigating, and reset the cursor. The chips are plain buttons that
+apply the drafts with their sport, so Search stays the form's default button and
+Enter keeps an applied sport filter. Editing search does not open advanced filters.
 
 The shared mobile navigation keeps its existing active-state behavior. Only the
 active destination shows a visible label; all four retain accessible names.

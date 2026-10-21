@@ -24,7 +24,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await expect(page.locator("html")).toHaveClass(colorScheme);
     await page.reload();
     await expect(page.locator("html")).toHaveClass(colorScheme);
-    await expect(page.getByRole("searchbox", { name: "Search sports or venues" })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Search sessions by sport or venue" })).toBeVisible();
     expect(hydrationErrors).toEqual([]);
   });
 
@@ -41,7 +41,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 test("responds to device theme changes while the page stays open", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/discover");
-  const search = page.getByRole("searchbox", { name: "Search sports or venues" });
+  const search = page.getByRole("searchbox", { name: "Search sessions by sport or venue" });
   await search.fill("Tennis");
   await expect(page.locator("html")).toHaveClass("light");
 

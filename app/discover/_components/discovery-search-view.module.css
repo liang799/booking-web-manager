@@ -1,7 +1,7 @@
 /*
  * Desktop Discover follows the SC2006 "Desktop Home" frame: a dark court banner with white copy,
- * a bold section heading and two-column photo cards. Below 768px the original mobile search
- * composition is unchanged, so every rule here is scoped to the desktop media query.
+ * a bold section heading and two-column photo cards. Below 768px the mobile search composition
+ * keeps its own styling, so every rule here is scoped to the desktop media query.
  * Selectors are nested under `.view` so they outrank the single-class mobile utilities.
  */
 
@@ -40,18 +40,18 @@
   .view .heroTitle br { display: none; }
   .view .heroIntro { max-width: 34rem; margin-top: 12px; color: hsl(0 0% 100% / .86); font-size: 16px; }
 
-  /* Search toolbar: a taller field with the filter control as a solid square, as in the frame. */
+  /* Sport chips, then the search toolbar directly above the results it searches. */
   .view .searchForm { margin-top: 28px; }
+  .view .searchFields { margin-top: 20px; }
   .view .searchBar { min-height: 60px; padding: 6px; border-radius: 12px; box-shadow: 0 4px 16px hsl(var(--foreground) / .07); }
   .view .searchInput { font-size: 15px; }
   .view .filterToggle { margin-left: 4px; border-radius: 8px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
   .view .filterToggle:hover { background: hsl(var(--primary) / .88); color: hsl(var(--primary-foreground)); }
   .view .filterToggle[aria-expanded="true"] { box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary)); }
   .view .filterPanel { margin-top: 16px; padding: 24px; border-radius: 12px; }
-  .view .sports { margin-top: 28px; }
   .view .sportChoices { flex-wrap: wrap; overflow: visible; }
 
-  .view .results { margin-top: 36px; container-type: inline-size; }
+  .view .results { margin-top: 32px; container-type: inline-size; }
   .view .resultsHeading { padding-bottom: 16px; }
   .view .resultsTitle { font-size: clamp(24px, 1.8vw, 28px); font-weight: 700; letter-spacing: -.025em; line-height: 1.25; }
   .view .resultsSummary { margin-top: 4px; font-size: 14px; }
