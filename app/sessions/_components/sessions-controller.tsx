@@ -46,8 +46,9 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
   const queryClient = useQueryClient();
   const tab = useSessionsUiStore((state) => state.tab);
   const setTab = useSessionsUiStore((state) => state.selectTab);
-  const selectedSessionId = useSessionsUiStore((state) => state.selectedSessionId);
-  const setSelected = useSessionsUiStore((state) => state.selectSession);
+  const mode = useSessionsUiStore((state) => state.mode);
+  const openSession = useSessionsUiStore((state) => state.openSession);
+  const closeSession = useSessionsUiStore((state) => state.closeSession);
   const [cancelling, setCancelling] = useState<HostedSessionItem | null>(null);
   const [cancelled, setCancelled] = useState<SessionCancellationResult | null>(null);
   const cancellationTrigger = useRef<HTMLButtonElement | null>(null);
@@ -65,7 +66,12 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
     for (const page of feed.data?.pages ?? []) for (const session of page.sessions) unique.set(session.sessionId, session);
     return Array.from(unique.values());
   }, [feed.data]);
-  const selected = sessions.find((session) => session.sessionId === selectedSessionId) ?? null;
+  const selected = mode.status === "viewingSession" ? sessions.find((session) => session.sessionId === mode.sessionId) ?? null : null;
+  useEffect(() => {
+    // A completed refresh can remove a session. Pending/failed requests must not
+    // discard the user's selection, and an old ID must not reopen on a later refresh.
+    if (feed.isSuccess && !feed.isFetching && mode.status === "viewingSession" && !selected) closeSession();
+  }, [feed.isSuccess, feed.isFetching, mode, selected, closeSession]);
   const first = feed.data?.pages[0];
   const signIn = feed.error instanceof SessionFeedLoadError && feed.error.signIn;
   const loginPath = feed.error instanceof SessionFeedLoadError && feed.error.code === "UNAUTHENTICATED" ? "/login?next=%2Fsessions" : "/login";
@@ -88,8 +94,8 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
       router.replace(`/sessions?${search}`, { scroll: false });
     }} sessions={sessions} asOf={first?.asOf ?? new Date().toISOString()} upcomingCount={first?.upcomingCount ?? 0} pastCount={first?.pastCount ?? 0} actions={actions}
       loading={feed.isPending || signIn} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
-      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => setSelected(session.sessionId)} />
-    <Dialog open={selected !== null} onOpenChange={(open) => { if (!open) setSelected(null); }}>
+      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => openSession(session.sessionId)} />
+    <Dialog open={mode.status === "viewingSession" && selected !== null} onOpenChange={(open) => { if (!open) closeSession(); }}>
       <DialogContent className={`${styles.dialogContent} sm:max-w-[680px]`}>
         {selected && <>
           <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(selected)}</DialogTitle><DialogDescription>{selected.venueName} · {selected.role === "HOST" ? "Manage your session" : sessionStatus(selected)}</DialogDescription></DialogHeader>
@@ -104,7 +110,7 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
       onClose={() => setCancelling(null)} onRestoreFocus={() => {
         if (cancellationTrigger.current?.isConnected) cancellationTrigger.current.focus();
         else document.getElementById("sessions-heading")?.focus();
-      }} onCancelled={(result) => { setCancelled(result); setSelected(null); }} onRefresh={refresh} />
+      }} onCancelled={(result) => { setCancelled(result); closeSession(); }} onRefresh={refresh} />
   </>;
 }
 

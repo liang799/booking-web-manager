@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
 import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
-import { useState, type ComponentProps } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { AppShell } from "@/components/ui/app-shell";
 import type { HostedSessionsResponse } from "../hosted-sessions-contract";
@@ -21,6 +21,7 @@ let reply: LoadSessionFeed = async ({ tab }) => response(tab === "hosting" ? hos
 let client: QueryClient;
 let hostedCalls = 0;
 let accountRequests: { readonly userId: string; readonly tab: FeedRequest["tab"] }[] = [];
+let changeAccount: ((userId: string) => void) | undefined;
 
 const loadFeed: LoadSessionFeed = async (input) => {
   requests.push(input);
@@ -51,6 +52,10 @@ async function loadHosted(): Promise<HostedSessionsResponse> {
 
 function AccountsHarness(props: ComponentProps<typeof SessionsController>) {
   const [userId, setUserId] = useState("first-account");
+  useEffect(() => {
+    changeAccount = setUserId;
+    return () => { changeAccount = undefined; };
+  }, []);
   return <>
     <div className="flex gap-3 px-10 pt-4">
       <button type="button" className="min-h-11 rounded border px-3" onClick={() => setUserId("first-account")}>Use first account</button>
@@ -82,6 +87,7 @@ const meta = {
     client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
     requests = [];
     accountRequests = [];
+    changeAccount = undefined;
     hostedCalls = 0;
     reply = async ({ tab }) => response(tab === "hosting" ? hostedSessions : joinedSessions);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -157,6 +163,79 @@ export const TimelineSelectionSurvivesTabChanges: Story = {
     await expect(canvas.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
     await expect(canvas.getByRole("tabpanel")).toHaveTextContent("3 players have a place in this session.");
     await expect(requests.map(({ tab }) => tab)).toEqual(["joined", "hosting"]);
+  },
+};
+
+export const AccountChangeClosesOpenSession: Story = {
+  render: (args) => <AccountsHarness {...args} />,
+  play: async ({ canvas }) => {
+    const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
+    await userEvent.click(first.getByRole("button", { name: "View session" }));
+    await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    // Authentication can change while a modal is open, without using inert background controls.
+    if (!changeAccount) throw new Error("The account harness has not mounted.");
+    changeAccount("second-account");
+    await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
+    await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "View session" }));
+    await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const ViewedSessionSurvivesPendingAndFailedRefresh: Story = {
+  beforeEach: () => { reply = async () => response(joinedSessions.slice(0, 2)); },
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
+    const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
+    await userEvent.click(first.getByRole("button", { name: "View session" }));
+    const dialog = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const queryKey = [...sessionFeedQueryKey, "player", "joined"];
+    let rejectRefresh: ((reason: unknown) => void) | undefined;
+    reply = () => new Promise((_resolve, reject) => { rejectRefresh = reject; });
+    const refresh = client.refetchQueries({ queryKey, exact: true });
+    await waitFor(() => expect(client.getQueryState(queryKey)?.fetchStatus).toBe("fetching"));
+    await expect(dialog).toBeVisible();
+    if (!rejectRefresh) throw new Error("The refresh request has not started.");
+    rejectRefresh(new SessionFeedLoadError("NETWORK_ERROR", "unexpected", false));
+    await refresh;
+    await waitFor(() => expect(client.getQueryState(queryKey)?.status).toBe("error"));
+    await expect(dialog).toBeVisible();
+    await expect(within(dialog).getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    reply = async () => response(joinedSessions);
+    await client.refetchQueries({ queryKey, exact: true });
+    await expect(dialog).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const SuccessfulRefreshClosesMissingViewedSession: Story = {
+  beforeEach: () => { reply = async () => response(joinedSessions.slice(0, 2)); },
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
+    const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
+    await userEvent.click(first.getByRole("button", { name: "View session" }));
+    await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const queryKey = [...sessionFeedQueryKey, "player", "joined"];
+    reply = async () => response(joinedSessions.slice(1, 2));
+    await client.refetchQueries({ queryKey, exact: true });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await expect(canvas.queryByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" })).not.toBeInTheDocument();
+    // Restoring the record must not restore its old viewing mode.
+    reply = async () => response(joinedSessions.slice(0, 2));
+    await client.refetchQueries({ queryKey, exact: true });
+    const restored = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
+    await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
+    await userEvent.click(restored.getByRole("button", { name: "View session" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   },
 };
 
