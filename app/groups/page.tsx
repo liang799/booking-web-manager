@@ -2,16 +2,23 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfoNote } from "@/components/ui/info-note";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { CreateGroupForm } from "./_components/group-controls";
 
+interface GroupsPageProps {
+  /** e.g. /groups?left=1 after leaving a group. */
+  readonly searchParams: Promise<{ left?: string | string[] }>;
+}
+
 /** UC1-06 Manage Group: the groups you belong to, and a form to create one. */
-export default async function GroupsPage() {
+export default async function GroupsPage({ searchParams }: GroupsPageProps) {
   const user = await getCurrentUser();
   if (user === null) redirect("/login");
+  const { left } = await searchParams;
 
     const groups = await createManageGroup().listMine({ actorId: user.id });
   return (
@@ -22,6 +29,11 @@ export default async function GroupsPage() {
           <h2 id="my-groups" className="text-xl font-semibold">
             Regular groups
           </h2>
+          {left === "1" && (
+            <InfoNote icon>
+              <span role="status">You left the group.</span>
+            </InfoNote>
+          )}
           {groups.length === 0 ? (
             <EmptyState
               title="No groups yet"

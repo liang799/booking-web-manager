@@ -377,6 +377,91 @@ describe("RegularGroup", () => {
       expect(group.memberships).toHaveLength(1);
     });
   });
+
+  describe("Leaving", () => {
+    test("leave_WhenMemberLeaves_RemovesOnlyThatMember", () => {
+      // Arrange
+      const group = newGroup();
+      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      group.join({ userId: "ben", invitationToken: "first-token", now: now() });
+
+      // Act
+      group.leave({ userId: "aisha" });
+
+      // Assert
+      expect(group.memberships.map((member) => member.userId)).toEqual([
+        "owner",
+        "ben",
+      ]);
+    });
+
+    test("leave_WhenUserIsOwner_RejectsWithoutChangingState", () => {
+      // Arrange
+      const group = newGroup();
+      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      const before = groupState(group);
+
+      // Act & Assert
+      expect(() => group.leave({ userId: "owner" })).toThrow(
+        expect.objectContaining({ code: "OWNER_REMOVAL" }),
+      );
+      expect(groupState(group)).toEqual(before);
+    });
+
+    test("leave_WhenUserIsNotAMember_RejectsWithoutChangingState", () => {
+      // Arrange
+      const group = newGroup();
+      const before = groupState(group);
+
+      // Act & Assert
+      expect(() => group.leave({ userId: "stranger" })).toThrow(
+        expect.objectContaining({ code: "NOT_FOUND" }),
+      );
+      expect(groupState(group)).toEqual(before);
+    });
+
+    test("leave_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
+      // Arrange
+      const group = new RegularGroup(
+        groupDetails({
+          status: "ARCHIVED",
+          invitationActive: false,
+          memberships: [
+            new GroupMembership({ userId: "owner", joinedAt: now() }),
+            new GroupMembership({ userId: "aisha", joinedAt: now() }),
+          ],
+        }),
+      );
+      const before = groupState(group);
+
+      // Act & Assert
+      expect(() => group.leave({ userId: "aisha" })).toThrow(
+        expect.objectContaining({ code: "INVALID_STATE" }),
+      );
+      expect(groupState(group)).toEqual(before);
+    });
+
+    test("join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain", () => {
+      // Arrange
+      const group = newGroup();
+      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      group.leave({ userId: "aisha" });
+
+      // Act
+      const result = group.join({
+        userId: "aisha",
+        invitationToken: "first-token",
+        now: now(),
+      });
+
+      // Assert
+      expect(result).toBe("JOINED");
+      expect(group.memberships.map((member) => member.userId)).toEqual([
+        "owner",
+        "aisha",
+      ]);
+    });
+  });
 });
 
 const now = () => new Date("2026-09-15T00:00:00Z");

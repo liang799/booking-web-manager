@@ -35,4 +35,4 @@ export const Playground: Story = {
   },
 };
 
-export const WithoutIcon: Story = { args: { icon: false, children: "You can leave only by asking the owner to remove you." } };
+export const WithoutIcon: Story = { args: { icon: false, children: "You can leave the group at any time from its page." } };
