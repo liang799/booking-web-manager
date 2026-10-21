@@ -22,6 +22,7 @@ let client: QueryClient;
 let hostedCalls = 0;
 let accountRequests: { readonly userId: string; readonly tab: FeedRequest["tab"] }[] = [];
 let changeAccount: ((userId: string) => void) | undefined;
+let restoredEntrancePhases: string[] = [];
 
 const loadFeed: LoadSessionFeed = async (input) => {
   requests.push(input);
@@ -234,10 +235,21 @@ export const UrlRestoresSessionAndPanelAcrossPages: Story = {
   parameters: { nextjs: { navigation: { query: { tab: "joined", session: joinedSessions[7]!.sessionId, panel: "participants" } } } },
   beforeEach: () => {
     reply = async ({ cursor }) => cursor ? response(joinedSessions.slice(6)) : response(joinedSessions.slice(0, 6), "restore-more");
+    restoredEntrancePhases = [];
+    const observer = new MutationObserver(() => {
+      const phase = document.querySelector<HTMLElement>("[data-timeline-entrance]")?.dataset.timelineEntrance;
+      if (phase && phase !== restoredEntrancePhases.at(-1)) restoredEntrancePhases.push(phase);
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-timeline-entrance"] });
+    return () => observer.disconnect();
   },
   play: async ({ canvas }) => {
     const selected = await canvas.findByRole("button", { name: "Show Tennis Court Booking, 10 Oct 2026" });
     await waitFor(() => expect(selected).toHaveAttribute("aria-expanded", "true"));
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    // Restoration's queued scroll event must not cancel the first visible entrance.
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 4000 });
+    await expect(restoredEntrancePhases.filter((phase) => phase !== "pending")).toEqual(["line", "dot", "details", "complete"]);
     await expect(requests.map(({ cursor }) => cursor)).toEqual([null, "restore-more"]);
     await expect(new URL(window.location.href).searchParams.get("session")).toBe(joinedSessions[7]!.sessionId);
     await expect(new URL(window.location.href).searchParams.get("panel")).toBe("participants");

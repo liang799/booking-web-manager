@@ -262,9 +262,11 @@ behind one loading status, and their pulse respects reduced motion. Background
 refreshes and pagination keep existing content visible.
 
 On the first desktop Joined visit, the rail draws downward, the marker travels to
-the selected date, and the compact card reveals from top to bottom. The sequence
-waits for URL restoration and reserves the card's final space to avoid layout
-shifts. It runs once per overview/account visit, including when arriving from
+the selected date, then the dates, artwork, title, venue, metadata, action and
+neighboring rows reveal individually. The visible rail draws for 560ms, the dot
+travels for 380ms, and details fade in over 420ms with a bounded 70ms stagger.
+The sequence waits for URL restoration and reserves the final layout to avoid
+shifts. Offscreen history does not delay the selected card. It runs once per overview/account visit, including when arriving from
 Hosting. Interaction, resizing or a motion-preference change finishes it
 immediately; mobile and reduced-motion users see the final state directly.
 

@@ -135,8 +135,8 @@ function Players({ count, large = false }: { readonly count: number; readonly la
 
 function Metadata({ session }: { readonly session: SessionFeedItem }) {
   return <span className={styles.metadata}>
-    <span><Clock3 aria-hidden /><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span>
-    <span><UsersRound aria-hidden />{session.participantCount} / {session.capacity} players</span>
+    <span data-timeline-reveal="detail"><Clock3 aria-hidden /><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span>
+    <span data-timeline-reveal="detail"><UsersRound aria-hidden />{session.participantCount} / {session.capacity} players</span>
   </span>;
 }
 
@@ -176,11 +176,11 @@ export function SessionDetails({ session, footer = true, onOpenSession }: { read
 function ExpandedSession({ session, index, onOpenSession }: { readonly session: SessionFeedItem; readonly index: number; readonly onOpenSession: SessionsViewProps["onOpenSession"] }) {
   const selectTimelineSession = useSessionsUiStore((state) => state.selectTimelineSession);
   return <div className={styles.expandedCard} data-timeline-expanded>
-    <div className={styles.hero}><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1280px) 1000px, 70vw" className={styles.photo} priority={index === 0} /><Status session={session} /></div>
+    <div className={styles.hero} data-timeline-reveal="hero"><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1280px) 1000px, 70vw" className={styles.photo} priority={index === 0} /><Status session={session} /></div>
     <div className={styles.cardBody}>
-      <h2>{sessionTitle(session)}</h2>
-      <p className={styles.venue}>{session.venueName}{session.region && <> <span>·</span> {session.region}</>}</p>
-      <div className={styles.summaryFooter}><Metadata session={session} /><button type="button" className={styles.viewDetails} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); selectTimelineSession(session.sessionId); onOpenSession(session); }}>View details<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></button></div>
+      <h2 data-timeline-reveal="title">{sessionTitle(session)}</h2>
+      <p className={styles.venue} data-timeline-reveal="venue">{session.venueName}{session.region && <> <span>·</span> {session.region}</>}</p>
+      <div className={styles.summaryFooter}><Metadata session={session} /><button type="button" className={styles.viewDetails} data-timeline-reveal="action" onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); selectTimelineSession(session.sessionId); onOpenSession(session); }}>View details<ArrowRight size={20} strokeWidth={1.5} aria-hidden /></button></div>
     </div>
   </div>;
 }
@@ -313,11 +313,11 @@ function JoinedTimeline({ sessions, asOf, onOpenSession, scrollTargetId, onUrlRe
       const previous = sessions[index - 1];
       const expanded = session.sessionId === active;
       return <Fragment key={session.sessionId}>
-        {(!previous || timelineGroup(previous, asOf) !== label) && <h2 className={styles.groupLabel}>{label}</h2>}
+        {(!previous || timelineGroup(previous, asOf) !== label) && <h2 className={styles.groupLabel} data-timeline-reveal="label">{label}</h2>}
         <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
-          <button type="button" data-date-control className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
+          <button type="button" data-date-control data-timeline-reveal="date" className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
-            {expanded ? <ExpandedSession session={session} index={index} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
+            {expanded ? <ExpandedSession session={session} index={index} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
               <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span>{sessionTime(session)}</span></span>
               <span className={styles.collapsedPlayers}><UsersRound size={18} aria-hidden />{session.participantCount} / {session.capacity}</span>
               <ChevronDown size={18} strokeWidth={1.5} aria-hidden />

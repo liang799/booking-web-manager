@@ -66,10 +66,12 @@ async function expectFeedSkeleton(canvasElement: HTMLElement, tab: "joined" | "h
 
 let entrancePhases: string[] = [];
 let entranceHeights: number[] = [];
+let concealedContent: { phase: string; opacities: string[] }[] = [];
 
 function observeEntrance() {
   entrancePhases = [];
   entranceHeights = [];
+  concealedContent = [];
   const observer = new MutationObserver(() => {
     const timeline = document.querySelector<HTMLElement>("[data-timeline-entrance]");
     const phase = timeline?.dataset.timelineEntrance;
@@ -77,9 +79,19 @@ function observeEntrance() {
     entrancePhases.push(phase);
     const expanded = timeline?.querySelector<HTMLElement>("[data-timeline-expanded]");
     if (expanded) entranceHeights.push(expanded.getBoundingClientRect().height);
+    if (timeline && (phase === "line" || phase === "dot")) {
+      concealedContent.push({ phase, opacities: Array.from(timeline.querySelectorAll<HTMLElement>("[data-timeline-reveal]"), (element) => getComputedStyle(element).opacity) });
+    }
   });
   observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-timeline-entrance"] });
   return () => observer.disconnect();
+}
+
+async function expectTimelineContentRevealed(timeline: HTMLElement) {
+  const content = timeline.querySelectorAll<HTMLElement>("[data-timeline-reveal]");
+  await expect(content.length).toBeGreaterThan(10);
+  for (const element of content) await expect(getComputedStyle(element).opacity).toBe("1");
+  await expect(timeline.getAnimations({ subtree: true }).filter((animation) => animation.constructor === Animation)).toHaveLength(0);
 }
 
 function timelineDay(canvasElement: HTMLElement, index: number) {
@@ -116,7 +128,8 @@ export const DesktopJoined: Story = {
     await expect(within(overview).getByText(/My sessions/)).toBeVisible();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
-    await expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible();
+    canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
     await expect(canvas.getByRole("heading", { name: "Earlier this month" })).toBeInTheDocument();
     await expect(canvas.queryByRole("tab", { name: "Details" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tab", { name: "Participants (2)" })).not.toBeInTheDocument();
@@ -139,8 +152,32 @@ export const DesktopEntranceSequence: Story = {
     const initialHeight = expanded.getBoundingClientRect().height;
     const initialScroll = window.scrollY;
     const initialUrl = window.location.href;
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "details"), { timeout: 2000 });
+    const hero = expanded.querySelector<HTMLElement>('[data-timeline-reveal="hero"]');
+    const title = expanded.querySelector<HTMLElement>('[data-timeline-reveal="title"]');
+    const venue = expanded.querySelector<HTMLElement>('[data-timeline-reveal="venue"]');
+    const action = expanded.querySelector<HTMLElement>('[data-timeline-reveal="action"]');
+    if (!hero || !title || !venue || !action) throw new globalThis.Error("The independent detail reveal targets were not rendered.");
+    const delays = [hero, title, venue, action].map((target) => {
+      const animation = target.getAnimations().find((animation) => animation.constructor === Animation);
+      if (!animation?.effect) throw new globalThis.Error("A detail target is missing its entrance animation.");
+      return animation.effect.getTiming().delay;
+    });
+    await expect(new Set(delays).size).toBe(4);
+    await expect(delays[0]!).toBeLessThan(delays[1]!);
+    await expect(delays[1]!).toBeLessThan(delays[2]!);
+    await expect(delays[2]!).toBeLessThan(delays[3]!);
+    await waitFor(() => {
+      expect(timeline).toHaveAttribute("data-timeline-entrance", "details");
+      expect(Number(getComputedStyle(hero).opacity)).toBeGreaterThan(Number(getComputedStyle(title).opacity));
+    });
     await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
-    await expect(entrancePhases.filter((phase) => phase !== "pending")).toEqual(["line", "dot", "card", "complete"]);
+    await expect(entrancePhases.filter((phase) => phase !== "pending")).toEqual(["line", "dot", "details", "complete"]);
+    await expect(concealedContent.map(({ phase }) => phase)).toEqual(["line", "dot"]);
+    for (const snapshot of concealedContent) {
+      await expect(snapshot.opacities.length).toBeGreaterThan(10);
+      await expect(snapshot.opacities.every((opacity) => opacity === "0")).toBe(true);
+    }
     await expect(entranceHeights.length).toBeGreaterThanOrEqual(3);
     for (const height of entranceHeights) await expect(Math.abs(height - initialHeight)).toBeLessThan(1);
     await expect(expanded.getBoundingClientRect().height).toBe(initialHeight);
@@ -148,7 +185,20 @@ export const DesktopEntranceSequence: Story = {
     await expect(window.location.href).toBe(initialUrl);
     await expect(args.onOpenSession).not.toHaveBeenCalled();
     await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
+    await expectTimelineContentRevealed(timeline);
     await expectTimelineHierarchy(canvasElement, 0);
+  },
+};
+
+export const EntranceDetailsInterrupt: Story = {
+  play: async ({ canvas }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "details"), { timeout: 2000 });
+    await expect(timeline.getAnimations({ subtree: true }).some((animation) => animation.constructor === Animation && animation.playState === "running")).toBe(true);
+    window.dispatchEvent(new WheelEvent("wheel", { deltaY: 120 }));
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"));
+    await expectTimelineContentRevealed(timeline);
+    await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
   },
 };
 
@@ -567,7 +617,8 @@ export const LoadingMore: Story = {
 export const NextPageError: Story = {
   args: { hasMore: true, error: "We couldn’t load more sessions. Please try again." },
   play: async ({ canvas, args }) => {
-    await expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible();
+    canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
+    await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
     await expect(canvas.getByRole("alert")).toHaveTextContent("We couldn’t load more sessions.");
     await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
     await expect(args.onRetry).toHaveBeenCalledOnce();

@@ -295,8 +295,8 @@
 @media (prefers-reduced-motion: reduce) { .page * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .timeline[data-timeline-entrance="pending"] .rail { transform: scaleY(0); }
+  .timeline[data-timeline-entrance="pending"] .rail { clip-path: inset(0 0 100% 0); }
   .timeline:is([data-timeline-entrance="pending"],[data-timeline-entrance="line"]) .activeDot { opacity: 0; transition: none; }
-  .timeline:is([data-timeline-entrance="pending"],[data-timeline-entrance="line"],[data-timeline-entrance="dot"]) [data-current] .expandedCard { opacity: 0; }
+  .timeline:not([data-timeline-entrance="complete"]) [data-timeline-reveal] { opacity: 0; }
   .timeline:not([data-timeline-entrance="complete"]) .activeDot { transition: none; }
 }
