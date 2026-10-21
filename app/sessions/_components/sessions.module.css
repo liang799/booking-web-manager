@@ -16,12 +16,14 @@
 .mobileGroups,.mobileList { display: none; }
 .timeline { position: relative; margin-top: 30px; padding-bottom: 12px; overflow-anchor: none; }
 .rail { position: absolute; left: 1px; top: 28px; bottom: 0; width: 1px; background: #ceced0; }
-.activeDot { position: absolute; z-index: 2; left: -4.5px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #111211; transform: translateY(var(--marker-y)); transition: transform 520ms cubic-bezier(.22,1,.36,1); pointer-events: none; box-shadow: 0 0 0 4px var(--session-paper); }
+.activeDot { position: absolute; z-index: 2; left: -4.5px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #111211; transform: translateY(calc(var(--marker-y) - 50%)); transition: transform 520ms cubic-bezier(.22,1,.36,1); pointer-events: none; box-shadow: 0 0 0 4px var(--session-paper); }
 .groupLabel { position: relative; width: fit-content; background: var(--session-paper); padding: 1px 14px 12px 19px; color: #737373; font-size: 12px; font-weight: 500; letter-spacing: 2.6px; line-height: 1.4; }
 .groupLabel:first-of-type::before { content: ""; position: absolute; width: 4px; height: 4px; top: 7px; left: 0; border-radius: 50%; background: #bcbcbf; }
 .timelineRow + .groupLabel { margin: 38px 0 0 -4px; padding: 2px 14px 12px 0; }
 .timelineRow { display: grid; grid-template-columns: 99px minmax(0,1fr); position: relative; margin-bottom: 14px; }
 .timelineRow[data-current] { margin-bottom: 28px; }
+.timelineRow .date { color: var(--session-muted); }
+.timelineRow[data-current] .date { color: hsl(var(--foreground)); }
 .timelineRow[data-section="past"] .date { color: var(--session-muted); }
 .timelineRow[data-section="past"] .date strong { color: #606066; }
 .timelineRow[data-section="past"] .thumbnail .photo { filter: grayscale(.85); opacity: .72; }
@@ -29,10 +31,11 @@
 .date { display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1; text-transform: uppercase; white-space: nowrap; }
 .date > span { font-size: 12px; }
 .date strong { font-size: 28px; font-weight: 650; letter-spacing: -1px; padding: 6px 0 8px; }
-.timeline .date strong { font-size: 32px; }
-.timelineRow[data-current] .dateButton { padding-top: 26px; }
+.timeline .date strong { font-size: 26px; padding: 0; margin: 6px 0 8px; }
+.timelineRow[data-current] .date strong { font-size: 48px; font-weight: 700; }
+.timelineRow[data-current] .dateButton { padding-top: 16px; }
 .dot { position: absolute; left: -4px; top: 34px; width: 11px; height: 11px; border: 1.5px solid #9d9da1; background: var(--session-paper); border-radius: 50%; }
-.timelineRow[data-current] .dot { top: 56px; opacity: 0; }
+.timelineRow[data-current] .dot { opacity: 0; }
 .timelineCard { min-width: 0; border: 1px solid var(--session-line); border-radius: 9px; background: hsl(var(--card)/.24); overflow: hidden; }
 .timelineRow[data-current] .timelineCard { box-shadow: 0 3px 12px rgb(0 0 0 / .025); }
 .hero { position: relative; height: clamp(190px, 19vw, 290px); overflow: hidden; background: #787c6e; }

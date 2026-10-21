@@ -164,13 +164,18 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
       pendingFocus.current = null;
     }
     const updateMarker = () => {
-      const row = rows.current.get(active);
+      const day = rows.current.get(active)?.querySelector<HTMLElement>("[data-date-control] time strong");
       const root = list.current;
-      if (row && root) setMarker(row.offsetTop + 56);
+      if (day && root) {
+        const bounds = day.getBoundingClientRect();
+        setMarker(bounds.top - root.getBoundingClientRect().top + bounds.height / 2);
+      }
     };
     updateMarker();
     const observer = new ResizeObserver(updateMarker);
     if (list.current) observer.observe(list.current);
+    const day = rows.current.get(active)?.querySelector<HTMLElement>("[data-date-control] time strong");
+    if (day) observer.observe(day);
     const frame = requestAnimationFrame(() => { ignoreScroll.current = false; });
     return () => { observer.disconnect(); cancelAnimationFrame(frame); };
   }, [active, sessions]);
@@ -227,7 +232,7 @@ function JoinedTimeline({ sessions, asOf, onOpenSession }: SessionsViewProps) {
 
   return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline">
     <div className={styles.rail} aria-hidden />
-    <span className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
+    <span data-timeline-marker className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
     {sessions.map((session, index) => {
       const label = timelineGroup(session, asOf);
       const previous = sessions[index - 1];

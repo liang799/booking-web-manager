@@ -43,8 +43,32 @@ async function expectNoHorizontalOverflow() {
   await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
 }
 
+function timelineDay(canvasElement: HTMLElement, index: number) {
+  const day = canvasElement.querySelector<HTMLElement>(`[data-session-id="${joinedSessions[index]!.sessionId}"] [data-date-control] time strong`);
+  if (!day) throw new globalThis.Error("The timeline date was not rendered.");
+  return day;
+}
+
+async function expectTimelineHierarchy(canvasElement: HTMLElement, activeIndex: number) {
+  const activeDay = timelineDay(canvasElement, activeIndex);
+  await expect(getComputedStyle(activeDay).fontSize).toBe("48px");
+  await expect(getComputedStyle(activeDay).fontWeight).toBe("700");
+  for (const [index] of joinedSessions.entries()) {
+    if (index !== activeIndex) await expect(getComputedStyle(timelineDay(canvasElement, index)).fontSize).toBe("26px");
+  }
+  // Wait through the marker's movement, then compare actual centers so padding
+  // or font changes cannot leave the dot aligned with an obsolete fixed offset.
+  await waitFor(() => {
+    const marker = canvasElement.querySelector<HTMLElement>("[data-timeline-marker]");
+    if (!marker) throw new globalThis.Error("The current timeline marker was not rendered.");
+    const markerBounds = marker.getBoundingClientRect();
+    const dayBounds = activeDay.getBoundingClientRect();
+    expect(Math.abs(markerBounds.top + markerBounds.height / 2 - dayBounds.top - dayBounds.height / 2)).toBeLessThan(1.5);
+  });
+}
+
 export const DesktopJoined: Story = {
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
     await expect(canvas.getByRole("heading", { level: 1, name: "Sessions" })).toBeVisible();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
@@ -53,6 +77,21 @@ export const DesktopJoined: Story = {
     await expect(canvas.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await expect(canvas.getByRole("tab", { name: "Participants (2)" })).toBeVisible();
     await expect(canvas.getByRole("link", { name: /^New session$/ })).toHaveAttribute("href", "/sessions/create");
+    await expectTimelineHierarchy(canvasElement, 0);
+    await expectNoHorizontalOverflow();
+  },
+};
+
+/** Matches the reference composition: two quiet rows precede the current session. */
+export const DesktopCurrentSessionHierarchy: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    const third = canvasElement.querySelector<HTMLElement>(`#timeline-card-${joinedSessions[2]!.sessionId}`);
+    if (!third) throw new globalThis.Error("The third session card was not rendered.");
+    await userEvent.click(within(third).getByRole("button", { name: "Expand Tennis Court Booking at Choa Chu Kang Tennis Centre" }));
+    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 24 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
+    await expectTimelineHierarchy(canvasElement, 2);
+    await expect(getComputedStyle(timelineDay(canvasElement, 0)).color).toBe(getComputedStyle(timelineDay(canvasElement, 1)).color);
+    await expect(getComputedStyle(timelineDay(canvasElement, 0)).color).not.toBe(getComputedStyle(timelineDay(canvasElement, 2)).color);
     await expectNoHorizontalOverflow();
   },
 };
@@ -167,6 +206,7 @@ export const KeyboardAndParticipantDetails: Story = {
       await userEvent.keyboard("{Enter}");
       await expect(date).toHaveAttribute("aria-expanded", "true");
       await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
+      await expectTimelineHierarchy(canvasElement, 1);
     });
     await step("The expanded card exposes truthful attendance and calendar details", async () => {
       const expanded = canvasElement.querySelector<HTMLElement>(`#timeline-card-${joinedSessions[1]!.sessionId}`);
@@ -188,6 +228,13 @@ export const KeyboardAndParticipantDetails: Story = {
       await userEvent.click(views.getByRole("button", { name: /^Hosting$/ }));
       await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     });
+    await step("A selected historical date stays subdued while gaining the current date size", async () => {
+      const pastDay = timelineDay(canvasElement, 4);
+      const historicalColor = getComputedStyle(pastDay).color;
+      await userEvent.click(canvas.getByRole("button", { name: "Show Tennis Court Booking, 20 Oct 2026" }));
+      await expectTimelineHierarchy(canvasElement, 4);
+      await expect(getComputedStyle(pastDay).color).toBe(historicalColor);
+    });
     await expectNoHorizontalOverflow();
   },
 };
@@ -207,6 +254,7 @@ export const ScrollAdvancesCurrentSession: Story = {
       await expect(nextRow).toHaveAttribute("data-current", "true");
     });
     await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "false");
+    await expectTimelineHierarchy(canvasElement, 1);
     await expectNoHorizontalOverflow();
   },
 };
@@ -219,9 +267,10 @@ export const ScrollReturnsToEarlierSessions: Story = {
       if (!next) throw new globalThis.Error("The next timeline row was not rendered.");
       window.scrollTo({ top: window.scrollY + next.getBoundingClientRect().top - Math.min(window.innerHeight * 0.45, 650) + 8, behavior: "instant" });
       await waitFor(() => expect(next).toHaveAttribute("data-current", "true"));
+      await expectTimelineHierarchy(canvasElement, index);
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     }
-    for (const date of ["23 Oct 2026", "21 Oct 2026"]) {
+    for (const [index, date] of [[1, "23 Oct 2026"], [0, "21 Oct 2026"]] as const) {
       const previous = canvas.getByRole("button", { name: `Show Tennis Court Booking, ${date}` });
       window.scrollBy({ top: -window.innerHeight, behavior: "instant" });
       // A native wheel still reports upward intent when card folding has reached scrollY=0.
@@ -229,6 +278,7 @@ export const ScrollReturnsToEarlierSessions: Story = {
         if (previous.getAttribute("aria-expanded") !== "true") window.dispatchEvent(new WheelEvent("wheel", { deltaY: -120 }));
         expect(previous).toHaveAttribute("aria-expanded", "true");
       });
+      await expectTimelineHierarchy(canvasElement, index);
     }
     await expectNoHorizontalOverflow();
   },

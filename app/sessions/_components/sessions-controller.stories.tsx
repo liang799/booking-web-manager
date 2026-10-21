@@ -194,6 +194,8 @@ export const ViewedSessionSurvivesPendingAndFailedRefresh: Story = {
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
     await userEvent.click(first.getByRole("button", { name: "View session" }));
     const dialog = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    // Finding the dialog can precede its opening animation becoming visible.
+    await waitFor(() => expect(dialog).toBeVisible());
     const queryKey = [...sessionFeedQueryKey, "player", "joined"];
     let rejectRefresh: ((reason: unknown) => void) | undefined;
     reply = () => new Promise((_resolve, reject) => { rejectRefresh = reject; });
