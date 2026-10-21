@@ -19,19 +19,24 @@ compiled Tailwind CSS, with the desktop introduction verified as `display: flex`
 and 224px tall; its mobile equivalent is hidden. Temporary baseline sources were
 removed after capture.
 
-[Validation results](validation.json) record **28 passing responsive cases**:
-320, 390, 768, 1024, 1200, 1440 and 1750px, in light and dark themes, for empty and
+[Validation results](validation.json) record **32 passing responsive cases**:
+320, 390, 767, 768, 1024, 1200, 1440 and 1750px, in light and dark themes, for empty and
 long-venue booking states. Each case checks horizontal overflow, visible control
-bounds, hero/weather overlap, image decoding and reduced-motion animations and
-link transitions. All 14 empty-state cases also use the keyboard to open the
-forecast and verify its disclosure fits within the viewport. An additional
-motion check verifies the title and court fade from zero to full opacity.
+bounds, desktop hero/weather overlap, image decoding and reduced-motion entrance
+animations. Desktop empty-state cases use the keyboard to open the forecast and
+verify its disclosure fits within the viewport. Mobile cases verify the full
+forecast details, a single Find action, and that the desktop court image is not
+downloaded. A resize check switches 767 → 768 → 767px without reloading.
 No browser page errors were observed.
 
 At the reference width, the hero ends at 519px and the empty panel is 260px
 tall. Typography, button sizes, the white image fade, unboxed forecast and shaded
-ball follow the supplied composition. The sidebar deliberately retains `main`'s
-size, typography, spacing and navigation; forecast values remain server-owned.
+ball follow the supplied desktop composition. Below 768px, Home retains the
+original `main` layout: Upcoming Bookings first, followed by booking cards or
+the empty message and full weather card with its Find a session footer. The
+mobile hero and empty-state ball are hidden. The sidebar deliberately retains
+`main`'s size, typography, spacing and navigation; forecast values remain
+server-owned.
 
 This evidence covers deterministic UI rendering. It does not establish
 production deployment, authentication, database access or live forecast service

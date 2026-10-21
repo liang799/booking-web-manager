@@ -42,7 +42,7 @@ export const NoBookingsWeather: Story = {
     await waitFor(() => expect(canvas.getByText("You have no upcoming bookings.")).toBeVisible());
     await expect(canvas.getAllByRole("link", { name: "Find a session" })).toHaveLength(2);
     await expect(canvas.getAllByRole("link", { name: "Host a session" })).toHaveLength(2);
-    await expect(canvas.getByText("Thundery showers")).toBeVisible();
+    await expect(canvas.getByLabelText(/^Forecast details:/)).toHaveTextContent("Thundery showers");
   },
 };
 export const WeatherUnavailable: Story = { args: { state: { status: "empty", weather: { status: "unavailable" } } } };

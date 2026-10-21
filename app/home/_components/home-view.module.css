@@ -15,7 +15,8 @@
   background: hsl(var(--home-surface));
 }
 
-.heroArt { z-index: -2; object-fit: cover; object-position: right center; }
+.heroPicture { position: absolute; z-index: -2; inset: 0; }
+.heroArt { object-fit: cover; object-position: right center; }
 
 /* A feathered white falloff lets the court emerge naturally behind the introduction. */
 .hero::after {
@@ -58,6 +59,7 @@
 
 .bookings { padding: 34px var(--home-gutter) 26px; }
 .sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.mobileHeading, .mobileWeather, .mobileBookingTitle { display: none; }
 .sectionHeading h2 { font-size: clamp(25px, 1.829vw, 34px); font-weight: 500; letter-spacing: -.035em; line-height: 1.3; }
 .sessionsLink { display: inline-flex; min-height: 44px; flex-shrink: 0; align-items: center; gap: 10px; border-radius: 4px; color: hsl(var(--muted-foreground)); font-size: 14px; transition: color .2s; }
 .sessionsLink:hover { color: hsl(var(--foreground)); }
@@ -65,8 +67,8 @@
 .bookingContent { margin-top: 16px; }
 .empty { display: flex; min-height: 260px; flex-direction: column; align-items: center; justify-content: center; padding: 26px 24px; border-radius: 12px; background: linear-gradient(115deg, hsl(0 0% 95.8%), hsl(0 0% 96.5%)); text-align: center; }
 .emptyBall { width: 128px; height: 78px; flex-shrink: 0; margin-bottom: 4px; object-fit: contain; }
-.empty h3 { font-size: 21px; font-weight: 500; letter-spacing: -.025em; line-height: 1.4; }
-.empty > p { margin-top: 4px; color: hsl(var(--muted-foreground)); font-size: 16px; line-height: 1.5; }
+.emptyMessage { font-size: 21px; font-weight: 500; letter-spacing: -.025em; line-height: 1.4; }
+.emptyExplanation { margin-top: 4px; color: hsl(var(--muted-foreground)); font-size: 16px; line-height: 1.5; }
 .compactActions { justify-content: center; margin-top: 14px; }
 .compactActions a { height: 52px; padding-inline: 22px; font-size: 15px; }
 .compactActions .findButton { gap: 12px; }
@@ -90,52 +92,24 @@
   .weatherIcon { width: 36px; height: 36px; }
 }
 
+/* Preserve main's original mobile Home, including the shell artwork behind its heading. */
 @media (max-width: 767px) {
-  .home { --home-gutter: 24px; }
-  .hero { min-height: 410px; align-items: flex-start; }
-  .heroArt { object-position: 68% center; }
-  .hero::after,
-  :global(.dark) .hero::after {
-    background: linear-gradient(180deg, hsl(var(--home-surface)), transparent 28%), linear-gradient(90deg, hsl(var(--home-surface) / .98), hsl(var(--home-surface) / .86) 47%, hsl(var(--home-surface) / .25)), linear-gradient(0deg, hsl(var(--home-surface)), transparent 35%);
-  }
-  .heroCopy { width: 100%; padding-block: 28px 40px; }
-  .withWeather .heroCopy { padding-top: 116px; }
-  .eyebrow { margin-bottom: 20px; font-size: 10px; }
-  .heroCopy h1 { font-size: clamp(48px, 12vw, 66px); }
-  .intro { margin-top: 20px; font-size: 14px; line-height: 1.55; }
-  .actions { gap: 10px; margin-top: 24px; }
-  .actions a { flex: 1; height: 48px; gap: 10px; padding-inline: 14px; font-size: 13px; }
-  .actions a svg { width: 17px; height: 17px; }
-  .weather { top: 12px; right: var(--home-gutter); }
-  .forecastOverview { gap: 12px; }
-  .weatherLocation { font-size: 12px; }
-  .temperature { font-size: 21px; }
-  .forecast { font-size: 11px; }
-  .weatherIcon { width: 30px; height: 30px; }
-  .forecastDetails { width: min(300px, calc(100vw - 48px)); }
-  .bookings { padding-top: 16px; }
-  .sectionHeading { gap: 12px; }
-  .sectionHeading h2 { font-size: 22px; }
-  .sessionsLink { gap: 6px; font-size: 12px; }
-  .empty { min-height: 292px; padding: 24px 18px; }
-  .empty h3 { max-width: 260px; font-size: 17px; }
-  .empty > p { max-width: 290px; font-size: 13px; }
-  .compactActions { width: 100%; margin-top: 20px; }
-  .compactActions a { padding-inline: 10px; font-size: 12px; }
-}
-
-@media (max-width: 359px) {
-  .home { --home-gutter: 20px; }
-  .sectionHeading { align-items: flex-start; flex-direction: column; gap: 0; }
-  .sectionHeading h2 { font-size: 21px; }
-  .sessionsLink { min-height: 44px; }
-  .actions { flex-direction: column; align-items: stretch; }
-  .actions a { flex: auto; }
+  .home { min-height: 0; background: transparent; }
+  .hero, .desktopHeading, .desktopBookingTitle, .sessionsLink, .emptyBall, .emptyExplanation, .compactActions { display: none; }
+  .bookings { padding: 24px 24px 40px; }
+  .mobileHeading { display: block; font-size: 24px; font-weight: 700; letter-spacing: -.025em; line-height: 32px; }
+  .bookingContent { margin-top: 12px; }
+  .empty, :global(.dark) .empty { display: block; min-height: 0; padding: 0; border-radius: 0; background: transparent; text-align: left; }
+  .emptyMessage { color: hsl(var(--muted-foreground)); font-size: 14px; font-weight: 400; letter-spacing: normal; line-height: 20px; }
+  .mobileWeather { display: block; margin-top: 20px; }
+  .mobileBookingTitle { display: block; }
+  .bookingCard { border-color: hsl(var(--border) / .75); border-radius: 6px; box-shadow: 0 2px 6px hsl(var(--foreground) / .08); }
+  .error { gap: 12px; padding-block: 0; }
 }
 
 @keyframes home-reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes court-reveal { from { opacity: 0; } }
-@media (prefers-reduced-motion: no-preference) {
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .heroArt { animation: court-reveal 1s ease-out both; }
   .heroCopy > * { animation: home-reveal .65s ease-out both; }
   .heroCopy > :nth-child(2) { animation-delay: .06s; }

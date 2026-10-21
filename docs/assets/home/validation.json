@@ -1,10 +1,12 @@
 {
-  "capturedAt": "2026-10-21T12:04:35.108Z",
+  "capturedAt": "2026-10-21T12:25:04.611Z",
   "environment": "Local Storybook 6008; Chromium; deterministic Home fixtures; no authenticated backend",
   "sidebar": "Unchanged from origin/main",
+  "mobile": "Original main layout below768px, with full forecast card",
   "widths": [
     320,
     390,
+    767,
     768,
     1024,
     1200,
@@ -19,8 +21,8 @@
     "empty",
     "long-venue"
   ],
-  "total": 28,
-  "passed": 28,
+  "total": 32,
+  "passed": 32,
   "failed": 0,
   "browserErrors": [],
   "screenshots": [
@@ -31,26 +33,22 @@
     "after-light-1750.webp",
     "after-dark-1750.webp"
   ],
-  "motion": {
-    "start": [
-      0,
-      0
-    ],
-    "end": [
-      1,
-      1
-    ],
+  "resize": {
+    "from": 767,
+    "to": 768,
+    "back": 767,
     "passed": true
   },
   "checks": [
     "Horizontal overflow",
     "Visible control bounds",
-    "Hero and weather overlap",
-    "Hero and empty ball decoded",
-    "Keyboard-operated forecast disclosure stays in viewport",
-    "Light and dark appearance",
-    "Reduced-motion removes entrance animations and link transitions",
-    "Entrance fades reach full opacity"
+    "Desktop hero/weather overlap",
+    "Visible images decoded",
+    "Mobile full weather card and one Find action",
+    "No desktop hero image downloaded on mobile",
+    "Desktop forecast opens by keyboard within viewport",
+    "767/768 resize without reload",
+    "Reduced-motion disables entrance animations"
   ],
   "results": [
     {
@@ -61,24 +59,31 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 320,
-        "height": 483.25,
-        "top": 168,
-        "right": 320,
-        "bottom": 651.25,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": {
-        "withinViewport": true
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -89,22 +94,26 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 320,
-        "height": 410,
-        "top": 168,
-        "right": 320,
-        "bottom": 578,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -115,24 +124,31 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 320,
-        "height": 483.25,
-        "top": 168,
-        "right": 320,
-        "bottom": 651.25,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": {
-        "withinViewport": true
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -143,22 +159,26 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 320,
-        "height": 410,
-        "top": 168,
-        "right": 320,
-        "bottom": 578,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -169,24 +189,31 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 390,
-        "height": 425.25,
-        "top": 168,
-        "right": 390,
-        "bottom": 593.25,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": {
-        "withinViewport": true
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -197,22 +224,26 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 390,
-        "height": 410,
-        "top": 168,
-        "right": 390,
-        "bottom": 578,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -223,24 +254,31 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 390,
-        "height": 425.25,
-        "top": 168,
-        "right": 390,
-        "bottom": 593.25,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": {
-        "withinViewport": true
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -251,22 +289,156 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": false,
       "hero": {
         "x": 0,
-        "y": 168,
-        "width": 390,
-        "height": 410,
-        "top": 168,
-        "right": 390,
-        "bottom": 578,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
         "left": 0
       },
       "loadedImages": true,
+      "mobileHeadingVisible": true,
       "sidebar": null,
-      "disclosure": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
       }
     },
     {
@@ -277,6 +449,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 224,
         "y": 0,
@@ -288,6 +461,7 @@
         "left": 224
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -298,12 +472,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -314,6 +490,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 224,
         "y": 0,
@@ -325,6 +502,7 @@
         "left": 224
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -335,10 +513,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -349,6 +529,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 224,
         "y": 0,
@@ -360,6 +541,7 @@
         "left": 224
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -370,12 +552,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -386,6 +570,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 224,
         "y": 0,
@@ -397,6 +582,7 @@
         "left": 224
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -407,10 +593,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -421,6 +609,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -432,6 +621,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -442,12 +632,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -458,6 +650,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -469,6 +662,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -479,10 +673,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -493,6 +689,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -504,6 +701,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -514,12 +712,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 3,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -530,6 +730,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -541,6 +742,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -551,10 +753,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 4,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -565,6 +769,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -576,6 +781,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -586,12 +792,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -602,6 +810,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -613,6 +822,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -623,10 +833,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -637,6 +849,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -648,6 +861,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -658,12 +872,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -674,6 +890,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -685,6 +902,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -695,10 +913,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -709,6 +929,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -720,6 +941,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -730,12 +952,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -746,6 +970,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -757,6 +982,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -767,10 +993,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -781,6 +1009,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -792,6 +1021,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -802,12 +1032,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 3,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -818,6 +1050,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 256,
         "y": 0,
@@ -829,6 +1062,7 @@
         "left": 256
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -839,10 +1073,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -853,6 +1089,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 272,
         "y": 0,
@@ -864,6 +1101,7 @@
         "left": 272
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -874,12 +1112,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -890,6 +1130,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 272,
         "y": 0,
@@ -901,6 +1142,7 @@
         "left": 272
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -911,10 +1153,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -925,6 +1169,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 272,
         "y": 0,
@@ -936,6 +1181,7 @@
         "left": 272
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -946,12 +1192,14 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": {
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
         "withinViewport": true
       },
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     },
     {
@@ -962,6 +1210,7 @@
       "overflow": false,
       "offscreenControls": [],
       "heroWeatherOverlaps": [],
+      "heroVisible": true,
       "hero": {
         "x": 272,
         "y": 0,
@@ -973,6 +1222,7 @@
         "left": 272
       },
       "loadedImages": true,
+      "mobileHeadingVisible": false,
       "sidebar": {
         "x": 16,
         "y": 16,
@@ -983,10 +1233,12 @@
         "bottom": 884,
         "left": 16
       },
-      "disclosure": null,
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
       "reducedMotion": {
-        "animationsDisabled": true,
-        "transitionsDisabled": true
+        "animationsDisabled": true
       }
     }
   ]
