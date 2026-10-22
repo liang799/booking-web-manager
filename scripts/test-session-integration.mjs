@@ -53,7 +53,7 @@ enabled = false
 [studio]
 enabled = false
 [realtime]
-enabled = false
+enabled = true
 [storage]
 enabled = false
 [analytics]
@@ -85,7 +85,7 @@ try {
         "--workdir",
         directory,
         "--exclude",
-        "studio,postgres-meta,mailpit,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor",
+        "studio,postgres-meta,mailpit,imgproxy,storage-api,edge-runtime,logflare,vector,supavisor",
       ],
       { stdio: "pipe", maxBuffer: 8 * 1024 * 1024 },
     );
