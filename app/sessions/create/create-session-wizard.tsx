@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useStore } from "zustand";
 import { SPORTS } from "@/app/(auth)/schemas";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,11 @@ import { MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "@/domain/sessions/capacity
 import { sportImage } from "@/lib/sessions/sport-image";
 import { DateTimeEditor } from "./date-time-editor";
 import { VenuePicker } from "./venue-picker";
-import { createSessionStore } from "./create-session-store";
+import { createSessionStore, creationScreen } from "./create-session-store";
 import { connectSessionDevtools } from "./create-session-devtools";
 import { decimalCents, draftPricing, parseSgdCents, type FieldErrors, type SessionDraft } from "./model";
 import type { CreateSession, SearchVenues } from "./transport";
+import { DesktopSessionWizard } from "./desktop-session-wizard";
 
 export interface CreateSessionWizardProps {
   readonly userId: string; readonly create: CreateSession; readonly search: SearchVenues; readonly onCreated: () => void;
@@ -29,6 +30,14 @@ const headings = ["Booked Venue Details", "Booked Venue Settings", "Auto-Generat
 const descriptions = ["Tell us where and when you want to play.", "Set access, group size, and player reliability preferences.", "A suggested price based on your booking cost and number of slots."];
 
 const noErrors: FieldErrors = {};
+const desktopQuery = "(min-width: 768px)";
+function subscribeViewport(notify: () => void) {
+  const media = window.matchMedia(desktopQuery);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+}
+const isDesktop = () => window.matchMedia(desktopQuery).matches;
+const serverViewport = () => false;
 
 export function CreateSessionWizard(props: CreateSessionWizardProps) {
   return <SessionWizard key={props.userId} {...props} />;
@@ -36,11 +45,14 @@ export function CreateSessionWizard(props: CreateSessionWizardProps) {
 
 function SessionWizard(props: CreateSessionWizardProps) {
   const { userId, create, search, onCreated, initialDraft, initialStep, storage } = props;
+  const desktop = useSyncExternalStore(subscribeViewport, isDesktop, serverViewport);
   const [store] = useState(() => createSessionStore({
-    userId, initialDraft, initialStep, getStorage: () => storage ?? window.sessionStorage,
+    userId, initialDraft, initialStep,
+    getStorage: () => storage ?? window.sessionStorage,
   }));
   const draft = useStore(store, (state) => state.draft);
-  const step = useStore(store, (state) => state.step);
+  const screen = useStore(store, creationScreen);
+  const step = screen === "schedule" || screen === "venue" ? 1 : screen === "settings" ? 2 : 3;
   const workflow = useStore(store, (state) => state.workflow);
   const { change, advance, back, restartAfterRecovery } = store.getState();
   const mounted = useRef(false);
@@ -49,6 +61,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
   useEffect(() => {
     mounted.current = true;
     const disconnectDevtools = connectSessionDevtools(store);
+    void store.getState().initialize();
     return () => { mounted.current = false; disconnectDevtools(); };
   }, [store]);
   const body = useRef<HTMLDivElement>(null);
@@ -68,7 +81,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
   const range = draftPricing(draft);
   const price = parseSgdCents(draft.price);
   function showErrors(found: FieldErrors) {
-    const field = Object.keys(found)[0];
+    const field = desktop && found.dateTime ? "startDate" : Object.keys(found)[0];
     if (field) requestAnimationFrame(() => {
       if (mounted.current) body.current?.querySelector<HTMLElement>(`[id="${field}"]`)?.focus();
     });
@@ -81,14 +94,17 @@ function SessionWizard(props: CreateSessionWizardProps) {
     if (result.status === "created") onCreated();
   }
   function next() {
-    const found = advance();
+    const found = advance(desktop ? "desktop" : "mobile");
     if (found) showErrors(found);
   }
+  if (workflow.status === "initializing") return <p role="status" className="p-6 text-center">Loading session form…</p>;
+  if (desktop) return <DesktopSessionWizard store={store} search={search}
+    onNext={next} onSubmit={() => void submit()} formRef={body} />;
   return <section aria-label="Create a session" className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-card md:my-8 md:h-[calc(100svh-4rem)] md:max-w-xl md:rounded-xl md:border md:shadow-sm">
     <header className="shrink-0 bg-foreground px-6 pb-7 pt-5 text-background md:px-8">
       <div className="mb-8 flex items-center gap-5">
         {step === 1 ? <Button asChild variant="ghost" size="icon" className="h-11 w-11 shrink-0 text-background hover:bg-background/10 hover:text-background" aria-label="Back to hosted sessions"><Link href="/sessions"><ArrowLeft aria-hidden="true" className="h-5 w-5" /></Link></Button>
-          : <Button type="button" variant="ghost" size="icon" aria-label="Previous step" disabled={locked} className="h-11 w-11 shrink-0 text-background hover:bg-background/10 hover:text-background" onClick={back}><ArrowLeft aria-hidden="true" className="h-5 w-5" /></Button>}
+          : <Button type="button" variant="ghost" size="icon" aria-label="Previous step" disabled={locked} className="h-11 w-11 shrink-0 text-background hover:bg-background/10 hover:text-background" onClick={() => back("mobile")}><ArrowLeft aria-hidden="true" className="h-5 w-5" /></Button>}
         <div role="progressbar" aria-label="Creation progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} className="h-0.5 flex-1 bg-background/30"><div className="h-full bg-background" style={{ width: `${step / 3 * 100}%` }} /></div>
         <span className="text-xs font-semibold tabular-nums">0{step} / 03</span>
       </div>
@@ -162,7 +178,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
     </div>
     </div>
     <footer className="flex shrink-0 gap-6 border-t bg-card px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 md:px-8">
-      {step > 1 && <Button type="button" variant="outline" className="min-h-12 flex-1" disabled={locked} onClick={back}>Back</Button>}
+      {step > 1 && <Button type="button" variant="outline" className="min-h-12 flex-1" disabled={locked} onClick={() => back("mobile")}>Back</Button>}
       <Button type="button" className="min-h-12 flex-1" disabled={submitting || completed || recoveryRequired} onClick={step === 3 ? () => void submit() : next}>
         {step === 3 ? submitting ? "Creating…" : pending ? "Retry submission" : "Done" : <>Next<ArrowRight aria-hidden="true" className="ml-auto h-5 w-5" /></>}
       </Button>

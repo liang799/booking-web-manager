@@ -34,12 +34,36 @@ The wizard and pricing changes retain independent review of every affected area 
 
 `/sessions/create` uses a focused mobile shell and the standard desktop sidebar;
 the hosted list has its own route-group layout and a create button in every state.
-The three steps preserve drafts, validate before advancing, and focus the new
-heading or first invalid field. The footer occupies layout space outside the
-scrolling body; short screens can scroll every field fully into view.
+Desktop creation has four screens: schedule, venue, settings and pricing. Mobile
+combines schedule and venue in its first screen, followed by settings and pricing.
+Both layouts render the same Zustand editor state; resizing preserves the current
+screen, field values and duration input mode. Mobile Back from settings returns to
+venue, so switching to desktop shows the venue screen. Navigation validates before
+advancing and focuses the new heading or first invalid field. The footer occupies
+layout space outside the scrolling body; short screens can scroll every field
+fully into view.
+
+The store models `initializing`, `editing`, `submitting`, `awaitingConfirmation`,
+`recoveryRequired` and `completed` as a discriminated union. Named actions reject
+invalid transitions. Editing owns the semantic screen, preset/custom duration,
+validation and definite rejection; submitting and awaiting confirmation require
+the exact pending request. Pricing, progress and disabled controls are derived
+from the store. Schedule handlers update duration and booking timestamps together,
+including overnight bookings, while preserving unfinished custom input.
+
+Save draft explicitly stores editable fields, screen and duration input mode in
+account-scoped `sessionStorage`. A private Zustand `persist` store owns only the
+last saved snapshot. Editing, navigation, hydration and DevTools time travel never
+write draft storage. Unsaved-change feedback compares the complete editor snapshot,
+including screen and duration; a failed save preserves both the last successful
+snapshot and current input. Saved drafts restore after mount on mobile or desktop,
+including older version-one drafts; explicit initial props override saved drafts.
+The storage key and flat version-one format remain compatible, with optional
+`durationMode` metadata. Pending submissions take precedence over editable drafts.
 
 Details start with Tennis and empty venue, dates and cost. The date dialog uses
-Singapore time, with separate start/end dates for overnight bookings. Cost is
+Singapore time and a start date/time plus duration to derive the end, including
+next-day bookings. Its Cancel action preserves the previous schedule. Cost is
 parsed directly into integer cents. Settings default to Private, eight slots,
 a minimum headcount of four, and 4.5/5 reliability (90/100). Capacity is 2–30
 (`domain/sessions/capacity.ts`, raised from the SRS's original 2–8 by migration
@@ -53,7 +77,9 @@ and uncertain server errors freeze editing; a retry replays the saved payload.
 Reload restores it. An authentication or service failure during replay retains
 the pending submission because it cannot resolve the original result. A definitive
 first-attempt rejection permits editing and a new key. Success clears pending
-state and refreshes `/sessions?created=1` with feedback. Storage must be available
+state and the saved draft, then refreshes `/sessions?created=1` with feedback.
+Failure to clean up draft storage cannot turn confirmed creation into an ambiguous
+submission. Storage must be available
 before a request is sent. Room tokens are not stored in browser submission state.
 
 OneMap search is debounced, cancels/discards stale responses, and supports keyboard
@@ -177,10 +203,13 @@ The creation operation is registered in [this feature's OpenAPI module](./openap
 Storybook's `Sessions/Create session` examples use the production wizard and
 focused shell, with interaction and accessibility checks for all steps, date
 editing, slot limits, price adjustments, lookup/fallback, stale results and submission
-failures. `npm run test:sessions:integration` applies all migrations to a disposable
-stack and verifies persistence, replay, real authentication, success navigation,
-short-screen keyboard operation and the visibility-management regression. Browser
-screenshots cover 390px, tablet (768px) and desktop (1280px).
+failures. Draft stories also cover explicit save, step-only unsaved changes, custom
+duration mode restoration and loading desktop drafts on mobile without storage writes.
+`npm run test:sessions:integration` applies all migrations to a disposable stack and
+verifies persistence, replay, real authentication, success navigation, draft restoration
+across reloads and breakpoints, short-screen keyboard operation and the
+visibility-management regression. Browser screenshots cover compact mobile (320px),
+mobile (390px), tablet (768px) and desktop (1280px).
 The [shared OpenAPI guide](../openapi/README.md) explains how feature registrations
 are assembled and how to add operations to the reference.
 
