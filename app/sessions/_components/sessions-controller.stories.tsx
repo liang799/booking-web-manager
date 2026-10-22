@@ -114,6 +114,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 async function openSessionDetails(trigger: HTMLElement) {
+  // A date seek is native smooth scrolling. Wait until its featured content has
+  // arrived before interacting with controls at the bottom of that photograph.
+  const row = trigger.closest<HTMLElement>("[data-session-id]");
+  if (row) await waitFor(() => expect(Number(row.style.getPropertyValue("--expansion"))).toBe(1));
   await userEvent.click(trigger);
   return within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
 }
@@ -185,6 +189,11 @@ export const OlderHistoryPreservesTimelineAnchor: Story = {
     await waitFor(() => expect(Math.abs(active.getBoundingClientRect().top - beforeTop)).toBeLessThan(2));
     await expect(region.querySelector("[data-session-id][data-current]")).toBe(active);
     await expect(active.querySelector("[data-timeline-expanded] img")).toHaveAttribute("src", artwork!);
+    await waitFor(() => {
+      const marker = region.querySelector("[data-timeline-marker]")!.getBoundingClientRect();
+      const day = active.querySelector("[data-date-control] strong")!.getBoundingClientRect();
+      expect(Math.abs(marker.top + marker.height / 2 - day.top - day.height / 2)).toBeLessThan(2);
+    });
     const timestamps = Array.from(region.querySelectorAll<HTMLElement>("[data-session-id]"), (row) => {
       const session = joinedSessions.find(({ sessionId }) => sessionId === row.dataset.sessionId);
       if (!session) throw new Error("The timeline rendered an unknown session.");
@@ -474,7 +483,8 @@ export const SuccessfulRefreshClosesMissingViewedSession: Story = {
     const restored = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
-    await userEvent.click(restored.getByRole("button", { name: "View details" }));
+    await waitFor(() => expect(restored.getByRole("button", { name: "View details" })).toBeVisible());
+    await openSessionDetails(restored.getByRole("button", { name: "View details" }));
     const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
     await userEvent.click(dialog.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

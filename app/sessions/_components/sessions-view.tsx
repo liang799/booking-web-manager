@@ -32,7 +32,7 @@ export interface SessionsViewProps {
   readonly onUrlRestored?: () => void;
 }
 
-/** A shared feed, with a gesture-led desktop timeline and a deliberately simple mobile list. */
+/** A shared feed, with a scroll-driven desktop timeline and a simple mobile list. */
 export function SessionsView(props: SessionsViewProps) {
   const { tab, onTabChange, sessions, actions, loading, error, onRetry } = props;
   const timelineEntrancePlayed = useRef(false);
@@ -175,9 +175,9 @@ export function SessionDetails({ session, footer = true, onOpenSession }: { read
   </>;
 }
 
-function ExpandedSession({ session, index, onOpenSession }: { readonly session: SessionFeedItem; readonly index: number; readonly onOpenSession: SessionsViewProps["onOpenSession"] }) {
+function ExpandedSession({ session, index, onOpenSession, featured = true }: { readonly session: SessionFeedItem; readonly index: number; readonly onOpenSession: SessionsViewProps["onOpenSession"]; readonly featured?: boolean }) {
   const selectTimelineSession = useSessionsUiStore((state) => state.selectTimelineSession);
-  return <div className={styles.feature} data-timeline-expanded>
+  return <div className={styles.feature} data-timeline-expanded={featured || undefined}>
     <div className={styles.hero} data-timeline-reveal="hero"><Image src={sessionArtwork(session, index)} alt="" fill sizes="(min-width: 1200px) 72vw, 85vw" className={styles.photo} priority={index === 0} /></div>
     <div className={styles.featureStatus} data-timeline-reveal="detail"><Status session={session} /></div>
     <div className={styles.cardBody}>
@@ -188,176 +188,256 @@ function ExpandedSession({ session, index, onOpenSession }: { readonly session: 
   </div>;
 }
 
-/** Wheel intent selects one booking; layout anchoring keeps it beneath the pinned header. */
+interface TimelineProgress { readonly from: string; readonly to: string; readonly mix: number }
+
+function expansionFor(progress: TimelineProgress, id: string) {
+  return progress.from === progress.to ? Number(id === progress.from)
+    : id === progress.from ? 1 - progress.mix : id === progress.to ? progress.mix : 0;
+}
+
+/** Native scroll transfers a constant amount of featured space between adjacent rows. */
 function JoinedTimeline({ sessions: feedSessions, asOf, onOpenSession, scrollTargetId, onUrlRestored, entrancePlayed }: SessionsViewProps & { readonly entrancePlayed: RefObject<boolean> }) {
-  // The cursor feed prioritizes upcoming bookings, then returns history newest
-  // first. A vertical timeline instead advances in time in both directions.
   const sessions = useMemo(() => [...feedSessions].sort((left, right) => Date.parse(left.startAt) - Date.parse(right.startAt) || left.sessionId.localeCompare(right.sessionId)), [feedSessions]);
-  const firstUpcoming = sessions.find((session) => session.section === "upcoming");
-  const defaultSession = firstUpcoming ?? sessions.at(-1);
+  const defaultSession = sessions.find((session) => session.section === "upcoming") ?? sessions.at(-1);
   const activeSessionId = useSessionsUiStore((state) => state.activeSessionId);
   const active = sessions.some((session) => session.sessionId === activeSessionId) ? activeSessionId! : defaultSession?.sessionId ?? "";
   const setActive = useSessionsUiStore((state) => state.selectTimelineSession);
+  const [progress, setProgress] = useState<TimelineProgress>({ from: active, to: active, mix: 0 });
+  const progressRef = useRef(progress);
+  const selected = useRef(active);
+  const navigationTarget = useRef<string | null>(null);
+  const dialogOpen = useRef(false);
   const [marker, setMarker] = useState(0);
   const list = useRef<HTMLDivElement>(null);
   const rows = useRef(new Map<string, HTMLDivElement>());
-  const anchor = useRef<{ id: string; top: number } | null>(null);
-  const pendingFocus = useRef<string | null>(null);
+  const positions = useRef<{ id: string; top: number }[]>([]);
   const positioned = useRef(false);
-  const previousSessions = useRef(sessions);
   const viewportAnchor = useRef<{ id: string; top: number } | null>(null);
-  const gesture = useRef({ lastEvent: -Infinity, delta: 0, consumed: false, lockedUntil: 0 });
+  const pendingFocus = useRef<string | null>(null);
   const entrance = useTimelineEntrance({ root: list, played: entrancePlayed, marker, restoring: Boolean(scrollTargetId), activeSessionId: active });
+
+  const readScroll = useCallback(() => {
+    const stops = positions.current;
+    if (!stops.length || !window.matchMedia("(min-width: 768px)").matches || dialogOpen.current || document.querySelector('[role="dialog"],dialog[open]')) return;
+    const y = window.scrollY;
+    let index = stops.findIndex((stop) => stop.top > y);
+    if (index < 0) index = stops.length;
+    const from = stops[Math.max(0, index - 1)]!;
+    const to = stops[Math.min(stops.length - 1, index)]!;
+    const distance = to.top - from.top;
+    const fraction = distance > 0 ? Math.max(0, Math.min(1, (y - from.top) / distance)) : 0;
+    // Round only subpixel endpoint differences from the browser's scroll range.
+    const mix = fraction * distance < 1 ? 0 : (1 - fraction) * distance < 1 ? 1 : fraction;
+    const next = { from: from.id, to: to.id, mix };
+    const previous = progressRef.current;
+    if (previous.from !== next.from || previous.to !== next.to || previous.mix !== next.mix) {
+      progressRef.current = next;
+      setProgress(next);
+    }
+    const requested = stops.find((stop) => stop.id === navigationTarget.current);
+    if (requested && Math.abs(y - requested.top) > 1) return;
+    navigationTarget.current = null;
+    const id = mix < .5 ? from.id : to.id;
+    if (selected.current !== id) {
+      selected.current = id;
+      setActive(id);
+    }
+  }, [setActive]);
+
   const select = useCallback((id: string) => {
-    if (id === active) { setActive(id); return; }
-    const row = rows.current.get(id);
-    const header = list.current?.closest("[data-view]")?.querySelector("header");
-    if (row && header) anchor.current = { id, top: header.getBoundingClientRect().bottom + 28 };
-    gesture.current.consumed = true;
-    gesture.current.lockedUntil = performance.now() + 520;
+    const stop = positions.current.find((position) => position.id === id);
+    if (!stop) return;
+    navigationTarget.current = id;
     setActive(id);
-  }, [active, setActive]);
+    // Explicit date/keyboard navigation uses the same native scroll path. Wheel,
+    // trackpad, scrollbar and momentum input never get cancelled or repositioned.
+    window.scrollTo({ top: stop.top, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    // A refreshed feed can put the requested row at the current scroll offset;
+    // no native scroll event is emitted in that case, but progress still changes.
+    readScroll();
+  }, [setActive, readScroll]);
 
   useLayoutEffect(() => {
-    const desktop = window.matchMedia("(min-width: 768px)").matches;
-    const positionAtEntry = () => {
-      const row = rows.current.get(active);
-      const header = list.current?.closest("[data-view]")?.querySelector("header");
-      if (!row || !header) return;
-      // Keep the next booking visible on entry while earlier dates remain above
-      // it. The pinned heading leaves the page controls in their original place.
-      const heading = row.previousElementSibling;
-      const labelSpace = heading?.matches("h2") ? heading.getBoundingClientRect().height : 0;
-      const top = header.getBoundingClientRect().bottom + 28 + labelSpace;
-      window.scrollBy({ top: row.getBoundingClientRect().top - top, behavior: "instant" });
-      positioned.current = true;
-    };
-    if (scrollTargetId === active && desktop) {
-      positionAtEntry();
-      onUrlRestored?.();
-      anchor.current = null;
-    } else if (!positioned.current && desktop) {
-      positionAtEntry();
-    } else if (anchor.current) {
-      const row = rows.current.get(anchor.current.id);
-      if (row) {
-        // Compensate for folding the old card before paint. Animate only the
-        // new content, never the document's height or its scroll position.
-        window.scrollBy({ top: row.getBoundingClientRect().top - anchor.current.top, behavior: "instant" });
-        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          row.querySelector<HTMLElement>("[data-timeline-expanded]")?.animate(
-            [{ opacity: .85, transform: "translateY(8px)" }, { opacity: 1, transform: "translateY(0)" }],
-            { duration: 180, easing: "ease-out" },
-          );
-        }
-      }
-      anchor.current = null;
-    } else if (previousSessions.current !== sessions && viewportAnchor.current?.id === active && desktop) {
-      const row = rows.current.get(active);
-      if (row) {
-        window.scrollBy({ top: row.getBoundingClientRect().top - viewportAnchor.current.top, behavior: "instant" });
-      }
-    }
-    previousSessions.current = sessions;
+    selected.current = active;
     if (pendingFocus.current) {
       rows.current.get(pendingFocus.current)?.querySelector<HTMLButtonElement>("[data-date-control]")?.focus({ preventScroll: true });
       pendingFocus.current = null;
     }
-    const updateMarker = () => {
-      const day = rows.current.get(active)?.querySelector<HTMLElement>("[data-date-control] time strong");
-      const root = list.current;
-      if (day && root) {
-        const bounds = day.getBoundingClientRect();
-        setMarker(bounds.top - root.getBoundingClientRect().top + bounds.height / 2);
-      }
-    };
-    updateMarker();
-    const rememberPosition = () => {
-      const row = rows.current.get(active);
-      if (row) viewportAnchor.current = { id: active, top: row.getBoundingClientRect().top };
-    };
-    rememberPosition();
-    window.addEventListener("scroll", rememberPosition, { passive: true });
-    const observer = new ResizeObserver(updateMarker);
-    if (list.current) observer.observe(list.current);
-    const day = rows.current.get(active)?.querySelector<HTMLElement>("[data-date-control] time strong");
-    if (day) observer.observe(day);
-    return () => { observer.disconnect(); window.removeEventListener("scroll", rememberPosition); };
-  }, [active, sessions, scrollTargetId, onUrlRestored]);
-
-  useEffect(() => {
     const root = list.current;
     if (!root) return;
-    const acceptsIntent = (event: WheelEvent | KeyboardEvent) => {
-      if (!window.matchMedia("(min-width: 768px)").matches || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return false;
-      if (document.querySelector('[role="dialog"],dialog[open]')) return false;
-      if (!(event.target instanceof Element)) return false;
-      if (event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="listbox"],[role="menu"],[role="slider"]')) return false;
-      // A nested scroller owns its entire gesture, including overscroll at its
-      // edges. The sidebar/header are outside this listener's subtree entirely.
-      for (let node: Element | null = event.target; node && node !== root; node = node.parentElement) {
-        if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight) return false;
-      }
-      return true;
+    const center = (id: string) => {
+      const day = rows.current.get(id)?.querySelector<HTMLElement>("[data-date-control] time strong");
+      if (!day) return 0;
+      const bounds = day.getBoundingClientRect();
+      return bounds.top - root.getBoundingClientRect().top + bounds.height / 2;
     };
-    const onWheel = (event: WheelEvent) => {
-      if (!acceptsIntent(event) || !event.cancelable || !event.deltaY || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
-      // WheelEvent units are pixels, lines or pages. Use the timeline's actual
-      // line height, with a fallback for computed line-height: normal.
-      const lineHeight = parseFloat(getComputedStyle(root).lineHeight) || 16;
-      const delta = event.deltaY * (event.deltaMode === 1 ? lineHeight : event.deltaMode === 2 ? window.innerHeight : 1);
-      const now = performance.now();
-      const state = gesture.current;
-      // Rearm only after BOTH the transition and a quiet interval. Updating the
-      // timestamp even for tiny momentum tails prevents a held gesture repeating.
-      if (now - state.lastEvent > 220) {
-        state.delta = 0;
-        if (now >= state.lockedUntil) state.consumed = false;
-      }
-      state.lastEvent = now;
-      if (state.consumed || now < state.lockedUntil) { event.preventDefault(); return; }
-      const adjacent = sessions[sessions.findIndex((session) => session.sessionId === active) + (delta > 0 ? 1 : -1)];
-      // At the first/last loaded session, release ordinary page scrolling so
-      // users can leave the timeline and reach the pagination sentinel.
-      if (!adjacent) return;
-      event.preventDefault();
-      if (Math.sign(state.delta) !== Math.sign(delta)) state.delta = 0;
-      state.delta += delta;
-      if (Math.abs(state.delta) >= 24) select(adjacent.sessionId);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (!acceptsIntent(event) || !["PageUp", "ArrowUp", "Home", "PageDown", "ArrowDown", "End"].includes(event.key)) return;
-      const index = sessions.findIndex((session) => session.sessionId === active);
-      const target = sessions[event.key === "Home" ? 0 : event.key === "End" ? sessions.length - 1 : index + (["PageDown", "ArrowDown"].includes(event.key) ? 1 : -1)];
-      if (!target || target.sessionId === active) return;
-      event.preventDefault();
-      pendingFocus.current = target.sessionId;
-      select(target.sessionId);
-    };
-    // Selection never subscribes to scroll: anchoring, pagination, restoration
-    // and browser scroll corrections cannot generate another selection.
-    root.addEventListener("wheel", onWheel, { passive: false });
-    root.addEventListener("keydown", onKey);
-    return () => {
-      root.removeEventListener("wheel", onWheel);
-      root.removeEventListener("keydown", onKey);
-    };
-  }, [active, sessions, select]);
+    setMarker(center(progress.from) * (1 - progress.mix) + center(progress.to) * progress.mix);
+  }, [active, progress, sessions]);
 
-  return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline" data-timeline-entrance={entrance.phase} onPointerDownCapture={entrance.finish} onFocusCapture={entrance.finish}>
+  useLayoutEffect(() => {
+    const row = rows.current.get(active);
+    if (row) viewportAnchor.current = { id: active, top: row.getBoundingClientRect().top };
+  }, [active, progress]);
+
+  useLayoutEffect(() => {
+    const root = list.current;
+    const header = root?.closest("[data-view]")?.querySelector("header");
+    if (!root || !header) return;
+    const desktop = window.matchMedia("(min-width: 768px)");
+    let previousWidth = -1;
+    let previousHeight = -1;
+    const measure = (initial = false) => {
+      if (!desktop.matches) return;
+      // Natural content is measured independently of its clipped slot. The same
+      // featured height is reserved across the feed, so total height stays fixed
+      // as its two expansion weights sum to one (including during reversal).
+      const height = Math.max(112, ...Array.from(root.querySelectorAll<HTMLElement>("[data-timeline-feature]"), (feature) => feature.offsetHeight));
+      const width = root.getBoundingClientRect().width;
+      if (!initial && width === previousWidth && height === previousHeight) return;
+      previousWidth = width;
+      previousHeight = height;
+      const currentRow = rows.current.get(selected.current);
+      const anchor = initial ? viewportAnchor.current : currentRow ? { id: selected.current, top: currentRow.getBoundingClientRect().top } : null;
+      const readingTop = (parseFloat(getComputedStyle(header).top) || 0) + header.getBoundingClientRect().height + 28;
+      const extra = Math.max(0, height - 112);
+      root.style.setProperty("--feature-extra", `${extra}px`);
+      root.style.setProperty("--feature-height", `${height}px`);
+      root.style.setProperty("--reading-top", `${readingTop}px`);
+      let expansionAbove = 0;
+      positions.current = sessions.flatMap((session) => {
+        const row = rows.current.get(session.sessionId);
+        if (!row) return [];
+        const heading = row.previousElementSibling;
+        const labelSpace = heading?.matches("h2") ? heading.getBoundingClientRect().height : 0;
+        const top = row.getBoundingClientRect().top + window.scrollY - expansionAbove * extra - readingTop - labelSpace;
+        expansionAbove += expansionFor(progressRef.current, session.sessionId);
+        return [{ id: session.sessionId, top: Math.max(0, top) }];
+      });
+      const target = scrollTargetId ?? (!positioned.current ? selected.current : null);
+      if (target) {
+        const stop = positions.current.find((position) => position.id === target);
+        if (stop) {
+          const next = { from: target, to: target, mix: 0 };
+          progressRef.current = next;
+          setProgress(next);
+          // Entry and deep-link restoration are the only selection-driven jumps.
+          // This happens before paint, including when the restored page arrives.
+          window.scrollTo({ top: stop.top, behavior: "instant" });
+          positioned.current = true;
+          if (scrollTargetId) onUrlRestored?.();
+        }
+      } else if (anchor) {
+        // Older pagination inserts rows above the viewport. Preserve that visual
+        // anchor once; ordinary progress never writes to the scroll position.
+        const row = rows.current.get(anchor.id);
+        if (row) {
+          const correction = row.getBoundingClientRect().top - anchor.top;
+          if (Math.abs(correction) > .5) window.scrollBy({ top: correction, behavior: "instant" });
+        }
+      }
+      readScroll();
+      // Geometry can change without changing the selected ID or scroll fraction
+      // (for example, prepended history). Remeasure the marker before paint too.
+      setProgress({ ...progressRef.current });
+    };
+    measure(true);
+    let resizeFrame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => measure());
+    });
+    observer.observe(root);
+    root.querySelectorAll<HTMLElement>("[data-timeline-feature]").forEach((feature) => observer.observe(feature));
+    const onResize = () => { previousWidth = -1; measure(); };
+    window.addEventListener("resize", onResize);
+    return () => { observer.disconnect(); cancelAnimationFrame(resizeFrame); window.removeEventListener("resize", onResize); };
+  }, [sessions, scrollTargetId, onUrlRestored, readScroll]);
+
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      const row = rows.current.get(selected.current);
+      if (row && !dialogOpen.current) viewportAnchor.current = { id: selected.current, top: row.getBoundingClientRect().top };
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; readScroll(); });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // Let new native input immediately take over an explicit smooth date seek.
+    // These passive listeners never cancel input or perform a selection.
+    const releaseSeek = (event: Event) => {
+      if (dialogOpen.current || document.querySelector('[role="dialog"],dialog[open]')) return;
+      if (event instanceof KeyboardEvent && list.current?.contains(event.target instanceof Node ? event.target : null) && ["PageUp", "ArrowUp", "Home", "PageDown", "ArrowDown", "End"].includes(event.key)) return;
+      // Cancel an unfinished explicit seek at its CURRENT position. This has
+      // zero displacement and leaves the incoming native gesture in control.
+      if (navigationTarget.current) window.scrollTo({ top: window.scrollY, behavior: "instant" });
+      if (event.type === "pointerdown" && event.target instanceof Element && event.target.closest('aside,[aria-label="Session views"]')) return;
+      navigationTarget.current = null;
+      readScroll();
+    };
+    window.addEventListener("wheel", releaseSeek, { passive: true });
+    window.addEventListener("pointerdown", releaseSeek, { passive: true });
+    window.addEventListener("keydown", releaseSeek, { capture: true });
+    // A modal's scroll lock and focus restoration are not timeline movement.
+    // Resume an explicit selection only after the portal and its lock leave.
+    let dialogFrame = 0;
+    const dialogs = new MutationObserver(() => {
+      if (document.querySelector('[role="dialog"],dialog[open]')) { dialogOpen.current = true; return; }
+      if (!dialogOpen.current) return;
+      cancelAnimationFrame(dialogFrame);
+      dialogFrame = requestAnimationFrame(() => {
+        dialogOpen.current = false;
+        const target = navigationTarget.current ?? (expansionFor(progressRef.current, selected.current) < .5 ? selected.current : null);
+        const stop = positions.current.find((position) => position.id === target);
+        if (stop) {
+          navigationTarget.current = stop.id;
+          window.scrollTo({ top: stop.top, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+        } else readScroll();
+      });
+    });
+    dialogs.observe(document.body, { childList: true });
+    return () => {
+      dialogs.disconnect();
+      cancelAnimationFrame(dialogFrame);
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", releaseSeek);
+      window.removeEventListener("pointerdown", releaseSeek);
+      window.removeEventListener("keydown", releaseSeek, { capture: true });
+    };
+  }, [readScroll]);
+
+  const onKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (!window.matchMedia("(min-width: 768px)").matches || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || document.querySelector('[role="dialog"],dialog[open]')) return;
+    if (!(event.target instanceof Element) || event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="listbox"],[role="menu"],[role="slider"]')) return;
+    for (let node: Element | null = event.target; node && node !== event.currentTarget; node = node.parentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight) return;
+    }
+    if (!["PageUp", "ArrowUp", "Home", "PageDown", "ArrowDown", "End"].includes(event.key)) return;
+    const index = sessions.findIndex((session) => session.sessionId === active);
+    const target = sessions[event.key === "Home" ? 0 : event.key === "End" ? sessions.length - 1 : index + (["PageDown", "ArrowDown"].includes(event.key) ? 1 : -1)];
+    if (!target || target.sessionId === active) return;
+    event.preventDefault();
+    pendingFocus.current = target.sessionId;
+    select(target.sessionId);
+  };
+
+  return <div className={styles.timeline} ref={list} role="region" aria-label="Joined session timeline" data-timeline-entrance={entrance.phase} onKeyDown={onKey} onPointerDownCapture={entrance.finish} onFocusCapture={entrance.finish}>
     <div className={styles.rail} data-timeline-rail aria-hidden />
+    <span className={styles.railProgress} style={{ height: `${Math.max(0, marker - 32)}px` }} aria-hidden />
     <span data-timeline-marker className={styles.activeDot} style={{ "--marker-y": `${marker}px` } as CSSProperties} aria-hidden />
     {sessions.map((session, index) => {
       const label = timelineGroup(session, asOf);
       const artworkIndex = feedSessions.findIndex((item) => item.sessionId === session.sessionId);
       const previous = sessions[index - 1];
       const expanded = session.sessionId === active;
+      const expansion = expansionFor(progress, session.sessionId);
       return <Fragment key={session.sessionId}>
         {(!previous || timelineGroup(previous, asOf) !== label) && <h2 className={styles.groupLabel} data-timeline-reveal="label">{label}</h2>}
-        <div className={styles.timelineRow} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
+        <div className={styles.timelineRow} style={{ "--expansion": expansion } as CSSProperties} ref={(element) => { if (element) rows.current.set(session.sessionId, element); else rows.current.delete(session.sessionId); }} data-current={expanded || undefined} data-section={session.section} data-session-id={session.sessionId}>
           <button type="button" data-date-control data-timeline-reveal="date" className={styles.dateButton} onClick={() => select(session.sessionId)} aria-label={`Show ${sessionTitle(session)}, ${sessionDate(session.startAt).full}`} aria-expanded={expanded} aria-controls={`timeline-card-${session.sessionId}`}><span className={styles.dot} aria-hidden /><DateStamp value={session.startAt} /></button>
           <article id={`timeline-card-${session.sessionId}`} className={styles.timelineCard} aria-label={`${sessionTitle(session)} at ${session.venueName}`}>
-            {expanded ? <ExpandedSession session={session} index={artworkIndex} onOpenSession={onOpenSession} /> : <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
+            <div className={styles.timelineFeature} style={{ visibility: expansion > 0 ? "visible" : "hidden" }} data-timeline-feature aria-hidden={!expanded} inert={!expanded}><ExpandedSession session={session} index={artworkIndex} onOpenSession={onOpenSession} featured={expanded} /></div>
+            {!expanded && <button type="button" className={styles.collapsedCard} data-timeline-reveal="row" aria-hidden={expansion > 0} inert={expansion > 0} onClick={(event) => { if (document.activeElement === event.currentTarget) pendingFocus.current = session.sessionId; select(session.sessionId); }} aria-expanded={false} aria-controls={`timeline-card-${session.sessionId}`} aria-label={`Expand ${sessionTitle(session)} at ${session.venueName}`}>
               <span className={styles.collapsedCopy}><strong>{session.venueName}</strong><span className={styles.collapsedTime}><span className="sr-only">Singapore time: </span>{sessionTime(session)}</span></span>
               <span className={styles.collapsedPlayers}><UsersRound size={22} strokeWidth={1.5} aria-hidden /><span>{session.participantCount} / {session.capacity}<span className="sr-only"> players</span></span></span>
               <ChevronDown size={18} strokeWidth={1.5} aria-hidden />

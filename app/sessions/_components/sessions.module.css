@@ -19,7 +19,8 @@
 .mobileGroups,.mobileList { display: none; }
 .timeline { --date-column: 148px; --session-line: hsl(var(--border) / .7); position: relative; margin-top: 28px; padding: 0 0 24px; overflow-anchor: none; }
 .rail { position: absolute; left: 6px; top: 32px; bottom: 0; width: 1px; background: var(--timeline-rail); transform-origin: top; }
-.activeDot { position: absolute; z-index: 2; left: -.5px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #111211; transform: translateY(calc(var(--marker-y) - 50%)); transition: transform 520ms cubic-bezier(.22,1,.36,1); pointer-events: none; box-shadow: 0 0 0 3px var(--session-paper); }
+.activeDot { position: absolute; z-index: 2; left: -.5px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #111211; transform: translateY(calc(var(--marker-y) - 50%)); pointer-events: none; box-shadow: 0 0 0 3px var(--session-paper); }
+.railProgress { position: absolute; left: 6px; top: 32px; width: 1px; background: hsl(var(--foreground)); opacity: .22; pointer-events: none; }
 .groupLabel { position: relative; width: fit-content; margin-left: 28px; padding: 0 0 16px; color: var(--session-muted); font-size: 11px; font-weight: 500; letter-spacing: .2em; line-height: 1.5; }
 .groupLabel::before { content: ""; position: absolute; left: -23px; top: 6px; width: 3px; height: 3px; border-radius: 50%; background: var(--timeline-rail); }
 .timelineRow + .groupLabel { margin-top: 24px; }
@@ -256,6 +257,20 @@
   .pastCount { flex-basis: 30px; font-size: 12px; }
 }
 @media (min-width: 768px) {
+  /* One featured slot is shared continuously by neighboring rows. Its total
+     height never changes with scroll progress, and no timed layout tween runs. */
+  .timeline { --feature-extra: 0px; --feature-height: 550px; --reading-top: 173px; padding-bottom: max(24px, calc(100dvh - var(--reading-top) - var(--feature-height) - 40px)); }
+  .timelineRow { height: calc(112px + var(--feature-extra) * var(--expansion)); }
+  .timelineCard { position: relative; height: 100%; overflow: clip; }
+  .timelineFeature { position: absolute; top: 0; left: 0; right: 0; }
+  .timelineFeature .hero { opacity: clamp(0, calc(var(--expansion) * 4), 1); }
+  .timelineFeature[inert] { pointer-events: none; }
+  .timelineCard > .collapsedCard { position: absolute; top: 0; left: 0; opacity: clamp(0, calc(1 - var(--expansion) * 4), 1); }
+  .timelineRow .dateButton { align-self: start; min-height: 0; height: calc(112px + 14px * var(--expansion)); }
+  .timelineRow[data-current] .dateButton { min-height: 0; }
+  .timeline .timelineRow .date > span { font-size: calc(11px + var(--expansion) * 1px); }
+  .timeline .timelineRow .date strong { font-size: calc(28px + var(--expansion) * 24px); font-weight: calc(600 + var(--expansion) * 50); margin: calc(6px + var(--expansion) * 4px) 0; }
+  .timeline .timelineRow .dot { opacity: calc(1 - var(--expansion)); }
   .mobilePagination { display: none; }
   .page[data-view="joined"] .breadcrumb { position: sticky; top: var(--session-sticky-top); z-index: 4; }
   .page[data-view="joined"] .breadcrumb::before { content: ""; position: absolute; z-index: -1; top: calc(-1 * var(--session-sticky-top)); bottom: -28px; left: 0; right: 0; background: var(--session-paper); }
@@ -264,6 +279,9 @@
   .page { display: flex; flex-direction: column; min-height: 100dvh; }
   .breadcrumb { flex-shrink: 0; }
   .panel { flex: 1; min-height: 0; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .timeline .timelineRow .date strong { font-size: calc(24px + var(--expansion) * 16px); }
 }
 @media (max-width: 767px) {
   .page { padding: 12px 22px 24px; --session-paper: hsl(var(--card)); }
@@ -319,5 +337,6 @@
   .timeline[data-timeline-entrance="pending"] .rail { clip-path: inset(0 0 100% 0); }
   .timeline:is([data-timeline-entrance="pending"],[data-timeline-entrance="line"]) .activeDot { opacity: 0; transition: none; }
   .timeline:not([data-timeline-entrance="complete"]) [data-timeline-reveal] { opacity: 0; }
+  .timeline:not([data-timeline-entrance="complete"]) .railProgress { opacity: 0; }
   .timeline:not([data-timeline-entrance="complete"]) .activeDot { transition: none; }
 }

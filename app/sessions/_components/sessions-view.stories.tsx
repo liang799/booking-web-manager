@@ -88,7 +88,7 @@ function observeEntrance() {
 }
 
 async function expectTimelineContentRevealed(timeline: HTMLElement) {
-  const content = timeline.querySelectorAll<HTMLElement>("[data-timeline-reveal]");
+  const content = Array.from(timeline.querySelectorAll<HTMLElement>("[data-timeline-reveal]")).filter((element) => !element.closest('[inert],[aria-hidden="true"]'));
   await expect(content.length).toBeGreaterThan(10);
   for (const element of content) await expect(getComputedStyle(element).opacity).toBe("1");
   await expect(timeline.getAnimations({ subtree: true }).filter((animation) => animation.constructor === Animation)).toHaveLength(0);
@@ -102,14 +102,16 @@ function timelineDay(canvasElement: HTMLElement, date: string) {
 
 async function expectTimelineHierarchy(canvasElement: HTMLElement, activeDate: string) {
   const activeDay = timelineDay(canvasElement, activeDate);
-  await expect(getComputedStyle(activeDay).fontSize).toBe(window.innerWidth >= 1200 ? "52px" : "40px");
-  await expect(getComputedStyle(activeDay).fontWeight).toBe("650");
-  for (const day of canvasElement.querySelectorAll<HTMLElement>("[data-date-control] time strong")) {
-    if (day !== activeDay) {
-      await expect(getComputedStyle(day).fontSize).toBe(window.innerWidth >= 1200 ? "28px" : "24px");
-      await expect(getComputedStyle(day).fontWeight).toBe("600");
+  await waitFor(() => {
+    expect(getComputedStyle(activeDay).fontSize).toBe(window.innerWidth >= 1200 ? "52px" : "40px");
+    expect(getComputedStyle(activeDay).fontWeight).toBe("650");
+    for (const day of canvasElement.querySelectorAll<HTMLElement>("[data-date-control] time strong")) {
+      if (day !== activeDay) {
+        expect(getComputedStyle(day).fontSize).toBe(window.innerWidth >= 1200 ? "28px" : "24px");
+        expect(getComputedStyle(day).fontWeight).toBe("600");
+      }
     }
-  }
+  });
   // Wait through the marker's movement, then compare actual centers so padding
   // or font changes cannot leave the dot aligned with an obsolete fixed offset.
   await waitFor(() => {
@@ -587,16 +589,20 @@ export const KeyboardAndSessionSummary: Story = {
 /** A neutral full feed for native Playwright wheel-input coverage. */
 export const DesktopWheelNavigation: Story = {};
 
-export const ProgrammaticScrollKeepsCurrentSession: Story = {
+export const NativeScrollProgress: Story = {
   play: async ({ canvas }) => {
-    const currentDate = canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" });
-    await expect(currentDate).toHaveAttribute("aria-expanded", "true");
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    await expect(currentDate).toHaveAttribute("aria-expanded", "true");
-    window.scrollTo({ top: 0, behavior: "instant" });
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    await expect(currentDate).toHaveAttribute("aria-expanded", "true");
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
+    const initialHeight = timeline.getBoundingClientRect().height;
+    const initialScroll = window.scrollY;
+    window.scrollBy({ top: 40, behavior: "instant" });
+    const next = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" }).parentElement!;
+    await waitFor(() => expect(Number(next.style.getPropertyValue("--expansion"))).toBeGreaterThan(.2));
+    await expect(Math.abs(timeline.getBoundingClientRect().height - initialHeight)).toBeLessThan(1);
+    window.scrollTo({ top: initialScroll + 144, behavior: "instant" });
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
+    window.scrollTo({ top: initialScroll, behavior: "instant" });
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
     await expectNoHorizontalOverflow();
   },
 };
@@ -615,7 +621,7 @@ export const KeyboardNavigatesTimeline: Story = {
   },
 };
 
-export const CompactTimelineWheelNavigation: Story = {
+export const TallViewportNativeScroll: Story = {
   globals: { viewport: { value: "tallDesktop", isRotated: false } },
   parameters: {
     viewport: { options: { tallDesktop: { name: "Tall desktop (1440px)", styles: { width: "1440px", height: "1800px" }, type: "desktop" } } },
@@ -623,8 +629,7 @@ export const CompactTimelineWheelNavigation: Story = {
   play: async ({ canvas, canvasElement }) => {
     const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
     await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-    timeline.dispatchEvent(new WheelEvent("wheel", { deltaY: 100, bubbles: true, cancelable: true }));
+    window.scrollBy({ top: 144, behavior: "instant" });
     await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
     await expectTimelineHierarchy(canvasElement, "2026-10-23");
     await expectNoHorizontalOverflow();
@@ -634,10 +639,10 @@ export const CompactTimelineWheelNavigation: Story = {
 export const InfiniteScrollRequestsNextPage: Story = {
   args: { hasMore: true },
   play: async ({ canvas, args }) => {
+    await waitFor(() => expect(canvas.getByRole("region", { name: "Joined session timeline" })).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
     const more = canvas.getByRole("button", { name: "Load more sessions" });
     await expect(args.onLoadMore).not.toHaveBeenCalled();
-    // Keyboard focus pauses timeline folding, so this check measures the feed's
-    // intersection trigger without moving the sentinel during the same scroll.
+    // The native page scroll reaches pagination independently of selection.
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
     more.scrollIntoView({ block: "center", behavior: "instant" });
     await waitFor(() => expect(args.onLoadMore).toHaveBeenCalled());
