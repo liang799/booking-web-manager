@@ -7,8 +7,13 @@ export interface WalletHistoryQuery {
 }
 
 export interface WalletHistoryReadPort {
-  listWalletTransactions(query: WalletHistoryQuery): Promise<readonly LedgerTransaction[]>;
+  listWalletTransactions(query: WalletHistoryQuery): Promise<readonly WalletHistoryTransaction[]>;
 }
+
+/** Read projection may include live session context without changing the ledger fact. */
+export type WalletHistoryTransaction = Pick<LedgerTransaction, keyof LedgerTransaction> & {
+  readonly sport?: string;
+};
 
 export interface ActiveWalletHold {
   readonly holdId: UUID;
@@ -26,6 +31,8 @@ export interface WalletReader extends WalletHistoryReadPort {
   findWalletIdByUserId(userId: UUID): Promise<UUID | null>;
   getWalletBalance(walletId: UUID): Promise<WalletBalance | null>;
   listActiveHolds(walletId: UUID): Promise<readonly ActiveWalletHold[]>;
+  /** Frozen withdrawal attempts requested by this booker and not yet completed or failed. */
+  getPendingPayoutAmount(userId: UUID): Promise<Money>;
 }
 
 export interface WalletSummary {
@@ -33,6 +40,7 @@ export interface WalletSummary {
   readonly userId: UUID;
   readonly availableBalanceCents: number;
   readonly heldBalanceCents: number;
+  readonly pendingPayoutCents: number;
   readonly currency: "SGD";
   readonly activeHolds: readonly {
     readonly holdId: UUID;
@@ -61,6 +69,7 @@ export interface WalletTransactionsResult {
     readonly externalReference: string | null;
     readonly holdId: UUID | null;
     readonly payoutId: UUID | null;
+    readonly sport?: string;
   }[];
   readonly nextCursor: Date | null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Search, UserRound, UsersRound } from "lucide-react";
+import { LogOut, Plus, Search, Settings, UserRound, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
+import styles from "./app-shell.module.css";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", image: "home" },
@@ -61,16 +62,21 @@ function SidebarContents({
   logoutAction,
   onNavigate,
   searchHref,
+  walletLayout = false,
 }: {
   readonly user: ShellUser;
   readonly logoutAction?: () => Promise<void>;
   readonly onNavigate?: () => void;
   readonly searchHref: string;
+  readonly walletLayout?: boolean;
 }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto px-4 py-7 lg:px-5 lg:py-8">
+    <div className={cn(
+      "flex h-full flex-col overflow-y-auto px-4 py-7 lg:px-5 lg:py-8",
+      walletLayout && "px-[18px] py-6 lg:px-[18px] lg:py-6",
+    )}>
       <div className="px-3">
         <Link
           href="/"
@@ -83,7 +89,7 @@ function SidebarContents({
       </div>
 
       {/* Navigation links */}
-      <nav className="mt-10 flex flex-col gap-2 lg:mt-12" aria-label="Main">
+      <nav className={cn("mt-10 flex flex-col gap-2 lg:mt-12", walletLayout && "mt-[42px] gap-2.5 lg:mt-[42px]")} aria-label="Main">
         {NAV_LINKS.map((link) => {
           const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
           return (
@@ -94,11 +100,14 @@ function SidebarContents({
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:gap-4",
+                walletLayout && "min-h-[46px] rounded-[7px] py-2.5",
                 active && "bg-accent font-semibold",
               )}
             >
               {link.image === "search" ? (
                 <Search className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
+              ) : walletLayout && link.image === "settings" ? (
+                <Settings className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
               ) : link.image === null ? (
                 <UsersRound className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
               ) : (
@@ -112,9 +121,9 @@ function SidebarContents({
 
       {/* Your account (bottom) */}
       <div className="mt-auto pt-10">
-        <div className="border-t pt-5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-semibold">
+        <div className={cn("border-t pt-5", walletLayout && "pt-6")}>
+          <div className={cn("flex items-center gap-3", walletLayout && "px-2")}>
+            <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-semibold", walletLayout && "h-9 w-9")}>
               {initials(user.name)}
             </span>
             <div className="min-w-0">
@@ -125,7 +134,7 @@ function SidebarContents({
             </div>
           </div>
           {logoutAction !== undefined && (
-            <form action={logoutAction} className="mt-3">
+            <form action={logoutAction} className={cn("mt-3", walletLayout && "mt-4")}>
               <button
                 type="submit"
                 className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -146,6 +155,7 @@ function SidebarContents({
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const walletLayout = pathname === "/wallet" || pathname.startsWith("/wallet/");
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const origins = searchParams.getAll("returnTo");
@@ -159,15 +169,18 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
   );
 
   return (
-    <div className="flex min-h-screen bg-card md:bg-background">
+    <div className={cn("flex min-h-screen bg-card md:bg-background", walletLayout && styles.wallet)}>
       {/* Desktop sidebar (hidden below 768px) */}
-      <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
-        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} />
+      <aside className={cn(
+        "sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64",
+        walletLayout && "mb-6 h-[calc(100dvh-2.5rem)] rounded-lg border-0 shadow-none lg:w-60 2xl:w-60",
+      )}>
+        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} walletLayout={walletLayout} />
       </aside>
 
       <div className="relative isolate flex min-w-0 flex-1 flex-col">
         {/* The desktop court fades behind the page introduction without competing with its content. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && "md:block")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && "md:block")} aria-hidden="true">
           <Image
             src="/images/mobile-hero.png"
             alt=""
@@ -192,14 +205,25 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
           <div className="absolute -left-2.5 top-3.5 h-72 w-[64.4%] bg-[linear-gradient(to_left,hsl(var(--card)/0)_0%,hsl(var(--card)/0.25)_12.5%,hsl(var(--card)/0.5)_25%,hsl(var(--card))_50%)] dark:top-0" />
           <div className="absolute inset-x-0 -top-[19px] h-[430px] bg-[linear-gradient(to_bottom,hsl(var(--card)/0)_0%,hsl(var(--card)/0.25)_12.5%,hsl(var(--card)/0.5)_25%,hsl(var(--card))_50%)]" />
         </div>
-        <header className={cn("relative px-6 pb-6 pt-5 md:hidden", mobileVariant === "focused" && "hidden")}>
-          <div className="mb-4 flex items-center justify-between">
+        <header className={cn("relative px-6 pb-6 pt-5 md:hidden", walletLayout && "pb-[31px]", mobileVariant === "focused" && "hidden")}>
+          <div className={cn("mb-4 flex items-center justify-between", walletLayout && "mb-2")}>
             <Link
               href="/"
               className="inline-flex min-h-11 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <BookingLogo />
+              <BookingLogo className={walletLayout ? "text-lg" : undefined} />
             </Link>
+            {walletLayout ? (
+              <Link
+                href="/sessions/create"
+                aria-label="Create session"
+                className="flex h-11 w-11 items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground">
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </Link>
+            ) : (
             <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="icon" className="h-11 w-11" aria-label="Search sessions">
               <Link href={searchHref}><Search className="h-5 w-5" aria-hidden="true" /></Link>
@@ -247,10 +271,14 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
               </SheetContent>
             </Sheet>
             </div>
+            )}
           </div>
 
           <nav
-            className="flex items-center rounded-md bg-card p-2.5 shadow-[0_0_1px_0_hsl(var(--foreground)/0.3),0_4px_8px_0_hsl(var(--foreground)/0.1)]"
+            className={cn(
+              "flex items-center rounded-md bg-card p-2.5 shadow-[0_0_1px_0_hsl(var(--foreground)/0.3),0_4px_8px_0_hsl(var(--foreground)/0.1)]",
+              walletLayout && "p-[7px]",
+            )}
             aria-label="Main"
           >
             {MOBILE_NAV_LINKS.map(({ href, label, image }, index) => {
@@ -264,6 +292,8 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
                     className={cn(
                       "flex min-h-11 min-w-[44px] items-center justify-center gap-2 whitespace-nowrap rounded px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       active ? "flex-[2] bg-accent font-medium text-foreground" : "flex-1 text-foreground",
+                      walletLayout && "relative text-xs",
+                      walletLayout && active && "isolate bg-transparent before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded before:bg-accent",
                     )}
                   >
                     <Image src={`/images/navigation/${image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />

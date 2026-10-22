@@ -1,4 +1,5 @@
 import { DomainError, Money } from "@/domain";
+import { formatSgdCents } from "./format";
 
 /**
  * Splitting money without losing cents.
@@ -95,35 +96,10 @@ export function sumOf(amounts: Iterable<Money>): Money {
   return total;
 }
 
-const WHOLE_UNITS = new Intl.NumberFormat("en-SG", {
-  useGrouping: true,
-  maximumFractionDigits: 0,
-});
-
-/**
- * Formats an amount for display, to two decimals.
- *
- * The dollars and the cents are separated by integer arithmetic and only the
- * dollar part is handed to `Intl`, so the value never becomes a float. Passing
- * `cents / 100` straight to a currency formatter would read correctly for small
- * amounts and quietly lose precision for large ones, which is the class of bug
- * the integer-cents rule exists to prevent.
- *
- * Presentation only. The string it returns must never be parsed back into a
- * number and fed into a calculation.
- */
+/** Formats a domain amount; UI callers use formatSgdCents with their cent-valued DTOs. */
 export function formatSgd(money: Money): string {
   requireMoney(money, "money");
-
-  const cents = money.toCents();
-  const sign = cents < 0 ? "-" : "";
-  const absolute = Math.abs(cents);
-  const fraction = absolute % 100;
-  // The numerator is an exact multiple of 100, so this division is exact for
-  // every safe integer.
-  const dollars = (absolute - fraction) / 100;
-
-  return `${sign}S$${WHOLE_UNITS.format(dollars)}.${String(fraction).padStart(2, "0")}`;
+  return formatSgdCents(money.toCents());
 }
 
 function requireMoney(value: Money, name: string): void {

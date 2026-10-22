@@ -10,7 +10,7 @@ import {
 import { fromDatabaseCents } from "./cents";
 import { LedgerError, rethrowDatabaseError } from "./errors";
 import type { SqlExecutor, SqlRow } from "./sql";
-import type { WalletHistoryQuery, WalletHistoryReadPort } from "@/use-cases/wallet/contracts";
+import type { WalletHistoryQuery, WalletHistoryReadPort, WalletHistoryTransaction } from "@/use-cases/wallet/contracts";
 
 export type { WalletHistoryQuery, WalletHistoryReadPort } from "@/use-cases/wallet/contracts";
 
@@ -83,7 +83,7 @@ export class PostgresLedgerReader
 
   async listWalletTransactions(
     query: WalletHistoryQuery,
-  ): Promise<readonly LedgerTransaction[]> {
+  ): Promise<readonly WalletHistoryTransaction[]> {
     const limit = Math.min(
       Math.max(query.limit ?? DEFAULT_HISTORY_LIMIT, 1),
       MAX_HISTORY_LIMIT,
