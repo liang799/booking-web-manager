@@ -1,0 +1,24 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /Users/tianpok/Projects/booking-web-manager
+
+ ✓ |unit| tests/app/discover/query.test.ts (32 tests) 10ms
+ ✓ |unit| tests/lib/sessions/postgres-session-discovery-reader.test.ts (5 tests) 4ms
+ ✓ |unit| tests/app/sessions/session-visibility-action.test.ts (11 tests) 6ms
+ ✓ |unit| tests/app/sessions/management-openapi.test.ts (2 tests) 2ms
+ ✓ |unit| tests/app/sessions/session-visibility-route.test.ts (20 tests) 71ms
+
+ Test Files  5 passed (5)
+      Tests  70 passed (70)
+   Start at  15:54:01
+   Duration  313ms (transform 468ms, setup 0ms, import 678ms, tests 93ms, environment 0ms)
+
+JSON report written to /Users/tianpok/Projects/booking-web-manager/output/session-testing/evidence/current-session-boundary-unit-20261020T075359Z.json

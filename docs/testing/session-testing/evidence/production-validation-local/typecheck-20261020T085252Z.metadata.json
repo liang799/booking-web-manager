@@ -1,0 +1,13 @@
+{
+  "command": [
+    "rtk",
+    "proxy",
+    "npm",
+    "run",
+    "typecheck"
+  ],
+  "startedAt": "2026-10-20T08:52:52.606791+00:00",
+  "finishedAt": "2026-10-20T08:52:55.218127+00:00",
+  "exitCode": 0,
+  "logPath": "docs/testing/session-testing/evidence/production-validation-local/typecheck-20261020T085252Z.log"
+}

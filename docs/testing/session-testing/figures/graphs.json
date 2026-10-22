@@ -1,0 +1,1245 @@
+{
+  "convention": "One entry and one synthetic exit per scoped graph. True/false labels denote predicate outcomes. Scope and short-circuit conventions are stated individually.",
+  "graphs": [
+    {
+      "id": "discovery",
+      "title": "UC2-01: Discovery query filters",
+      "sourcePath": "lib/sessions/postgres-session-discovery-reader.ts",
+      "sourceLines": [
+        16,
+        52
+      ],
+      "subject": "PostgresSessionDiscoveryReader.search",
+      "boundary": "Source-level filter guards only. Optional property access is part of each guard. SQL execution, row projection and callee internals are action nodes; implicit exception edges are excluded.",
+      "rankdir": "LR",
+      "sameRank": [
+        [
+          "D1",
+          "D2"
+        ],
+        [
+          "D3",
+          "D4"
+        ],
+        [
+          "D5",
+          "D6"
+        ],
+        [
+          "D7",
+          "D8"
+        ],
+        [
+          "D9",
+          "D10"
+        ]
+      ],
+      "nodes": [
+        {
+          "id": "D0",
+          "label": "Entry\nBase query",
+          "kind": "entry"
+        },
+        {
+          "id": "D1",
+          "label": "Text\nsupplied?",
+          "kind": "predicate"
+        },
+        {
+          "id": "D2",
+          "label": "Add escaped\ntext filter",
+          "kind": "action"
+        },
+        {
+          "id": "D3",
+          "label": "Sport\nsupplied?",
+          "kind": "predicate"
+        },
+        {
+          "id": "D4",
+          "label": "Add sport\nfilter",
+          "kind": "action"
+        },
+        {
+          "id": "D5",
+          "label": "Region\nsupplied?",
+          "kind": "predicate"
+        },
+        {
+          "id": "D6",
+          "label": "Add region\nfilter",
+          "kind": "action"
+        },
+        {
+          "id": "D7",
+          "label": "From\nsupplied?",
+          "kind": "predicate"
+        },
+        {
+          "id": "D8",
+          "label": "Add inclusive\nlower bound",
+          "kind": "action"
+        },
+        {
+          "id": "D9",
+          "label": "Before\nsupplied?",
+          "kind": "predicate"
+        },
+        {
+          "id": "D10",
+          "label": "Add exclusive\nupper bound",
+          "kind": "action"
+        },
+        {
+          "id": "D11",
+          "label": "Query + project\nReturn results",
+          "kind": "action"
+        },
+        {
+          "id": "D12",
+          "label": "Exit",
+          "kind": "exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "D0",
+          "to": "D1",
+          "label": ""
+        },
+        {
+          "from": "D1",
+          "to": "D2",
+          "label": "T"
+        },
+        {
+          "from": "D1",
+          "to": "D3",
+          "label": "F"
+        },
+        {
+          "from": "D2",
+          "to": "D3",
+          "label": ""
+        },
+        {
+          "from": "D3",
+          "to": "D4",
+          "label": "T"
+        },
+        {
+          "from": "D3",
+          "to": "D5",
+          "label": "F"
+        },
+        {
+          "from": "D4",
+          "to": "D5",
+          "label": ""
+        },
+        {
+          "from": "D5",
+          "to": "D6",
+          "label": "T"
+        },
+        {
+          "from": "D5",
+          "to": "D7",
+          "label": "F"
+        },
+        {
+          "from": "D6",
+          "to": "D7",
+          "label": ""
+        },
+        {
+          "from": "D7",
+          "to": "D8",
+          "label": "T"
+        },
+        {
+          "from": "D7",
+          "to": "D9",
+          "label": "F"
+        },
+        {
+          "from": "D8",
+          "to": "D9",
+          "label": ""
+        },
+        {
+          "from": "D9",
+          "to": "D10",
+          "label": "T"
+        },
+        {
+          "from": "D9",
+          "to": "D11",
+          "label": "F"
+        },
+        {
+          "from": "D10",
+          "to": "D11",
+          "label": ""
+        },
+        {
+          "from": "D11",
+          "to": "D12",
+          "label": ""
+        }
+      ],
+      "paths": [
+        {
+          "id": "WB-D1",
+          "nodes": [
+            "D0",
+            "D1",
+            "D3",
+            "D5",
+            "D7",
+            "D9",
+            "D11",
+            "D12"
+          ],
+          "input": "No optional filters.",
+          "expected": "Only PUBLIC, OPEN and strictly-future base constraints.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "D0",
+              "to": "D1"
+            },
+            {
+              "from": "D1",
+              "to": "D3"
+            },
+            {
+              "from": "D3",
+              "to": "D5"
+            },
+            {
+              "from": "D5",
+              "to": "D7"
+            },
+            {
+              "from": "D7",
+              "to": "D9"
+            },
+            {
+              "from": "D9",
+              "to": "D11"
+            },
+            {
+              "from": "D11",
+              "to": "D12"
+            }
+          ]
+        },
+        {
+          "id": "WB-D2",
+          "nodes": [
+            "D0",
+            "D1",
+            "D2",
+            "D3",
+            "D5",
+            "D7",
+            "D9",
+            "D11",
+            "D12"
+          ],
+          "input": "Only text=\"100%_Court\".",
+          "expected": "Bound literal escaped text filter on sport or venue.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "D1",
+              "to": "D2"
+            },
+            {
+              "from": "D2",
+              "to": "D3"
+            }
+          ]
+        },
+        {
+          "id": "WB-D3",
+          "nodes": [
+            "D0",
+            "D1",
+            "D3",
+            "D4",
+            "D5",
+            "D7",
+            "D9",
+            "D11",
+            "D12"
+          ],
+          "input": "Only sport=\"Badminton\".",
+          "expected": "Bound sport equality filter.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "D3",
+              "to": "D4"
+            },
+            {
+              "from": "D4",
+              "to": "D5"
+            }
+          ]
+        },
+        {
+          "id": "WB-D4",
+          "nodes": [
+            "D0",
+            "D1",
+            "D3",
+            "D5",
+            "D6",
+            "D7",
+            "D9",
+            "D11",
+            "D12"
+          ],
+          "input": "Only region=\"West\".",
+          "expected": "Bound region equality filter.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "D5",
+              "to": "D6"
+            },
+            {
+              "from": "D6",
+              "to": "D7"
+            }
+          ]
+        },
+        {
+          "id": "WB-D5",
+          "nodes": [
+            "D0",
+            "D1",
+            "D3",
+            "D5",
+            "D7",
+            "D8",
+            "D9",
+            "D11",
+            "D12"
+          ],
+          "input": "Only startsWithin.from supplied.",
+          "expected": "Inclusive lower bound start_at >= value.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "D7",
+              "to": "D8"
+            },
+            {
+              "from": "D8",
+              "to": "D9"
+            }
+          ]
+        },
+        {
+          "id": "WB-D6",
+          "nodes": [
+            "D0",
+            "D1",
+            "D3",
+            "D5",
+            "D7",
+            "D9",
+            "D10",
+            "D11",
+            "D12"
+          ],
+          "input": "Only startsWithin.before supplied.",
+          "expected": "Exclusive upper bound start_at < value.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "D9",
+              "to": "D10"
+            },
+            {
+              "from": "D10",
+              "to": "D11"
+            }
+          ]
+        }
+      ],
+      "predicates": {
+        "D1": {
+          "line": 23,
+          "expression": "criteria.text !== undefined"
+        },
+        "D3": {
+          "line": 28,
+          "expression": "criteria.sport !== undefined"
+        },
+        "D5": {
+          "line": 29,
+          "expression": "criteria.region !== undefined"
+        },
+        "D7": {
+          "line": 30,
+          "expression": "criteria.startsWithin?.from !== undefined"
+        },
+        "D9": {
+          "line": 32,
+          "expression": "criteria.startsWithin?.before !== undefined"
+        }
+      },
+      "counts": {
+        "nodes": 13,
+        "edges": 17,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 6,
+        "formula": "17 - 13 + 2 = 6",
+        "predicateCount": 5
+      },
+      "audit": {
+        "allEdgesCoveredByDeclaredPaths": true,
+        "pathVectorRankGF2": 6,
+        "allPathsUseDeclaredEdges": true,
+        "scope": "Authored graph arithmetic and predicted-path audit only; not runtime branch coverage."
+      },
+      "dotFile": "discovery-cfg.dot",
+      "pngFile": "discovery-cfg.png"
+    },
+    {
+      "id": "creation",
+      "title": "UC2-02: Creation account policy",
+      "sourcePath": "domain/accounts/booking-account-eligibility.ts",
+      "sourceLines": [
+        10,
+        16
+      ],
+      "subject": "bookingAccountIneligibility",
+      "boundary": "The pure account-policy helper called by Booker.assertCanCreateSession at domain/accounts/booker.ts:95. Payout, booking validation and persistence are outside this graph.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "C0",
+          "label": "Entry",
+          "kind": "entry"
+        },
+        {
+          "id": "C1",
+          "label": "Account\ninactive?",
+          "kind": "predicate"
+        },
+        {
+          "id": "C2",
+          "label": "Return\nINACTIVE_ACCOUNT",
+          "kind": "action"
+        },
+        {
+          "id": "C3",
+          "label": "Email\nmissing?",
+          "kind": "predicate"
+        },
+        {
+          "id": "C4",
+          "label": "Return\nEMAIL_REQUIRED",
+          "kind": "action"
+        },
+        {
+          "id": "C5",
+          "label": "Return undefined\nAccount eligible",
+          "kind": "action"
+        },
+        {
+          "id": "C6",
+          "label": "Exit",
+          "kind": "exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "C0",
+          "to": "C1",
+          "label": ""
+        },
+        {
+          "from": "C1",
+          "to": "C2",
+          "label": "T"
+        },
+        {
+          "from": "C1",
+          "to": "C3",
+          "label": "F"
+        },
+        {
+          "from": "C3",
+          "to": "C4",
+          "label": "T"
+        },
+        {
+          "from": "C3",
+          "to": "C5",
+          "label": "F"
+        },
+        {
+          "from": "C2",
+          "to": "C6",
+          "label": ""
+        },
+        {
+          "from": "C4",
+          "to": "C6",
+          "label": ""
+        },
+        {
+          "from": "C5",
+          "to": "C6",
+          "label": ""
+        }
+      ],
+      "paths": [
+        {
+          "id": "WB-C1",
+          "nodes": [
+            "C0",
+            "C1",
+            "C2",
+            "C6"
+          ],
+          "input": "accountStatus=\"INACTIVE\", hasEmail=true.",
+          "expected": "INACTIVE_ACCOUNT",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "C0",
+              "to": "C1"
+            },
+            {
+              "from": "C1",
+              "to": "C2"
+            },
+            {
+              "from": "C2",
+              "to": "C6"
+            }
+          ]
+        },
+        {
+          "id": "WB-C2",
+          "nodes": [
+            "C0",
+            "C1",
+            "C3",
+            "C4",
+            "C6"
+          ],
+          "input": "accountStatus=\"ACTIVE\", hasEmail=false.",
+          "expected": "EMAIL_REQUIRED",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "C1",
+              "to": "C3"
+            },
+            {
+              "from": "C3",
+              "to": "C4"
+            },
+            {
+              "from": "C4",
+              "to": "C6"
+            }
+          ]
+        },
+        {
+          "id": "WB-C3",
+          "nodes": [
+            "C0",
+            "C1",
+            "C3",
+            "C5",
+            "C6"
+          ],
+          "input": "accountStatus=\"ACTIVE\", hasEmail=true.",
+          "expected": "undefined (account eligible)",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "C3",
+              "to": "C5"
+            },
+            {
+              "from": "C5",
+              "to": "C6"
+            }
+          ]
+        }
+      ],
+      "predicates": {
+        "C1": {
+          "line": 13,
+          "expression": "account.accountStatus !== \"ACTIVE\""
+        },
+        "C3": {
+          "line": 14,
+          "expression": "!account.hasEmail"
+        }
+      },
+      "counts": {
+        "nodes": 7,
+        "edges": 8,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 3,
+        "formula": "8 - 7 + 2 = 3",
+        "predicateCount": 2
+      },
+      "audit": {
+        "allEdgesCoveredByDeclaredPaths": true,
+        "pathVectorRankGF2": 3,
+        "allPathsUseDeclaredEdges": true,
+        "scope": "Authored graph arithmetic and predicted-path audit only; not runtime branch coverage."
+      },
+      "dotFile": "creation-cfg.dot",
+      "pngFile": "creation-cfg.png"
+    },
+    {
+      "id": "visibility",
+      "title": "UC2-03a: Visibility request parser",
+      "sourcePath": "app/sessions/visibility-input.ts",
+      "sourceLines": [
+        8,
+        13
+      ],
+      "subject": "parseSessionVisibilityInput",
+      "boundary": "Both safeParse calls execute before the OR condition. Each atomic operand of that short-circuit OR is a predicate. Schema internals and downstream ownership, lifecycle and capacity checks are outside this graph. Explicit throw reaches the synthetic exit.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "V0",
+          "label": "Entry",
+          "kind": "entry"
+        },
+        {
+          "id": "V1",
+          "label": "Run both\nsafeParse calls",
+          "kind": "action"
+        },
+        {
+          "id": "V2",
+          "label": "ID parse\nfailed?",
+          "kind": "predicate"
+        },
+        {
+          "id": "V3",
+          "label": "Body parse\nfailed?",
+          "kind": "predicate"
+        },
+        {
+          "id": "V4",
+          "label": "Throw\ninvalid request",
+          "kind": "action"
+        },
+        {
+          "id": "V5",
+          "label": "Return validated\nID + visibility",
+          "kind": "action"
+        },
+        {
+          "id": "V6",
+          "label": "Exit",
+          "kind": "exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "V0",
+          "to": "V1",
+          "label": ""
+        },
+        {
+          "from": "V1",
+          "to": "V2",
+          "label": ""
+        },
+        {
+          "from": "V2",
+          "to": "V4",
+          "label": "T"
+        },
+        {
+          "from": "V2",
+          "to": "V3",
+          "label": "F"
+        },
+        {
+          "from": "V3",
+          "to": "V4",
+          "label": "T"
+        },
+        {
+          "from": "V3",
+          "to": "V5",
+          "label": "F"
+        },
+        {
+          "from": "V4",
+          "to": "V6",
+          "label": ""
+        },
+        {
+          "from": "V5",
+          "to": "V6",
+          "label": ""
+        }
+      ],
+      "paths": [
+        {
+          "id": "WB-V1",
+          "nodes": [
+            "V0",
+            "V1",
+            "V2",
+            "V4",
+            "V6"
+          ],
+          "input": "sessionId=\"not-a-uuid\"; body={visibility:\"PUBLIC\"}.",
+          "expected": "Invalid-request failure; no validated value.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "V0",
+              "to": "V1"
+            },
+            {
+              "from": "V1",
+              "to": "V2"
+            },
+            {
+              "from": "V2",
+              "to": "V4"
+            },
+            {
+              "from": "V4",
+              "to": "V6"
+            }
+          ]
+        },
+        {
+          "id": "WB-V2",
+          "nodes": [
+            "V0",
+            "V1",
+            "V2",
+            "V3",
+            "V4",
+            "V6"
+          ],
+          "input": "Valid session UUID; body={visibility:\"public\"}.",
+          "expected": "Invalid-request failure; enum is case-sensitive.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "V2",
+              "to": "V3"
+            },
+            {
+              "from": "V3",
+              "to": "V4"
+            }
+          ]
+        },
+        {
+          "id": "WB-V3",
+          "nodes": [
+            "V0",
+            "V1",
+            "V2",
+            "V3",
+            "V5",
+            "V6"
+          ],
+          "input": "Valid session UUID; body={visibility:\"PUBLIC\"}.",
+          "expected": "Return validated UUID and PUBLIC.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "V3",
+              "to": "V5"
+            },
+            {
+              "from": "V5",
+              "to": "V6"
+            }
+          ]
+        }
+      ],
+      "predicates": {
+        "V2": {
+          "line": 11,
+          "expression": "!params.success"
+        },
+        "V3": {
+          "line": 11,
+          "expression": "!input.success"
+        }
+      },
+      "counts": {
+        "nodes": 7,
+        "edges": 8,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 3,
+        "formula": "8 - 7 + 2 = 3",
+        "predicateCount": 2
+      },
+      "audit": {
+        "allEdgesCoveredByDeclaredPaths": true,
+        "pathVectorRankGF2": 3,
+        "allPathsUseDeclaredEdges": true,
+        "scope": "Authored graph arithmetic and predicted-path audit only; not runtime branch coverage."
+      },
+      "dotFile": "visibility-cfg.dot",
+      "pngFile": "visibility-cfg.png"
+    },
+    {
+      "id": "removal",
+      "title": "UC2-03b: Removal preview confirmation",
+      "sourcePath": "use-cases/sessions/RemoveParticipant.ts",
+      "sourceLines": [
+        20,
+        28
+      ],
+      "subject": "RemoveParticipant.forBooker inner submission callback",
+      "boundary": "The callback passed to submission.once, after the active-account check. Aggregate loading, ownership and domain removal are contracted actions. Replay selection, callee internals and implicit exceptions are excluded. Explicit stale-preview throw reaches the synthetic exit.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "R0",
+          "label": "Callback entry",
+          "kind": "entry"
+        },
+        {
+          "id": "R1",
+          "label": "Load + authorize\nVersion + domain removal",
+          "kind": "action"
+        },
+        {
+          "id": "R2",
+          "label": "Preview version\ndifferent?",
+          "kind": "predicate"
+        },
+        {
+          "id": "R3",
+          "label": "Throw stale\npreview conflict",
+          "kind": "action"
+        },
+        {
+          "id": "R4",
+          "label": "Append refund + save\nReturn REMOVED",
+          "kind": "action"
+        },
+        {
+          "id": "R5",
+          "label": "Exit",
+          "kind": "exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "R0",
+          "to": "R1",
+          "label": ""
+        },
+        {
+          "from": "R1",
+          "to": "R2",
+          "label": ""
+        },
+        {
+          "from": "R2",
+          "to": "R3",
+          "label": "T"
+        },
+        {
+          "from": "R2",
+          "to": "R4",
+          "label": "F"
+        },
+        {
+          "from": "R3",
+          "to": "R5",
+          "label": ""
+        },
+        {
+          "from": "R4",
+          "to": "R5",
+          "label": ""
+        }
+      ],
+      "paths": [
+        {
+          "id": "WB-R1",
+          "nodes": [
+            "R0",
+            "R1",
+            "R2",
+            "R3",
+            "R5"
+          ],
+          "input": "Active owner; OPEN future session; COMMITTED target; stale previewVersion.",
+          "expected": "STALE_REMOVAL_PREVIEW; no ledger append/save; transaction rolls back tentative domain change.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "R0",
+              "to": "R1"
+            },
+            {
+              "from": "R1",
+              "to": "R2"
+            },
+            {
+              "from": "R2",
+              "to": "R3"
+            },
+            {
+              "from": "R3",
+              "to": "R5"
+            }
+          ]
+        },
+        {
+          "id": "WB-R2",
+          "nodes": [
+            "R0",
+            "R1",
+            "R2",
+            "R4",
+            "R5"
+          ],
+          "input": "Same valid setup; current previewVersion; historical hold 733 cents.",
+          "expected": "One full REFUND of 733 cents; persisted REMOVED; return refundCents=733.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "R2",
+              "to": "R4"
+            },
+            {
+              "from": "R4",
+              "to": "R5"
+            }
+          ]
+        }
+      ],
+      "predicates": {
+        "R2": {
+          "line": 25,
+          "expression": "previewVersion !== currentVersion"
+        }
+      },
+      "counts": {
+        "nodes": 6,
+        "edges": 6,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 2,
+        "formula": "6 - 6 + 2 = 2",
+        "predicateCount": 1
+      },
+      "audit": {
+        "allEdgesCoveredByDeclaredPaths": true,
+        "pathVectorRankGF2": 2,
+        "allPathsUseDeclaredEdges": true,
+        "scope": "Authored graph arithmetic and predicted-path audit only; not runtime branch coverage."
+      },
+      "dotFile": "removal-cfg.dot",
+      "pngFile": "removal-cfg.png"
+    },
+    {
+      "id": "cancellation",
+      "title": "UC2-03c: Prepare one cancellation",
+      "sourcePath": "domain/accounts/booker.ts",
+      "sourceLines": [
+        294,
+        318
+      ],
+      "subject": "Booker.prepareCancellation",
+      "boundary": "One participation per invocation. Atomic operands of short-circuit OR and AND are predicate nodes. The caller loop, called methods and implicit exceptions are excluded. All return nodes join one synthetic exit.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "B0",
+          "label": "Entry",
+          "kind": "entry"
+        },
+        {
+          "id": "B1",
+          "label": "Status\nREMOVED?",
+          "kind": "predicate"
+        },
+        {
+          "id": "B2",
+          "label": "Status\nCANCELLED?",
+          "kind": "predicate"
+        },
+        {
+          "id": "B3",
+          "label": "Hold\npresent?",
+          "kind": "predicate"
+        },
+        {
+          "id": "B4",
+          "label": "Hold not\nterminal?",
+          "kind": "predicate"
+        },
+        {
+          "id": "B5",
+          "label": "Keep participation\nNo refund",
+          "kind": "action"
+        },
+        {
+          "id": "B6",
+          "label": "Refund + cancel\nOne REFUND",
+          "kind": "action"
+        },
+        {
+          "id": "B7",
+          "label": "Cancel\nNo refund",
+          "kind": "action"
+        },
+        {
+          "id": "B8",
+          "label": "Exit",
+          "kind": "exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "B0",
+          "to": "B1",
+          "label": ""
+        },
+        {
+          "from": "B1",
+          "to": "B5",
+          "label": "T"
+        },
+        {
+          "from": "B1",
+          "to": "B2",
+          "label": "F"
+        },
+        {
+          "from": "B2",
+          "to": "B5",
+          "label": "T"
+        },
+        {
+          "from": "B2",
+          "to": "B3",
+          "label": "F"
+        },
+        {
+          "from": "B3",
+          "to": "B4",
+          "label": "T"
+        },
+        {
+          "from": "B3",
+          "to": "B7",
+          "label": "F"
+        },
+        {
+          "from": "B4",
+          "to": "B6",
+          "label": "T"
+        },
+        {
+          "from": "B4",
+          "to": "B7",
+          "label": "F"
+        },
+        {
+          "from": "B5",
+          "to": "B8",
+          "label": ""
+        },
+        {
+          "from": "B6",
+          "to": "B8",
+          "label": ""
+        },
+        {
+          "from": "B7",
+          "to": "B8",
+          "label": ""
+        }
+      ],
+      "paths": [
+        {
+          "id": "WB-B1",
+          "nodes": [
+            "B0",
+            "B1",
+            "B5",
+            "B8"
+          ],
+          "input": "REMOVED participation with REFUNDED hold.",
+          "expected": "Same terminal object retained; no refund.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "B0",
+              "to": "B1"
+            },
+            {
+              "from": "B1",
+              "to": "B5"
+            },
+            {
+              "from": "B5",
+              "to": "B8"
+            }
+          ]
+        },
+        {
+          "id": "WB-B2",
+          "nodes": [
+            "B0",
+            "B1",
+            "B2",
+            "B5",
+            "B8"
+          ],
+          "input": "CANCELLED participation with REFUNDED hold in hydrated OPEN session.",
+          "expected": "Same terminal object retained; no refund.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "B1",
+              "to": "B2"
+            },
+            {
+              "from": "B2",
+              "to": "B5"
+            }
+          ]
+        },
+        {
+          "id": "WB-B3",
+          "nodes": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B7",
+            "B8"
+          ],
+          "input": "WAITLISTED participation without a hold.",
+          "expected": "Participation CANCELLED; no refund.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "B2",
+              "to": "B3"
+            },
+            {
+              "from": "B3",
+              "to": "B7"
+            },
+            {
+              "from": "B7",
+              "to": "B8"
+            }
+          ]
+        },
+        {
+          "id": "WB-B4",
+          "nodes": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B7",
+            "B8"
+          ],
+          "input": "WITHDRAWN participation with already REFUNDED hold.",
+          "expected": "Participation CANCELLED; no duplicate refund.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "B3",
+              "to": "B4"
+            },
+            {
+              "from": "B4",
+              "to": "B7"
+            }
+          ]
+        },
+        {
+          "id": "WB-B5",
+          "nodes": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B6",
+            "B8"
+          ],
+          "input": "COMMITTED participation with HELD 500-cent hold.",
+          "expected": "Participation CANCELLED; hold REFUNDED; exactly one 500-cent REFUND.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "B4",
+              "to": "B6"
+            },
+            {
+              "from": "B6",
+              "to": "B8"
+            }
+          ]
+        }
+      ],
+      "predicates": {
+        "B1": {
+          "line": 299,
+          "expression": "participation.status === \"REMOVED\""
+        },
+        "B2": {
+          "line": 299,
+          "expression": "participation.status === \"CANCELLED\""
+        },
+        "B3": {
+          "line": 302,
+          "expression": "participation.hold !== undefined"
+        },
+        "B4": {
+          "line": 303,
+          "expression": "![\"REFUNDED\", \"RELEASED\", \"FORFEITED\"].includes(participation.hold.state)"
+        }
+      },
+      "counts": {
+        "nodes": 9,
+        "edges": 12,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 5,
+        "formula": "12 - 9 + 2 = 5",
+        "predicateCount": 4
+      },
+      "audit": {
+        "allEdgesCoveredByDeclaredPaths": true,
+        "pathVectorRankGF2": 5,
+        "allPathsUseDeclaredEdges": true,
+        "scope": "Authored graph arithmetic and predicted-path audit only; not runtime branch coverage."
+      },
+      "dotFile": "cancellation-cfg.dot",
+      "pngFile": "cancellation-cfg.png"
+    }
+  ]
+}
