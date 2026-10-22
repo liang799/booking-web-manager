@@ -145,6 +145,18 @@ export const EmptyPreferences: Story = {
   },
 };
 
+/** An unavailable score must not become the starting score. */
+export const ReliabilityUnavailable: Story = {
+  args: { user: { ...exampleUser, reliabilityScore: null } },
+  play: async ({ canvas }) => {
+    const main = canvas.getByRole("main");
+    const page = within(main);
+    await expect(page.getByText("Reliability score unavailable right now.")).toBeVisible();
+    await expect(page.queryByText(/Reliability 5\.0/)).not.toBeInTheDocument();
+    await expectSettingsLinks(main);
+  },
+};
+
 export const LongNameAndPreferences: Story = {
   globals: { viewport: { value: "phone", isRotated: false } },
   args: {
