@@ -1,10 +1,9 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface SettingsRowProps {
-  /** Two letters in the grey circle, e.g. "EP" (mockup 10). */
-  readonly code: string;
+  readonly icon: LucideIcon;
   readonly title: string;
   readonly description?: string;
   /** Where the row goes. Without it, the row shows "Coming soon" and can't be clicked. */
@@ -12,25 +11,28 @@ interface SettingsRowProps {
   readonly tone?: "default" | "danger";
 }
 
-/** One row in a Settings list (mockup 10), e.g. "EP  Edit profile  >". */
-export function SettingsRow({ code, title, description, href, tone = "default" }: SettingsRowProps) {
+/** An accessible account action with a decorative icon and optional supporting text. */
+export function SettingsRow({ icon: Icon, title, description, href, tone = "default" }: SettingsRowProps) {
   const danger = tone === "danger";
   const content = (
     <>
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-background text-xs font-semibold text-muted-foreground"
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground",
+          danger && "bg-destructive/10 text-destructive dark:bg-red-400/10 dark:text-red-400",
+        )}
         aria-hidden
       >
-        {code}
+        <Icon className="h-5 w-5" strokeWidth={1.8} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className={cn("block font-medium", danger && "text-destructive")}>{title}</span>
+        <span className={cn("block text-sm font-medium md:text-base", danger && "text-destructive dark:text-red-400")}>{title}</span>
         {description !== undefined && (
-          <span className="block truncate text-sm text-muted-foreground">{description}</span>
+          <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground md:text-sm">{description}</span>
         )}
       </span>
       {href !== undefined ? (
-        <ChevronRight className={cn("h-4 w-4 shrink-0", danger && "text-destructive")} aria-hidden />
+        <ChevronRight className={cn("h-4 w-4 shrink-0 text-muted-foreground", danger && "text-destructive dark:text-red-400")} aria-hidden />
       ) : (
         <span className="shrink-0 text-xs text-muted-foreground">Coming soon</span>
       )}
@@ -38,8 +40,8 @@ export function SettingsRow({ code, title, description, href, tone = "default" }
   );
 
   const rowClassName = cn(
-    "flex items-center gap-3 px-4 py-3",
-    danger && "bg-destructive/5",
+    "flex min-h-14 items-center gap-4 px-4 py-2.5 md:gap-5 md:px-6",
+    danger && "min-h-[72px] bg-card",
   );
 
   if (href === undefined) return <div className={cn(rowClassName, "opacity-70")}>{content}</div>;

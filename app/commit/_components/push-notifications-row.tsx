@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   disablePushNotifications,
@@ -56,16 +57,16 @@ export function PushNotificationsRow() {
 
   const actionable = state === "on" || state === "off" || state === "saving";
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 md:gap-x-5 md:px-6">
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-background text-xs font-semibold text-muted-foreground"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
         aria-hidden
       >
-        NT
+        <Bell className="h-5 w-5" strokeWidth={1.8} />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-medium">Session notifications</span>
-        <span className="block text-sm text-muted-foreground" aria-live="polite">
+      <span className="min-w-[140px] flex-1">
+        <span className="block text-sm font-medium md:text-base">Session notifications</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground md:text-sm" aria-live="polite">
           {error ?? descriptions[state]}
         </span>
       </span>

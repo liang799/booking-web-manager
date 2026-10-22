@@ -1,7 +1,4 @@
 import { redirect } from "next/navigation";
-import { initials } from "@/components/ui/initials";
-import { PageHeader } from "@/components/ui/page-header";
-import { ReliabilityBadge } from "@/components/ui/reliability-badge";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { PushNotificationsRow } from "@/app/commit/_components/push-notifications-row";
 import { SettingsRow } from "./_components/settings-row";
