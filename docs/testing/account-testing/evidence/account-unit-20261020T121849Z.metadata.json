@@ -1,0 +1,37 @@
+{
+  "runAt": "20261020T121849Z",
+  "timezone": "UTC",
+  "node": "22.22.2",
+  "vitest": "4.1.11",
+  "project": "unit",
+  "baseRevision": "7aacdc97e2ab7d72724429b13eb7f17ee398010b",
+  "command": "LAB4_EVIDENCE_DIR=docs/testing/account-testing/evidence npx vitest run --project unit <files>",
+  "files": [
+    "tests/lab4/account-basis-path.test.ts",
+    "tests/lab4/auth-profile-basis-path.test.ts",
+    "tests/lab4/delete-account-black-box.test.ts",
+    "tests/lab4/update-profile-black-box.test.ts",
+    "tests/use-cases/UC1-01-register-user.test.ts",
+    "tests/use-cases/UC1-02-authenticate-user.test.ts",
+    "tests/use-cases/UC1-03-manage-profile.test.ts",
+    "tests/use-cases/UC1-04-delete-account.test.ts",
+    "tests/use-cases/UC1-06-manage-group.test.ts",
+    "tests/app/profile/actions.test.ts",
+    "tests/app/profile/settings-links.test.ts",
+    "tests/domain/accounts/deactivation-policy.test.ts",
+    "tests/domain/groups/regular-group.test.ts"
+  ],
+  "exitCode": 0,
+  "totals": {
+    "tests": 228,
+    "passed": 226,
+    "failed": 0,
+    "todo": 2,
+    "files": 13
+  },
+  "todo": [
+    "UC1-03 Manage Profile computes and displays the reliability score",
+    "UC1-04 Delete Account retains the anonymised record for audit"
+  ],
+  "notes": "Unit project only: in-memory and mocked ports. No browser, real PostgreSQL, Supabase Auth or Stripe call is made."
+}

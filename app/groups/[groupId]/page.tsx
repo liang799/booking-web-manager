@@ -11,6 +11,7 @@ import {
   ArchiveGroupButton,
   InvitationControls,
   InvitationLink,
+  LeaveGroupButton,
   RemoveMemberButton,
   RenameGroupForm,
 } from "../_components/group-controls";
@@ -98,6 +99,18 @@ export default async function GroupPage({ params }: GroupPageProps) {
                   <p className="text-sm text-muted-foreground">The invitation link is turned off.</p>
                 )}
                 {isOwner && <InvitationControls groupId={group.groupId} active={group.invitationActive} />}
+              </section>
+            )}
+
+            {!isOwner && active && (
+              <section className="space-y-3 rounded-lg border bg-card p-6" aria-labelledby="leave">
+                <h2 id="leave" className="text-xl font-semibold">
+                  Leave group
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  You can leave at any time. To come back, you&apos;ll need a current invitation link.
+                </p>
+                <LeaveGroupButton groupId={group.groupId} groupName={group.name} />
               </section>
             )}
 

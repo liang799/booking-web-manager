@@ -158,15 +158,32 @@ and informational session data. Photo sources and credits are in
 The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus a Search
 button alongside the account menu. Search opens the focused `/discover` view with
 a back arrow, tennis hero, mounted search/filter form, sport chips and compact cards.
-The desktop sidebar has separate Home and Discover destinations.
+The search field is labelled "Search sessions by sport or venue". The desktop sidebar
+has separate Home and Discover destinations.
+
+From 768px the same view follows the layout reviewed on PR #108: "Upcoming sessions"
+is the page heading, the search bar sits directly beneath it, then the sport chips,
+then photo-top cards, two per row when the results column is at least 600px wide
+(a container query). The court hero and back arrow are mobile-only; on desktop the
+hero's "Find Your Next Game" heading stays as a visually hidden page title, and the
+sidebar provides navigation. The heading block is not focusable, so moving it to the
+top with CSS `order` keeps the keyboard order (search, then chips, then results) the
+same at every width. The styles live in
+[`discovery-search-view.module.css`](./_components/discovery-search-view.module.css)
+and apply only from 768px. Labels, form behavior, polling and the shared join
+confirmation are the same at every width. Each sport chip has its own icon:
+Lucide has no tennis, badminton, basketball, football or futsal icons, so
+[`sport-icons.tsx`](./_components/sport-icons.tsx) draws them in the same style.
+Before/after captures are in [`docs/assets/discover`](../../docs/assets/discover/README.md).
 
 A UI-only `returnTo` URL value records the originating page and its query. Apply,
 Clear and Next preserve it; it never reaches the API or reader. The back arrow
 replaces the current location with the validated destination, falling back to `/`
 for direct entry or invalid destinations. Browser Back/Forward still traverses
 filter changes. Search and sport-chip submissions include current form drafts,
-validate before navigating, and reset the cursor. Editing search does not open
-advanced filters.
+validate before navigating, and reset the cursor. The chips are plain buttons that
+apply the drafts with their sport, so Search stays the form's default button and
+Enter keeps an applied sport filter. Editing search does not open advanced filters.
 
 The shared mobile navigation keeps its existing active-state behavior. Only the
 active destination shows a visible label; all four retain accessible names.

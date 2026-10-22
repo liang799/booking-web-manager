@@ -1,0 +1,124 @@
+.home {
+  --home-gutter: clamp(2rem, 4.057vw, 5rem);
+  --home-surface: 0 0% 98%;
+  min-width: 0;
+  min-height: 100%;
+  background: hsl(var(--home-surface));
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: clamp(440px, 29.657vw, 580px);
+  background: hsl(var(--home-surface));
+}
+
+.heroPicture { position: absolute; z-index: -2; inset: 0; }
+.heroArt { object-fit: cover; object-position: right center; }
+
+/* A feathered white falloff lets the court emerge naturally behind the introduction. */
+.hero::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, hsl(var(--home-surface)) 0%, hsl(var(--home-surface) / .97) 15%, hsl(var(--home-surface) / .88) 27%, hsl(var(--home-surface) / .42) 39%, hsl(var(--home-surface) / .08) 53%, transparent 65%);
+}
+
+.heroCopy { padding: clamp(64px, 5.143vw, 90px) var(--home-gutter) 60px; }
+.eyebrow { margin-bottom: 22px; font-size: 14px; font-weight: 500; letter-spacing: .32em; line-height: 1.5; text-transform: uppercase; }
+.heroCopy h1 { font-size: clamp(60px, 4.114vw, 80px); font-weight: 400; letter-spacing: -.035em; line-height: 1.03; }
+.intro { margin-top: 26px; color: hsl(var(--muted-foreground)); font-size: clamp(16px, 1.143vw, 22px); line-height: 1.4; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 32px; }
+.actions a {
+  height: clamp(50px, 3.314vw, 60px);
+  padding-inline: 24px;
+  border-radius: 6px;
+  font-size: clamp(15px, 1.029vw, 18px);
+  font-weight: 400;
+  transition: background-color .2s, box-shadow .2s, transform .2s;
+}
+.actions a svg { width: 20px; height: 20px; }
+.actions a:hover { transform: translateY(-2px); }
+.actions a:active { transform: translateY(0); }
+.findButton { gap: 20px; box-shadow: 0 2px 3px hsl(var(--foreground) / .04); }
+.hostButton { gap: 16px; border-color: hsl(var(--foreground) / .16); background: hsl(var(--home-surface) / .38); }
+
+.weather { position: absolute; z-index: 2; top: 54px; right: clamp(32px, 2.857vw, 64px); max-width: 240px; }
+.forecastOverview { display: flex; align-items: flex-start; gap: 20px; }
+.weatherLocation { display: block; font-size: 14px; line-height: 1.5; }
+.temperature { display: block; margin-top: 2px; font-size: 26px; font-weight: 500; letter-spacing: -.04em; line-height: 1.2; }
+.forecast { display: block; max-width: 170px; margin-top: 3px; font-size: 14px; line-height: 1.5; text-transform: capitalize; }
+.weatherIcon { width: 44px; height: 44px; flex-shrink: 0; margin-top: 5px; }
+.weatherDisclosure summary { min-height: 44px; border-radius: 6px; cursor: pointer; list-style: none; transition: opacity .2s; }
+.weatherDisclosure summary:hover { opacity: .72; }
+.weatherDisclosure summary::-webkit-details-marker { display: none; }
+.forecastDetails { position: absolute; right: 0; top: calc(100% + 12px); width: 300px; padding: 18px; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--card)); box-shadow: 0 8px 30px hsl(var(--foreground) / .1); font-size: 12px; }
+
+.bookings { padding: 34px var(--home-gutter) 26px; }
+.sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.mobileHeading, .mobileWeather, .mobileBookingTitle { display: none; }
+.sectionHeading h2 { font-size: clamp(25px, 1.829vw, 34px); font-weight: 500; letter-spacing: -.035em; line-height: 1.3; }
+.sessionsLink { display: inline-flex; min-height: 44px; flex-shrink: 0; align-items: center; gap: 10px; border-radius: 4px; color: hsl(var(--muted-foreground)); font-size: 14px; transition: color .2s; }
+.sessionsLink:hover { color: hsl(var(--foreground)); }
+.sessionsLink:focus-visible, .weatherDisclosure summary:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
+.bookingContent { margin-top: 16px; }
+.empty { display: flex; min-height: 260px; flex-direction: column; align-items: center; justify-content: center; padding: 26px 24px; border-radius: 12px; background: linear-gradient(115deg, hsl(0 0% 95.8%), hsl(0 0% 96.5%)); text-align: center; }
+.emptyBall { width: 128px; height: 78px; flex-shrink: 0; margin-bottom: 4px; object-fit: contain; }
+.emptyMessage { font-size: 21px; font-weight: 500; letter-spacing: -.025em; line-height: 1.4; }
+.emptyExplanation { margin-top: 4px; color: hsl(var(--muted-foreground)); font-size: 16px; line-height: 1.5; }
+.compactActions { justify-content: center; margin-top: 14px; }
+.compactActions a { height: 52px; padding-inline: 22px; font-size: 15px; }
+.compactActions .findButton { gap: 12px; }
+.compactActions a svg { width: 19px; height: 19px; }
+.bookingCard { min-width: 0; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--card)); }
+.error { display: grid; max-width: 36rem; justify-items: start; gap: 16px; padding-block: 24px; }
+
+:global(.dark) .home { --home-surface: var(--card); }
+:global(.dark) .heroArt { opacity: .4; }
+:global(.dark) .hero::after { background: linear-gradient(90deg, hsl(var(--home-surface)) 0%, hsl(var(--home-surface) / .93) 22%, hsl(var(--home-surface) / .72) 42%, hsl(var(--home-surface) / .12) 100%); }
+:global(.dark) .empty { background: linear-gradient(115deg, hsl(var(--muted) / .5), hsl(var(--muted) / .3)); }
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .hero { min-height: 520px; }
+  .heroCopy { padding-block: 72px 48px; }
+  .withWeather .heroCopy { padding-top: 136px; }
+  .weather { top: 24px; right: var(--home-gutter); }
+  .heroCopy h1 { font-size: 56px; }
+  .heroArt { object-position: 65% center; }
+  .forecast { font-size: 12px; }
+  .weatherIcon { width: 36px; height: 36px; }
+}
+
+/* Preserve main's original mobile Home, including the shell artwork behind its heading. */
+@media (max-width: 767px) {
+  .home { min-height: 0; background: transparent; }
+  .hero, .desktopHeading, .desktopBookingTitle, .sessionsLink, .emptyBall, .emptyExplanation, .compactActions { display: none; }
+  .bookings { padding: 24px 24px 40px; }
+  .mobileHeading { display: block; font-size: 24px; font-weight: 700; letter-spacing: -.025em; line-height: 32px; }
+  .bookingContent { margin-top: 12px; }
+  .empty, :global(.dark) .empty { display: block; min-height: 0; padding: 0; border-radius: 0; background: transparent; text-align: left; }
+  .emptyMessage { color: hsl(var(--muted-foreground)); font-size: 14px; font-weight: 400; letter-spacing: normal; line-height: 20px; }
+  .mobileWeather { display: block; margin-top: 20px; }
+  .mobileBookingTitle { display: block; }
+  .bookingCard { border-color: hsl(var(--border) / .75); border-radius: 6px; box-shadow: 0 2px 6px hsl(var(--foreground) / .08); }
+  .error { gap: 12px; padding-block: 0; }
+}
+
+@keyframes home-reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes court-reveal { from { opacity: 0; } }
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .heroArt { animation: court-reveal 1s ease-out both; }
+  .heroCopy > * { animation: home-reveal .65s ease-out both; }
+  .heroCopy > :nth-child(2) { animation-delay: .06s; }
+  .heroCopy > :nth-child(3) { animation-delay: .12s; }
+  .heroCopy > :nth-child(4) { animation-delay: .18s; }
+  .weather { animation: home-reveal .7s .16s ease-out both; }
+  .bookings { animation: home-reveal .7s .22s ease-out both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .actions a, .weatherDisclosure summary, .sessionsLink { transition: none; }
+  .actions a:hover { transform: none; }
+}

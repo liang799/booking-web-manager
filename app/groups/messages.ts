@@ -24,3 +24,12 @@ export function groupErrorMessage(error: unknown): string {
       return "Please check the details and try again.";
   }
 }
+
+/** Leaving refuses the owner with the same rule that stops them being removed; say what to do instead. */
+export function leaveGroupErrorMessage(error: unknown): string {
+  if (error instanceof DomainError && error.code === "OWNER_REMOVAL") {
+    return "As the owner, you can't leave this group. Archive it instead.";
+  }
+  if (error instanceof DomainError && error.code === "NOT_FOUND") return "You're no longer a member of this group.";
+  return groupErrorMessage(error);
+}

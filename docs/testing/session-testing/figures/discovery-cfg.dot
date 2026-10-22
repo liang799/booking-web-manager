@@ -1,0 +1,40 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", size="8.8,3.45", dpi=220, fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  D0 [shape=oval, label="D0\nEntry\nBase query"];
+  D1 [shape=diamond, label="D1\nText\nsupplied?"];
+  D2 [shape=box, label="D2\nAdd escaped\ntext filter"];
+  D3 [shape=diamond, label="D3\nSport\nsupplied?"];
+  D4 [shape=box, label="D4\nAdd sport\nfilter"];
+  D5 [shape=diamond, label="D5\nRegion\nsupplied?"];
+  D6 [shape=box, label="D6\nAdd region\nfilter"];
+  D7 [shape=diamond, label="D7\nFrom\nsupplied?"];
+  D8 [shape=box, label="D8\nAdd inclusive\nlower bound"];
+  D9 [shape=diamond, label="D9\nBefore\nsupplied?"];
+  D10 [shape=box, label="D10\nAdd exclusive\nupper bound"];
+  D11 [shape=box, label="D11\nQuery + project\nReturn results"];
+  D12 [shape=oval, label="D12\nExit"];
+  D0 -> D1;
+  D1 -> D2 [label="T"];
+  D1 -> D3 [label="F"];
+  D2 -> D3;
+  D3 -> D4 [label="T"];
+  D3 -> D5 [label="F"];
+  D4 -> D5;
+  D5 -> D6 [label="T"];
+  D5 -> D7 [label="F"];
+  D6 -> D7;
+  D7 -> D8 [label="T"];
+  D7 -> D9 [label="F"];
+  D8 -> D9;
+  D9 -> D10 [label="T"];
+  D9 -> D11 [label="F"];
+  D10 -> D11;
+  D11 -> D12;
+  { rank=same; D1; D2; }
+  { rank=same; D3; D4; }
+  { rank=same; D5; D6; }
+  { rank=same; D7; D8; }
+  { rank=same; D9; D10; }
+}

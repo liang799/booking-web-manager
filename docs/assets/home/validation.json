@@ -1,0 +1,1245 @@
+{
+  "capturedAt": "2026-10-21T12:25:04.611Z",
+  "environment": "Local Storybook 6008; Chromium; deterministic Home fixtures; no authenticated backend",
+  "sidebar": "Unchanged from origin/main",
+  "mobile": "Original main layout below768px, with full forecast card",
+  "widths": [
+    320,
+    390,
+    767,
+    768,
+    1024,
+    1200,
+    1440,
+    1750
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "states": [
+    "empty",
+    "long-venue"
+  ],
+  "total": 32,
+  "passed": 32,
+  "failed": 0,
+  "browserErrors": [],
+  "screenshots": [
+    "after-light-390.webp",
+    "after-dark-390.webp",
+    "after-light-1440.webp",
+    "after-dark-1440.webp",
+    "after-light-1750.webp",
+    "after-dark-1750.webp"
+  ],
+  "resize": {
+    "from": 767,
+    "to": 768,
+    "back": 767,
+    "passed": true
+  },
+  "checks": [
+    "Horizontal overflow",
+    "Visible control bounds",
+    "Desktop hero/weather overlap",
+    "Visible images decoded",
+    "Mobile full weather card and one Find action",
+    "No desktop hero image downloaded on mobile",
+    "Desktop forecast opens by keyboard within viewport",
+    "767/768 resize without reload",
+    "Reduced-motion disables entrance animations"
+  ],
+  "results": [
+    {
+      "width": 320,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 320,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 1,
+      "visibleHostCount": 0,
+      "forecast": {
+        "fullCard": true,
+        "periodVisible": true,
+        "sourceVisible": true,
+        "licenceVisible": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 767,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": false,
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": true,
+      "sidebar": null,
+      "courtRequests": 0,
+      "visibleFindCount": 0,
+      "visibleHostCount": 0,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 224,
+        "y": 0,
+        "width": 544,
+        "height": 520,
+        "top": 0,
+        "right": 768,
+        "bottom": 520,
+        "left": 224
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 208,
+        "height": 868,
+        "top": 16,
+        "right": 224,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 3,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 768,
+        "height": 520,
+        "top": 0,
+        "right": 1024,
+        "bottom": 520,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 4,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1200,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 944,
+        "height": 443.375,
+        "top": 0,
+        "right": 1200,
+        "bottom": 443.375,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 3,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 256,
+        "y": 0,
+        "width": 1184,
+        "height": 454.703125,
+        "top": 0,
+        "right": 1440,
+        "bottom": 454.703125,
+        "left": 256
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 240,
+        "height": 868,
+        "top": 16,
+        "right": 256,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1750,
+      "theme": "light",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1750,
+      "theme": "light",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1750,
+      "theme": "dark",
+      "state": "empty",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 2,
+      "visibleHostCount": 2,
+      "forecast": {
+        "withinViewport": true
+      },
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    },
+    {
+      "width": 1750,
+      "theme": "dark",
+      "state": "long-venue",
+      "passed": true,
+      "overflow": false,
+      "offscreenControls": [],
+      "heroWeatherOverlaps": [],
+      "heroVisible": true,
+      "hero": {
+        "x": 272,
+        "y": 0,
+        "width": 1478,
+        "height": 518.984375,
+        "top": 0,
+        "right": 1750,
+        "bottom": 518.984375,
+        "left": 272
+      },
+      "loadedImages": true,
+      "mobileHeadingVisible": false,
+      "sidebar": {
+        "x": 16,
+        "y": 16,
+        "width": 256,
+        "height": 868,
+        "top": 16,
+        "right": 272,
+        "bottom": 884,
+        "left": 16
+      },
+      "courtRequests": 1,
+      "visibleFindCount": 1,
+      "visibleHostCount": 1,
+      "forecast": null,
+      "reducedMotion": {
+        "animationsDisabled": true
+      }
+    }
+  ]
+}

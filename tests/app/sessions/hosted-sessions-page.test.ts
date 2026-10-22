@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import SessionsPage, { dynamic } from "@/app/sessions/(manage)/page";
-import { HostedSessionsController } from "@/app/sessions/_components/hosted-sessions-controller";
+import { SessionsController } from "@/app/sessions/_components/sessions-controller";
 import { getSessionManagementDependencies } from "@/app/sessions/management-server-dependencies";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 
 vi.mock("@/app/sessions/management-server-dependencies", () => ({ getSessionManagementDependencies: vi.fn() }));
-vi.mock("@/app/sessions/_components/hosted-sessions-controller", () => ({ HostedSessionsController: () => null }));
+vi.mock("@/app/sessions/_components/sessions-controller", () => ({ SessionsController: () => null }));
 vi.mock("@/lib/supabase/current-user", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: (path: string) => { throw new Error(`redirect:${path}`); } }));
 
@@ -23,11 +23,11 @@ beforeEach(() => {
 async function renderController() {
   const page = await SessionsPage();
   const controller = page.props.children;
-  expect(controller.type).toBe(HostedSessionsController);
+  expect(controller.type).toBe(SessionsController);
   return controller;
 }
 
-describe("hosted Sessions page", () => {
+describe("personal Sessions page", () => {
   test("requires cookie identity before rendering the sessions screen", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null);
     await expect(SessionsPage()).rejects.toThrow("redirect:/login?next=%2Fsessions");
@@ -40,6 +40,14 @@ describe("hosted Sessions page", () => {
     expect(controller.props.actions).toEqual([{ name: "create-session", href: "/sessions/create", method: "GET", inputs: {} }]);
     expect(controller.props).not.toHaveProperty("outcome");
     expect(getSessionManagementDependencies).not.toHaveBeenCalled();
+  });
+
+  test("remounts the controller for a different account so selected details do not survive sign-in changes", async () => {
+    const first = await renderController();
+    vi.mocked(getCurrentUser).mockResolvedValue({ ...user, id: "another-booker" });
+    const second = await renderController();
+    expect(first.key).toBe("booker");
+    expect(second.key).toBe("another-booker");
   });
 
   test("unverified users with an email may create sessions", async () => {

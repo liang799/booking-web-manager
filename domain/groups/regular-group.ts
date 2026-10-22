@@ -27,7 +27,8 @@ export type GroupJoinResult = "JOINED" | "ALREADY_MEMBER";
  * Aggregate root: RegularGroup.
  * Owns GroupMembership children, group details, and invitation/archive state.
  * Membership and invitation commands enter through this root so it can enforce
- * unique membership, retain the owner, and check invitation or owner authority.
+ * unique membership, retain the owner, and check invitation or owner authority,
+ * or that a leaving member acts only on their own membership (ADR-0017).
  * Referenced users and sessions belong to separate aggregates.
  * See docs/adr/0003-aggregate-roots-and-boundaries.md.
  */
@@ -118,6 +119,32 @@ export class RegularGroup {
       (member) => member.userId === command.userId,
     );
     DomainError.require(index >= 0, "NOT_FOUND", "The group member was not found");
+    this.#memberships = this.#memberships.filter(
+      (member) => member.userId !== command.userId,
+    );
+  }
+
+  /**
+   * A member leaves on their own. The command carries only the leaving member,
+   * so nobody can remove someone else this way. The owner cannot leave; they
+   * archive the group instead.
+   */
+  leave(command: { readonly userId: UUID }): void {
+    DomainError.require(
+      this.#status === "ACTIVE",
+      "INVALID_STATE",
+      "An archived group cannot change membership",
+    );
+    DomainError.require(
+      command.userId !== this.#ownerId,
+      "OWNER_REMOVAL",
+      "The group owner cannot leave the group",
+    );
+    DomainError.require(
+      this.#memberships.some((member) => member.userId === command.userId),
+      "NOT_FOUND",
+      "The group member was not found",
+    );
     this.#memberships = this.#memberships.filter(
       (member) => member.userId !== command.userId,
     );

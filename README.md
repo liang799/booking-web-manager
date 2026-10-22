@@ -307,6 +307,11 @@ content offers Home. These views are documented under Storybook's
 
 ### Storybook on the same site
 
+For UI design and implementation, follow the
+[Lucide iconography standard](./components/ui/README.md#iconography-lucide-icons).
+The Storybook introduction and **Design system / Navigation icons** preview
+show the shared icon rules and selection motion.
+
 `npm run dev` first builds a static Storybook preview, so the landing page’s
 Storybook link works on the app’s own port. `npm run build` repeats that build
 before Next.js, so deployed previews and production include the same public

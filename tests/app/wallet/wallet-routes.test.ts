@@ -27,6 +27,7 @@ const mockSummary = {
   userId,
   availableBalanceCents: 10000,
   heldBalanceCents: 1500,
+  pendingPayoutCents: 1850,
   currency: "SGD" as const,
   activeHolds: [
     {

@@ -180,6 +180,56 @@ describe("UC1-06 Manage Group", () => {
       expect(code).toBe("UNAUTHORIZED");
     });
 
+    test("a member can leave the group", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+      await manageGroup.join({ userId: FRIEND, invitationToken: group.invitationToken });
+
+      // Act
+      await manageGroup.leave({ actorId: FRIEND, groupId: group.groupId });
+
+      // Assert
+      const saved = await manageGroup.viewAsMember({ actorId: OWNER, groupId: group.groupId });
+      expect(saved.memberships.map((member) => member.userId)).toEqual([OWNER]);
+      const mine = await manageGroup.listMine({ actorId: FRIEND });
+      expect(mine).toEqual([]);
+    });
+
+    test("the owner cannot leave", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+
+      // Act
+      const code = await errorCode(() => manageGroup.leave({ actorId: OWNER, groupId: group.groupId }));
+
+      // Assert
+      expect(code).toBe("OWNER_REMOVAL");
+    });
+
+    test("someone who is not a member cannot leave", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+
+      // Act
+      const code = await errorCode(() => manageGroup.leave({ actorId: STRANGER, groupId: group.groupId }));
+
+      // Assert
+      expect(code).toBe("NOT_FOUND");
+    });
+
+    test("a member cannot leave an archived group", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+      await manageGroup.join({ userId: FRIEND, invitationToken: group.invitationToken });
+      await manageGroup.archive({ actorId: OWNER, groupId: group.groupId });
+
+      // Act
+      const code = await errorCode(() => manageGroup.leave({ actorId: FRIEND, groupId: group.groupId }));
+
+      // Assert
+      expect(code).toBe("INVALID_STATE");
+    });
+
     test("non-members cannot see a group", async () => {
       // Arrange
       const { manageGroup, group } = await withGroup();

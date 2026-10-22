@@ -9,11 +9,15 @@ The current implementation's [domain UML class diagram](./domain-class-diagram.m
 is available as [PlantUML source](./domain-class-diagram.puml) and a
 [scalable SVG](./assets/domain-class-diagram.svg).
 
+[Session testing](./testing/session-testing/README.md) covers UC2-01, UC2-02
+and UC2-03a/b/c with an editable Word report, black-box cases, white-box
+control-flow diagrams and recorded execution evidence.
+
 Architecture decisions are recorded in [`docs/adr`](./adr):
 
 - [ADR-0001: Use-case-driven development](./adr/0001-use-case-driven-development.md) — session factory output superseded by ADR-0011.
 - [ADR-0002: Constructor-based domain hydration](./adr/0002-constructor-based-domain-hydration.md).
-- [ADR-0003: Aggregate roots and boundaries](./adr/0003-aggregate-roots-and-boundaries.md) — current role routing is defined by ADR-0009.
+- [ADR-0003: Aggregate roots and boundaries](./adr/0003-aggregate-roots-and-boundaries.md) — current role routing is defined by ADR-0009; members leaving a group is defined by ADR-0017.
 - [ADR-0004: Participant join and session admission](./adr/0004-participant-join-and-session-admission.md) — admission routing updated by ADR-0007 and ADR-0009.
 - [ADR-0004: Append-only double-entry ledger](./adr/0004-append-only-double-entry-ledger.md) — independently recorded with the same historical number; the filename distinguishes this storage decision from participant admission.
 - [ADR-0005: Domain unit-test structure](./adr/0005-domain-unit-test-structure.md).
@@ -28,6 +32,7 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0014: Account policies and transaction guards](./adr/0014-account-policies-and-transaction-guards.md) — profile policy exception to ADR-0003, account deactivation, group transaction guards, and dependency enforcement.
 - [ADR-0015: Declarative session HTTP actions](./adr/0015-declarative-session-http-actions.md).
 - [ADR-0016: Deep workflows and dependency assembly](./adr/0016-deep-workflows-and-dependency-assembly.md) — complete application results, construction-only configuration, app serialization, and technical endpoint boundaries.
+- [ADR-0017: Members leave regular groups through RegularGroup](./adr/0017-members-leave-regular-groups.md) — a member may leave on their own; the owner cannot leave and archives the group instead.
 
 Product decisions and remaining discussion:
 

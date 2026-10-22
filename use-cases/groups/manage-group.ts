@@ -37,9 +37,9 @@ export interface ManageGroupDependencies {
 
 /**
  * UC1-06 Manage Group: create a regular group, share and control its invitation link,
- * and manage its members. RegularGroup (Rishi's domain) enforces the rules, such as
- * "only the owner may remove members" and "the owner can't be removed"; this class
- * loads the group, asks it to act, and saves it.
+ * and manage its members, who may also leave on their own. RegularGroup (Rishi's domain)
+ * enforces the rules, such as "only the owner may remove members" and "the owner can't be
+ * removed or leave"; this class loads the group, asks it to act, and saves it.
  */
 export class ManageGroup {
   readonly #deps: ManageGroupDependencies;
@@ -111,6 +111,16 @@ export class ManageGroup {
   }): Promise<void> {
     const group = await this.#load(command.groupId);
     group.removeMember({ actorId: command.actorId, userId: command.userId });
+    await this.#deps.groups.save(group);
+  }
+
+  /**
+   * A member leaves the group themselves; the actor is the leaving member. The owner can't
+   * leave (they archive the group instead), and a non-member gets NOT_FOUND.
+   */
+  async leave(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<void> {
+    const group = await this.#load(command.groupId);
+    group.leave({ userId: command.actorId });
     await this.#deps.groups.save(group);
   }
 

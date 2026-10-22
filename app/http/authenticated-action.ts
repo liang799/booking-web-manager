@@ -20,7 +20,7 @@ interface JsonAction<Dependencies, Input, Output> extends Action<Dependencies, I
 }
 
 interface GetAction<Dependencies, Input, Output> extends Action<Dependencies, Input, Output> {
-  readonly parse: (userId: UUID, params: RouteParams) => Input;
+  readonly parse: (userId: UUID, params: RouteParams, request: Request) => Input;
   readonly invalidRequestMessage?: string;
 }
 
@@ -64,8 +64,8 @@ export function createAuthenticatedActions<Dependencies extends AuthenticatedDep
       });
     },
     get<Input, Output>(action: GetAction<Dependencies, Input, Output>) {
-      return handler(action, (_request, userId, params) => parseInput(
-        () => action.parse(userId, params),
+      return handler(action, (request, userId, params) => parseInput(
+        () => action.parse(userId, params, request),
         action.invalidRequestMessage ?? "Invalid request parameters",
       ));
     },

@@ -20,7 +20,18 @@ test("Wallet links open the wallet inside account navigation on mobile and deskt
       await page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Wallet", exact: true }).click();
       await expect(page).toHaveURL(/\/wallet$/);
       await expect(page.getByRole("heading", { name: "Wallet", exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Transactions", exact: true })).toBeVisible();
+      const transactions = page.getByRole("region", { name: "Transactions", exact: true });
+      await expect(transactions.getByText("No transactions yet", { exact: true })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Balance", exact: true }).getByRole("button", { name: "Add funds", exact: true })).toBeVisible();
+      const activityHeading = transactions.getByRole("heading", { name: "Recent activity", exact: true });
+      const sections = transactions.getByRole("navigation", { name: "Wallet sections", exact: true });
+      if (width < 768) {
+        await expect(activityHeading).toBeVisible();
+        await expect(sections).toBeHidden();
+      } else {
+        await expect(sections.getByRole("link", { name: "All transactions", exact: true })).toBeVisible();
+        await expect(activityHeading).toBeHidden();
+      }
       await expect(page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Wallet", exact: true })).toHaveAttribute("aria-current", "page");
       await expect(page.getByRole("main")).toHaveCount(1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -30,7 +41,7 @@ test("Wallet links open the wallet inside account navigation on mobile and deskt
     await page.goto("/profile");
     await page.getByRole("link", { name: /Transaction history/ }).click();
     await expect(page).toHaveURL(/\/wallet$/);
-    await expect(page.getByRole("heading", { name: "Transactions", exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Transactions", exact: true }).getByText("No transactions yet", { exact: true })).toBeVisible();
   } finally { await context.pool.end(); }
 });
 
@@ -50,7 +61,7 @@ test("unknown routes and missing groups show one signed-in shell with usable exi
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: testInfo.outputPath(`not-found-${width}.png`), fullPage: true });
       await page.getByRole("link", { name: "View my sessions", exact: true }).click();
-      await expect(page.getByRole("heading", { name: "Sessions you host", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
     }
     await page.goto(`/groups/${randomUUID()}`);
     await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();

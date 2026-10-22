@@ -2,6 +2,17 @@ import { expect, test } from "vitest";
 import { openApiDocument } from "@/app/openapi";
 import { parseSessionVisibilityInput } from "@/app/sessions/visibility-input";
 
+test("documents the authenticated personal feed and its bounded cursor query", () => {
+  const operation = openApiDocument.paths["/api/sessions/mine"]?.get;
+  expect(operation?.operationId).toBe("listPersonalSessions");
+  expect(operation?.security).toEqual([{ bearerAuth: [] }, { loginCookie: [] }]);
+  expect(operation?.parameters).toEqual(expect.arrayContaining([
+    expect.objectContaining({ name: "tab", in: "query" }),
+    expect.objectContaining({ name: "cursor", in: "query" }),
+  ]));
+  expect(Object.keys(operation?.responses ?? {})).toEqual(["200", "400", "401", "403", "404", "500", "503"]);
+});
+
 test("publishes the bearer-authenticated visibility operation with all response statuses", () => {
   const operation = openApiDocument.paths["/api/sessions/{sessionId}/visibility"]?.patch;
   expect(operation?.operationId).toBe("setSessionVisibility");

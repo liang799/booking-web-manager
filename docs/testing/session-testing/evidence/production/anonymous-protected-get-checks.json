@@ -1,0 +1,59 @@
+{
+  "recordedAt": "2026-10-20T08:50:21.970293+00:00",
+  "source": "Production application protected session read endpoints",
+  "scope": "Anonymous authorization checks only. No account, session, participant, payout, or ledger mutations requested.",
+  "checks": [
+    {
+      "requestStartedAt": "2026-10-20T08:50:20.846420+00:00",
+      "requestFinishedAt": "2026-10-20T08:50:21.622833+00:00",
+      "method": "GET",
+      "path": "/api/sessions/hosted",
+      "credentials": "none; no cookie or Authorization header",
+      "identifier": "no identifier",
+      "expected": {
+        "httpStatus": 401,
+        "errorCode": "UNAUTHENTICATED"
+      },
+      "actual": {
+        "httpStatus": 401,
+        "errorCode": "UNAUTHENTICATED"
+      },
+      "passed": true
+    },
+    {
+      "requestStartedAt": "2026-10-20T08:50:21.622857+00:00",
+      "requestFinishedAt": "2026-10-20T08:50:21.780005+00:00",
+      "method": "GET",
+      "path": "/api/sessions/00000000-0000-4000-8000-000000000000/participants",
+      "credentials": "none; no cookie or Authorization header",
+      "identifier": "synthetic UUID",
+      "expected": {
+        "httpStatus": 401,
+        "errorCode": "UNAUTHENTICATED"
+      },
+      "actual": {
+        "httpStatus": 401,
+        "errorCode": "UNAUTHENTICATED"
+      },
+      "passed": true
+    },
+    {
+      "requestStartedAt": "2026-10-20T08:50:21.780039+00:00",
+      "requestFinishedAt": "2026-10-20T08:50:21.970272+00:00",
+      "method": "GET",
+      "path": "/api/sessions/00000000-0000-4000-8000-000000000000/cancellation-preview",
+      "credentials": "none; no cookie or Authorization header",
+      "identifier": "synthetic UUID",
+      "expected": {
+        "httpStatus": 401,
+        "errorCode": "UNAUTHENTICATED"
+      },
+      "actual": {
+        "httpStatus": 401,
+        "errorCode": "UNAUTHENTICATED"
+      },
+      "passed": true
+    }
+  ],
+  "sanitization": "Only route paths, synthetic identifiers, statuses and allowlisted error codes retained; response payloads omitted."
+}

@@ -11,6 +11,7 @@ import {
   archiveGroup,
   createGroup,
   joinGroup,
+  leaveGroup,
   removeMember,
   renameGroup,
   revokeInvitation,
@@ -215,11 +216,29 @@ export function ArchiveGroupButton({ groupId }: { readonly groupId: string }) {
   );
 }
 
+/** Member (not the owner): leave the group, after a confirmation. On success the server opens the group list. */
+export function LeaveGroupButton({ groupId, groupName }: { readonly groupId: string; readonly groupName: string }) {
+  return (
+    <ConfirmDialog
+      trigger={<Button variant="outline">Leave group</Button>}
+      title={`Leave ${groupName}?`}
+      description="You'll no longer see this group or sessions shared only with it. Sessions you've already joined stay as they are. To rejoin, you'll need a current invitation link."
+      confirmLabel="Leave group"
+      destructive
+      onConfirm={async () => {
+        // A successful leave redirects, so there may be no result to read.
+        const result = await leaveGroup(groupId);
+        if (result?.error !== undefined) throw new Error(result.error);
+      }}
+    />
+  );
+}
+
 /** Join page: the "Join group" button. On success the server opens the group page. */
 export function JoinGroupButton({ token, groupName }: { readonly token: string; readonly groupName: string }) {
   return (
     <div className="space-y-3">
-      <InfoNote>You can leave only by asking the owner to remove you.</InfoNote>
+      <InfoNote>You can leave the group at any time from its page.</InfoNote>
       <ActionButton run={() => joinGroup(token)} label={`Join ${groupName}`} pendingLabel="Joining…" variant="default" />
     </div>
   );

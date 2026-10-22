@@ -10,7 +10,7 @@ const meta = {
   parameters: {
     layout: "fullscreen",
     nextjs: { navigation: { pathname: "/discover" } },
-    docs: { description: { component: "The dedicated 390px search composition uses the production focused shell, controller, and synchronous view. Back returns to the originating page and query. Applied URL filters and results remain unchanged during draft edits. Search edits clear local validation without expanding advanced filters. Chips submit the current drafts with the chosen sport. Browser tests verify router replacement, URL commits, server outcomes, and back/forward restoration." } },
+    docs: { description: { component: "The dedicated 390px search composition uses the production focused shell, controller, and synchronous view. Back returns to the originating page and query. The search bar comes first, then the sport chips, then the results it searches. Applied URL filters and results remain unchanged during draft edits. Search edits clear local validation without expanding advanced filters. Chips submit the current drafts with the chosen sport. Browser tests verify router replacement, URL commits, server outcomes, and back/forward restoration." } },
   },
   globals: { viewport: { value: "phone", isRotated: false } },
   decorators: [(Story) => <AppShell mobileVariant="focused" user={{ name: "Marcus Lim", reliabilityScore: 96 }} logoutAction={fn()}><Story /></AppShell>],
@@ -26,6 +26,11 @@ export const Populated: Story = {
     await expect(canvas.queryByRole("navigation", { name: "Main" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("button", { name: "Open account menu" })).not.toBeInTheDocument();
     await expect(canvas.getByRole("link", { name: "Back to previous page" })).toHaveAttribute("href", "/?region=East");
+    const search = canvas.getByRole("searchbox", { name: "Search sessions by sport or venue" }).getBoundingClientRect();
+    const chips = canvas.getByRole("group", { name: "Choose a sport" }).getBoundingClientRect();
+    const heading = canvas.getByRole("heading", { name: "Upcoming sessions" }).getBoundingClientRect();
+    await expect(search.bottom).toBeLessThanOrEqual(chips.top);
+    await expect(chips.bottom).toBeLessThanOrEqual(heading.top);
     const photos = [...canvasElement.querySelectorAll<HTMLImageElement>("li img")];
     await expect(photos).toHaveLength(2);
     await waitFor(() => expect(photos.every((photo) => photo.complete && photo.naturalWidth > 0)).toBe(true));
@@ -49,6 +54,15 @@ export const EnterSubmitsSearch: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.type(canvas.getByRole("searchbox"), "Tampines{Enter}");
     await expect(args.onNavigate).toHaveBeenCalledWith("q=Tampines");
+  },
+};
+
+export const EnterKeepsAppliedSport: Story = {
+  args: { filters: { ...emptyFilters, sport: "Badminton" } },
+  play: async ({ canvas, args }) => {
+    // The chips are plain buttons, so Enter in the search box submits through Search and keeps the sport.
+    await userEvent.type(canvas.getByRole("searchbox"), "Bishan{Enter}");
+    await expect(args.onNavigate).toHaveBeenCalledWith("q=Bishan&sport=Badminton");
   },
 };
 

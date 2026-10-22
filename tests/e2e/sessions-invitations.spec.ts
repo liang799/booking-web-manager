@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { addCancellationParticipant, cancellationSql } from "../support/cancellation-fixtures";
 import { fundInvitationWallet, invitationAdmission, invitationFixture, type InvitationIdentity } from "../support/invitation-fixtures";
 import { sessionTestContext } from "../support/session-test-context";
+import { openHostedSession } from "./session-overview-helpers";
 
 async function expectLocation(page: Page, destination: string) {
   await expect.poll(() => {
@@ -63,6 +64,7 @@ test("a host creates a private session and shares a mobile invitation that a sec
     const { sessionId } = await created.json();
     await expectLocation(page, "/sessions?created=1");
     await hostBrowser.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(page.url()).origin });
+    await openHostedSession(page, venueName);
     const card = page.getByRole("article", { name: `Tennis at ${venueName}`, exact: true });
     const copy = card.getByRole("button", { name: "Copy invitation link", exact: true });
     await copy.focus();
@@ -81,6 +83,7 @@ test("a host creates a private session and shares a mobile invitation that a sec
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("private-invitation-host-mobile.png"), fullPage: true, animations: "disabled" });
     await page.reload();
+    await openHostedSession(page, venueName);
     await copy.click();
     await expect(field).toHaveValue(link);
     await expect(card.getByRole("status")).toHaveText("Invitation link copied.");
@@ -167,7 +170,8 @@ test("clipboard denial leaves a selectable invitation and a lost join response r
       configurable: true,
       value: { writeText: async () => { throw new Error("Clipboard permission denied"); } },
     }));
-    await login(page, fixture.booker, "/sessions");
+    await login(page, fixture.booker, "/sessions?tab=hosting");
+    await openHostedSession(page, fixture.venueName);
     const card = page.getByRole("article", { name: `Badminton at ${fixture.venueName}`, exact: true });
     await card.getByRole("button", { name: "Copy invitation link", exact: true }).click();
     const field = card.getByLabel("Invitation link", { exact: true });

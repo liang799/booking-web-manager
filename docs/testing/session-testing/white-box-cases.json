@@ -1,0 +1,193 @@
+[
+  {
+    "uc": "UC2-01",
+    "title": "Discovery SQL filter construction",
+    "source": "lib/sessions/postgres-session-discovery-reader.ts:16-52",
+    "image": "discovery-cfg.png",
+    "separate_paths": true,
+    "scope": "Graph the search method's five explicit filter guards. Optional property access is part of each source-level guard. SQL execution, row-mapping internals and helper internals are excluded. T means the optional filter is supplied; F means it is absent.",
+    "complexity": "Cyclomatic complexity V(G) = E - N + 2 = 17 - 13 + 2 = 6. Five binary source guards also give 5 + 1 = 6.",
+    "paths": [
+      [
+        "D1",
+        "D0 D1 D3 D5 D7 D9 D11 D12",
+        "No filters. Keep PUBLIC, OPEN and start_at > now; use deterministic start/ID order.",
+        "Passed existing isolated no-filter test."
+      ],
+      [
+        "D2",
+        "D0 D1 D2 D3 D5 D7 D9 D11 D12",
+        "Text only. Add a bound case-insensitive substring; escape %, _ and backslash literally.",
+        "Pass; isolated local WB-D2 SQL/parameter test. No database execution or branch instrumentation."
+      ],
+      [
+        "D3",
+        "D0 D1 D3 D4 D5 D7 D9 D11 D12",
+        "Sport only. Add bound sport equality without other optional predicates.",
+        "Pass; isolated local WB-D3 SQL/parameter test. No database execution or branch instrumentation."
+      ],
+      [
+        "D4",
+        "D0 D1 D3 D5 D6 D7 D9 D11 D12",
+        "Region only. Add bound region equality.",
+        "Pass; isolated local WB-D4 SQL/parameter test. No database execution or branch instrumentation."
+      ],
+      [
+        "D5",
+        "D0 D1 D3 D5 D7 D8 D9 D11 D12",
+        "Lower time bound only. Add start_at >= from.",
+        "Pass; isolated local WB-D5 SQL/parameter test. No database execution or branch instrumentation."
+      ],
+      [
+        "D6",
+        "D0 D1 D3 D5 D7 D9 D10 D11 D12",
+        "Upper time bound only. Add start_at < before.",
+        "Pass; isolated local WB-D6 SQL/parameter test. No database execution or branch instrumentation."
+      ]
+    ],
+    "notes": [
+      "The baseline takes every false edge. Each subsequent path introduces one distinct true-action edge, giving six independent feasible paths for this graph. The path strings remain source-derived predictions.",
+      "All six declared basis inputs now have executable evidence: D1 from the earlier existing no-filter test, and D2-D6 from five new isolated local checks. The new checks assert exact optional predicates, bound parameter order, escaped literal text and absence of raw input in SQL. No database or production request was made by those checks.",
+      "Earlier evidence: tests/lib/sessions/postgres-session-discovery-reader.test.ts:10-68. New evidence: tests/lab4/discovery-basis-path.test.ts and evidence/production-validation-local/discovery-basis-vitest.json, discovery-basis-observations.json and discovery-basis-vitest.log. The focused run passed 5 tests in 1 file with zero failures; this is not an instrumented branch-coverage result."
+    ]
+  },
+  {
+    "uc": "UC2-02",
+    "title": "Creation account eligibility",
+    "source": "domain/accounts/booking-account-eligibility.ts:10-16, called by domain/accounts/booker.ts:94-110",
+    "image": "creation-cfg.png",
+    "separate_paths": false,
+    "scope": "This graph covers the shared account-policy helper reached during creation. It has two ordered if statements. Payout readiness, dates, pricing, persistence and transaction handling are outside this helper.",
+    "complexity": "Cyclomatic complexity V(G) = 8 - 7 + 2 = 3. Two binary decisions also give 2 + 1 = 3.",
+    "paths": [
+      [
+        "C1",
+        "C0 C1 C2 C6",
+        "Inactive account. Return INACTIVE_ACCOUNT before checking email.",
+        "Passed creation BB43."
+      ],
+      [
+        "C2",
+        "C0 C1 C3 C4 C6",
+        "Active account with no email. Return EMAIL_REQUIRED.",
+        "Passed creation BB45."
+      ],
+      [
+        "C3",
+        "C0 C1 C3 C5 C6",
+        "Active account with email. Return undefined and continue other creation guards.",
+        "Passed creation BB01 with completed payout setup."
+      ]
+    ],
+    "notes": [
+      "These are source-derived paths corroborated by public creation outcomes, not runtime traces. BB44 separately verifies that a missing payout account is rejected after the account helper succeeds.",
+      "Use the 46 executed boundary cases for capacity, cost, chosen price, reliability and time. A three-path helper basis does not prove the complete creation workflow."
+    ]
+  },
+  {
+    "uc": "UC2-03a",
+    "title": "Visibility request validation",
+    "source": "app/sessions/visibility-input.ts:8-13",
+    "image": "visibility-cfg.png",
+    "separate_paths": false,
+    "scope": "Both safeParse calls execute first. The graph then expands each Boolean operand in !params.success || !input.success. Only evaluation of the second operand is short-circuited; parsing the body is not skipped.",
+    "complexity": "Cyclomatic complexity V(G) = 8 - 7 + 2 = 3. Two atomic Boolean predicates also give 2 + 1 = 3.",
+    "paths": [
+      [
+        "V1",
+        "V0 V1 V2 V4 V6",
+        "Bad UUID with valid PUBLIC body. Throw INVALID_REQUEST.",
+        "Passed route invalid-ID and action invalid-ID checks."
+      ],
+      [
+        "V2",
+        "V0 V1 V2 V3 V4 V6",
+        "Valid UUID; missing/invalid visibility. Throw INVALID_REQUEST.",
+        "Passed malformed-body/enum route cases."
+      ],
+      [
+        "V3",
+        "V0 V1 V2 V3 V5 V6",
+        "Valid UUID with PUBLIC or PRIVATE. Return validated values.",
+        "Passed route PRIVATE, action PUBLIC and documented-example checks."
+      ]
+    ],
+    "notes": [
+      "Evidence: tests/app/sessions/session-visibility-route.test.ts:21-44; session-visibility-action.test.ts:22-33; management-openapi.test.ts:14-18.",
+      "The application still checks current account status, ownership, session lifecycle and available capacity. Its 24 tests passed, including same-value requests, replacement reservations and failed commit handling."
+    ]
+  },
+  {
+    "uc": "UC2-03b",
+    "title": "Removal confirmation version check",
+    "source": "use-cases/sessions/RemoveParticipant.ts:20-28",
+    "image": "removal-cfg.png",
+    "separate_paths": false,
+    "scope": "Graph only the inner submission callback after current-account authorization and replay handling. Called guards, domain internals, ledger/save internals and transaction exception paths are excluded. Domain removal is prepared before checking the preview version.",
+    "complexity": "Cyclomatic complexity V(G) = 6 - 6 + 2 = 2. One explicit mismatch decision also gives 1 + 1 = 2.",
+    "paths": [
+      [
+        "R1",
+        "R0 R1 R2 R3 R5",
+        "Eligible committed target; stale preview. Throw STALE_REMOVAL_PREVIEW and persist no removal/refund.",
+        "Passed stale-preview test at UC2-03b test:105."
+      ],
+      [
+        "R2",
+        "R0 R1 R2 R4 R5",
+        "Eligible target; current preview. Append refund, save REMOVED state and return historical refund amount.",
+        "Passed success test at UC2-03b test:22."
+      ]
+    ],
+    "notes": [
+      "The stale branch can follow tentative mutation of a transaction-loaded object. Assert that persisted state is unchanged and no ledger/save effect commits; do not claim that no in-memory preparation happened.",
+      "The 30 removal application tests also cover missing records, access, non-committed targets, exact start, unrelated changes, replay and append/save/commit failures. Those use in-memory transaction doubles and do not establish PostgreSQL atomicity."
+    ]
+  },
+  {
+    "uc": "UC2-03c",
+    "title": "Cancellation preparation for one participant",
+    "source": "domain/accounts/booker.ts:294-318",
+    "image": "cancellation-cfg.png",
+    "separate_paths": true,
+    "scope": "Graph one call to prepareCancellation using valid domain values. Expand the two operands of OR and the two operands of AND as four atomic predicates. The participant loop in cancel and all called-method internals are outside the graph.",
+    "complexity": "Cyclomatic complexity V(G) = 12 - 9 + 2 = 5. Four atomic Boolean predicates also give 4 + 1 = 5.",
+    "paths": [
+      [
+        "B1",
+        "B0 B1 B5 B8",
+        "REMOVED with REFUNDED hold. Preserve the same terminal participation; no refund instruction.",
+        "Pass; WB-B1 actual equals expected."
+      ],
+      [
+        "B2",
+        "B0 B1 B2 B5 B8",
+        "Already CANCELLED with REFUNDED hold. Preserve terminal history; no refund instruction.",
+        "Pass; WB-B2 actual equals expected."
+      ],
+      [
+        "B3",
+        "B0 B1 B2 B3 B7 B8",
+        "WAITLISTED without a hold. Cancel participation; no refund instruction.",
+        "Pass; WB-B3 actual equals expected."
+      ],
+      [
+        "B4",
+        "B0 B1 B2 B3 B4 B7 B8",
+        "WITHDRAWN with REFUNDED hold. Cancel participation; keep hold refunded; no second refund.",
+        "Pass; WB-B4 actual equals expected."
+      ],
+      [
+        "B5",
+        "B0 B1 B2 B3 B4 B6 B8",
+        "COMMITTED with HELD 500c. Cancel participation, refund hold and emit one REFUND for 500c.",
+        "Pass; WB-B5 actual equals expected."
+      ]
+    ],
+    "notes": [
+      "Each case supplies exactly one participation to the assessed call and introduces an edge absent from the preceding paths. The session becomes CANCELLED in every public-call fixture.",
+      "REFUNDED represents the terminal-hold false branch. RELEASED and FORFEITED are not additional CFG paths and were not separate cases in this five-test basis.",
+      "Evidence: tests/lab4/booker-basis-path.test.ts:14-103 and evidence/testing-booker-observations.json. Recorded path strings are predictions; expected/actual state and instruction assertions were executed. No branch instrumentation was run."
+    ]
+  }
+]
