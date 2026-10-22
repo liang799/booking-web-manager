@@ -25,7 +25,10 @@ identity is cached across requests. The adapter reads account status and calls
 the atomic `update_profile` capability from migration 0011; it preserves provider
 failures as infrastructure errors and translates the RPC's explicit business
 rejections. The RPC rechecks active status while holding the profile row lock.
-See the [profile guide](../app/profile/README.md) and
+`createReliabilityDependencies` assembles `GetReliabilityScore` with a
+pooled PostgreSQL history reader when session server settings exist, and an
+unavailable capability otherwise; `app/profile/reliability-server-dependencies.ts`
+caches it. See the [profile guide](../app/profile/README.md) and
 [ADR-0014](../docs/adr/0014-account-policies-and-transaction-guards.md).
 
 ## Discovery configuration

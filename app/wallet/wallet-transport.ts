@@ -9,6 +9,8 @@ const timestamp = z.string().datetime({ offset: true });
 const walletSummarySchema = z.object({
   availableBalanceCents: cents,
   heldBalanceCents: cents,
+  // Older wallet responses may omit withdrawals in progress; absence is not zero.
+  pendingPayoutCents: cents.optional(),
   activeHolds: z.array(z.object({
     holdId: z.string(),
     sessionId: z.string(),
@@ -27,6 +29,7 @@ const transactionsSchema = z.object({
     kind: transactionKind,
     amountCents: cents,
     occurredAt: timestamp,
+    sport: z.string().min(1).optional(),
   })),
   nextCursor: z.string().nullable(),
 });

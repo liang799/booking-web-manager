@@ -23,7 +23,7 @@ describe("UC1-05 wallet page against the wallet API routes", () => {
       authenticate: async (request: Request) => request.method === "GET" && !request.headers.has("authorization") ? userId : null,
       walletSummary: { forUser: async () => ({
         walletId: "22222222-2222-4222-8222-222222222222", userId,
-        availableBalanceCents: 10000, heldBalanceCents: 1500, currency: "SGD",
+        availableBalanceCents: 10000, heldBalanceCents: 1500, pendingPayoutCents: 1850, currency: "SGD",
         activeHolds: [{
           holdId: "33333333-3333-4333-8333-333333333333", sessionId: "44444444-4444-4444-8444-444444444444",
           heldCents: 1500, originalCents: 1500, createdAt: new Date("2026-10-09T10:00:00.000Z"),
@@ -32,7 +32,7 @@ describe("UC1-05 wallet page against the wallet API routes", () => {
       }) },
       walletTransactions: { forUser: async () => ({
         items: [{
-          transactionId: "55555555-5555-4555-8555-555555555555", kind: "TOP_UP", amountCents: 5000,
+          transactionId: "55555555-5555-4555-8555-555555555555", kind: "LOCK", amountCents: 5000, sport: "Tennis",
           occurredAt: new Date("2026-10-09T12:00:00.000Z"), idempotencyKey: "topup-key-1",
           externalReference: "pi_12345", holdId: null, payoutId: null,
         }],
@@ -49,7 +49,7 @@ describe("UC1-05 wallet page against the wallet API routes", () => {
     const result = await walletTransport.loadSummary();
 
     // Assert
-    expect(result).toMatchObject({ status: "ready", data: { availableBalanceCents: 10000, heldBalanceCents: 1500 } });
+    expect(result).toMatchObject({ status: "ready", data: { availableBalanceCents: 10000, heldBalanceCents: 1500, pendingPayoutCents: 1850 } });
   });
 
   test("reads a transactions page and passes its cursor back to the route", async () => {
@@ -58,7 +58,7 @@ describe("UC1-05 wallet page against the wallet API routes", () => {
     const next = await walletTransport.loadTransactions("2026-10-09T12:00:00.000Z");
 
     // Assert
-    expect(first).toMatchObject({ status: "ready", data: { items: [{ kind: "TOP_UP", amountCents: 5000 }], nextCursor: "2026-10-09T12:00:00.000Z" } });
+    expect(first).toMatchObject({ status: "ready", data: { items: [{ kind: "LOCK", amountCents: 5000, sport: "Tennis" }], nextCursor: "2026-10-09T12:00:00.000Z" } });
     expect(next.status).toBe("ready");
   });
 });

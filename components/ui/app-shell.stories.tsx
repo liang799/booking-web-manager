@@ -18,14 +18,16 @@ const meta = {
           "Below that, it shows a Booking. header, decorative sport photo and floating Home / Sessions / Wallet / Settings navigation. " +
           "Only the active mobile destination shows its label; the other icons retain accessible names. Groups belongs to the Sessions area " +
           "and remains reachable from the account sheet. The account button opens that accessible sheet with account details, settings and logout. " +
-          "The current page is highlighted and marked `aria-current=\"page\"`. Mobile links and controls have 44px touch targets. Change the page with the " +
-          "`nextjs.navigation.pathname` parameter and the user with the `user` control.",
+          "The current page is highlighted and marked `aria-current=\"page\"`. Every navigation icon uses the same 20px size and 1.8px stroke. " +
+          "The selected icon plays a short, single animation when its route becomes active or its page mounts; reduced-motion preferences disable that animation. " +
+          "Mobile links and controls have 44px touch targets. Choose another route story to preview its arrival animation, or change the " +
+          "`nextjs.navigation.pathname` parameter. Storybook records link navigation without loading application pages. Change the user with the `user` control.",
       },
     },
   },
   argTypes: {
     user: {
-      description: "The logged-in user: `{ name, reliabilityScore }`. The score is 0–100 and shows as x.x out of 5.",
+      description: "The logged-in user: `{ name, reliabilityScore }`. The score is 0–100 and shows as x.x out of 5, or null when it couldn't be read.",
     },
     logoutAction: { control: false, description: "Server action for the Log out button. Hidden when omitted." },
     children: { control: false, description: "The page content, usually a `<PageHeader>` plus the page body." },
@@ -44,6 +46,30 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The same vector contract keeps every destination consistent across both navigation layouts. */
+async function expectNavigationIcon(link: HTMLElement) {
+  const icon = link.querySelector("svg")!;
+  await expect(icon).toBeInTheDocument();
+  await expect(icon).toHaveAttribute("width", "20");
+  await expect(icon).toHaveAttribute("height", "20");
+  await expect(icon).toHaveAttribute("stroke-width", "1.8");
+  await expect(icon).toHaveAttribute("stroke", "currentColor");
+  await expect(icon).toHaveAttribute("fill", "none");
+  await expect(icon).toHaveAttribute("focusable", "false");
+  await expect(icon.closest('[aria-hidden="true"]')).toBeInTheDocument();
+  // CSS can override SVG dimensions; computed size also ignores the arrival transform.
+  const style = getComputedStyle(icon);
+  await expect(style.width).toBe("20px");
+  await expect(style.height).toBe("20px");
+  await expect(Number.parseFloat(style.strokeWidth)).toBe(1.8);
+}
+
+async function expectNavigationIcons(nav: HTMLElement) {
+  for (const link of within(nav).getAllByRole("link")) {
+    await expectNavigationIcon(link);
+  }
+}
+
 /** Edit the user in Controls to see long names and different reliability scores. */
 export const Playground: Story = {};
 
@@ -55,32 +81,19 @@ export const Desktop: Story = {
     await expect(nav.querySelector('[aria-current="page"]')).toHaveTextContent("Groups");
     await expect(canvas.getByText("Reliability 4.8")).toBeInTheDocument();
     await expect(within(nav).getAllByRole("link")).toHaveLength(6);
+    await expectNavigationIcons(nav);
     await expect(canvas.getByRole("link", { name: "Booking." })).toHaveAttribute("href", "/");
     await expect(canvas.queryByRole("link", { name: "+ Create session" })).not.toBeInTheDocument();
   },
 };
 
-/** The sessions page uses the same shared sidebar as the other signed-in pages. */
-export const DesktopSessions: Story = {
+/** The score couldn't be read, so the account details say so instead of showing the starting score. */
+export const ReliabilityUnavailable: Story = {
   globals: { viewport: { value: "desktop", isRotated: false } },
-  parameters: { nextjs: { navigation: { pathname: "/sessions" } } },
-  args: {
-    children: <div className="p-8">Sessions page content</div>,
-    logoutAction: fn().mockResolvedValue(undefined),
-  },
+  args: { user: { name: "Marcus Lim", reliabilityScore: null } },
   play: async ({ canvas }) => {
-    const sidebar = within(canvas.getByRole("complementary"));
-    const nav = sidebar.getByRole("navigation", { name: "Main" });
-    const links = within(nav);
-    await expect(links.getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
-      "Home", "Discover", "My sessions", "Wallet", "Groups", "Settings",
-    ]);
-    await expect(links.getByRole("link", { name: "My sessions" })).toHaveAttribute("aria-current", "page");
-    await expect(links.getByRole("link", { name: "Discover" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
-    await expect(links.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/profile");
-    await expect(sidebar.getByText("Marcus Lim")).toBeVisible();
-    await expect(sidebar.getByText("Reliability 4.8")).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Log out" })).toBeVisible();
+    await expect(canvas.getByText("Reliability unavailable")).toBeInTheDocument();
+    await expect(canvas.queryByText(/Reliability \d/)).not.toBeInTheDocument();
   },
 };
 
@@ -98,6 +111,7 @@ export const DesktopHome: Story = {
   play: async ({ canvas }) => {
     const nav = canvas.getByRole("navigation", { name: "Main" });
     await expect(within(nav).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    await expectNavigationIcons(nav);
   },
 };
 
@@ -134,6 +148,28 @@ export const OnSettings: Story = {
   },
 };
 
+export const DesktopSessions: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  parameters: { nextjs: { navigation: { pathname: "/sessions" } } },
+  args: { children: <PageHeader breadcrumb="Sessions" title="My sessions" /> },
+  play: async ({ canvas }) => {
+    const nav = canvas.getByRole("navigation", { name: "Main" });
+    await expect(within(nav).getByRole("link", { name: "My sessions" })).toHaveAttribute("aria-current", "page");
+    await expectNavigationIcons(nav);
+  },
+};
+
+export const DesktopWallet: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  parameters: { nextjs: { navigation: { pathname: "/wallet" } } },
+  args: { children: <PageHeader breadcrumb="Wallet" title="Wallet" /> },
+  play: async ({ canvas }) => {
+    const nav = canvas.getByRole("navigation", { name: "Main" });
+    await expect(within(nav).getByRole("link", { name: "Wallet" })).toHaveAttribute("aria-current", "page");
+    await expectNavigationIcons(nav);
+  },
+};
+
 const mobileDestinations = [
   { label: "Home", href: "/" },
   { label: "Sessions", href: "/sessions" },
@@ -143,6 +179,7 @@ const mobileDestinations = [
 
 async function expectMobileNavigation(nav: HTMLElement, activeLabel: string) {
   const navigation = within(nav);
+  await expectNavigationIcons(nav);
   await expect(navigation.getAllByRole("link")).toHaveLength(4);
   await expect(nav.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   const activeLink = navigation.getByRole("link", { name: activeLabel });
@@ -151,14 +188,22 @@ async function expectMobileNavigation(nav: HTMLElement, activeLabel: string) {
   for (const { label, href } of mobileDestinations) {
     const link = navigation.getByRole("link", { name: label });
     const text = within(link).getByText(label, { exact: true });
+    const visualLabel = text.closest('[aria-hidden="true"]')!;
     await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAccessibleName(label);
     await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await expect(link.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
+    await waitFor(async () => {
+      await expect(getComputedStyle(visualLabel).opacity).toBe(label === activeLabel ? "1" : "0");
+      if (label === activeLabel) {
+        await expect(visualLabel.getBoundingClientRect().width).toBeGreaterThan(20);
+      } else {
+        await expect(visualLabel.getBoundingClientRect().width).toBeLessThan(0.5);
+      }
+    });
     if (label === activeLabel) {
-      await expect(text).not.toHaveClass("sr-only");
       await expect(text).toBeVisible();
     } else {
-      await expect(text).toHaveClass("sr-only");
       await expect(link).not.toHaveAttribute("aria-current");
       await expect(activeLink.getBoundingClientRect().width).toBeGreaterThan(link.getBoundingClientRect().width);
     }
@@ -187,6 +232,7 @@ export const PhoneSearchPreservesOrigin: Story = {
     const destination = new URL(search.getAttribute("href")!, "https://booking.invalid");
     await expect(destination.pathname).toBe("/discover");
     await expect(destination.searchParams.get("returnTo")).toBe("/?sport=Tennis&region=East");
+    await expectNavigationIcon(search);
     await expect(search.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await expect(canvas.getByRole("button", { name: "Open account menu" })).toBeVisible();
   },

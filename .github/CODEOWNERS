@@ -27,6 +27,7 @@
 /tests/app/wallet/ @rbrishi15
 /tests/use-cases/UC1-05-*.test.ts @rbrishi15
 /tests/lib/wallet/ @rbrishi15 @harr008
+/tests/integration/wallet-persistence.test.ts @rbrishi15 @harr008
 /app/payouts/ @rbrishi15
 /app/api/webhooks/ @rbrishi15
 /app/api/payouts/ @rbrishi15
@@ -70,6 +71,8 @@
 /use-cases/sessions/*attendance*.ts @Wyjessie
 /use-cases/sessions/*settlement*.ts @Wyjessie
 /use-cases/sessions/AcceptReplacement.ts @Wyjessie
+/use-cases/sessions/ListJoinedSessions.ts @Wyjessie
+/use-cases/sessions/ListReplacementInvitations.ts @Wyjessie
 /use-cases/sessions/ExpireReplacements.ts @Wyjessie
 /use-cases/sessions/RunScheduledSessionJobs.ts @Wyjessie
 /use-cases/sessions/follow-up-promotion.ts @Wyjessie
@@ -196,8 +199,10 @@
 /tests/lib/sessions/*settlement*.test.ts @Wyjessie
 /app/api/sessions/*/withdrawal-preview/ @Wyjessie
 /use-case-config/withdrawal-preview.ts @Wyjessie
+/use-case-config/player-sessions.ts @Wyjessie
 /app/api/sessions/commit/ @Wyjessie
 /app/api/sessions/withdraw/ @Wyjessie
+/app/api/sessions/joined/ @Wyjessie
 /app/api/sessions/replacements/ @Wyjessie
 /app/api/sessions/waitlist/ @Wyjessie
 /app/api/sessions/attendance/ @Wyjessie

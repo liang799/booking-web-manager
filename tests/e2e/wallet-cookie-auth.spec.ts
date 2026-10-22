@@ -70,7 +70,7 @@ test("UC1-05 the wallet page reads the wallet with the browser's login cookies, 
   const request = await walletRead;
   expect(await request.headerValue("authorization")).toBeNull();
   expect((await request.response())?.status()).toBe(200);
-  await expect(page.getByText("Available", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Balance", exact: true }).getByRole("button", { name: "Add funds" })).toBeVisible();
 });
 
 test("UC1-05 the wallet API accepts a real login cookie and rejects missing, invalid and signed-out ones", async ({ request }) => {

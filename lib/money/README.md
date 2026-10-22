@@ -61,6 +61,7 @@ three lots of SGD 3.33.
 | File | Responsibility |
 | --- | --- |
 | `allocation.ts` | `bookingShare` (REQ-20), cent-exact `allocate`, `sumOf`, `formatSgd` |
+| `format.ts` | Domain-free `formatSgdCents` for displaying integer-cent DTOs in the UI |
 | `cents.ts` | The `bigint` ↔ `Money` codec. No decimal is ever parsed |
 | `constants.ts` | The platform holding account seeded by migration 0001 |
 | `errors.ts` | `LedgerError`, and translation of driver errors into it |
@@ -74,8 +75,10 @@ three lots of SGD 3.33.
 ## Rules this directory exists to enforce
 
 - Money is an exact integer number of cents, everywhere. No `float`, no
-  `double`, no `parseFloat`. `formatSgd` separates dollars from cents by integer
-  arithmetic rather than dividing by 100.
+  `double`, no `parseFloat`. `formatSgdCents` separates whole dollars from the
+  remainder with integer arithmetic. UI components call this formatter directly;
+  they do not construct domain `Money` objects for display. `formatSgd` delegates
+  to the same formatter for existing domain-valued callers.
 - The ledger is append-only. A mistaken entry is corrected by appending a
   compensating entry, never by editing a row.
 - Balances are projections. Nothing writes a balance directly; the

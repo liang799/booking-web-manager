@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/ui/app-shell";
+import { loadReliabilityScore } from "@/app/profile/reliability";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { logOut } from "../logout-action";
 import { SignedInVerificationPrompt } from "./signed-in-verification-prompt";
@@ -8,10 +9,11 @@ import { SignedInVerificationPrompt } from "./signed-in-verification-prompt";
 export async function SignedInShell({ children, mobileVariant = "standard" }: { readonly children: React.ReactNode; readonly mobileVariant?: "standard" | "focused" }) {
   const user = await getCurrentUser();
   if (user === null) redirect("/login"); // normally the middleware has already done this
+  const reliabilityScore = await loadReliabilityScore(user.id);
 
   return (
     <AppShell
-      user={{ name: user.displayName, reliabilityScore: user.reliabilityScore }}
+      user={{ name: user.displayName, reliabilityScore }}
       logoutAction={logOut}
       mobileVariant={mobileVariant}
     >
