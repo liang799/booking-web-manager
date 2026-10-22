@@ -1,5 +1,6 @@
 import { DomainError } from "@/domain";
 import { isRequestFailure } from "@/app/http/request-failure";
+import { LedgerError } from "@/lib/money/errors";
 import {
   SESSION_API_UNAVAILABLE_MESSAGE,
   SessionApiUnavailableError,
@@ -21,6 +22,12 @@ export function sessionCreationErrorResponse(error: unknown): Response {
   }
   if (error instanceof SessionApiUnavailableError) {
     return errorResponse(503, "SESSION_API_UNAVAILABLE", SESSION_API_UNAVAILABLE_MESSAGE);
+  }
+  if (error instanceof LedgerError && error.code === "IDEMPOTENCY_CONFLICT") {
+    return errorResponse(409, error.code, "This submission key was already used for different booking details");
+  }
+  if (error instanceof LedgerError && error.code === "IDEMPOTENCY_IN_FLIGHT") {
+    return errorResponse(409, error.code, "This submission is already being processed");
   }
   if (error instanceof DomainError) {
     const status = domainErrorStatuses[error.code];

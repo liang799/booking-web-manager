@@ -33,6 +33,7 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0015: Declarative session HTTP actions](./adr/0015-declarative-session-http-actions.md).
 - [ADR-0016: Deep workflows and dependency assembly](./adr/0016-deep-workflows-and-dependency-assembly.md) — complete application results, construction-only configuration, app serialization, and technical endpoint boundaries.
 - [ADR-0017: Members leave regular groups through RegularGroup](./adr/0017-members-leave-regular-groups.md) — a member may leave on their own; the owner cannot leave and archives the group instead.
+- [ADR-0018: Request-bound HTTP session-creation retries](./adr/0018-request-bound-session-creation-retries.md) — proposed example; API-supplied request metadata, infrastructure-owned fingerprints and legacy replay compatibility.
 
 Product decisions and remaining discussion:
 

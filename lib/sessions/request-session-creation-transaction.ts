@@ -3,11 +3,25 @@ import type {
   SessionCreationRepositories,
   SessionCreationTransaction,
 } from "@/use-cases/sessions/session-creation-transaction";
+import type { SessionBooking, SessionConfig } from "@/use-cases/sessions/CreateSessions";
 import type { UnitOfWork } from "@/use-cases/shared/contracts";
 
 /** Identifies retries of one logical session-creation submission. */
 export interface SessionCreationSubmission {
   readonly idempotencyKey: string;
+}
+
+/**
+ * Opt-in request binding for HTTP creation. The API supplies only parsed input;
+ * the persistence adapter owns hashing, comparison and atomic replay.
+ * The key-only shape remains supported for existing non-HTTP adapters/callers.
+ */
+export interface RequestBoundSessionCreationSubmission extends SessionCreationSubmission {
+  readonly request: {
+    readonly bookerId: UUID;
+    readonly booking: Readonly<SessionBooking>;
+    readonly config: Readonly<SessionConfig>;
+  };
 }
 
 /**
