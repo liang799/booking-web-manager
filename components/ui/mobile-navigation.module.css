@@ -5,6 +5,11 @@
   box-shadow: 0 0 1px hsl(var(--foreground) / 0.3), 0 4px 8px hsl(var(--foreground) / 0.1);
 }
 
+/* Preserve the tighter mobile Wallet shell spacing from the Wallet V4 revamp. */
+.compact {
+  padding: 7px;
+}
+
 .track {
   --tab-unit: calc((100% - 12px) / 5.4);
   position: relative;
