@@ -82,6 +82,12 @@ export function useWalletScreen(transport: WalletTransport): WalletViewProps {
     loadingMore: transactions.isFetchingNextPage,
     moreError,
     onRetry: () => { void queryClient.resetQueries({ queryKey: walletQueryKeys.all }); },
-    onLoadMore: () => { void transactions.fetchNextPage(); },
+    onLoadMore: () => {
+      // A visible scroll sentinel can fire again before React renders the pending state.
+      // Reuse an active request and leave background refreshes undisturbed.
+      if (transactions.hasNextPage && !transactions.isFetching) {
+        void transactions.fetchNextPage({ cancelRefetch: false });
+      }
+    },
   };
 }

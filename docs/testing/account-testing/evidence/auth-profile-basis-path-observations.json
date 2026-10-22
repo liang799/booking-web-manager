@@ -1,0 +1,344 @@
+{
+  "generatedAt": "2026-10-20T12:18:56.126Z",
+  "observations": [
+    {
+      "id": "WB-G1",
+      "input": "Password of 5 characters",
+      "predictedPath": "G0 G1 G2 G14",
+      "expected": {
+        "status": "error",
+        "message": "Please fix the highlighted fields.",
+        "emailTaken": false,
+        "signUpCalls": 0
+      },
+      "actual": {
+        "status": "error",
+        "message": "Please fix the highlighted fields.",
+        "emailTaken": false,
+        "signUpCalls": 0
+      }
+    },
+    {
+      "id": "WB-G2",
+      "input": "Valid fields; request has no Origin header",
+      "predictedPath": "G0 G1 G3 G4 G14",
+      "expected": {
+        "status": "error",
+        "message": "We couldn't prepare your confirmation link. Reload this page and try again.",
+        "emailTaken": false,
+        "signUpCalls": 0
+      },
+      "actual": {
+        "status": "error",
+        "message": "We couldn't prepare your confirmation link. Reload this page and try again.",
+        "emailTaken": false,
+        "signUpCalls": 0
+      }
+    },
+    {
+      "id": "WB-G3",
+      "input": "Sign-up error code user_already_exists",
+      "predictedPath": "G0 G1 G3 G5 G6 G8 G14",
+      "expected": {
+        "status": "error",
+        "message": "An account with this email already exists.",
+        "emailTaken": true
+      },
+      "actual": {
+        "status": "error",
+        "message": "An account with this email already exists.",
+        "emailTaken": true
+      }
+    },
+    {
+      "id": "WB-G4",
+      "input": "No error; user returned with no identities",
+      "predictedPath": "G0 G1 G3 G5 G6 G7 G8 G14",
+      "expected": {
+        "status": "error",
+        "message": "An account with this email already exists.",
+        "emailTaken": true
+      },
+      "actual": {
+        "status": "error",
+        "message": "An account with this email already exists.",
+        "emailTaken": true
+      }
+    },
+    {
+      "id": "WB-G5",
+      "input": "Sign-up error code over_email_send_rate_limit",
+      "predictedPath": "G0 G1 G3 G5 G6 G7 G9 G10 G14",
+      "expected": {
+        "status": "error",
+        "message": "We couldn't create your account. Please try again.",
+        "emailTaken": false
+      },
+      "actual": {
+        "status": "error",
+        "message": "We couldn't create your account. Please try again.",
+        "emailTaken": false
+      }
+    },
+    {
+      "id": "WB-G6",
+      "input": "New user; no session (email confirmation on)",
+      "predictedPath": "G0 G1 G3 G5 G6 G7 G9 G11 G12 G14",
+      "expected": {
+        "status": "check-email",
+        "message": "Account created. Check your email for a confirmation link, then log in.",
+        "emailTaken": false
+      },
+      "actual": {
+        "status": "check-email",
+        "message": "Account created. Check your email for a confirmation link, then log in.",
+        "emailTaken": false
+      }
+    },
+    {
+      "id": "WB-G7",
+      "input": "New user with a session; next=/groups/join/abc",
+      "predictedPath": "G0 G1 G3 G5 G6 G7 G9 G11 G13 G14",
+      "expected": {
+        "redirect": "/groups/join/abc"
+      },
+      "actual": {
+        "redirect": "/groups/join/abc"
+      }
+    },
+    {
+      "id": "WB-S1",
+      "input": "Not a string (undefined)",
+      "predictedPath": "S0 S1 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S2",
+      "input": "Empty string",
+      "predictedPath": "S0 S1 S2 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S3",
+      "input": "\"/\\t/evil.example\" (tab character)",
+      "predictedPath": "S0 S1 S2 S3 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S4",
+      "input": "\"https://evil.example\" (another site)",
+      "predictedPath": "S0 S1 S2 S3 S4 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S5",
+      "input": "\"//evil.example\" (protocol-relative)",
+      "predictedPath": "S0 S1 S2 S3 S4 S5 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S6",
+      "input": "\"/login?next=/wallet\" (login page)",
+      "predictedPath": "S0 S1 S2 S3 S4 S5 S6 S7 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S7",
+      "input": "\"/auth/callback\" (callback route)",
+      "predictedPath": "S0 S1 S2 S3 S4 S5 S6 S7 S8 S9 S11",
+      "expected": {
+        "destination": "/"
+      },
+      "actual": {
+        "destination": "/"
+      }
+    },
+    {
+      "id": "WB-S8",
+      "input": "\"/groups?tab=mine\" (page on this site)",
+      "predictedPath": "S0 S1 S2 S3 S4 S5 S6 S7 S8 S10 S11",
+      "expected": {
+        "destination": "/groups?tab=mine"
+      },
+      "actual": {
+        "destination": "/groups?tab=mine"
+      }
+    },
+    {
+      "id": "WB-P1",
+      "input": "Inactive account",
+      "predictedPath": "P0 P1 P11 P13",
+      "expected": {
+        "error": "INACTIVE_ACCOUNT",
+        "message": "The account is inactive"
+      },
+      "actual": {
+        "error": "INACTIVE_ACCOUNT",
+        "message": "The account is inactive"
+      }
+    },
+    {
+      "id": "WB-P2",
+      "input": "Name of spaces only",
+      "predictedPath": "P0 P1 P2 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "A profile name must contain between 1 and 60 characters"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "A profile name must contain between 1 and 60 characters"
+      }
+    },
+    {
+      "id": "WB-P3",
+      "input": "Name of 61 characters",
+      "predictedPath": "P0 P1 P2 P3 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "A profile name must contain between 1 and 60 characters"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "A profile name must contain between 1 and 60 characters"
+      }
+    },
+    {
+      "id": "WB-P4",
+      "input": "Blank sport \" \"",
+      "predictedPath": "P0 P1 P2 P3 P4 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "preferredSports contains an empty value"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "preferredSports contains an empty value"
+      }
+    },
+    {
+      "id": "WB-P5",
+      "input": "Blank region \" \"",
+      "predictedPath": "P0 P1 P2 P3 P4 P5 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "preferredRegions contains an empty value"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "preferredRegions contains an empty value"
+      }
+    },
+    {
+      "id": "WB-P6",
+      "input": "No sports",
+      "predictedPath": "P0 P1 P2 P3 P4 P5 P6 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported sport"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported sport"
+      }
+    },
+    {
+      "id": "WB-P7",
+      "input": "Unsupported sport \"Golf\"",
+      "predictedPath": "P0 P1 P2 P3 P4 P5 P6 P7 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported sport"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported sport"
+      }
+    },
+    {
+      "id": "WB-P8",
+      "input": "No regions",
+      "predictedPath": "P0 P1 P2 P3 P4 P5 P6 P7 P8 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported region"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported region"
+      }
+    },
+    {
+      "id": "WB-P9",
+      "input": "Unsupported region \"South\"",
+      "predictedPath": "P0 P1 P2 P3 P4 P5 P6 P7 P8 P9 P12 P13",
+      "expected": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported region"
+      },
+      "actual": {
+        "error": "INVALID_INPUT",
+        "message": "Choose at least one supported region"
+      }
+    },
+    {
+      "id": "WB-P10",
+      "input": "Valid; name with spaces, repeated sport",
+      "predictedPath": "P0 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P13",
+      "expected": {
+        "saved": {
+          "displayName": "Alex Tan",
+          "preferredSports": [
+            "Tennis",
+            "Futsal"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        }
+      },
+      "actual": {
+        "saved": {
+          "displayName": "Alex Tan",
+          "preferredSports": [
+            "Tennis",
+            "Futsal"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import type { VenueSearchPage } from "@/lib/venues/contracts";
 import { CreateSessionWizard, type CreateSessionWizardProps } from "./create-session-wizard";
 import { emptySessionDraft, pendingStorageKey, submissionPayload } from "./model";
 import type { CreationOutcome } from "./transport";
+import { saveDraft, savedDraftStorageKey } from "./saved-session-draft";
 
 const complete = { ...emptySessionDraft, venueName: "Bukit Timah CC", region: "Central", cost: "60.00", price: "7.50",
   startDate: "2045-06-17", startTime: "07:00", endDate: "2045-06-17", endTime: "08:00" };
@@ -14,6 +15,11 @@ const venues: VenueSearchPage = { items: [{ venueName: "Bukit Timah CC", address
 function memoryStorage(initial?: string) {
   const values = new Map<string, string>(initial !== undefined ? [[pendingStorageKey("storybook"), initial]] : []);
   return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); }, removeItem: (key: string) => { values.delete(key); } };
+}
+function savedDesktopSettingsStorage() {
+  const storage = memoryStorage();
+  saveDraft(storage, "storybook", { ...complete, venueName: "Saved desktop court" }, 3, "60");
+  return { ...storage, setItem: fn(storage.setItem), removeItem: fn(storage.removeItem) };
 }
 function Harness(props: CreateSessionWizardProps) {
   const storage = useMemo(() => memoryStorage(), []);
@@ -47,6 +53,27 @@ export const DetailsAndNavigation: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Back" }));
     await expect(canvas.getByLabelText("Booking cost (SGD)")).toHaveValue("60.00");
     await expect(canvas.getByRole("combobox", { name: "Venue" })).toHaveValue("Bukit Timah CC");
+  },
+};
+export const RestoreDesktopDraftOnMobile: Story = {
+  args: { storage: savedDesktopSettingsStorage() },
+  play: async ({ canvas, args }) => {
+    const key = savedDraftStorageKey("storybook");
+    const saved = args.storage?.getItem(key);
+    await expect(await canvas.findByRole("heading", { name: "Booked Venue Settings" })).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Back" }));
+    await expect(canvas.getByRole("heading", { name: "Booked Venue Details" })).toHaveFocus();
+    await expect(canvas.getByRole("combobox", { name: "Venue" })).toHaveValue("Saved desktop court");
+    await expect(canvas.getByLabelText("Booking cost (SGD)")).toHaveValue("60.00");
+    await userEvent.click(canvas.getByRole("button", { name: "Edit booking schedule" }));
+    const dialog = within(portal().getByRole("dialog", { name: "Booking schedule" }));
+    await expect(dialog.getByLabelText("Start date", { exact: true })).toHaveValue("2045-06-17");
+    await expect(dialog.getByLabelText("Duration (minutes)")).toHaveValue(60);
+    await userEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+    await expect(args.storage?.getItem(key)).toBe(saved);
+    await expect(args.storage?.setItem).not.toHaveBeenCalled();
+    await expect(args.storage?.removeItem).not.toHaveBeenCalled();
+    await expect(args.create).not.toHaveBeenCalled();
   },
 };
 export const OvernightDates: Story = {

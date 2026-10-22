@@ -9,6 +9,10 @@ The current implementation's [domain UML class diagram](./domain-class-diagram.m
 is available as [PlantUML source](./domain-class-diagram.puml) and a
 [scalable SVG](./assets/domain-class-diagram.svg).
 
+[Session testing](./testing/session-testing/README.md) covers UC2-01, UC2-02
+and UC2-03a/b/c with an editable Word report, black-box cases, white-box
+control-flow diagrams and recorded execution evidence.
+
 Architecture decisions are recorded in [`docs/adr`](./adr):
 
 - [ADR-0001: Use-case-driven development](./adr/0001-use-case-driven-development.md) — session factory output superseded by ADR-0011.

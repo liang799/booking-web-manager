@@ -1,5 +1,4 @@
-import { Money as DomainMoney } from "@/domain";
-import { formatSgd } from "@/lib/money/allocation";
+import { formatSgdCents } from "@/lib/money/format";
 
 interface MoneyProps {
   readonly cents: number;
@@ -14,7 +13,7 @@ interface MoneyProps {
 export function Money({ cents, className }: MoneyProps) {
   return (
     <span className={`tabular-nums ${className ?? ""}`}>
-      {formatSgd(DomainMoney.fromCents(cents))}
+      {formatSgdCents(cents)}
     </span>
   );
 }

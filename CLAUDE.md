@@ -235,6 +235,14 @@ creation and cannot be changed.
   irreversible action.
 - Responsive from 390px.
 
+### UI icons
+
+Use **Lucide Icons** exclusively for UI icons in designs and code, importing
+named components from `lucide-react`. Reuse `NavigationIcon` for app navigation.
+Before adding or changing icons, read the
+[iconography standard](./components/ui/README.md#iconography-lucide-icons)
+for glyph choices, sizing, stroke weight, accessibility and motion.
+
 ### Commit messages
 
 Use semantic commit messages. For breaking changes, add `!` immediately before

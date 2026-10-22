@@ -1,0 +1,32 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  A0 [shape=oval, label="A0\nEntry"];
+  A1 [shape=diamond, label="A1\nFirst check\nclear?"];
+  A2 [shape=box, label="A2\nReturn BLOCKED\nnothing changed"];
+  A3 [shape=box, label="A3\nDeactivate profile\n(snapshot)"];
+  A4 [shape=diamond, label="A4\nRe-check\nclear?"];
+  A5 [shape=box, label="A5\nRestore profile\nReturn BLOCKED"];
+  A6 [shape=diamond, label="A6\nDelete login\nsucceeds?"];
+  A7 [shape=box, label="A7\nReturn DELETED"];
+  A8 [shape=diamond, label="A8\nRestore\nsucceeds?"];
+  A9 [shape=box, label="A9\nRethrow\noriginal error"];
+  A10 [shape=box, label="A10\nThrow\nAggregateError"];
+  A11 [shape=oval, label="A11\nExit"];
+  A0 -> A1;
+  A1 -> A2 [label="F"];
+  A1 -> A3 [label="T"];
+  A2 -> A11;
+  A3 -> A4;
+  A4 -> A5 [label="F"];
+  A4 -> A6 [label="T"];
+  A5 -> A11;
+  A6 -> A7 [label="T"];
+  A6 -> A8 [label="F"];
+  A7 -> A11;
+  A8 -> A9 [label="T"];
+  A8 -> A10 [label="F"];
+  A9 -> A11;
+  A10 -> A11;
+}

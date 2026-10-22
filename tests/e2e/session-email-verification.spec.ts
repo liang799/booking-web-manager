@@ -10,7 +10,7 @@ async function login(page: Page, identity: Identity) {
   await page.getByLabel("Password", { exact: true }).fill(identity.password);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await expect(page).toHaveURL(/\/sessions$/);
-  await expect(page.getByRole("heading", { name: "Sessions you host", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
 }
 
 function submission(venueName: string) {
@@ -47,7 +47,7 @@ test("an existing unconfirmed account can browse, create and replay after option
     await page.screenshot({ path: testInfo.outputPath("unconfirmed-discovery-mobile.png"), fullPage: true });
 
     await page.goto("/sessions");
-    await expect(page.getByRole("link", { name: "Create a session", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "New session", exact: true })).toBeVisible();
     await page.goto("/sessions/create");
     await expect(page).toHaveURL(/\/sessions\/create$/);
     await page.goto("/profile/email");
