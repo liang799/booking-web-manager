@@ -94,6 +94,7 @@ class RegularGroup <<AggregateRoot>> {
   {static} +create(...) : RegularGroup
   +join(...) : GroupJoinResult
   +removeMember(...) : void
+  +leave(...) : void
   +rotateInvitation(...) : void
   +archive(...) : void
 }
@@ -114,7 +115,7 @@ GroupMembership "0..*" -left-> "1" User : userId {ID reference}
 
 note bottom of RegularGroup
   Membership user IDs are unique within a group.
-  The owner is always a member and cannot be removed.
+  The owner is always a member and cannot be removed or leave.
 end note
 
 note bottom of User

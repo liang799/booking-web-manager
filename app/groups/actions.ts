@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createManageGroup } from "@/use-case-config/groups";
 import { createClient } from "@/lib/supabase/server";
-import { groupErrorMessage } from "./messages";
-import { groupNameSchema } from "./schemas";
+import { groupErrorMessage, leaveGroupErrorMessage } from "./messages";
+import { groupIdSchema, groupNameSchema } from "./schemas";
 
 export interface GroupFormState {
   readonly status: "idle" | "error" | "saved";
@@ -109,6 +109,23 @@ export async function revokeInvitation(groupId: string): Promise<GroupActionResu
 /** UC1-06: owner archives the group (read-only afterwards). */
 export async function archiveGroup(groupId: string): Promise<GroupActionResult> {
   return ownerAction(groupId, (userId) => createManageGroup().archive({ actorId: userId, groupId }));
+}
+
+/** UC1-06: a member (not the owner) leaves the group, then returns to their group list. */
+export async function leaveGroup(groupId: string): Promise<GroupActionResult> {
+  const id = groupIdSchema.safeParse(groupId);
+  if (!id.success) return { error: "That group wasn't found." };
+
+  const userId = await currentUserId();
+  if (userId === null) return { error: "Please log in again." };
+
+  try {
+    await createManageGroup().leave({ actorId: userId, groupId: id.data });
+  } catch (error) {
+    return { error: leaveGroupErrorMessage(error) };
+  }
+  refresh(id.data);
+  redirect("/groups?left=1");
 }
 
 /** UC1-06: join through an invitation link, then open the group. */
