@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Plus, Search, Settings, UserRound, UsersRound } from "lucide-react";
+import { LogOut, Plus, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -99,15 +99,7 @@ function SidebarContents({
                 active && "bg-accent font-semibold",
               )}
             >
-              {link.image === "search" ? (
-                <Search className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : walletLayout && link.image === "settings" ? (
-                <Settings className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : link.image === null ? (
-                <UsersRound className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : (
-                <Image src={`/images/navigation/${link.image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />
-              )}
+              <NavigationIcon name={link.icon} active={active} />
               {link.label}
             </Link>
           );
@@ -265,44 +257,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             )}
           </div>
 
-          <nav
-            className={cn(
-              "flex items-center rounded-md bg-card p-2.5 shadow-[0_0_1px_0_hsl(var(--foreground)/0.3),0_4px_8px_0_hsl(var(--foreground)/0.1)]",
-              walletLayout && "p-[7px]",
-            )}
-            aria-label="Main"
-          >
-            {MOBILE_NAV_LINKS.map(({ href, label, image }, index) => {
-              const active = index === activeMobileIndex;
-              return (
-                <Fragment key={href}>
-                  <Link
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    title={active ? undefined : label}
-                    className={cn(
-                      "flex min-h-11 min-w-[44px] items-center justify-center gap-2 whitespace-nowrap rounded px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                      active ? "flex-[2] bg-accent font-medium text-foreground" : "flex-1 text-foreground",
-                      walletLayout && "relative text-xs",
-                      walletLayout && active && "isolate bg-transparent before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded before:bg-accent",
-                    )}
-                  >
-                    <Image src={`/images/navigation/${image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />
-                    <span className={active ? undefined : "sr-only"}>{label}</span>
-                  </Link>
-                  {index < MOBILE_NAV_LINKS.length - 1 && (
-                    <Image
-                      src="/images/navigation/separator.svg"
-                      width={1}
-                      height={20}
-                      alt=""
-                      className={cn("mx-1.5 shrink-0 dark:invert", (active || activeMobileIndex === index + 1) && "invisible")}
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
-          </nav>
+          <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} />
         </header>
 
         {/* Page content */}
