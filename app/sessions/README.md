@@ -239,10 +239,139 @@ waitlisting without a hold. Run `npm run test:sessions:integration` for the real
 disposable-stack suite; `npm run test:storybook` exercises sharing and preview UI
 states without provider dependencies.
 
+## Personal sessions feed
+
+`/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
+creation with `?created=1` selects Hosting and announces success. Desktop Joined
+uses an editorial agenda on the grey page canvas, without an outer bordered card.
+The selected session puts the photograph above its title, venue and horizontal
+time/player metadata. **View details** sits at the right of that metadata row
+with a plain arrow. The text rests directly on the page canvas below the image.
+Compact sessions show the venue and time on the left, with the player count and
+chevron at the far right; they have no thumbnail, subtitle or divider. The feature
+title is 34px and its venue line 18px on wide desktop. Group labels such as This
+week use 11px title-case text with .2em letter spacing, a 28px left inset and a
+small dot on the rail. Sessions in the same week retain one shared group label.
+
+The active date is 52px at weight 650; inactive dates are 28px at weight 600.
+Below 1200px those sizes reduce to 40px and 24px. The active date control aligns
+with the top of the photograph and has a 126px minimum height; other dates are
+centered alongside their rows. Their 14px active and 12px inactive markers align
+with each date's numeral. The date column is 148px on wide desktop, 96px below
+1200px and 72px below 951px. The photograph uses an 8:3 aspect ratio, with its
+wide-desktop height bounded between 240px and 420px. The selected feature has 32px
+of space below it, while compact rows are at least 112px high with 24px vertical
+padding. Scrolling selects the
+next/previous session and moves the marker to the selected date. The desktop
+timeline sorts by actual start time, oldest above newest, including future-dated
+cancelled sessions. Entry keeps the earliest upcoming booking selected (or the
+latest booking when no upcoming session exists), with earlier dates above it.
+The breadcrumb and tabs stay visible while scrolling. Older cursor pages are
+inserted in chronological position without moving the selected row or changing
+its artwork; desktop pagination moves above history after all upcoming records
+have loaded. The API cursor order and mobile/Hosting lists remain unchanged.
+**View details** opens Details/Participants and calendar/map actions in a transient
+dialog. Closing it returns keyboard focus to its trigger. Date buttons and compact
+rows provide keyboard alternatives; keyboard focus within a session prevents scroll selection
+from removing that control. Reduced-motion preferences remove transitions.
+Desktop Hosting has equal-width upcoming carousel cards and compact history rows;
+it has no timeline. Both views use the original shared sidebar from `main`, with
+the sessions breadcrumb and header directly on the page canvas. Wide-desktop page
+padding scales from 28px to 64px and is 48px at a 1536px viewport. This reference
+refinement leaves the sidebar and grey canvas color unchanged.
+Below 768px both tabs use simple dated rows separated by rules, with details in a dialog.
+
+Initial loading uses matching skeletons: the Joined date rail, photograph above
+title/venue/metadata placeholders, group labels and simple compact rows; Hosting's
+upcoming cards and history rows; or simple dated
+rows on mobile. The host-management dialog also shows a controls skeleton while retaining its title
+and Close button. Decorative placeholders are hidden from assistive technology
+behind one loading status, and their pulse respects reduced motion. Background
+refreshes and pagination keep existing content visible.
+
+On the first desktop Joined visit, the rail draws downward, the marker travels to
+the selected date, then the dates, artwork, title, venue, metadata, action and
+neighboring rows reveal individually. The visible rail draws for 560ms, the dot
+travels for 380ms, and details fade in over 420ms with a bounded 70ms stagger.
+The sequence waits for URL restoration and reserves the final layout to avoid
+shifts. Offscreen history does not delay the selected session. It runs once per overview/account visit, including when arriving from
+Hosting. Interaction, resizing or a motion-preference change finishes it
+immediately; mobile and reduced-motion users see the final state directly.
+
+`SessionsController` uses React Query `useInfiniteQuery`, with account/tab-scoped
+caches and the server's cursor. An intersection observer requests the next page;
+an accessible Load more button provides the same action. Pagination errors retain
+loaded records and expose a retry. A different account remounts the controller.
+An account-scoped Zustand store keeps guarded browsing/viewing-session modes,
+timeline selection and remembered detail panels. Its validated URL storage persists
+the selected tab, Joined session ID and Details/Participants panel. Reloading a link
+expands the timeline feature; the remembered panel appears when View details is opened.
+Dialogs remain transient, and changing accounts clears the account-specific selection.
+
+Hosting cards open the existing visibility, invitations, cancellation and
+attendance workflows. Cancellation recovery stays mounted at page scope, so a
+saved request can be retried after reload even when its card has moved to history.
+
+All display dates use Singapore time. Calendar and map links use the stored
+session facts. The feed does not contain court numbers, notes, names or portraits;
+the overview shows the sport and aggregate player counts instead. Tennis imagery
+is decorative reference-derived artwork; other sports retain their own imagery.
+See [visual evidence](../../docs/assets/sessions/README.md) and
+`Sessions/Overview` / `Sessions/Overview loading` in Storybook.
+
+`/sessions` has separate Joined and Hosting views backed by
+`GET /api/sessions/mine?tab=joined|hosting&cursor=…`. Omit `cursor` for the first
+page; omitted `tab` defaults to Joined. The response contains `sessions`,
+`nextCursor` (null at the end), `asOf`, `upcomingCount` and `pastCount`. Each page
+contains at most 12 sessions, while counts cover the complete selected tab.
+
+Hosting includes sessions owned by the signed-in user. Joined includes that
+user's participation records in other hosts' sessions, including waitlists and
+historical departures. Public visibility alone never grants access through this
+personal endpoint. The reader checks current account status and session scope in
+one database statement; inactive or missing accounts cannot obtain session data.
+Both verified bearer and same-origin login-cookie authentication are supported.
+Responses are `no-store`, and client caches are scoped to the user and tab.
+
+Open sessions that have not ended appear in the upcoming section, including
+sessions currently in progress. Joined additionally requires a COMMITTED or
+WAITLISTED participation for that section. All other eligible records appear in
+history, including cancelled sessions and departed participation records. Upcoming
+sessions sort by start time ascending, followed by history by start time
+descending; session ID ascending breaks ties in each section.
+
+The first request captures `asOf`. The opaque cursor binds the tab, authenticated
+user, time boundary, section and last returned start time/session ID. The adapter
+uses a SQL keyset predicate and bounded page size rather than loading all rows or
+using offsets. Later requests preserve that time boundary so ordinary clock
+progression cannot move rows between upcoming and history during scrolling.
+This is not a long-lived database snapshot: membership and lifecycle changes
+remain live, and a fresh first page reconciles them. Malformed cursors or cursors
+from another user or tab return 400.
+
+Session facts include dates, sport, venue, region, total capacity, committed
+participant count, immutable price per slot in integer cents, visibility, session
+status, viewer role, viewer participation status and section. Hosting also
+receives `unverifiedCount` for ended OPEN sessions awaiting attendance. Counts do
+not imply seat availability, because replacement reservations have separate
+capacity rules. No room tokens, participant identities, invented court labels or
+notes are included. The existing hosted management endpoint supplies authoritative
+mutation actions separately.
+
+[`ListSessionFeed`](../../use-cases/sessions/ListSessionFeed.ts) owns the page and
+account policy; [`PostgresSessionFeedReader`](../../lib/sessions/postgres-session-feed-reader.ts)
+owns SQL and persistence translation. The app validates and serializes cursors
+and timestamps, and [`session-feed-transport`](./session-feed-transport.ts)
+validates every browser response and forwards React Query cancellation.
+No new migration or environment setting is required. Database coverage checks
+private-session isolation, account status, in-progress/history classification,
+attendance counts, and tied timestamps across multiple page boundaries.
+
 ## UC2-03a: visibility management
 
-`/sessions` lists every open, upcoming session hosted by the signed-in user,
-ordered by start time and session ID. It includes full sessions; their action list omits visibility changes. Availability includes direct-invitation reservations
+`GET /api/sessions/hosted` supplies management actions for every open, upcoming
+session hosted by the signed-in user, ordered by start time and session ID. It
+includes full sessions; their action list omits visibility changes. Availability includes direct-invitation reservations
 through `Session.getAvailableSlots`; the UI does not calculate capacity itself.
 Rows display confirmed visibility with per-row saving, success and error feedback.
 The UI follows the returned HTTP actions. Existing cookie-authenticated server

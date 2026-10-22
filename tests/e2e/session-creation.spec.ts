@@ -43,8 +43,11 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
     const venue = `Create-${randomUUID().slice(0, 8)}`;
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, booker);
-    await expect(page.getByText("No upcoming sessions to manage")).toBeVisible();
-    await page.getByRole("link", { name: "Create a session", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
+    const navigation = page.getByRole("navigation", { name: "Main", exact: true });
+    await expect(navigation.getByRole("link", { name: "Sessions", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("link", { name: "Settings", exact: true })).toHaveAttribute("href", "/profile");
+    await page.getByRole("link", { name: "New session", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Booked Venue Details" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main", exact: true })).not.toBeVisible();
     await page.getByRole("button", { name: "Next", exact: true }).click();
@@ -82,8 +85,8 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
       totalSlots: 8, minimumHeadcount: 4, visibility: "PUBLIC", minimumReliability: 90, pricePerSlotCents: 1202,
     });
     await expect(page).toHaveURL(/\/sessions\?created=1$/);
-    await expect(page.getByRole("status")).toHaveText("Your session was created successfully.");
-    await expect(page.getByRole("article", { name: `Tennis at ${venue}` })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Your session was created successfully." })).toHaveText("Your session was created successfully.");
+    await expect(page.getByRole("button", { name: `Manage Tennis Court Booking at ${venue}`, exact: true })).toBeVisible();
     expect(await page.evaluate((key) => sessionStorage.getItem(key), pendingStorageKey(booker.userId))).toBeNull();
     expect((await context.pool.query("select booking_share_cents, minimum_reliability, total_slots, minimum_headcount, start_at, end_at from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{
       booking_share_cents: "1202", minimum_reliability: "90", total_slots: 8, minimum_headcount: 4,

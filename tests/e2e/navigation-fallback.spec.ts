@@ -61,7 +61,7 @@ test("unknown routes and missing groups show one signed-in shell with usable exi
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: testInfo.outputPath(`not-found-${width}.png`), fullPage: true });
       await page.getByRole("link", { name: "View my sessions", exact: true }).click();
-      await expect(page.getByRole("heading", { name: "Sessions you host", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
     }
     await page.goto(`/groups/${randomUUID()}`);
     await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();

@@ -14,6 +14,8 @@ export default defineConfig({
     // Compile with dummy settings: public environment values are embedded by Next.js.
     // Run separately from production-build tests because both write to .next.
     command: "npx next dev --hostname 127.0.0.1 --port 3101",
+    // Include readiness and compilation output when CI cannot reach /login.
+    stdout: "pipe",
     env: {
       DATABASE_URL: "",
       NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:1",

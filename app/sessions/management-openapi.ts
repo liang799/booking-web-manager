@@ -3,9 +3,29 @@ import { z, errorResponse } from "@/app/openapi/contracts";
 import { sessionVisibilityParamsSchema, sessionVisibilityRequestSchema } from "./visibility-input";
 import { SESSION_MANAGEMENT_UNAVAILABLE_MESSAGE } from "./session-management-unavailable";
 import { hostedSessionsResponseSchema } from "./hosted-sessions-contract";
+import { sessionFeedResponseSchema, sessionFeedTabSchema } from "./session-feed-contract";
 
 /** Registers the hosted-sessions GET and visibility PATCH operations, their schemas, and documented error responses. */
 export function registerSessionManagementApi(registry: OpenAPIRegistry): void {
+  registry.registerPath({
+    method: "get",
+    path: "/api/sessions/mine",
+    operationId: "listPersonalSessions",
+    tags: ["Sessions"],
+    summary: "List joined or hosted sessions with cursor pagination",
+    description: "Requires an active account. Hosting contains owned sessions; Joined contains the caller's participations in other hosts' sessions. Current/open sessions sort by start ascending, followed by history descending, with session ID tie ordering. Returns at most 12 records and an opaque cursor bound to the caller and tab. Counts cover all eligible records. No invitation tokens or participant identities are returned.",
+    security: [{ bearerAuth: [] }, { loginCookie: [] }],
+    request: { query: z.object({ tab: sessionFeedTabSchema.default("joined"), cursor: z.string().max(2048).optional() }) },
+    responses: {
+      200: { description: "A page of personal sessions.", content: { "application/json": { schema: sessionFeedResponseSchema } } },
+      400: errorResponse("Invalid query or cursor.", "INVALID_REQUEST", "Invalid sessions cursor"),
+      401: errorResponse("No valid login.", "UNAUTHENTICATED", "Authentication is required"),
+      403: errorResponse("Inactive account.", "INACTIVE_ACCOUNT", "An inactive account cannot view sessions"),
+      404: errorResponse("The authenticated user has no account.", "NOT_FOUND", "User not found"),
+      500: errorResponse("Unexpected infrastructure failure.", "INTERNAL_ERROR", "Internal server error"),
+      503: errorResponse("Required server settings are missing.", "SESSION_MANAGEMENT_UNAVAILABLE", SESSION_MANAGEMENT_UNAVAILABLE_MESSAGE),
+    },
+  });
   const hosted = registry.register("HostedSessions", hostedSessionsResponseSchema);
   registry.registerPath({
     method: "get",
