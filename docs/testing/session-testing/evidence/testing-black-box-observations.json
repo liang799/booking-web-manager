@@ -1,0 +1,1495 @@
+{
+  "generatedAt": "2026-10-20T07:52:10.542Z",
+  "observations": [
+    {
+      "id": "BB01",
+      "name": "nominal defaults and floor division",
+      "technique": "valid EP / shared nominal",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB02",
+      "name": "capacity just below minimum",
+      "technique": "BVA slots min-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 1,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB03",
+      "name": "capacity at minimum",
+      "technique": "BVA slots min",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 2,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 500,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 500,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB04",
+      "name": "capacity just below maximum",
+      "technique": "BVA slots max-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 29,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 34,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 34,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB05",
+      "name": "capacity at maximum",
+      "technique": "BVA slots max",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 30,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 33,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 33,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB06",
+      "name": "capacity just above maximum",
+      "technique": "BVA slots max+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 31,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB07",
+      "name": "capacity is fractional",
+      "technique": "invalid numeric EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 2.5,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB08",
+      "name": "minimum headcount below two",
+      "technique": "BVA headcount min-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 1
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB09",
+      "name": "minimum headcount equals capacity",
+      "technique": "BVA headcount min+1/max",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 3
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB10",
+      "name": "minimum headcount exceeds capacity",
+      "technique": "BVA headcount max+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 4
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB11",
+      "name": "minimum headcount is fractional",
+      "technique": "invalid numeric EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2.5
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB12",
+      "name": "price just below permitted minimum",
+      "technique": "BVA price min-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 166
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB13",
+      "name": "price at permitted minimum",
+      "technique": "BVA price min",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 167
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 167,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 167,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB14",
+      "name": "price just above permitted minimum",
+      "technique": "BVA price min+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 168
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 168,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 168,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB15",
+      "name": "price just below permitted maximum",
+      "technique": "BVA price max-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 665
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 665,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 665,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB16",
+      "name": "price at permitted maximum",
+      "technique": "BVA price max",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 666
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 666,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 666,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB17",
+      "name": "price just above permitted maximum",
+      "technique": "BVA price max+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 667
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB18",
+      "name": "price has fractional cents",
+      "technique": "invalid money EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "pricePerSlotCents": 333.5
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB19",
+      "name": "cost is negative",
+      "technique": "invalid money EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": -1
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB20",
+      "name": "cost is zero",
+      "technique": "BVA cost zero",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 0
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB21",
+      "name": "cost produces zero share",
+      "technique": "BVA effective cost min-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 2
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB22",
+      "name": "cost produces first positive share",
+      "technique": "BVA effective cost min",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 3
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 1,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 1,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB23",
+      "name": "cost is just above effective minimum",
+      "technique": "BVA effective cost min+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 4
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 1,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 1,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB24",
+      "name": "cost is maximum safe integer",
+      "technique": "BVA cost max",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 9007199254740991
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 3002399751580330,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 3002399751580330,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB25",
+      "name": "cost exceeds maximum safe integer",
+      "technique": "BVA cost max+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 9007199254740992
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB26",
+      "name": "cost has fractional cents",
+      "technique": "invalid money EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001.5
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB27",
+      "name": "reliability below zero",
+      "technique": "BVA reliability min-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": -1
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB28",
+      "name": "reliability at zero",
+      "technique": "BVA reliability min",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": 0
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB29",
+      "name": "reliability just above zero",
+      "technique": "BVA reliability min+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": 1
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB30",
+      "name": "reliability just below maximum",
+      "technique": "BVA reliability max-1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": 99
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB31",
+      "name": "reliability at maximum",
+      "technique": "BVA reliability max",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": 100
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB32",
+      "name": "reliability above maximum",
+      "technique": "BVA reliability max+1",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": 101
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB33",
+      "name": "reliability accepts finite fractional scores",
+      "technique": "valid fractional EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": 50.5
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB34",
+      "name": "reliability is nonfinite",
+      "technique": "invalid nonfinite EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "minimumReliability": "NaN"
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB35",
+      "name": "session starts one millisecond in future",
+      "technique": "BVA start now+1ms",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-11-01T09:59:59.999Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB36",
+      "name": "session starts now",
+      "technique": "BVA start now",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-11-01T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "SESSION_STARTED",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "SESSION_STARTED",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB37",
+      "name": "session started one millisecond ago",
+      "technique": "BVA start now-1ms",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-11-01T10:00:00.001Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "SESSION_STARTED",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "SESSION_STARTED",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB38",
+      "name": "booking ends before start",
+      "technique": "BVA duration -1ms",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T09:59:59.999Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB39",
+      "name": "booking ends at start",
+      "technique": "BVA duration zero",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T10:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB40",
+      "name": "booking lasts one millisecond",
+      "technique": "BVA duration +1ms",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T10:00:00.001Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    },
+    {
+      "id": "BB41",
+      "name": "venue is blank",
+      "technique": "invalid text EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": " ",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INVALID_INPUT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB42",
+      "name": "booker is missing",
+      "technique": "invalid actor EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "missing",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "NOT_FOUND",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "NOT_FOUND",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB43",
+      "name": "booker is inactive",
+      "technique": "invalid account EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "inactive",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "INACTIVE_ACCOUNT",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "INACTIVE_ACCOUNT",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB44",
+      "name": "payout account is missing",
+      "technique": "invalid payout EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "no-payout",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "PAYOUT_ACCOUNT_NOT_READY",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "PAYOUT_ACCOUNT_NOT_READY",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB45",
+      "name": "booker email is missing",
+      "technique": "invalid account EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "no-email",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "rejected",
+        "error": "EMAIL_REQUIRED",
+        "persistedSessions": 0
+      },
+      "actual": {
+        "outcome": "rejected",
+        "error": "EMAIL_REQUIRED",
+        "persistedSessions": 0
+      }
+    },
+    {
+      "id": "BB46",
+      "name": "optional public group and reliability are retained",
+      "technique": "valid optional-settings EP",
+      "input": {
+        "bookerId": "lab4-booker",
+        "actor": "ready",
+        "booking": {
+          "venueName": "Jurong East Sports Hall",
+          "region": "West",
+          "sport": "Badminton",
+          "startAt": "2026-11-01T10:00:00.000Z",
+          "endAt": "2026-11-01T12:00:00.000Z",
+          "totalCostCents": 1001
+        },
+        "config": {
+          "totalSlots": 3,
+          "minimumHeadcount": 2,
+          "visibility": "PUBLIC",
+          "invitedGroupId": "lab4-group",
+          "minimumReliability": 75
+        },
+        "now": "2026-10-30T10:00:00.000Z"
+      },
+      "expected": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      },
+      "actual": {
+        "outcome": "created",
+        "shareCents": 333,
+        "persistedSessions": 1
+      }
+    }
+  ]
+}

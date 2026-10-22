@@ -1,0 +1,3 @@
+Browser tab: 1, Title: "Booking Web Manager", URL: "https://booking-web-manager.vercel.app/sessions/create".
+There has been no change in the accessibility tree.
+The focused UI element is 16 combo box (collapsed, settable) Venue, Value:    , ID: venueName, Secondary Actions: Expand

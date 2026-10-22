@@ -1,0 +1,13 @@
+
+> booking-web-manager@0.1.0 test:e2e:production
+> playwright test --config playwright.production.config.ts --reporter=list,json
+
+
+Running 2 tests using 1 worker
+
+(node:10124) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/production/public-api.spec.ts:21:5 › production serves its OpenAPI contract (330ms)
+  ✓  2 tests/production/public-api.spec.ts:31:5 › live GET /api/sessions returns HTTP 200 for anonymous visitors (139ms)
+
+  2 passed (768ms)
