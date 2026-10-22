@@ -146,11 +146,36 @@ test("fast scrolling follows distance rather than skipping or waiting on locks",
 });
 
 test("native input immediately takes over an unfinished keyboard seek", async ({ page }) => {
+  // Hold the smooth request at its starting position so slow browser commands
+  // cannot finish the seek before the wheel arrives. Native wheel input and
+  // the application's instant cancellation still use the real scroll API.
+  await page.evaluate(() => {
+    const original = window.scrollTo.bind(window);
+    const calls: (ScrollToOptions & { from: number })[] = [];
+    Object.defineProperty(window, "timelineSeekCalls", { value: calls });
+    Object.defineProperty(window, "scrollTo", { value: (options: ScrollToOptions | number, y?: number) => {
+      if (typeof options === "number") return original(options, y ?? 0);
+      calls.push({ ...options, from: window.scrollY });
+      if (options.behavior !== "smooth") original(options);
+    } });
+  });
   await date(page, 21).focus();
+  const before = await page.evaluate(() => scrollY);
   await page.keyboard.press("End");
+  await expect(date(page, 25)).toHaveAttribute("aria-expanded", "true");
+  expect(await page.evaluate(() => scrollY)).toBe(before);
   await page.mouse.move(900, 300);
   await page.mouse.wheel(0, -40);
   await expect(date(page, 25)).toHaveAttribute("aria-expanded", "false");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(before - 40, 0);
+  const calls = await page.evaluate(() => Reflect.get(window, "timelineSeekCalls"));
+  expect(calls).toEqual([
+    { top: expect.any(Number), behavior: "smooth", from: before },
+    { top: expect.any(Number), behavior: "instant", from: expect.any(Number) },
+  ]);
+  // Passive wheel delivery can run after native movement; cancellation must
+  // preserve the position at delivery, whichever order the browser uses.
+  expect(calls[1].top).toBe(calls[1].from);
   const afterInput = await page.evaluate(() => scrollY);
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   expect(await page.evaluate(() => scrollY)).toBeCloseTo(afterInput, 0);
