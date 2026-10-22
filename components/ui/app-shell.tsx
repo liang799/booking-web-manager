@@ -257,7 +257,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             )}
           </div>
 
-          <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} />
+          <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} compact={walletLayout} />
         </header>
 
         {/* Page content */}
