@@ -27,7 +27,7 @@ const meta = {
   },
   argTypes: {
     user: {
-      description: "The logged-in user: `{ name, reliabilityScore }`. The score is 0–100 and shows as x.x out of 5.",
+      description: "The logged-in user: `{ name, reliabilityScore }`. The score is 0–100 and shows as x.x out of 5, or null when it couldn't be read.",
     },
     logoutAction: { control: false, description: "Server action for the Log out button. Hidden when omitted." },
     children: { control: false, description: "The page content, usually a `<PageHeader>` plus the page body." },
@@ -84,6 +84,16 @@ export const Desktop: Story = {
     await expectNavigationIcons(nav);
     await expect(canvas.getByRole("link", { name: "Booking." })).toHaveAttribute("href", "/");
     await expect(canvas.queryByRole("link", { name: "+ Create session" })).not.toBeInTheDocument();
+  },
+};
+
+/** The score couldn't be read, so the account details say so instead of showing the starting score. */
+export const ReliabilityUnavailable: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { user: { name: "Marcus Lim", reliabilityScore: null } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Reliability unavailable")).toBeInTheDocument();
+    await expect(canvas.queryByText(/Reliability \d/)).not.toBeInTheDocument();
   },
 };
 

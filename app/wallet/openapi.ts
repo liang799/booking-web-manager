@@ -36,7 +36,7 @@ export function registerWalletApi(registry: OpenAPIRegistry): void {
     tags: ["Wallet"],
     summary: "UC1-05 Get wallet balance and active holds",
     description:
-      "Returns the authenticated user's wallet details, including available balance, total held funds, and active session fund holds. Available funds reflect spendable SGD cents derived from the append-only double-entry ledger. All balances are non-negative safe integer cents.",
+      "Returns the authenticated user's wallet details, including available balance, total held funds, active session fund holds, and pending withdrawals. pendingPayoutCents is the total of the booker's REQUESTED payout attempts, excluding completed and failed attempts; it is not spendable wallet funds. Available funds reflect spendable SGD cents derived from the append-only double-entry ledger. All amounts are non-negative safe integer cents.",
     security: readSecurity,
     responses: {
       200: {
@@ -50,6 +50,7 @@ export function registerWalletApi(registry: OpenAPIRegistry): void {
               userId: "22222222-2222-4222-8222-222222222222",
               availableBalanceCents: 12850,
               heldBalanceCents: 4200,
+              pendingPayoutCents: 1850,
               currency: "SGD",
               activeHolds: [
                 {
@@ -102,7 +103,7 @@ export function registerWalletApi(registry: OpenAPIRegistry): void {
     tags: ["Wallet"],
     summary: "UC1-05 List wallet transaction history",
     description:
-      "Returns a paged list of the authenticated user's ledger transactions in reverse chronological order (newest first). Each entry records an append-only money movement (TOP_UP, LOCK, RELEASE, REFUND, FORFEIT, or PAYOUT) with safe integer cents and timestamps. Satisfies REQ-7 and REQ-8.",
+      "Returns a paged list of the authenticated user's ledger transactions in reverse chronological order (newest first). Each entry records an append-only money movement (TOP_UP, LOCK, RELEASE, REFUND, FORFEIT, or PAYOUT) with safe integer cents and timestamps. Optional sport is the current session context, omitted for top-ups and unavailable sessions. Satisfies REQ-7 and REQ-8.",
     security: readSecurity,
     request: {
       query: z.object({

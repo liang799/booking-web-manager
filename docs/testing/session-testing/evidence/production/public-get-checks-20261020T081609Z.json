@@ -1,0 +1,667 @@
+{
+  "target": "https://booking-web-manager.vercel.app",
+  "started_at_utc": "2026-10-20T08:16:09.524513+00:00",
+  "finished_at_utc": "2026-10-20T08:16:10.738105+00:00",
+  "method_scope": "Unauthenticated GET only; no cookies/authentication, writes, seeds, fixtures or fault injection",
+  "source_contracts": [
+    "app/discover/query.ts:38-137",
+    "app/discover/request.ts:5-9",
+    "app/discover/response.ts:60-103",
+    "app/discover/openapi.ts:75-152",
+    "app/api/sessions/route.ts:9-13"
+  ],
+  "result_counts": {
+    "PASS": 19,
+    "FAIL": 0
+  },
+  "scenario_scope": {
+    "D01": "Anonymous API half only; signed-in and browser behavior not assessed here.",
+    "D02": "Not run: no seeded visibility/lifecycle/capacity fixture matrix.",
+    "D03": "Not run: production clock not controlled and millisecond fixtures not seeded.",
+    "D04": "Empty-query and punctuation request acceptance observed; literal matching needs controlled data.",
+    "D05": "Three specified API query-length subcases executed plus trimming extension.",
+    "D06": "Valid range request acceptance only; no exact boundary fixture assertions.",
+    "D07": "All stated malformed-query API subcases executed plus cursor/time/region extensions.",
+    "D08": "Only naturally observed page count; 0/1/20/21 fixture matrix and pagination not established.",
+    "C01-C08/V01-V08/R01-R08/X01-X08": "Not run in this GET-only unauthenticated investigation."
+  },
+  "observations": [
+    {
+      "id": "GET01",
+      "scenario_subcase": "D01 anonymous subcase; D04 empty query",
+      "label": "Anonymous baseline",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.524708+00:00",
+      "finished_at_utc": "2026-10-20T08:16:09.828907+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.524708+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET02",
+      "scenario_subcase": "D05 99-character subcase",
+      "label": "q has 99 characters",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?q=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.524956+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.447428+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.524956+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET03",
+      "scenario_subcase": "D05 100-character subcase",
+      "label": "q has 100 characters",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?q=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.525095+00:00",
+      "finished_at_utc": "2026-10-20T08:16:09.749722+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.525095+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET04",
+      "scenario_subcase": "D05 101-character subcase",
+      "label": "q has 101 characters",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?q=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.749774+00:00",
+      "finished_at_utc": "2026-10-20T08:16:09.835787+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.749774+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET05",
+      "scenario_subcase": "D05 trimming extension",
+      "label": "100 characters surrounded by spaces",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?q=++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx++",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.828991+00:00",
+      "finished_at_utc": "2026-10-20T08:16:09.941779+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.828991+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET06",
+      "scenario_subcase": "D07 impossible-date subcase",
+      "label": "Invalid calendar date",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?date=2026-02-30",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.835840+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.223231+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.835840+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET07",
+      "scenario_subcase": "D07 time-without-date subcase",
+      "label": "Time supplied without date",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?timeFrom=18%3A00",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:09.941831+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.007015+00:00",
+      "started_at_sgt": "2026-10-20T16:16:09.941831+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET08",
+      "scenario_subcase": "D07 equal-times subcase",
+      "label": "Equal time bounds",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?date=2026-11-01&timeFrom=18%3A00&timeTo=18%3A00",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.007047+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.072310+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.007047+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET09",
+      "scenario_subcase": "D07 reversed-times subcase",
+      "label": "Reversed time bounds",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?date=2026-11-01&timeFrom=20%3A00&timeTo=18%3A00",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.072341+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.230225+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.072341+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET10",
+      "scenario_subcase": "D07 duplicate-sport subcase",
+      "label": "Duplicate known sport parameter",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?sport=Tennis&sport=Badminton",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.223351+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.306207+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.223351+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET11",
+      "scenario_subcase": "D07 unknown-sport subcase",
+      "label": "Unknown sport",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?sport=Cricket",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.230293+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.312831+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.230293+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET12",
+      "scenario_subcase": "D07 malformed-time extension",
+      "label": "Time outside clock range",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?date=2026-11-01&timeFrom=24%3A00",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.306310+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.389993+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.306310+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET13",
+      "scenario_subcase": "D07 invalid-region extension",
+      "label": "Unknown region",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?region=UnknownRegion",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.312888+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.397079+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.312888+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET14",
+      "scenario_subcase": "D07 malformed-cursor extension",
+      "label": "Invalid cursor characters",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?cursor=%25%25%25",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.390064+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.483046+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.390064+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET15",
+      "scenario_subcase": "D07 oversized-cursor extension",
+      "label": "513-character cursor",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?cursor=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.397130+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.475930+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.397130+08:00",
+      "expected": {
+        "http_status": 400,
+        "contract": "INVALID_REQUEST JSON and no-store"
+      },
+      "actual": {
+        "http_status": 400,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "543f96f19b52e68aac99b208467b3cb7528b0235bd1cd62ff92a205cbfb1b576",
+        "response_bytes": 80,
+        "error_code": "INVALID_REQUEST",
+        "error_message": "Invalid session discovery query"
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "invalid_request_envelope": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET16",
+      "scenario_subcase": "D06 request acceptance only",
+      "label": "Valid Singapore date/time range",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?date=2026-11-01&timeFrom=18%3A00&timeTo=20%3A00",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.447493+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.547039+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.447493+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET17",
+      "scenario_subcase": "D04 percent acceptance only",
+      "label": "Literal percent request accepted",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?q=%25",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.475983+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.611494+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.475983+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET18",
+      "scenario_subcase": "D04 underscore acceptance only",
+      "label": "Literal underscore request accepted",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/sessions?q=_",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.483092+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.595214+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.483092+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "Discovery items/nextCursor JSON, at most 20 public projections and no-store"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "response_sha256": "d47160c01f441269d023ff1a0e5126668c511828d22da948a5f6f4ed033367a5",
+        "response_bytes": 30,
+        "item_count": 0,
+        "has_next_cursor": false,
+        "item_field_sets": []
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "no_store_cache_policy": true,
+        "page_contract": true,
+        "page_size_at_most_20": true,
+        "public_projection_only": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "GET19",
+      "scenario_subcase": "Supplemental public contract",
+      "label": "Public OpenAPI",
+      "method": "GET",
+      "url": "https://booking-web-manager.vercel.app/api/openapi",
+      "authenticated": false,
+      "started_at_utc": "2026-10-20T08:16:10.547148+00:00",
+      "finished_at_utc": "2026-10-20T08:16:10.737450+00:00",
+      "started_at_sgt": "2026-10-20T16:16:10.547148+08:00",
+      "expected": {
+        "http_status": 200,
+        "contract": "OpenAPI public discovery contract"
+      },
+      "actual": {
+        "http_status": 200,
+        "content_type": "application/json",
+        "cache_control": "public, max-age=0, must-revalidate",
+        "response_sha256": "ebea28faba9882a021c0c0159b9fc17b987efa5b4b51fc05a78c2d8f1b1c8c59",
+        "response_bytes": 99152,
+        "openapi": "3.0.3",
+        "documented_path_count": 23,
+        "discovery_security": [],
+        "discovery_response_statuses": [
+          "200",
+          "400",
+          "500",
+          "503"
+        ]
+      },
+      "assertions": {
+        "expected_http_status": true,
+        "json_content_type": true,
+        "json_object": true,
+        "openapi_version_present": true,
+        "public_discovery_documented": true,
+        "discovery_200_and_400_documented": true
+      },
+      "result": "PASS"
+    }
+  ]
+}

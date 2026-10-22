@@ -42,6 +42,7 @@ describe("Wallet OpenAPI contracts", () => {
         currency: "SGD",
         availableBalanceCents: expect.any(Number),
         heldBalanceCents: expect.any(Number),
+        pendingPayoutCents: expect.any(Number),
         activeHolds: expect.any(Array),
       });
     }

@@ -1,0 +1,16 @@
+Browser tab: 1, Title: "Booking Web Manager", URL: "https://booking-web-manager.vercel.app/".
+0 AXWebArea Booking Web Manager, URL: booking-web-manager.vercel.app/
+	1 container Your account, ID: radix-_r_0_
+		2 heading Your account, Value: 2, ID: radix-_r_1_
+			3 text Your account
+		4 text Account details, settings, and logout
+		5 text NS
+		6 text Neoh Session QA
+		7 container
+			8 text Reliability  5.0
+		9 link Description: My groups, Value: booking-web-manager.vercel.app/groups
+		10 link Description: Account settings, Value: booking-web-manager.vercel.app/profile
+		11 button Log out
+		12 button Close
+
+The focused UI element is 11 button Log out

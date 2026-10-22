@@ -46,6 +46,7 @@ export default defineConfig({
             "@radix-ui/react-tabs",
             "@storybook/addon-themes",
             "@tanstack/react-query",
+            "@tanstack/react-table",
             "class-variance-authority",
             "clsx",
             "lucide-react",

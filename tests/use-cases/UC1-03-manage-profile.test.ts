@@ -1,5 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { profileSchema } from "@/app/profile/schemas";
+import { FundHold, Money, Participation, type ParticipationHistoryEntry } from "@/domain";
+import { GetReliabilityScore, type ReliabilityHistoryReader } from "@/use-cases/accounts/get-reliability-score";
 import { UpdateProfile, type ProfileStore } from "@/use-cases/accounts/update-profile";
 import type { AccountStatus } from "@/domain/shared/statuses";
 
@@ -72,7 +74,69 @@ describe("UC1-03 Manage Profile", () => {
     })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(store.saveForActiveUser).not.toHaveBeenCalled();
   });
-  test.todo("computes and displays the reliability score");
+
+  describe("computes the reliability score from the user's history (REQ-10)", () => {
+    const now = new Date("2026-10-20T00:00:00Z");
+    const day = 86_400_000;
+
+    test("gives the starting score when the user has no history", async () => {
+      // Arrange
+      const { reader } = historyReader([]);
+
+      // Act
+      const score = await new GetReliabilityScore({ reader, clock: { now: () => now } }).forUser("alice");
+
+      // Assert
+      expect(score.toNumber()).toBe(100);
+    });
+
+    test("weights an absence one half-life older by half", async () => {
+      // Arrange
+      const recent = new Date(now.getTime() - day);
+      const older = new Date(recent.getTime() - 90 * day);
+      const { reader } = historyReader([
+        { participation: verified("attended", "ATTENDED", recent), endAt: recent },
+        { participation: verified("absent", "ABSENT", older), endAt: older },
+      ]);
+
+      // Act
+      const score = await new GetReliabilityScore({ reader, clock: { now: () => now } }).forUser("alice");
+
+      // Assert
+      expect(score.toNumber()).toBeCloseTo(100 / 1.5, 8);
+    });
+
+    test("reads only the requested user's history", async () => {
+      // Arrange
+      const { reader, historyFor } = historyReader([]);
+
+      // Act
+      await new GetReliabilityScore({ reader, clock: { now: () => now } }).forUser("alice");
+
+      // Assert
+      expect(historyFor).toHaveBeenCalledExactlyOnceWith("alice");
+    });
+
+    test("passes a storage failure through instead of reporting the starting score", async () => {
+      // Arrange
+      const failure = new Error("database unavailable");
+      const reader: ReliabilityHistoryReader = { historyFor: async () => { throw failure; } };
+
+      // Act & Assert
+      await expect(new GetReliabilityScore({ reader, clock: { now: () => now } }).forUser("alice")).rejects.toBe(failure);
+    });
+
+    /** A committed place for alice, verified at its session's end. */
+    function verified(id: string, attendance: "ATTENDED" | "ABSENT", endAt: Date): Participation {
+      const hold = FundHold.create({
+        holdId: `h-${id}`, participationId: id, holdingAccountId: "platform", walletId: "w-alice",
+        amount: Money.fromCents(500), createdAt: new Date(endAt.getTime() - day),
+      });
+      return Participation.createCommitted({
+        participationId: id, userId: "alice", committedAt: new Date(endAt.getTime() - day), hold,
+      }).verify(attendance, "BOOKER", endAt);
+    }
+  });
 
   describe("checks the Edit profile form at the boundary (Zod)", () => {
     test("accepts several sports and regions (REQ-3, REQ-4)", () => {
@@ -130,6 +194,11 @@ describe("UC1-03 Manage Profile", () => {
     });
   });
 });
+
+function historyReader(history: readonly ParticipationHistoryEntry[]) {
+  const historyFor = vi.fn<ReliabilityHistoryReader["historyFor"]>().mockResolvedValue(history);
+  return { reader: { historyFor } satisfies ReliabilityHistoryReader, historyFor };
+}
 
 function profileStore(status: AccountStatus | null) {
   return {

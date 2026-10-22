@@ -1,0 +1,30 @@
+{
+  "startedAt": "2026-10-20T07:52:08.356037+00:00",
+  "finishedAt": "2026-10-20T07:52:10.617151+00:00",
+  "commit": "135064c0244fc684c9773ff947d8bf44e60f085e",
+  "command": [
+    "rtk",
+    "proxy",
+    "npx",
+    "vitest",
+    "run",
+    "--project",
+    "unit",
+    "tests/use-cases/UC2-01-discover-sessions.test.ts",
+    "tests/use-cases/UC2-02-create-session.test.ts",
+    "tests/use-cases/UC2-03-manage-session.test.ts",
+    "tests/use-cases/UC2-03b-remove-participant.test.ts",
+    "tests/use-cases/UC2-03c-cancel-session.test.ts",
+    "tests/lab4/create-sessions-black-box.test.ts",
+    "tests/lab4/booker-basis-path.test.ts",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile.json=output/session-testing/evidence/current-session-unit-20261020T075208Z.json"
+  ],
+  "env": {
+    "LAB4_EVIDENCE_DIR": "output/session-testing/evidence"
+  },
+  "exitCode": 0,
+  "consolePath": "output/session-testing/evidence/current-session-unit-20261020T075208Z.log",
+  "jsonPath": "output/session-testing/evidence/current-session-unit-20261020T075208Z.json"
+}

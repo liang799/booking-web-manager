@@ -1,0 +1,3 @@
+Browser tab: 1, Title: "Booking Web Manager", URL: "https://booking-web-manager.vercel.app/discover?returnTo=%2F".
+There has been no change in the accessibility tree.
+The focused UI element is 0 AXWebArea Booking Web Manager, URL: booking-web-manager.vercel.app/discover?returnTo=%2F
