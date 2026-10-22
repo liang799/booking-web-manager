@@ -1,0 +1,125 @@
+{
+  "scope": "Local SQL-construction tests with a recording executor; no database or production requests.",
+  "pathConvention": "Paths are source-derived predictions, not instrumented runtime traces.",
+  "observations": [
+    {
+      "id": "WB-D2",
+      "input": {
+        "text": "100%_O'Brien\\Court'; select pg_sleep(10); --"
+      },
+      "predictedPath": "D0 D1 D2 D3 D5 D7 D9 D11 D12",
+      "expected": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and (sport ilike $2 or venue_name ilike $2)",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "%100\\%\\_O'Brien\\\\Court'; select pg\\_sleep(10); --%"
+        ],
+        "result": []
+      },
+      "actual": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and (sport ilike $2 or venue_name ilike $2)",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "%100\\%\\_O'Brien\\\\Court'; select pg\\_sleep(10); --%"
+        ],
+        "result": []
+      }
+    },
+    {
+      "id": "WB-D3",
+      "input": {
+        "sport": "Badminton"
+      },
+      "predictedPath": "D0 D1 D3 D4 D5 D7 D9 D11 D12",
+      "expected": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and sport = $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "Badminton"
+        ],
+        "result": []
+      },
+      "actual": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and sport = $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "Badminton"
+        ],
+        "result": []
+      }
+    },
+    {
+      "id": "WB-D4",
+      "input": {
+        "region": "West"
+      },
+      "predictedPath": "D0 D1 D3 D5 D6 D7 D9 D11 D12",
+      "expected": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and region = $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "West"
+        ],
+        "result": []
+      },
+      "actual": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and region = $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "West"
+        ],
+        "result": []
+      }
+    },
+    {
+      "id": "WB-D5",
+      "input": {
+        "startsWithin": {
+          "from": "2030-01-02T10:00:00.000Z"
+        }
+      },
+      "predictedPath": "D0 D1 D3 D5 D7 D8 D9 D11 D12",
+      "expected": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and start_at >= $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "2030-01-02T10:00:00.000Z"
+        ],
+        "result": []
+      },
+      "actual": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and start_at >= $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "2030-01-02T10:00:00.000Z"
+        ],
+        "result": []
+      }
+    },
+    {
+      "id": "WB-D6",
+      "input": {
+        "startsWithin": {
+          "before": "2030-01-02T12:00:00.000Z"
+        }
+      },
+      "predictedPath": "D0 D1 D3 D5 D7 D9 D10 D11 D12",
+      "expected": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and start_at < $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "2030-01-02T12:00:00.000Z"
+        ],
+        "result": []
+      },
+      "actual": {
+        "where": "visibility = 'PUBLIC' and status = 'OPEN' and start_at > $1 and start_at < $2",
+        "parameters": [
+          "2030-01-01T00:00:00.000Z",
+          "2030-01-02T12:00:00.000Z"
+        ],
+        "result": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-10-20T07:52:10.534Z",
+  "observations": [
+    {
+      "id": "WB-B1",
+      "input": "REMOVED with REFUNDED hold",
+      "predictedPath": "B0 B1 B5 B8",
+      "expected": {
+        "session": "CANCELLED",
+        "participation": "REMOVED",
+        "hold": "REFUNDED",
+        "instructionCents": []
+      },
+      "actual": {
+        "session": "CANCELLED",
+        "participation": "REMOVED",
+        "hold": "REFUNDED",
+        "instructionCents": []
+      }
+    },
+    {
+      "id": "WB-B2",
+      "input": "CANCELLED with REFUNDED hold",
+      "predictedPath": "B0 B1 B2 B5 B8",
+      "expected": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": "REFUNDED",
+        "instructionCents": []
+      },
+      "actual": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": "REFUNDED",
+        "instructionCents": []
+      }
+    },
+    {
+      "id": "WB-B3",
+      "input": "WAITLISTED without hold",
+      "predictedPath": "B0 B1 B2 B3 B7 B8",
+      "expected": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": null,
+        "instructionCents": []
+      },
+      "actual": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": null,
+        "instructionCents": []
+      }
+    },
+    {
+      "id": "WB-B4",
+      "input": "WITHDRAWN with REFUNDED hold",
+      "predictedPath": "B0 B1 B2 B3 B4 B7 B8",
+      "expected": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": "REFUNDED",
+        "instructionCents": []
+      },
+      "actual": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": "REFUNDED",
+        "instructionCents": []
+      }
+    },
+    {
+      "id": "WB-B5",
+      "input": "COMMITTED with HELD 500 cents",
+      "predictedPath": "B0 B1 B2 B3 B4 B6 B8",
+      "expected": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": "REFUNDED",
+        "instructionCents": [
+          500
+        ]
+      },
+      "actual": {
+        "session": "CANCELLED",
+        "participation": "CANCELLED",
+        "hold": "REFUNDED",
+        "instructionCents": [
+          500
+        ]
+      }
+    }
+  ]
+}

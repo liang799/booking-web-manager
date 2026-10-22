@@ -130,9 +130,10 @@ unknown), in [`withdrawal-recovery.ts`](./withdrawal-recovery.ts):
 - [`withdrawal-transport.ts`](./withdrawal-transport.ts) calls the existing preview,
   withdraw and leave-waitlist routes, validates each reply with Zod and maps it explicitly to
   [`withdrawal-ports.ts`](./withdrawal-ports.ts).
-- The joined-sessions list has no API yet; stories use
-  [`withdrawal-fakes.ts`](./_components/withdrawal-fakes.ts). The page, the composition root
-  that loads the list with React Query and provides the `QueryClient`, follows once it exists.
+- The joined-sessions list is served by `GET /api/sessions/joined` (see [Player lists](#player-lists)).
+  Stories still use [`withdrawal-fakes.ts`](./_components/withdrawal-fakes.ts) until its transport
+  and the page, the composition root that loads the list with React Query and provides the
+  `QueryClient`, are added.
 
 ### Accept-replacement screen
 
@@ -156,8 +157,33 @@ accepting it. The screen follows the same split as the withdrawal screens.
   maps the reply to [`replacement-ports.ts`](./replacement-ports.ts). It shares request handling
   and failure classification with the withdrawal transport through
   [`session-action-request.ts`](./session-action-request.ts).
-- No API lists a player's pending invitations yet; stories use
-  [`replacement-fakes.ts`](./_components/replacement-fakes.ts).
+- Pending invitations are served by `GET /api/sessions/replacements` (see
+  [Player lists](#player-lists)). Stories still use
+  [`replacement-fakes.ts`](./_components/replacement-fakes.ts) until its transport is added.
+
+### Player lists
+
+Two authenticated, uncached GET routes give the screens above their data. Both are built with
+[`playerSessionsGetAction`](./player-sessions-action.ts), take the player from authentication
+(any query parameter is ignored), and return complete lists ordered by start time, then session
+ID. There is no paging: the recovery strategy treats a place or invitation missing from the list
+as resolved, so a truncated list could clear an unresolved request too early.
+
+| Route | Use case | Body (200) |
+| --- | --- | --- |
+| [`GET /api/sessions/joined`](../api/sessions/joined/route.ts) | [`ListJoinedSessions.forParticipant`](../../use-cases/sessions/ListJoinedSessions.ts) | `{ sessions: [{ sessionId, venueName, sport, region, startAt, endAt, status: "COMMITTED" \| "WAITLISTED", bookingShareCents }] }` |
+| [`GET /api/sessions/replacements`](../api/sessions/replacements/route.ts) | [`ListReplacementInvitations.forInvitee`](../../use-cases/sessions/ListReplacementInvitations.ts) | `{ invitations: [{ sessionId, venueName, sport, region, startAt, endAt, bookingShareCents }] }` |
+
+Both list only OPEN sessions that have not started. `bookingShareCents` is the stored
+`booking_share_cents`. Joined sessions are the player's COMMITTED and WAITLISTED participations
+([`PostgresJoinedSessionsReader`](../../lib/commit/postgres-joined-sessions-reader.ts)).
+An invitation is a pending personal reservation naming the player, using the domain's
+`personalReplacementReservations` rule: a WITHDRAWN `DIRECT_INVITE` participation whose hold is
+`AWAITING_REPLACEMENT` or `REFUNDED` and that nobody has replaced
+([`PostgresReplacementInvitationsReader`](../../lib/commit/postgres-replacement-invitations-reader.ts)).
+The withdrawer is not identified. Assembly is in
+[`use-case-config/player-sessions.ts`](../../use-case-config/player-sessions.ts); without server
+settings both routes answer 503.
 
 ## UC2-06 Verify Attendance
 

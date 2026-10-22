@@ -1,0 +1,63 @@
+{
+  "observed_at_utc": "2026-10-20T08:50:24.412Z",
+  "target": "https://booking-web-manager.vercel.app",
+  "browser": "Codex in-app browser",
+  "authenticated": false,
+  "observations": [
+    {
+      "id": "UI01",
+      "case": "D01/D08",
+      "expected": "Anonymous Discover renders without login; zero results has an empty state",
+      "actual": "Find Your Next Game and No sessions found rendered with Log in link",
+      "result": "PASS"
+    },
+    {
+      "id": "UI02",
+      "case": "D05",
+      "expected": "101-character search is rejected",
+      "actual": "Search must be 100 characters or fewer; results replaced by Please fix the highlighted filters, then search again",
+      "result": "PASS"
+    },
+    {
+      "id": "UI03",
+      "case": "D05",
+      "expected": "100-character search accepted",
+      "actual": "URL and applied filter contain 100 characters; No sessions found; no validation error",
+      "result": "PASS"
+    },
+    {
+      "id": "UI04",
+      "case": "D05",
+      "expected": "99-character search accepted",
+      "actual": "URL and applied filter contain 99 characters; No sessions found; no validation error",
+      "result": "PASS"
+    },
+    {
+      "id": "UI05",
+      "case": "D07",
+      "expected": "Time filter without date rejected",
+      "actual": "Choose a date when filtering by time; successful result set hidden",
+      "result": "PASS"
+    },
+    {
+      "id": "UI06",
+      "case": "D07",
+      "expected": "Equal time bounds rejected",
+      "actual": "End time must be later than start time on the same day",
+      "result": "PASS"
+    },
+    {
+      "id": "UI07",
+      "case": "D07",
+      "expected": "Reversed time bounds rejected",
+      "actual": "Same end-time validation message for 18:00 to17:00",
+      "result": "PASS"
+    }
+  ],
+  "account_setup": {
+    "status": "prepared_not_submitted",
+    "reason": "Final Create account action accepts Terms and Privacy Policy; user confirmation requested",
+    "profile_label": "Neoh Session QA",
+    "terms_observation": "The production Terms page identifies Booking as an NTU SC2006 student project with Stripe test-mode payments; no real money moves"
+  }
+}

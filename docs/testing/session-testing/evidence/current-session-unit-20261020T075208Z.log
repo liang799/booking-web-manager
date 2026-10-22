@@ -1,0 +1,26 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /Users/tianpok/Projects/booking-web-manager
+
+ ✓ |unit| tests/use-cases/UC2-01-discover-sessions.test.ts (4 tests) 5ms
+ ✓ |unit| tests/lab4/booker-basis-path.test.ts (5 tests) 6ms
+ ✓ |unit| tests/lab4/create-sessions-black-box.test.ts (46 tests) 12ms
+ ✓ |unit| tests/use-cases/UC2-02-create-session.test.ts (25 tests) 13ms
+ ✓ |unit| tests/use-cases/UC2-03-manage-session.test.ts (24 tests) 12ms
+ ✓ |unit| tests/use-cases/UC2-03c-cancel-session.test.ts (19 tests) 13ms
+ ✓ |unit| tests/use-cases/UC2-03b-remove-participant.test.ts (30 tests) 15ms
+
+ Test Files  7 passed (7)
+      Tests  153 passed (153)
+   Start at  15:52:10
+   Duration  260ms (transform 670ms, setup 0ms, import 886ms, tests 75ms, environment 0ms)
+
+JSON report written to /Users/tianpok/Projects/booking-web-manager/output/session-testing/evidence/current-session-unit-20261020T075208Z.json
