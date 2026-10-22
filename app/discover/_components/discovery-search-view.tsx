@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft, CalendarDays, CircleDot, Clock3, Feather, Grid2X2, MapPin, Search, SlidersHorizontal, Users, Volleyball } from "lucide-react";
+import { ArrowLeft, CalendarDays, CircleDot, Clock3, Grid2X2, MapPin, Search, SlidersHorizontal, Users, Volleyball } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useId } from "react";
+import { useId, type ComponentType, type SVGProps } from "react";
 import { REGIONS, SPORTS } from "@/app/(auth)/schemas";
 import { JoinSessionButton } from "@/app/commit/_components/join-session-button";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import type { DiscoveryPage } from "../contracts";
 import type { DiscoveryFieldErrors, DiscoveryFilters } from "../query";
 import type { DiscoveryState, FilterPanelState } from "./discovery-state";
+import styles from "./discovery-search-view.module.css";
+import { BadmintonIcon, BasketballIcon, FootballIcon, FutsalIcon, TennisIcon } from "./sport-icons";
 
 export interface DiscoverySearchViewProps {
   readonly filters: DiscoveryFilters;
@@ -44,48 +46,43 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
   const expanded = filterPanel === "expanded";
 
   return (
-    <div className="relative isolate mx-auto min-h-full w-full max-w-4xl px-6 pb-10 pt-4 md:my-5 md:px-10 md:pb-12 md:pt-5">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[270px] overflow-hidden md:h-[310px] md:rounded-2xl" aria-hidden="true">
-        <Image src="/images/mobile-hero.png" alt="" fill sizes="(max-width: 767px) 100vw, 896px" priority className="object-cover object-[65%_center] opacity-90 dark:opacity-[0.35]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--card))_0%,hsl(var(--card)/0.96)_18%,hsl(var(--card)/0.2)_65%,hsl(var(--card)/0)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--card)/0)_65%,hsl(var(--card))_100%)]" />
-      </div>
-
+    <div className={cn(styles.view, "relative isolate mx-auto min-h-full w-full max-w-4xl px-6 pb-10 pt-4")}>
       <header>
-        <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-full border-border/60 bg-card/90 shadow-sm">
+        {/* Mobile shows the court hero; desktop keeps only the page title, for screen readers. */}
+        <div className={cn(styles.heroArt, "pointer-events-none absolute inset-x-0 top-0 -z-10 h-[270px] overflow-hidden")} aria-hidden="true">
+          <Image src="/images/mobile-hero.png" alt="" fill sizes="(max-width: 767px) 100vw, 1px" priority className="object-cover object-[65%_center] opacity-90 dark:opacity-[0.35]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--card))_0%,hsl(var(--card)/0.96)_18%,hsl(var(--card)/0.2)_65%,hsl(var(--card)/0)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--card)/0)_65%,hsl(var(--card))_100%)]" />
+        </div>
+        <Button asChild variant="outline" size="icon" className={cn(styles.backLink, "h-11 w-11 rounded-full border-border/60 bg-card/90 shadow-sm")}>
           <Link href={returnTo} replace aria-label="Back to previous page"><ArrowLeft aria-hidden="true" /></Link>
         </Button>
-        <h1 className="mt-7 max-w-[190px] text-[28px] font-bold leading-[1.08] tracking-tight md:mt-8 md:max-w-xs md:text-4xl">Find Your <br />Next Game</h1>
-        <p className="mt-2 max-w-[175px] text-xs leading-relaxed text-muted-foreground md:max-w-[230px] md:text-sm">Discover public sports sessions near you.</p>
+        <h1 className={cn(styles.heroTitle, "mt-7 max-w-[190px] text-[28px] font-bold leading-[1.08] tracking-tight")}>Find Your <br />Next Game</h1>
+        <p className={cn(styles.heroIntro, "mt-2 max-w-[175px] text-xs leading-relaxed text-muted-foreground")}>Discover public sports sessions near you.</p>
       </header>
 
       <form
-        className="mt-6"
+        className={cn(styles.searchForm, "mt-6")}
         noValidate
         onChange={onEdit}
         onSubmit={(event) => {
           event.preventDefault();
           if (busy) return;
-          const formData = new FormData(event.currentTarget);
-          const submitter = (event.nativeEvent as SubmitEvent).submitter;
-          if (submitter instanceof HTMLButtonElement && submitter.dataset.sport !== undefined) {
-            formData.set("sport", submitter.dataset.sport);
-          }
-          onApply(formData);
+          onApply(new FormData(event.currentTarget));
         }}
       >
         <fieldset disabled={busy} className="min-w-0 [color-scheme:light] dark:[color-scheme:dark]">
           <legend className="sr-only">Search and filter sessions</legend>
-          <div className="flex min-h-[52px] items-center rounded-lg border border-border/70 bg-card p-1 shadow-[0_3px_10px_hsl(var(--foreground)/0.08)] focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          <div className={cn(styles.searchBar, "flex min-h-[52px] items-center rounded-lg border border-border/70 bg-card p-1 shadow-[0_3px_10px_hsl(var(--foreground)/0.08)] focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2")}>
             <Button type="submit" variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Search"><Search aria-hidden="true" /></Button>
-            <Label htmlFor={`${id}-q`} className="sr-only">Search sports or venues</Label>
-            <input id={`${id}-q`} name="q" type="search" maxLength={100} defaultValue={filters.q ?? ""} placeholder="Search sports or venues" className="h-11 min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground disabled:opacity-50 md:text-sm" {...fieldAccessibility(id, "q", errors)} />
-            <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Filters" aria-expanded={expanded} aria-controls={`${id}-filter-panel`} onClick={onToggleFilters} disabled={busy || state.status === "invalid"}><SlidersHorizontal aria-hidden="true" /></Button>
+            <Label htmlFor={`${id}-q`} className="sr-only">Search sessions by sport or venue</Label>
+            <input id={`${id}-q`} name="q" type="search" maxLength={100} defaultValue={filters.q ?? ""} placeholder="Search sessions by sport or venue" className={cn(styles.searchInput, "h-11 min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-[13px] placeholder:text-muted-foreground disabled:opacity-50")} {...fieldAccessibility(id, "q", errors)} />
+            <Button variant="ghost" size="icon" className={cn(styles.filterToggle, "h-11 w-11 shrink-0")} aria-label="Filters" aria-expanded={expanded} aria-controls={`${id}-filter-panel`} onClick={onToggleFilters} disabled={busy || state.status === "invalid"}><SlidersHorizontal aria-hidden="true" /></Button>
           </div>
           {errors.q && <p id={`${id}-q-error`} className="mt-2 text-sm text-destructive">{errors.q.join(" ")}</p>}
 
           {/* Hiding, rather than unmounting, preserves all unsubmitted filter drafts. */}
-          <section id={`${id}-filter-panel`} aria-labelledby={`${id}-filters-heading`} className={cn("mt-4 rounded-lg border bg-card p-4", !expanded && "hidden")}>
+          <section id={`${id}-filter-panel`} aria-labelledby={`${id}-filters-heading`} className={cn(styles.filterPanel, "mt-4 rounded-lg border bg-card p-4", !expanded && "hidden")}>
             <h2 id={`${id}-filters-heading`} className="text-base font-semibold">Filter sessions</h2>
             <p id={`${id}-time-zone`} className="mt-1 text-xs leading-relaxed text-muted-foreground">Dates and times use Singapore time (SGT). Time filters match when a session starts.</p>
             <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
@@ -122,11 +119,18 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
             </div>
           </section>
         </fieldset>
-        <section aria-labelledby={`${id}-sports-heading`} className="mt-6">
+        {/* Chips are plain buttons that apply the drafts with their sport; Search stays the default (Enter) button. */}
+        <section aria-labelledby={`${id}-sports-heading`} className={cn(styles.sports, "mt-6")}>
           <h2 id={`${id}-sports-heading`} className="text-sm font-semibold">Explore sports</h2>
-          <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto rounded-md px-1 pb-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" role="group" aria-label="Choose a sport" tabIndex={0}>
+          <div className={cn(styles.sportChoices, "-mx-1 mt-2 flex gap-2 overflow-x-auto rounded-md px-1 pb-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring")} role="group" aria-label="Choose a sport" tabIndex={0}>
             {["", ...sportChoices].map((sport) => (
-              <Button key={sport} type="submit" data-sport={sport} disabled={busy} variant={filters.sport === sport ? "default" : "outline"} aria-pressed={filters.sport === sport} className="h-11 shrink-0 gap-2 px-3 text-xs">
+              <Button key={sport} type="button" disabled={busy} variant={filters.sport === sport ? "default" : "outline"} aria-pressed={filters.sport === sport} className="h-11 shrink-0 gap-2 px-3 text-xs" onClick={(event) => {
+                const form = event.currentTarget.form;
+                if (busy || form === null) return;
+                const formData = new FormData(form);
+                formData.set("sport", sport);
+                onApply(formData);
+              }}>
                 <SportIcon sport={sport} />{sport || "All sports"}
               </Button>
             ))}
@@ -134,19 +138,26 @@ export function DiscoverySearchView({ filters, state, filterPanel, onToggleFilte
         </section>
       </form>
 
-      <section aria-label="Upcoming sessions" aria-busy={busy} className="mt-5 space-y-3">
-        <div className="border-b pb-3">
-          <h2 className="text-sm font-semibold md:text-lg">Upcoming sessions</h2>
-          <p aria-label="Applied filters" className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">{summarizeFilters(filters) || "All upcoming public sessions"}</p>
-        </div>
+      {/* Below the chips on mobile; desktop moves this heading to the top of the page (it is not focusable). */}
+      <div className={cn(styles.resultsHeading, "mt-5 border-b pb-3")}>
+        <h2 className={cn(styles.resultsTitle, "text-sm font-semibold")}>Upcoming sessions</h2>
+        <p aria-label="Applied filters" className={cn(styles.resultsSummary, "mt-1 break-words text-xs leading-relaxed text-muted-foreground")}>{summarizeFilters(filters) || "All upcoming public sessions"}</p>
+      </div>
+      <section aria-label="Upcoming sessions" aria-busy={busy} className={cn(styles.results, "mt-3 space-y-3")}>
         <SearchResults state={state} onNext={onNext} onRetry={onRetry} />
       </section>
     </div>
   );
 }
 
+const SPORT_ICONS = new Map<string, ComponentType<SVGProps<SVGSVGElement>>>([
+  ["", Grid2X2], ["Tennis", TennisIcon], ["Badminton", BadmintonIcon], ["Basketball", BasketballIcon],
+  ["Football", FootballIcon], ["Futsal", FutsalIcon], ["Volleyball", Volleyball],
+]);
+
 function SportIcon({ sport }: { readonly sport: string }) {
-  const Icon = sport === "" ? Grid2X2 : sport === "Badminton" ? Feather : sport === "Volleyball" ? Volleyball : CircleDot;
+  // A sport added later falls back to a neutral icon until it has its own.
+  const Icon = SPORT_ICONS.get(sport) ?? CircleDot;
   return <Icon aria-hidden="true" />;
 }
 
@@ -184,7 +195,7 @@ function SearchResults({ state, onNext, onRetry }: Pick<DiscoverySearchViewProps
     case "ready": {
       const cursor = state.page.nextCursor;
       return <>
-        {state.page.items.length === 0 ? <EmptyState title="No sessions found" description="Try another search, sport, region, or date, or clear your filters to see all upcoming public sessions." /> : <ul className="space-y-3">{state.page.items.map((session) => <CompactSessionCard key={session.sessionId} session={session} />)}</ul>}
+        {state.page.items.length === 0 ? <EmptyState title="No sessions found" description="Try another search, sport, region, or date, or clear your filters to see all upcoming public sessions." /> : <ul className={cn(styles.cards, "flex flex-col gap-3")}>{state.page.items.map((session) => <CompactSessionCard key={session.sessionId} session={session} />)}</ul>}
         {cursor !== null && <nav aria-label="Session result pages" className="flex justify-end pt-2"><Button variant="outline" className="h-11" onClick={() => onNext(cursor)}>Next page</Button></nav>}
       </>;
     }
@@ -204,20 +215,20 @@ function CompactSessionCard({ session }: { readonly session: DiscoveryPage["item
   const end = new Date(session.endAt);
   const sameDay = singaporeDate.format(start) === singaporeDate.format(end);
   return (
-    <li className="flex min-w-0 gap-3 rounded-lg border border-border/70 bg-card p-2 shadow-[0_2px_5px_hsl(var(--foreground)/0.06)] sm:gap-5 sm:p-3">
-      <div className="relative min-h-[148px] w-[96px] shrink-0 overflow-hidden rounded-md sm:min-h-[160px] sm:w-[180px]">
-        <Image src={sportImage(session.sport)} alt="" fill sizes="(max-width: 639px) 96px, 180px" className="object-cover" />
+    <li className={cn(styles.card, "flex min-w-0 gap-3 rounded-lg border border-border/70 bg-card p-2 shadow-[0_2px_5px_hsl(var(--foreground)/0.06)] sm:gap-5 sm:p-3")}>
+      <div className={cn(styles.cardMedia, "relative min-h-[148px] w-[96px] shrink-0 overflow-hidden rounded-md sm:min-h-[160px] sm:w-[180px]")}>
+        <Image src={sportImage(session.sport)} alt="" fill sizes="(max-width: 639px) 96px, (max-width: 767px) 180px, 540px" className="object-cover" />
       </div>
-      <div className="min-w-0 flex-1 py-1 pr-1 sm:py-2">
-        <h3 className="break-words text-sm font-semibold leading-snug sm:text-lg">{session.sport} session</h3>
-        <dl className="mt-2 space-y-1.5 text-[11px] leading-relaxed text-muted-foreground sm:text-sm">
+      <div className={cn(styles.cardBody, "min-w-0 flex-1 py-1 pr-1 sm:py-2")}>
+        <h3 className={cn(styles.cardTitle, "break-words text-sm font-semibold leading-snug sm:text-lg")}>{session.sport} session</h3>
+        <dl className={cn(styles.cardMeta, "mt-2 space-y-1.5 text-[11px] leading-relaxed text-muted-foreground sm:text-sm")}>
           <div className="flex items-start gap-1.5"><MapPin className="mt-0.5 h-3 w-3 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" /><dt className="sr-only">Venue and region</dt><dd className="min-w-0 break-words">{session.venueName} · {session.region}</dd></div>
           <div className="flex items-start gap-1.5"><CalendarDays className="mt-0.5 h-3 w-3 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" /><dt className="sr-only">Date</dt><dd><time dateTime={session.startAt}>{singaporeDate.format(start)}</time></dd></div>
           <div className="flex items-start gap-1.5"><Clock3 className="mt-0.5 h-3 w-3 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" /><dt className="sr-only">Session time in Singapore</dt><dd className="min-w-0"><time dateTime={session.startAt}>{singaporeTime.format(start)}</time> – <time dateTime={session.endAt}>{sameDay ? singaporeTime.format(end) : singaporeDateTime.format(end)}</time> SGT</dd></div>
           <div className="flex items-start gap-1.5"><Users className="mt-0.5 h-3 w-3 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" /><dt>Total capacity</dt><dd>{session.totalSlots}</dd></div>
         </dl>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
-          <dl><dt className="sr-only">Booking share</dt><dd className="flex flex-wrap items-baseline gap-x-1.5"><Money cents={session.bookingShareCents} className="text-base font-semibold sm:text-xl" /><span className="text-[10px] text-muted-foreground sm:text-xs">per person</span></dd></dl>
+        <div className={cn(styles.cardFooter, "mt-2 flex flex-wrap items-end justify-between gap-2")}>
+          <dl><dt className="sr-only">Booking share</dt><dd className="flex flex-wrap items-baseline gap-x-1.5"><Money cents={session.bookingShareCents} className={cn(styles.price, "text-base font-semibold sm:text-xl")} /><span className="text-[10px] text-muted-foreground sm:text-xs">per person</span></dd></dl>
           <JoinSessionButton session={session} />
         </div>
       </div>
