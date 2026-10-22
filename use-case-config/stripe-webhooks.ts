@@ -13,7 +13,12 @@ import { createPayoutServices } from "./payouts";
  */
 export function createStripeWebhookDependencies(): StripeWebhookDependencies | undefined {
   const services = createPayoutServices();
-  if (services === undefined || services.stripeSettings.webhookSecrets.length === 0)
+  if (
+    services === undefined ||
+    services.stripe === undefined ||
+    services.stripeSettings === undefined ||
+    services.stripeSettings.webhookSecrets.length === 0
+  )
     return undefined;
   return {
     verify: createStripeEventVerifier(services.stripe, services.stripeSettings.webhookSecrets),

@@ -6,7 +6,7 @@ let initialization: Promise<PayoutDependencies> | undefined;
 /** Shares successful configuration and permits retry after setup failure. */
 export function getPayoutDependencies(): Promise<PayoutDependencies> {
   initialization ??= Promise.resolve()
-    .then(createPayoutDependencies)
+    .then(() => createPayoutDependencies())
     .catch((error) => {
       initialization = undefined;
       throw error;

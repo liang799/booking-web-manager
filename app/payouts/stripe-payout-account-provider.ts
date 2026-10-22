@@ -39,6 +39,11 @@ export class StripePayoutAccountProvider implements PayoutAccountProvider {
     accountReference: string,
     links: OnboardingLinks,
   ): Promise<string> {
+    if (accountReference.startsWith("acct_simulated_")) {
+      throw new PayoutProviderError(
+        "Simulated payout accounts cannot generate Stripe Connect onboarding links",
+      );
+    }
     const link = await provider(() =>
       this.stripe.accountLinks.create({
         account: accountReference,
@@ -51,6 +56,17 @@ export class StripePayoutAccountProvider implements PayoutAccountProvider {
   }
 
   async getAccount(accountReference: string): Promise<ProviderAccountState> {
+    // If transitioning from a simulated development account, reject safely so
+    // the user can onboard a real Stripe Connect account without Stripe API errors.
+    if (accountReference.startsWith("acct_simulated_")) {
+      return {
+        accountReference,
+        payoutsEnabled: false,
+        rejected: true,
+        instantPayoutsAvailable: false,
+      };
+    }
+
     const account = await provider(() => this.stripe.accounts.retrieve(accountReference));
     return stripeAccountState(account);
   }

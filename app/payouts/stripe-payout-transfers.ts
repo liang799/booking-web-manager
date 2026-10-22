@@ -16,6 +16,10 @@ export class StripePayoutTransfers implements PayoutTransfers {
     readonly amountCents: number;
     readonly accountReference: string;
   }): Promise<string> {
+    if (request.accountReference.startsWith("acct_simulated_")) {
+      throw new PayoutDeclinedError("simulated_account_not_supported_by_stripe");
+    }
+
     // Stripe forgets idempotency keys after 24 hours; the transfer group (one
     // per payout attempt) finds an earlier transfer however late the retry.
     const existing = await provider(() =>
@@ -44,6 +48,10 @@ export class StripePayoutTransfers implements PayoutTransfers {
     readonly amountCents: number;
     readonly accountReference: string;
   }): Promise<void> {
+    if (request.accountReference.startsWith("acct_simulated_")) {
+      throw new PayoutDeclinedError("simulated_account_not_supported_by_stripe");
+    }
+
     await provider(() =>
       this.stripe.payouts.create(
         {
