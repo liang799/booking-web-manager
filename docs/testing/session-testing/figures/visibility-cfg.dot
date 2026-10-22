@@ -1,0 +1,20 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", size="8.8,3.45", dpi=220, fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  V0 [shape=oval, label="V0\nEntry"];
+  V1 [shape=box, label="V1\nRun both\nsafeParse calls"];
+  V2 [shape=diamond, label="V2\nID parse\nfailed?"];
+  V3 [shape=diamond, label="V3\nBody parse\nfailed?"];
+  V4 [shape=box, label="V4\nThrow\ninvalid request"];
+  V5 [shape=box, label="V5\nReturn validated\nID + visibility"];
+  V6 [shape=oval, label="V6\nExit"];
+  V0 -> V1;
+  V1 -> V2;
+  V2 -> V4 [label="T"];
+  V2 -> V3 [label="F"];
+  V3 -> V4 [label="T"];
+  V3 -> V5 [label="F"];
+  V4 -> V6;
+  V5 -> V6;
+}

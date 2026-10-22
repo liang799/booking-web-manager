@@ -1,0 +1,35 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  S0 [shape=oval, label="S0\nEntry"];
+  S1 [shape=diamond, label="S1\nNot a\nstring?"];
+  S2 [shape=diamond, label="S2\nEmpty?"];
+  S3 [shape=diamond, label="S3\nUnsafe\ncharacters?"];
+  S4 [shape=diamond, label="S4\nNot starting\nwith \"/\"?"];
+  S5 [shape=diamond, label="S5\nStarts\nwith \"//\"?"];
+  S6 [shape=box, label="S6\nTake the path\nbefore ? or #"];
+  S7 [shape=diamond, label="S7\nLogin or\nregister page?"];
+  S8 [shape=diamond, label="S8\nCallback\nroute?"];
+  S9 [shape=box, label="S9\nReturn Home \"/\""];
+  S10 [shape=box, label="S10\nReturn\nthe value"];
+  S11 [shape=oval, label="S11\nExit"];
+  S0 -> S1;
+  S1 -> S9 [label="T"];
+  S1 -> S2 [label="F"];
+  S2 -> S9 [label="T"];
+  S2 -> S3 [label="F"];
+  S3 -> S9 [label="T"];
+  S3 -> S4 [label="F"];
+  S4 -> S9 [label="T"];
+  S4 -> S5 [label="F"];
+  S5 -> S9 [label="T"];
+  S5 -> S6 [label="F"];
+  S6 -> S7;
+  S7 -> S9 [label="T"];
+  S7 -> S8 [label="F"];
+  S8 -> S9 [label="T"];
+  S8 -> S10 [label="F"];
+  S9 -> S11;
+  S10 -> S11;
+}

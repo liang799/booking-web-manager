@@ -1,0 +1,1926 @@
+{
+  "graphs": [
+    {
+      "id": "register-user",
+      "title": "UC1-01 registerUser server action",
+      "sourcePath": "app/(auth)/register/actions.ts",
+      "sourceLines": "23-97",
+      "subject": "registerUser(previous, formData)",
+      "boundary": "One call of the server action. Field validation (Zod) and building the confirmation link are one decision each. \"Hidden duplicate\" (no error, and a user returned with no identities) is one compound decision: Supabase reports that situation as a single case when email confirmation is on.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "G0",
+          "shape": "oval",
+          "label": "G0 Entry"
+        },
+        {
+          "id": "G1",
+          "shape": "diamond",
+          "label": "G1 Fields valid?"
+        },
+        {
+          "id": "G2",
+          "shape": "box",
+          "label": "G2 Return fix fields"
+        },
+        {
+          "id": "G3",
+          "shape": "diamond",
+          "label": "G3 Confirmation link ready?"
+        },
+        {
+          "id": "G4",
+          "shape": "box",
+          "label": "G4 Return link error"
+        },
+        {
+          "id": "G5",
+          "shape": "box",
+          "label": "G5 Sign up with Supabase"
+        },
+        {
+          "id": "G6",
+          "shape": "diamond",
+          "label": "G6 Error: user already exists?"
+        },
+        {
+          "id": "G7",
+          "shape": "diamond",
+          "label": "G7 Hidden duplicate?"
+        },
+        {
+          "id": "G8",
+          "shape": "box",
+          "label": "G8 Return email taken"
+        },
+        {
+          "id": "G9",
+          "shape": "diamond",
+          "label": "G9 Other error?"
+        },
+        {
+          "id": "G10",
+          "shape": "box",
+          "label": "G10 Return couldn't create"
+        },
+        {
+          "id": "G11",
+          "shape": "diamond",
+          "label": "G11 No session yet?"
+        },
+        {
+          "id": "G12",
+          "shape": "box",
+          "label": "G12 Return check email"
+        },
+        {
+          "id": "G13",
+          "shape": "box",
+          "label": "G13 Redirect to destination"
+        },
+        {
+          "id": "G14",
+          "shape": "oval",
+          "label": "G14 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "G0",
+          "to": "G1",
+          "label": null
+        },
+        {
+          "from": "G1",
+          "to": "G2",
+          "label": "F"
+        },
+        {
+          "from": "G1",
+          "to": "G3",
+          "label": "T"
+        },
+        {
+          "from": "G2",
+          "to": "G14",
+          "label": null
+        },
+        {
+          "from": "G3",
+          "to": "G4",
+          "label": "F"
+        },
+        {
+          "from": "G3",
+          "to": "G5",
+          "label": "T"
+        },
+        {
+          "from": "G4",
+          "to": "G14",
+          "label": null
+        },
+        {
+          "from": "G5",
+          "to": "G6",
+          "label": null
+        },
+        {
+          "from": "G6",
+          "to": "G8",
+          "label": "T"
+        },
+        {
+          "from": "G6",
+          "to": "G7",
+          "label": "F"
+        },
+        {
+          "from": "G7",
+          "to": "G8",
+          "label": "T"
+        },
+        {
+          "from": "G7",
+          "to": "G9",
+          "label": "F"
+        },
+        {
+          "from": "G8",
+          "to": "G14",
+          "label": null
+        },
+        {
+          "from": "G9",
+          "to": "G10",
+          "label": "T"
+        },
+        {
+          "from": "G9",
+          "to": "G11",
+          "label": "F"
+        },
+        {
+          "from": "G10",
+          "to": "G14",
+          "label": null
+        },
+        {
+          "from": "G11",
+          "to": "G12",
+          "label": "T"
+        },
+        {
+          "from": "G11",
+          "to": "G13",
+          "label": "F"
+        },
+        {
+          "from": "G12",
+          "to": "G14",
+          "label": null
+        },
+        {
+          "from": "G13",
+          "to": "G14",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "G1",
+        "G3",
+        "G6",
+        "G7",
+        "G9",
+        "G11"
+      ],
+      "paths": [
+        {
+          "id": "WB-G1",
+          "nodes": [
+            "G0",
+            "G1",
+            "G2",
+            "G14"
+          ],
+          "input": "Password of 5 characters.",
+          "expected": "\"Please fix the highlighted fields.\"; sign-up not called.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G0",
+              "to": "G1"
+            },
+            {
+              "from": "G1",
+              "to": "G2"
+            },
+            {
+              "from": "G2",
+              "to": "G14"
+            }
+          ]
+        },
+        {
+          "id": "WB-G2",
+          "nodes": [
+            "G0",
+            "G1",
+            "G3",
+            "G4",
+            "G14"
+          ],
+          "input": "Valid fields; request has no Origin header.",
+          "expected": "Confirmation-link error; sign-up not called.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G1",
+              "to": "G3"
+            },
+            {
+              "from": "G3",
+              "to": "G4"
+            },
+            {
+              "from": "G4",
+              "to": "G14"
+            }
+          ]
+        },
+        {
+          "id": "WB-G3",
+          "nodes": [
+            "G0",
+            "G1",
+            "G3",
+            "G5",
+            "G6",
+            "G8",
+            "G14"
+          ],
+          "input": "Sign-up error code user_already_exists.",
+          "expected": "\"An account with this email already exists.\"; emailTaken.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G3",
+              "to": "G5"
+            },
+            {
+              "from": "G5",
+              "to": "G6"
+            },
+            {
+              "from": "G6",
+              "to": "G8"
+            },
+            {
+              "from": "G8",
+              "to": "G14"
+            }
+          ]
+        },
+        {
+          "id": "WB-G4",
+          "nodes": [
+            "G0",
+            "G1",
+            "G3",
+            "G5",
+            "G6",
+            "G7",
+            "G8",
+            "G14"
+          ],
+          "input": "No error; user returned with no identities.",
+          "expected": "\"An account with this email already exists.\"; emailTaken.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G6",
+              "to": "G7"
+            },
+            {
+              "from": "G7",
+              "to": "G8"
+            }
+          ]
+        },
+        {
+          "id": "WB-G5",
+          "nodes": [
+            "G0",
+            "G1",
+            "G3",
+            "G5",
+            "G6",
+            "G7",
+            "G9",
+            "G10",
+            "G14"
+          ],
+          "input": "Sign-up error code over_email_send_rate_limit.",
+          "expected": "\"We couldn't create your account. Please try again.\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G7",
+              "to": "G9"
+            },
+            {
+              "from": "G9",
+              "to": "G10"
+            },
+            {
+              "from": "G10",
+              "to": "G14"
+            }
+          ]
+        },
+        {
+          "id": "WB-G6",
+          "nodes": [
+            "G0",
+            "G1",
+            "G3",
+            "G5",
+            "G6",
+            "G7",
+            "G9",
+            "G11",
+            "G12",
+            "G14"
+          ],
+          "input": "New user; no session (confirmation on).",
+          "expected": "check-email: \"Account created. Check your email…\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G9",
+              "to": "G11"
+            },
+            {
+              "from": "G11",
+              "to": "G12"
+            },
+            {
+              "from": "G12",
+              "to": "G14"
+            }
+          ]
+        },
+        {
+          "id": "WB-G7",
+          "nodes": [
+            "G0",
+            "G1",
+            "G3",
+            "G5",
+            "G6",
+            "G7",
+            "G9",
+            "G11",
+            "G13",
+            "G14"
+          ],
+          "input": "New user with a session; next=/groups/join/abc.",
+          "expected": "Redirected to /groups/join/abc.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "G11",
+              "to": "G13"
+            },
+            {
+              "from": "G13",
+              "to": "G14"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 15,
+        "edges": 20,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 7,
+        "formula": "20 - 15 + 2 = 7",
+        "predicateCount": 6
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "register-user-cfg.dot",
+      "pngFile": "register-user-cfg.png"
+    },
+    {
+      "id": "safe-redirect-path",
+      "title": "UC1-02 safeRedirectPath",
+      "sourcePath": "app/(auth)/redirect-path.ts",
+      "sourceLines": "12-21",
+      "subject": "safeRedirectPath(value)",
+      "boundary": "One call. The two operands of each OR are separate decisions (not a string / empty; does not start with \"/\" / starts with \"//\"; login or register page / callback). hasUnsafeCharacters is one decision; its character loop is outside the graph.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "S0",
+          "shape": "oval",
+          "label": "S0 Entry"
+        },
+        {
+          "id": "S1",
+          "shape": "diamond",
+          "label": "S1 Not a string?"
+        },
+        {
+          "id": "S2",
+          "shape": "diamond",
+          "label": "S2 Empty?"
+        },
+        {
+          "id": "S3",
+          "shape": "diamond",
+          "label": "S3 Unsafe characters?"
+        },
+        {
+          "id": "S4",
+          "shape": "diamond",
+          "label": "S4 Not starting with \\\"/\\\"?"
+        },
+        {
+          "id": "S5",
+          "shape": "diamond",
+          "label": "S5 Starts with \\\"//\\\"?"
+        },
+        {
+          "id": "S6",
+          "shape": "box",
+          "label": "S6 Take the path before ? or #"
+        },
+        {
+          "id": "S7",
+          "shape": "diamond",
+          "label": "S7 Login or register page?"
+        },
+        {
+          "id": "S8",
+          "shape": "diamond",
+          "label": "S8 Callback route?"
+        },
+        {
+          "id": "S9",
+          "shape": "box",
+          "label": "S9 Return Home \\\"/\\\""
+        },
+        {
+          "id": "S10",
+          "shape": "box",
+          "label": "S10 Return the value"
+        },
+        {
+          "id": "S11",
+          "shape": "oval",
+          "label": "S11 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "S0",
+          "to": "S1",
+          "label": null
+        },
+        {
+          "from": "S1",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S1",
+          "to": "S2",
+          "label": "F"
+        },
+        {
+          "from": "S2",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S2",
+          "to": "S3",
+          "label": "F"
+        },
+        {
+          "from": "S3",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S3",
+          "to": "S4",
+          "label": "F"
+        },
+        {
+          "from": "S4",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S4",
+          "to": "S5",
+          "label": "F"
+        },
+        {
+          "from": "S5",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S5",
+          "to": "S6",
+          "label": "F"
+        },
+        {
+          "from": "S6",
+          "to": "S7",
+          "label": null
+        },
+        {
+          "from": "S7",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S7",
+          "to": "S8",
+          "label": "F"
+        },
+        {
+          "from": "S8",
+          "to": "S9",
+          "label": "T"
+        },
+        {
+          "from": "S8",
+          "to": "S10",
+          "label": "F"
+        },
+        {
+          "from": "S9",
+          "to": "S11",
+          "label": null
+        },
+        {
+          "from": "S10",
+          "to": "S11",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S7",
+        "S8"
+      ],
+      "paths": [
+        {
+          "id": "WB-S1",
+          "nodes": [
+            "S0",
+            "S1",
+            "S9",
+            "S11"
+          ],
+          "input": "Not a string (undefined).",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S0",
+              "to": "S1"
+            },
+            {
+              "from": "S1",
+              "to": "S9"
+            },
+            {
+              "from": "S9",
+              "to": "S11"
+            }
+          ]
+        },
+        {
+          "id": "WB-S2",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S9",
+            "S11"
+          ],
+          "input": "Empty string.",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S1",
+              "to": "S2"
+            },
+            {
+              "from": "S2",
+              "to": "S9"
+            }
+          ]
+        },
+        {
+          "id": "WB-S3",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "S9",
+            "S11"
+          ],
+          "input": "\"/\\t/evil.example\" (tab).",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S2",
+              "to": "S3"
+            },
+            {
+              "from": "S3",
+              "to": "S9"
+            }
+          ]
+        },
+        {
+          "id": "WB-S4",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S9",
+            "S11"
+          ],
+          "input": "\"https://evil.example\".",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S3",
+              "to": "S4"
+            },
+            {
+              "from": "S4",
+              "to": "S9"
+            }
+          ]
+        },
+        {
+          "id": "WB-S5",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S9",
+            "S11"
+          ],
+          "input": "\"//evil.example\".",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S4",
+              "to": "S5"
+            },
+            {
+              "from": "S5",
+              "to": "S9"
+            }
+          ]
+        },
+        {
+          "id": "WB-S6",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6",
+            "S7",
+            "S9",
+            "S11"
+          ],
+          "input": "\"/login?next=/wallet\".",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S5",
+              "to": "S6"
+            },
+            {
+              "from": "S6",
+              "to": "S7"
+            },
+            {
+              "from": "S7",
+              "to": "S9"
+            }
+          ]
+        },
+        {
+          "id": "WB-S7",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6",
+            "S7",
+            "S8",
+            "S9",
+            "S11"
+          ],
+          "input": "\"/auth/callback\".",
+          "expected": "\"/\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S7",
+              "to": "S8"
+            },
+            {
+              "from": "S8",
+              "to": "S9"
+            }
+          ]
+        },
+        {
+          "id": "WB-S8",
+          "nodes": [
+            "S0",
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6",
+            "S7",
+            "S8",
+            "S10",
+            "S11"
+          ],
+          "input": "\"/groups?tab=mine\".",
+          "expected": "\"/groups?tab=mine\"",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "S8",
+              "to": "S10"
+            },
+            {
+              "from": "S10",
+              "to": "S11"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 12,
+        "edges": 18,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 8,
+        "formula": "18 - 12 + 2 = 8",
+        "predicateCount": 7
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "safe-redirect-path-cfg.dot",
+      "pngFile": "safe-redirect-path-cfg.png"
+    },
+    {
+      "id": "prepare-profile-update",
+      "title": "UC1-03 prepareProfileUpdate",
+      "sourcePath": "domain/accounts/profile.ts",
+      "sourceLines": "21-37",
+      "subject": "prepareProfileUpdate(status, changes)",
+      "boundary": "One call. The two operands of each AND are separate decisions (name not empty / at most 60; has a sport / all supported; has a region / all supported). Each assertValidPreferences call is one decision (\"no blank value\"); its loop and the .every callbacks are outside the graph.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "P0",
+          "shape": "oval",
+          "label": "P0 Entry"
+        },
+        {
+          "id": "P1",
+          "shape": "diamond",
+          "label": "P1 Account active?"
+        },
+        {
+          "id": "P2",
+          "shape": "diamond",
+          "label": "P2 Trimmed name not empty?"
+        },
+        {
+          "id": "P3",
+          "shape": "diamond",
+          "label": "P3 Name at most 60 chars?"
+        },
+        {
+          "id": "P4",
+          "shape": "diamond",
+          "label": "P4 No blank sport?"
+        },
+        {
+          "id": "P5",
+          "shape": "diamond",
+          "label": "P5 No blank region?"
+        },
+        {
+          "id": "P6",
+          "shape": "diamond",
+          "label": "P6 At least one sport?"
+        },
+        {
+          "id": "P7",
+          "shape": "diamond",
+          "label": "P7 Every sport supported?"
+        },
+        {
+          "id": "P8",
+          "shape": "diamond",
+          "label": "P8 At least one region?"
+        },
+        {
+          "id": "P9",
+          "shape": "diamond",
+          "label": "P9 Every region supported?"
+        },
+        {
+          "id": "P10",
+          "shape": "box",
+          "label": "P10 Return trimmed, deduplicated changes"
+        },
+        {
+          "id": "P11",
+          "shape": "box",
+          "label": "P11 Throw INACTIVE_ACCOUNT"
+        },
+        {
+          "id": "P12",
+          "shape": "box",
+          "label": "P12 Throw INVALID_INPUT"
+        },
+        {
+          "id": "P13",
+          "shape": "oval",
+          "label": "P13 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "P0",
+          "to": "P1",
+          "label": null
+        },
+        {
+          "from": "P1",
+          "to": "P11",
+          "label": "F"
+        },
+        {
+          "from": "P1",
+          "to": "P2",
+          "label": "T"
+        },
+        {
+          "from": "P2",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P2",
+          "to": "P3",
+          "label": "T"
+        },
+        {
+          "from": "P3",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P3",
+          "to": "P4",
+          "label": "T"
+        },
+        {
+          "from": "P4",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P4",
+          "to": "P5",
+          "label": "T"
+        },
+        {
+          "from": "P5",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P5",
+          "to": "P6",
+          "label": "T"
+        },
+        {
+          "from": "P6",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P6",
+          "to": "P7",
+          "label": "T"
+        },
+        {
+          "from": "P7",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P7",
+          "to": "P8",
+          "label": "T"
+        },
+        {
+          "from": "P8",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P8",
+          "to": "P9",
+          "label": "T"
+        },
+        {
+          "from": "P9",
+          "to": "P12",
+          "label": "F"
+        },
+        {
+          "from": "P9",
+          "to": "P10",
+          "label": "T"
+        },
+        {
+          "from": "P10",
+          "to": "P13",
+          "label": null
+        },
+        {
+          "from": "P11",
+          "to": "P13",
+          "label": null
+        },
+        {
+          "from": "P12",
+          "to": "P13",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "P8",
+        "P9"
+      ],
+      "paths": [
+        {
+          "id": "WB-P1",
+          "nodes": [
+            "P0",
+            "P1",
+            "P11",
+            "P13"
+          ],
+          "input": "Inactive account.",
+          "expected": "INACTIVE_ACCOUNT.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P0",
+              "to": "P1"
+            },
+            {
+              "from": "P1",
+              "to": "P11"
+            },
+            {
+              "from": "P11",
+              "to": "P13"
+            }
+          ]
+        },
+        {
+          "id": "WB-P2",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P12",
+            "P13"
+          ],
+          "input": "Name of spaces only.",
+          "expected": "INVALID_INPUT: name must be 1-60 characters.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P1",
+              "to": "P2"
+            },
+            {
+              "from": "P2",
+              "to": "P12"
+            },
+            {
+              "from": "P12",
+              "to": "P13"
+            }
+          ]
+        },
+        {
+          "id": "WB-P3",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P12",
+            "P13"
+          ],
+          "input": "Name of 61 characters.",
+          "expected": "INVALID_INPUT: name must be 1-60 characters.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P2",
+              "to": "P3"
+            },
+            {
+              "from": "P3",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P4",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P12",
+            "P13"
+          ],
+          "input": "Blank sport \" \".",
+          "expected": "INVALID_INPUT: preferredSports contains an empty value.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P3",
+              "to": "P4"
+            },
+            {
+              "from": "P4",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P5",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P12",
+            "P13"
+          ],
+          "input": "Blank region \" \".",
+          "expected": "INVALID_INPUT: preferredRegions contains an empty value.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P4",
+              "to": "P5"
+            },
+            {
+              "from": "P5",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P6",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6",
+            "P12",
+            "P13"
+          ],
+          "input": "No sports.",
+          "expected": "INVALID_INPUT: choose a supported sport.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P5",
+              "to": "P6"
+            },
+            {
+              "from": "P6",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P7",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6",
+            "P7",
+            "P12",
+            "P13"
+          ],
+          "input": "Unsupported sport \"Golf\".",
+          "expected": "INVALID_INPUT: choose a supported sport.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P6",
+              "to": "P7"
+            },
+            {
+              "from": "P7",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P8",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6",
+            "P7",
+            "P8",
+            "P12",
+            "P13"
+          ],
+          "input": "No regions.",
+          "expected": "INVALID_INPUT: choose a supported region.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P7",
+              "to": "P8"
+            },
+            {
+              "from": "P8",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P9",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6",
+            "P7",
+            "P8",
+            "P9",
+            "P12",
+            "P13"
+          ],
+          "input": "Unsupported region \"South\".",
+          "expected": "INVALID_INPUT: choose a supported region.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P8",
+              "to": "P9"
+            },
+            {
+              "from": "P9",
+              "to": "P12"
+            }
+          ]
+        },
+        {
+          "id": "WB-P10",
+          "nodes": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6",
+            "P7",
+            "P8",
+            "P9",
+            "P10",
+            "P13"
+          ],
+          "input": "\"  Alex Tan  \"; Tennis, Tennis, Futsal; West.",
+          "expected": "Saved as \"Alex Tan\"; Tennis, Futsal; West.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "P9",
+              "to": "P10"
+            },
+            {
+              "from": "P10",
+              "to": "P13"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 14,
+        "edges": 22,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 10,
+        "formula": "22 - 14 + 2 = 10",
+        "predicateCount": 9
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "prepare-profile-update-cfg.dot",
+      "pngFile": "prepare-profile-update-cfg.png"
+    },
+    {
+      "id": "delete-account",
+      "title": "UC1-04 deleteAccount use case",
+      "sourcePath": "use-cases/accounts/delete-account.ts",
+      "sourceLines": "66-95",
+      "subject": "deleteAccount(ports, command)",
+      "boundary": "One call with valid ports. canDeactivate is one predicate per call (its six obligation checks are covered by the black-box table). An exception anywhere in the try block follows the same catch edges as the login-removal failure modelled at A6.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "A0",
+          "shape": "oval",
+          "label": "A0 Entry"
+        },
+        {
+          "id": "A1",
+          "shape": "diamond",
+          "label": "A1 First check clear?"
+        },
+        {
+          "id": "A2",
+          "shape": "box",
+          "label": "A2 Return BLOCKED nothing changed"
+        },
+        {
+          "id": "A3",
+          "shape": "box",
+          "label": "A3 Deactivate profile (snapshot)"
+        },
+        {
+          "id": "A4",
+          "shape": "diamond",
+          "label": "A4 Re-check clear?"
+        },
+        {
+          "id": "A5",
+          "shape": "box",
+          "label": "A5 Restore profile Return BLOCKED"
+        },
+        {
+          "id": "A6",
+          "shape": "diamond",
+          "label": "A6 Delete login succeeds?"
+        },
+        {
+          "id": "A7",
+          "shape": "box",
+          "label": "A7 Return DELETED"
+        },
+        {
+          "id": "A8",
+          "shape": "diamond",
+          "label": "A8 Restore succeeds?"
+        },
+        {
+          "id": "A9",
+          "shape": "box",
+          "label": "A9 Rethrow original error"
+        },
+        {
+          "id": "A10",
+          "shape": "box",
+          "label": "A10 Throw AggregateError"
+        },
+        {
+          "id": "A11",
+          "shape": "oval",
+          "label": "A11 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "A0",
+          "to": "A1",
+          "label": null
+        },
+        {
+          "from": "A1",
+          "to": "A2",
+          "label": "F"
+        },
+        {
+          "from": "A1",
+          "to": "A3",
+          "label": "T"
+        },
+        {
+          "from": "A2",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A3",
+          "to": "A4",
+          "label": null
+        },
+        {
+          "from": "A4",
+          "to": "A5",
+          "label": "F"
+        },
+        {
+          "from": "A4",
+          "to": "A6",
+          "label": "T"
+        },
+        {
+          "from": "A5",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A6",
+          "to": "A7",
+          "label": "T"
+        },
+        {
+          "from": "A6",
+          "to": "A8",
+          "label": "F"
+        },
+        {
+          "from": "A7",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A8",
+          "to": "A9",
+          "label": "T"
+        },
+        {
+          "from": "A8",
+          "to": "A10",
+          "label": "F"
+        },
+        {
+          "from": "A9",
+          "to": "A11",
+          "label": null
+        },
+        {
+          "from": "A10",
+          "to": "A11",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "A1",
+        "A4",
+        "A6",
+        "A8"
+      ],
+      "paths": [
+        {
+          "id": "WB-D1",
+          "nodes": [
+            "A0",
+            "A1",
+            "A2",
+            "A11"
+          ],
+          "input": "First check: 1 active commitment.",
+          "expected": "BLOCKED; profile unchanged; only the check runs.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A0",
+              "to": "A1"
+            },
+            {
+              "from": "A1",
+              "to": "A2"
+            },
+            {
+              "from": "A2",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D2",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A6",
+            "A7",
+            "A11"
+          ],
+          "input": "Nothing outstanding at either check.",
+          "expected": "DELETED; profile INACTIVE; login removed.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A1",
+              "to": "A3"
+            },
+            {
+              "from": "A3",
+              "to": "A4"
+            },
+            {
+              "from": "A4",
+              "to": "A6"
+            },
+            {
+              "from": "A6",
+              "to": "A7"
+            },
+            {
+              "from": "A7",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D3",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A5",
+            "A11"
+          ],
+          "input": "Clear at first check; 100c available at re-check.",
+          "expected": "Profile restored; BLOCKED with the re-check standing.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A4",
+              "to": "A5"
+            },
+            {
+              "from": "A5",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D4",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A6",
+            "A8",
+            "A9",
+            "A11"
+          ],
+          "input": "Login removal throws; restore succeeds.",
+          "expected": "Profile restored ACTIVE; original error rethrown.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A6",
+              "to": "A8"
+            },
+            {
+              "from": "A8",
+              "to": "A9"
+            },
+            {
+              "from": "A9",
+              "to": "A11"
+            }
+          ]
+        },
+        {
+          "id": "WB-D5",
+          "nodes": [
+            "A0",
+            "A1",
+            "A3",
+            "A4",
+            "A6",
+            "A8",
+            "A10",
+            "A11"
+          ],
+          "input": "Login removal throws; restore also throws.",
+          "expected": "AggregateError with both errors; profile left INACTIVE.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "A8",
+              "to": "A10"
+            },
+            {
+              "from": "A10",
+              "to": "A11"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 12,
+        "edges": 15,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 5,
+        "formula": "15 - 12 + 2 = 5",
+        "predicateCount": 4
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "delete-account-cfg.dot",
+      "pngFile": "delete-account-cfg.png"
+    },
+    {
+      "id": "group-join",
+      "title": "UC1-06 join a group through its invitation link",
+      "sourcePath": "use-cases/groups/manage-group.ts; domain/groups/regular-group.ts",
+      "sourceLines": "manage-group.ts 90-104; regular-group.ts 74-100",
+      "subject": "ManageGroup.join(command) with RegularGroup.join",
+      "boundary": "One call with a valid user ID (validateId is excluded). The link check \"active and token matches\" is one compound predicate: the group is found by its token, so a mismatched token cannot reach it through this entry point.",
+      "rankdir": "LR",
+      "nodes": [
+        {
+          "id": "J0",
+          "shape": "oval",
+          "label": "J0 Entry"
+        },
+        {
+          "id": "J1",
+          "shape": "diamond",
+          "label": "J1 Group found by token?"
+        },
+        {
+          "id": "J2",
+          "shape": "box",
+          "label": "J2 Throw INVALID_INVITATION"
+        },
+        {
+          "id": "J3",
+          "shape": "diamond",
+          "label": "J3 Group ACTIVE?"
+        },
+        {
+          "id": "J4",
+          "shape": "box",
+          "label": "J4 Throw INVALID_STATE"
+        },
+        {
+          "id": "J5",
+          "shape": "diamond",
+          "label": "J5 Link active and token matches?"
+        },
+        {
+          "id": "J6",
+          "shape": "box",
+          "label": "J6 Throw INVALID_INVITATION"
+        },
+        {
+          "id": "J7",
+          "shape": "diamond",
+          "label": "J7 Already a member?"
+        },
+        {
+          "id": "J8",
+          "shape": "box",
+          "label": "J8 Return ALREADY_MEMBER no save"
+        },
+        {
+          "id": "J9",
+          "shape": "box",
+          "label": "J9 Add member, save Return JOINED"
+        },
+        {
+          "id": "J10",
+          "shape": "oval",
+          "label": "J10 Exit"
+        }
+      ],
+      "edges": [
+        {
+          "from": "J0",
+          "to": "J1",
+          "label": null
+        },
+        {
+          "from": "J1",
+          "to": "J2",
+          "label": "F"
+        },
+        {
+          "from": "J1",
+          "to": "J3",
+          "label": "T"
+        },
+        {
+          "from": "J2",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J3",
+          "to": "J4",
+          "label": "F"
+        },
+        {
+          "from": "J3",
+          "to": "J5",
+          "label": "T"
+        },
+        {
+          "from": "J4",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J5",
+          "to": "J6",
+          "label": "F"
+        },
+        {
+          "from": "J5",
+          "to": "J7",
+          "label": "T"
+        },
+        {
+          "from": "J6",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J7",
+          "to": "J8",
+          "label": "T"
+        },
+        {
+          "from": "J7",
+          "to": "J9",
+          "label": "F"
+        },
+        {
+          "from": "J8",
+          "to": "J10",
+          "label": null
+        },
+        {
+          "from": "J9",
+          "to": "J10",
+          "label": null
+        }
+      ],
+      "predicates": [
+        "J1",
+        "J3",
+        "J5",
+        "J7"
+      ],
+      "paths": [
+        {
+          "id": "WB-J1",
+          "nodes": [
+            "J0",
+            "J1",
+            "J2",
+            "J10"
+          ],
+          "input": "Token that matches no group.",
+          "expected": "INVALID_INVITATION; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J0",
+              "to": "J1"
+            },
+            {
+              "from": "J1",
+              "to": "J2"
+            },
+            {
+              "from": "J2",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J2",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J4",
+            "J10"
+          ],
+          "input": "Old link of an archived group.",
+          "expected": "INVALID_STATE; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J1",
+              "to": "J3"
+            },
+            {
+              "from": "J3",
+              "to": "J4"
+            },
+            {
+              "from": "J4",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J3",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J5",
+            "J6",
+            "J10"
+          ],
+          "input": "Active group whose link was turned off.",
+          "expected": "INVALID_INVITATION; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J3",
+              "to": "J5"
+            },
+            {
+              "from": "J5",
+              "to": "J6"
+            },
+            {
+              "from": "J6",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J4",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J5",
+            "J7",
+            "J8",
+            "J10"
+          ],
+          "input": "The owner opens the valid link.",
+          "expected": "ALREADY_MEMBER; nothing saved.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J5",
+              "to": "J7"
+            },
+            {
+              "from": "J7",
+              "to": "J8"
+            },
+            {
+              "from": "J8",
+              "to": "J10"
+            }
+          ]
+        },
+        {
+          "id": "WB-J5",
+          "nodes": [
+            "J0",
+            "J1",
+            "J3",
+            "J5",
+            "J7",
+            "J9",
+            "J10"
+          ],
+          "input": "A new user opens the valid link.",
+          "expected": "JOINED; saved once; two members.",
+          "pathStatus": "Source-derived predicted path; not an instrumented execution trace",
+          "newEdges": [
+            {
+              "from": "J7",
+              "to": "J9"
+            },
+            {
+              "from": "J9",
+              "to": "J10"
+            }
+          ]
+        }
+      ],
+      "counts": {
+        "nodes": 11,
+        "edges": 14,
+        "connectedComponents": 1,
+        "cyclomaticComplexity": 5,
+        "formula": "14 - 11 + 2 = 5",
+        "predicateCount": 4
+      },
+      "audit": {
+        "formulaMatchesPredicates": true,
+        "everyPathAddsAnEdge": true,
+        "pathsCoverEveryEdge": true
+      },
+      "dotFile": "group-join-cfg.dot",
+      "pngFile": "group-join-cfg.png"
+    }
+  ]
+}

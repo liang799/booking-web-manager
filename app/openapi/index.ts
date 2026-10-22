@@ -1,4 +1,5 @@
 import { registerCommitmentApi } from "@/app/commit/openapi";
+import { registerPlayerSessionsApi } from "@/app/commit/player-sessions-openapi";
 import { registerWithdrawalPreviewApi } from "@/app/commit/withdrawal-preview-openapi";
 import { registerDiscoveryApi } from "@/app/discover/openapi";
 import { registerPayoutApi } from "@/app/payouts/openapi";
@@ -17,6 +18,7 @@ export const openApiDocument = createOpenApiDocument([
   registerDiscoveryApi,
   registerCommitmentApi,
   registerWithdrawalPreviewApi,
+  registerPlayerSessionsApi,
   registerSessionManagementApi,
   registerSessionCancellationApi,
   registerParticipantRemovalApi,
