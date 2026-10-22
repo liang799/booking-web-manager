@@ -1,0 +1,632 @@
+{
+  "generatedAt": "2026-10-20T12:18:56.857Z",
+  "observations": [
+    {
+      "id": "P01",
+      "name": "nominal profile",
+      "technique": "valid EP / shared nominal",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P02",
+      "name": "name of one character",
+      "technique": "BVA name min",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "A",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "A",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "A",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P03",
+      "name": "empty name",
+      "technique": "BVA name min-1",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P04",
+      "name": "name of spaces only",
+      "technique": "invalid EP / trimmed to empty",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "   ",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P05",
+      "name": "name of 59 characters",
+      "technique": "BVA name max-1",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P06",
+      "name": "name of 60 characters",
+      "technique": "BVA name max",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P07",
+      "name": "name of 61 characters",
+      "technique": "BVA name max+1",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P08",
+      "name": "60 characters inside surrounding spaces",
+      "technique": "valid EP / trimmed to max",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA  ",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P09",
+      "name": "no sports",
+      "technique": "BVA sports min-1",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P10",
+      "name": "every supported sport",
+      "technique": "BVA sports max",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton",
+          "Basketball",
+          "Football",
+          "Futsal",
+          "Tennis",
+          "Volleyball"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Badminton",
+            "Basketball",
+            "Football",
+            "Futsal",
+            "Tennis",
+            "Volleyball"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Badminton",
+            "Basketball",
+            "Football",
+            "Futsal",
+            "Tennis",
+            "Volleyball"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P11",
+      "name": "unsupported sport",
+      "technique": "invalid EP / not in list",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Golf"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P12",
+      "name": "sport in the wrong case",
+      "technique": "invalid EP / exact match",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "tennis"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P13",
+      "name": "repeated sport",
+      "technique": "valid EP / duplicates removed",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Tennis",
+          "Tennis"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Tennis"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Tennis"
+          ],
+          "preferredRegions": [
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P14",
+      "name": "no regions",
+      "technique": "BVA regions min-1",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": []
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P15",
+      "name": "every supported region",
+      "technique": "BVA regions max",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "Central",
+          "East",
+          "North",
+          "North-East",
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "Central",
+            "East",
+            "North",
+            "North-East",
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      },
+      "actual": {
+        "outcome": "SAVED",
+        "saved": {
+          "displayName": "Marcus Lim",
+          "preferredSports": [
+            "Badminton"
+          ],
+          "preferredRegions": [
+            "Central",
+            "East",
+            "North",
+            "North-East",
+            "West"
+          ]
+        },
+        "saveCalls": 1
+      }
+    },
+    {
+      "id": "P16",
+      "name": "unsupported region",
+      "technique": "invalid EP / not in list",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "South"
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P17",
+      "name": "blank region",
+      "technique": "invalid EP / blank value",
+      "input": {
+        "account": "ACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          " "
+        ]
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P18",
+      "name": "inactive account",
+      "technique": "invalid account EP",
+      "input": {
+        "account": "INACTIVE",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "INACTIVE_ACCOUNT",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "INACTIVE_ACCOUNT",
+        "saved": null,
+        "saveCalls": 0
+      }
+    },
+    {
+      "id": "P19",
+      "name": "profile not found",
+      "technique": "invalid account EP",
+      "input": {
+        "account": "missing",
+        "displayName": "Marcus Lim",
+        "preferredSports": [
+          "Badminton"
+        ],
+        "preferredRegions": [
+          "West"
+        ]
+      },
+      "expected": {
+        "outcome": "NOT_FOUND",
+        "saved": null,
+        "saveCalls": 0
+      },
+      "actual": {
+        "outcome": "NOT_FOUND",
+        "saved": null,
+        "saveCalls": 0
+      }
+    }
+  ]
+}

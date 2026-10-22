@@ -1,0 +1,30 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  J0 [shape=oval, label="J0\nEntry"];
+  J1 [shape=diamond, label="J1\nGroup found\nby token?"];
+  J2 [shape=box, label="J2\nThrow\nINVALID_INVITATION"];
+  J3 [shape=diamond, label="J3\nGroup\nACTIVE?"];
+  J4 [shape=box, label="J4\nThrow\nINVALID_STATE"];
+  J5 [shape=diamond, label="J5\nLink active and\ntoken matches?"];
+  J6 [shape=box, label="J6\nThrow\nINVALID_INVITATION"];
+  J7 [shape=diamond, label="J7\nAlready a\nmember?"];
+  J8 [shape=box, label="J8\nReturn ALREADY_MEMBER\nno save"];
+  J9 [shape=box, label="J9\nAdd member, save\nReturn JOINED"];
+  J10 [shape=oval, label="J10\nExit"];
+  J0 -> J1;
+  J1 -> J2 [label="F"];
+  J1 -> J3 [label="T"];
+  J2 -> J10;
+  J3 -> J4 [label="F"];
+  J3 -> J5 [label="T"];
+  J4 -> J10;
+  J5 -> J6 [label="F"];
+  J5 -> J7 [label="T"];
+  J6 -> J10;
+  J7 -> J8 [label="T"];
+  J7 -> J9 [label="F"];
+  J8 -> J10;
+  J9 -> J10;
+}
