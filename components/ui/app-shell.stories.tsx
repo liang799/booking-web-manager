@@ -264,7 +264,9 @@ export const PhoneWallet: Story = {
   parameters: { nextjs: { navigation: { pathname: "/wallet" } } },
   args: { children: <div className="px-6 pb-6">Wallet page content</div> },
   play: async ({ canvas }) => {
-    await expectMobileNavigation(canvas.getByRole("navigation", { name: "Main" }), "Wallet");
+    const nav = canvas.getByRole("navigation", { name: "Main" });
+    await expectMobileNavigation(nav, "Wallet");
+    await expect(getComputedStyle(nav).padding).toBe("7px");
   },
 };
 
