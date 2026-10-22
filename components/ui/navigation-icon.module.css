@@ -1,0 +1,85 @@
+.icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  pointer-events: none;
+}
+
+.glyph {
+  overflow: visible;
+  transform-origin: center;
+}
+
+/* Route-derived selection also plays on mount: each signed-in area owns its shell. */
+@media (prefers-reduced-motion: no-preference) {
+  .icon[data-active="true"] .glyph {
+    animation-duration: 520ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-iteration-count: 1;
+  }
+
+  .icon[data-active="true"] .home {
+    animation-name: home-arrive;
+    transform-origin: center bottom;
+  }
+
+  .icon[data-active="true"] .search {
+    animation-name: search-arrive;
+  }
+
+  .icon[data-active="true"] .sessions {
+    animation-name: calendar-arrive;
+    transform-origin: center 25%;
+  }
+
+  .icon[data-active="true"] .wallet {
+    animation-name: wallet-arrive;
+  }
+
+  .icon[data-active="true"] .groups {
+    animation-name: groups-arrive;
+  }
+
+  .icon[data-active="true"] .settings {
+    animation-name: settings-arrive;
+  }
+}
+
+@keyframes home-arrive {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(1px) scale(1.08, 0.9); }
+  55% { transform: translateY(-3px) scale(0.96, 1.08); }
+  78% { transform: translateY(0) scale(1.03, 0.98); }
+}
+
+@keyframes search-arrive {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  30% { transform: translate(-2px, -1px) rotate(-14deg); }
+  65% { transform: translate(1px, 0) rotate(7deg); }
+}
+
+@keyframes calendar-arrive {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-12deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-3deg); }
+}
+
+@keyframes wallet-arrive {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  30% { transform: translateY(-2px) rotate(-10deg); }
+  65% { transform: translateY(0) rotate(5deg); }
+}
+
+@keyframes groups-arrive {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-2px) scale(1.12); }
+  70% { transform: translateY(0) scale(0.97); }
+}
+
+@keyframes settings-arrive {
+  0% { transform: rotate(-60deg); }
+  65% { transform: rotate(8deg); }
+  100% { transform: rotate(0); }
+}

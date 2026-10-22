@@ -28,6 +28,18 @@ component, ask the owner rather than editing it directly.
   readers announce them.
 - **Colours come from the tokens** in `app/globals.css` (for example `bg-primary`, `text-destructive`)
   and meet WCAG AA contrast, so the look is consistent and text stays readable.
+- **UI icons use Lucide Icons exclusively**, in design mockups and code (`lucide-react`).
+  Follow the iconography standard in `components/ui/README.md`; reuse `NavigationIcon`
+  for app navigation so desktop and mobile share glyphs, size, stroke and motion.
+
+## Icon previews
+
+Open [Navigation icons](?path=/story/design-system-navigation-icons--selection) to try
+selection animations at the actual navigation size, or
+[AppShell](?path=/story/design-system-appshell--desktop) to inspect the desktop and
+mobile layouts. The icon preview buttons demonstrate selection without navigating
+between application pages. Use the theme toolbar to compare light and dark
+appearances; motion follows the device's reduced-motion preference.
 
 ## Running the tests
 

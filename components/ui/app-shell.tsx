@@ -4,10 +4,12 @@ import { LogOut, Plus, Search, Settings, UserRound, UsersRound } from "lucide-re
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookingLogo } from "@/components/ui/booking-logo";
 import { initials } from "@/components/ui/initials";
+import { NavigationIcon } from "@/components/ui/navigation-icon";
+import { MobileNavigation } from "@/components/ui/mobile-navigation";
 import { toFivePoint } from "@/components/ui/reliability-badge";
 import {
   Sheet,
@@ -21,19 +23,12 @@ import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
 import styles from "./app-shell.module.css";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home", image: "home" },
-  { href: "/discover", label: "Discover", image: "search" },
-  { href: "/sessions", label: "My sessions", image: "sessions" },
-  { href: "/wallet", label: "Wallet", image: "wallet" },
-  { href: "/groups", label: "Groups", image: null },
-  { href: "/profile", label: "Settings", image: "settings" },
-] as const;
-
-const MOBILE_NAV_LINKS = [
-  { href: "/", label: "Home", image: "home" },
-  { href: "/sessions", label: "Sessions", image: "sessions" },
-  { href: "/wallet", label: "Wallet", image: "wallet" },
-  { href: "/profile", label: "Settings", image: "settings" },
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/discover", label: "Discover", icon: "search" },
+  { href: "/sessions", label: "My sessions", icon: "sessions" },
+  { href: "/wallet", label: "Wallet", icon: "wallet" },
+  { href: "/groups", label: "Groups", icon: "groups" },
+  { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
 export interface ShellUser {
@@ -163,10 +158,6 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
     ? discoveryReturnTo(origins.length === 1 ? origins[0] : undefined)
     : `${pathname}${query ? `?${query}` : ""}`;
   const searchHref = discoveryHref("", searchOrigin);
-  const activeMobileIndex = MOBILE_NAV_LINKS.findIndex(({ href }) =>
-    pathname === href || pathname.startsWith(`${href}/`)
-    || (href === "/sessions" && (pathname === "/groups" || pathname.startsWith("/groups/"))),
-  );
 
   return (
     <div className={cn("flex min-h-screen bg-card md:bg-background", walletLayout && styles.wallet)}>
@@ -225,8 +216,8 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
               </Link>
             ) : (
             <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="icon" className="h-11 w-11" aria-label="Search sessions">
-              <Link href={searchHref}><Search className="h-5 w-5" aria-hidden="true" /></Link>
+            <Button asChild variant="ghost" size="icon" className="h-11 w-11 [&_svg]:size-5" aria-label="Search sessions">
+              <Link href={searchHref}><NavigationIcon name="search" active={pathname === "/discover"} /></Link>
             </Button>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
