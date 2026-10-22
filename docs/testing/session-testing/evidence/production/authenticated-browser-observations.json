@@ -1,0 +1,249 @@
+{
+  "target": "https://booking-web-manager.vercel.app",
+  "browser": "Codex in-app browser",
+  "account": {
+    "label": "Neoh Session QA",
+    "created_at_utc": "2026-10-20T09:04:24.543Z",
+    "status": "created and signed in",
+    "credentials": "Excluded from evidence"
+  },
+  "fixture": {
+    "venue": "QA Session Test 2026-10-20 Neoh",
+    "sport": "Badminton",
+    "region": "West",
+    "start": "2026-11-01T10:00:00Z",
+    "end": "2026-11-01T12:00:00Z",
+    "costCents": 1001,
+    "totalSlots": 3,
+    "minimumHeadcount": 2,
+    "visibility": "PRIVATE",
+    "minimumReliability": "none",
+    "chosenPriceCents": 333
+  },
+  "scope": "23 successful browser observations and one fixture-availability blocker; no HTTP response status was captured for authenticated creation. Client rejections do not prove server validation for those inputs.",
+  "observations": [
+    {
+      "id": "AUTH01",
+      "case": "D01",
+      "observed_at_utc": "2026-10-20T09:05:31.922Z",
+      "expected": "Signed-in Discover renders the same empty result as the anonymous run",
+      "actual": "Signed-in Find Your Next Game rendered All upcoming public sessions and No sessions found",
+      "result": "PASS",
+      "evidence": "authenticated-auth01.txt"
+    },
+    {
+      "id": "AUTH02",
+      "case": "Supplemental hosted-list access",
+      "observed_at_utc": "2026-10-20T09:06:04.001Z",
+      "expected": "New account has no hosted sessions",
+      "actual": "Sessions you host rendered No upcoming sessions to manage",
+      "result": "PASS",
+      "evidence": "authenticated-auth02.txt"
+    },
+    {
+      "id": "AUTH03",
+      "case": "C06 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:07:16.204Z",
+      "expected": "Zero duration rejected",
+      "actual": "Save schedule displayed Enter a valid duration of at least 1 minute and kept dialog open",
+      "result": "PASS",
+      "evidence": "authenticated-auth03.txt"
+    },
+    {
+      "id": "AUTH04",
+      "case": "C06 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:07:21.352Z",
+      "expected": "Negative duration rejected",
+      "actual": "-1 minute retained dialog with Enter a valid duration of at least 1 minute",
+      "result": "PASS",
+      "evidence": "authenticated-auth04.txt"
+    },
+    {
+      "id": "AUTH05",
+      "case": "C06 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:07:28.658Z",
+      "expected": "Fractional-minute duration rejected",
+      "actual": "1.5 minutes retained dialog with Enter a valid duration of at least 1 minute",
+      "result": "PASS",
+      "evidence": "authenticated-auth05.txt"
+    },
+    {
+      "id": "AUTH06",
+      "case": "C06 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:07:37.579Z",
+      "expected": "Past start rejected",
+      "actual": "19 Oct 2026 start retained schedule dialog with Choose a start time in the future",
+      "result": "PASS",
+      "evidence": "authenticated-auth06.txt"
+    },
+    {
+      "id": "AUTH07",
+      "case": "C07 blank venue UI",
+      "observed_at_utc": "2026-10-20T09:07:57.536Z",
+      "expected": "Whitespace-only venue rejected",
+      "actual": "Next remained on step one and displayed Enter or select a venue",
+      "result": "PASS",
+      "evidence": "authenticated-auth07.txt"
+    },
+    {
+      "id": "AUTH08",
+      "case": "C02/C03 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:08:20.601Z",
+      "expected": "Minimum slots2; headcount stays2 and cannot exceed capacity",
+      "actual": "At capacity2, slot decrease disabled; headcount2 with both headcount controls disabled",
+      "result": "PASS",
+      "evidence": "authenticated-auth08.txt"
+    },
+    {
+      "id": "AUTH09",
+      "case": "C02 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:08:26.527Z",
+      "expected": "Capacity29 remains selectable with increment enabled",
+      "actual": "Capacity29 displayed and increase button enabled",
+      "result": "PASS",
+      "evidence": "authenticated-auth09.txt"
+    },
+    {
+      "id": "AUTH10",
+      "case": "C02 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:08:33.597Z",
+      "expected": "Capacity30 disables increment",
+      "actual": "Capacity30 displayed and increase disabled, preventing31 through the stepper",
+      "result": "PASS",
+      "evidence": "authenticated-auth10.txt"
+    },
+    {
+      "id": "AUTH11",
+      "case": "C03 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:09:09.927Z",
+      "expected": "Headcount cannot exceed capacity3",
+      "actual": "Headcount3 displayed with increase disabled; lower bound2 previously disabled decrease",
+      "result": "PASS",
+      "evidence": "authenticated-auth11.txt"
+    },
+    {
+      "id": "AUTH12",
+      "case": "C05 client cost partition",
+      "observed_at_utc": "2026-10-20T09:09:32.201Z",
+      "expected": "Negative booking cost rejected",
+      "actual": "-0.01 SGD rejected with Enter a valid booking cost, with at least one cent per slot",
+      "result": "PASS",
+      "evidence": "authenticated-auth12.txt"
+    },
+    {
+      "id": "AUTH13",
+      "case": "C05 client cost partition",
+      "observed_at_utc": "2026-10-20T09:09:38.017Z",
+      "expected": "Zero booking cost rejected",
+      "actual": "0.00 SGD rejected with at-least-one-cent-per-slot error",
+      "result": "PASS",
+      "evidence": "authenticated-auth13.txt"
+    },
+    {
+      "id": "AUTH14",
+      "case": "C05 client cost partition",
+      "observed_at_utc": "2026-10-20T09:09:44.072Z",
+      "expected": "One-cent total is insufficient for three slots",
+      "actual": "0.01 SGD rejected with at-least-one-cent-per-slot error",
+      "result": "PASS",
+      "evidence": "authenticated-auth14.txt"
+    },
+    {
+      "id": "AUTH15",
+      "case": "C05 client cost partition",
+      "observed_at_utc": "2026-10-20T09:09:59.713Z",
+      "expected": "Two-cent total is insufficient for three slots",
+      "actual": "0.02 SGD rejected with at-least-one-cent-per-slot error",
+      "result": "PASS",
+      "evidence": "authenticated-auth15.txt"
+    },
+    {
+      "id": "AUTH16",
+      "case": "C05 supplemental UI",
+      "observed_at_utc": "2026-10-20T09:10:08.801Z",
+      "expected": "Fractional-cent booking cost rejected",
+      "actual": "10.011 SGD rejected with booking-cost validation error",
+      "result": "PASS",
+      "evidence": "authenticated-auth16.txt"
+    },
+    {
+      "id": "AUTH17",
+      "case": "C04 pricing display",
+      "observed_at_utc": "2026-10-20T09:10:20.456Z",
+      "expected": "1001c cost/3 slots yields333c suggested; range167–666c",
+      "actual": "UI showed S$3.33 suggested price, S$1.67–S$6.66 range and S$9.99 full-capacity revenue",
+      "result": "PASS",
+      "evidence": "authenticated-auth17.txt"
+    },
+    {
+      "id": "AUTH18",
+      "case": "C04 client price partition",
+      "observed_at_utc": "2026-10-20T09:10:25.855Z",
+      "expected": "166c rejected below167c minimum",
+      "actual": "Done retained pricing step with Choose a price within the displayed range",
+      "result": "PASS",
+      "evidence": "authenticated-auth18.txt"
+    },
+    {
+      "id": "AUTH19",
+      "case": "C04 client price partition",
+      "observed_at_utc": "2026-10-20T09:10:32.732Z",
+      "expected": "667c rejected above666c maximum",
+      "actual": "Done retained pricing step with displayed-range error",
+      "result": "PASS",
+      "evidence": "authenticated-auth19.txt"
+    },
+    {
+      "id": "AUTH20",
+      "case": "C04 client price partition",
+      "observed_at_utc": "2026-10-20T09:10:38.959Z",
+      "expected": "333.5 cents rejected as fractional cents",
+      "actual": "3.335 SGD retained pricing step with displayed-range error",
+      "result": "PASS",
+      "evidence": "authenticated-auth20.txt"
+    },
+    {
+      "id": "AUTH21",
+      "case": "C07 incomplete payout",
+      "observed_at_utc": "2026-10-20T09:11:11.560Z",
+      "expected": "Otherwise-valid draft rejected for incomplete payout with editable fields restored",
+      "actual": "UI displayed Complete your payout account setup before creating a session; price3.33 and Back/Done remained enabled",
+      "result": "PASS",
+      "evidence": "authenticated-auth21.txt"
+    },
+    {
+      "id": "AUTH22",
+      "case": "C07 no saved session",
+      "observed_at_utc": "2026-10-20T09:11:50.823Z",
+      "expected": "Rejected draft leaves no hosted session after reload",
+      "actual": "Fresh reload still showed No upcoming sessions to manage",
+      "result": "PASS",
+      "evidence": "authenticated-auth22.txt"
+    },
+    {
+      "id": "AUTH23",
+      "case": "Supplemental fixture readiness",
+      "observed_at_utc": "2026-10-20T09:12:04.195Z",
+      "expected": "New wallet starts with zero available and held funds",
+      "actual": "Wallet showed S$0.00 available, S$0.00 held, no transactions and Topping up with PayNow is coming soon",
+      "result": "PASS",
+      "evidence": "authenticated-auth23.txt"
+    },
+    {
+      "id": "AUTH24",
+      "case": "Production fixture blocker",
+      "observed_at_utc": "2026-10-20T09:12:58.866Z",
+      "expected": "Inspect whether normal payout onboarding is available",
+      "actual": "Payouts are not available yet message persisted after Try again; no onboarding controls offered",
+      "result": "BLOCKED",
+      "evidence": "authenticated-auth24.txt"
+    }
+  ],
+  "cleanup": "No session created. Hosted list remained empty after reload. Test account retained signed in.",
+  "limitations": [
+    "Production payout UI unavailable after retry; valid session creation blocked",
+    "Wallet available/held balance zero; topup UI coming soon; funded removal/refund fixtures unavailable",
+    "No visibility, participant removal or cancellation request executed",
+    "No private account credentials, tokens or external payment data included"
+  ]
+}

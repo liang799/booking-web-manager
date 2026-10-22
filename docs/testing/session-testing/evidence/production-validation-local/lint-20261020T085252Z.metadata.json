@@ -1,0 +1,13 @@
+{
+  "command": [
+    "rtk",
+    "proxy",
+    "npm",
+    "run",
+    "lint"
+  ],
+  "startedAt": "2026-10-20T08:52:52.606874+00:00",
+  "finishedAt": "2026-10-20T08:52:56.349002+00:00",
+  "exitCode": 0,
+  "logPath": "docs/testing/session-testing/evidence/production-validation-local/lint-20261020T085252Z.log"
+}

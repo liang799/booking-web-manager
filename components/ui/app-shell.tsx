@@ -38,8 +38,13 @@ const MOBILE_NAV_LINKS = [
 
 export interface ShellUser {
   readonly name: string;
-  
-  readonly reliabilityScore: number;
+  /** 0–100, or null when the score couldn't be read (shown as unavailable, not as a default). */
+  readonly reliabilityScore: number | null;
+}
+
+/** "Reliability 4.8", or "Reliability unavailable" when the score couldn't be read. */
+function reliabilityText(score: number | null): string {
+  return score === null ? "Reliability unavailable" : `Reliability ${toFivePoint(score)}`;
 }
 
 interface AppShellProps {
@@ -124,7 +129,7 @@ function SidebarContents({
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{user.name}</p>
               <p className="text-xs text-muted-foreground">
-                Reliability {toFivePoint(user.reliabilityScore)}
+                {reliabilityText(user.reliabilityScore)}
               </p>
             </div>
           </div>
@@ -242,7 +247,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
                   <div className="min-w-0">
                     <p className="break-words text-sm font-medium">{user.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Reliability {toFivePoint(user.reliabilityScore)}
+                      {reliabilityText(user.reliabilityScore)}
                     </p>
                   </div>
                 </div>

@@ -1,0 +1,20 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", size="8.8,3.45", dpi=220, fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  C0 [shape=oval, label="C0\nEntry"];
+  C1 [shape=diamond, label="C1\nAccount\ninactive?"];
+  C2 [shape=box, label="C2\nReturn\nINACTIVE_ACCOUNT"];
+  C3 [shape=diamond, label="C3\nEmail\nmissing?"];
+  C4 [shape=box, label="C4\nReturn\nEMAIL_REQUIRED"];
+  C5 [shape=box, label="C5\nReturn undefined\nAccount eligible"];
+  C6 [shape=oval, label="C6\nExit"];
+  C0 -> C1;
+  C1 -> C2 [label="T"];
+  C1 -> C3 [label="F"];
+  C3 -> C4 [label="T"];
+  C3 -> C5 [label="F"];
+  C2 -> C6;
+  C4 -> C6;
+  C5 -> C6;
+}

@@ -1,0 +1,19 @@
+{
+  "started_at_utc": "2026-10-20T08:51:25.560877+00:00",
+  "finished_at_utc": "2026-10-20T08:51:27.752534+00:00",
+  "scope": "Local Vitest SQL-construction tests only; recording executor, no PostgreSQL or production requests",
+  "command": [
+    "rtk",
+    "npx",
+    "vitest",
+    "run",
+    "--project",
+    "unit",
+    "tests/lab4/discovery-basis-path.test.ts",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/Users/tianpok/.codex/worktrees/session-testing-report/booking-web-manager/docs/testing/session-testing/evidence/production-validation-local/discovery-basis-vitest.json"
+  ],
+  "cwd": "/Users/tianpok/.codex/worktrees/session-testing-report/booking-web-manager",
+  "exit_code": 0
+}
