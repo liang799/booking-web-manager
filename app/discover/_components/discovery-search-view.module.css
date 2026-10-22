@@ -1,0 +1,73 @@
+/*
+ * Desktop Discover follows the reviewed mock-up: "Upcoming sessions" as the page heading, the
+ * search bar directly beneath it, sport chips, then two-column photo cards. Below 768px the
+ * mobile search composition (court hero and back arrow) keeps its own styling, so every rule
+ * here is scoped to the desktop media query.
+ * Selectors are nested under `.view` so they outrank the single-class mobile utilities.
+ */
+
+@media (min-width: 768px) {
+  .view.view { display: flex; max-width: 1180px; flex-direction: column; margin-block: 20px; padding: 28px 40px 56px; }
+
+  /* The court hero is a mobile composition. Desktop keeps its h1 as the page title for
+     screen readers; the sidebar replaces the back arrow. */
+  .view .heroArt, .view .backLink, .view .heroIntro { display: none; }
+  .view .heroTitle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* The heading is not focusable, so moving it above the form keeps keyboard order intact. */
+  .view .resultsHeading { order: -1; margin-top: 0; padding-bottom: 0; border-bottom: 0; }
+  .view .resultsTitle { font-size: clamp(30px, 2.4vw, 38px); font-weight: 700; letter-spacing: -.03em; line-height: 1.15; }
+  .view .resultsSummary { margin-top: 6px; font-size: 15px; }
+
+  .view .searchForm { margin-top: 24px; }
+  .view .searchBar { min-height: 60px; padding: 6px; border-radius: 12px; box-shadow: 0 1px 3px hsl(var(--foreground) / .05); }
+  .view .searchInput { font-size: 15px; }
+  .view .searchInput::placeholder { font-size: 15px; }
+  .view .filterToggle { margin-left: 6px; border-left: 1px solid hsl(var(--border)); border-radius: 0 8px 8px 0; }
+  .view .filterPanel { margin-top: 16px; padding: 24px; border-radius: 12px; }
+  .view .sports { margin-top: 20px; }
+  .view .sports > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .view .sportChoices { margin-top: 0; flex-wrap: wrap; overflow: visible; }
+
+  .view .results { margin-top: 24px; container-type: inline-size; }
+
+  /* One card per row in a narrow column, two once the results column has room. */
+  .view .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .view .card {
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px hsl(var(--foreground) / .06);
+    transition: box-shadow .2s, transform .2s;
+  }
+  .view .card:hover { box-shadow: 0 10px 28px hsl(var(--foreground) / .12); transform: translateY(-2px); }
+  .view .cardMedia { width: 100%; min-height: 0; height: 180px; border-radius: 0; }
+  .view .cardBody { display: flex; flex: 1; flex-direction: column; padding: 18px 20px 20px; }
+  .view .cardTitle { font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  .view .cardMeta { margin-top: 10px; font-size: 13px; }
+  .view .cardFooter { flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 14px; }
+  .view .price { font-size: 22px; font-weight: 700; }
+
+  :global(.dark) .view .card:hover { box-shadow: 0 10px 28px hsl(0 0% 0% / .4); }
+}
+
+@container (min-width: 600px) {
+  .view .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view .card { transition: none; }
+  .view .card:hover { transform: none; }
+}

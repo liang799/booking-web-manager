@@ -1,5 +1,40 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+async function openLanding(page: Page) {
+  // Decorative images must not delay content, navigation, or motion checks.
+  // Tests that require artwork to load assert naturalWidth explicitly.
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  // Wait for client enhancement before sending input to server-rendered controls.
+  await expect(page.locator("#host")).toHaveAttribute("data-enhanced", "true");
+}
+
+test("landing navigation remains usable while an image is pending", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  page.setDefaultNavigationTimeout(3_000);
+  let releaseImage = () => {};
+  const pendingImage = new Promise<void>((resolve) => { releaseImage = resolve; });
+  let imageRequested = false;
+  await page.route("**/images/landing-court.webp", async (route) => {
+    imageRequested = true;
+    await pendingImage;
+    await route.continue();
+  });
+
+  try {
+    await openLanding(page);
+    await expect.poll(() => imageRequested).toBe(true);
+    await expect(page.getByRole("heading", { name: "Find your next game.", exact: true })).toBeVisible();
+    await page.getByRole("navigation", { name: "Main navigation", exact: true })
+      .getByRole("link", { name: "Discover", exact: true }).click();
+    await expect(page).toHaveURL(/\/#sports$/);
+    await expect(page.locator("#sports")).toBeFocused();
+    await expect(page.locator("#sports")).toBeInViewport();
+  } finally {
+    releaseImage();
+    await page.unrouteAll({ behavior: "wait" });
+  }
+});
+
 function pressTab(page: Page, backwards = false) {
   // macOS Safari uses Option+Tab to include links in keyboard navigation.
   const option = process.platform === "darwin" && page.context().browser()?.browserType().name() === "webkit" ? "Alt+" : "";
@@ -60,7 +95,7 @@ async function expectCourtToStayStill(page: Page, host: Locator) {
 test("landing navigation stays usable without horizontal overflow on mobile, tablet, and desktop", async ({ page }) => {
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await openLanding(page);
 
     await expect(page.getByRole("heading", { name: "Find your next game.", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Browse sessions", exact: true })).toHaveAttribute("href", "/discover");
@@ -86,7 +121,7 @@ test("landing navigation stays usable without horizontal overflow on mobile, tab
 test("the keyboard skip link moves past navigation to the primary action", async ({ page }) => {
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await openLanding(page);
 
     await pressTab(page);
     await expect(page.getByRole("link", { name: "Skip to content", exact: true })).toBeFocused();
@@ -99,7 +134,7 @@ test("the keyboard skip link moves past navigation to the primary action", async
 
 test("the mobile disclosure supports keyboard navigation and all dismissal paths", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openLanding(page);
   const trigger = page.locator('summary[aria-controls="landing-mobile-navigation"]');
   const panel = page.locator("#landing-mobile-navigation");
   const navigation = page.getByRole("navigation", { name: "Mobile navigation", exact: true });
@@ -149,7 +184,7 @@ test("the mobile disclosure supports keyboard navigation and all dismissal paths
 
 test("rapid mobile toggles recover and resizing to desktop closes the disclosure", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openLanding(page);
   const trigger = page.locator('summary[aria-controls="landing-mobile-navigation"]');
   const panel = page.locator("#landing-mobile-navigation");
 
@@ -190,7 +225,7 @@ test("rapid mobile toggles recover and resizing to desktop closes the disclosure
 
 test("modifier-click opens a section in another tab without dismissing the original menu", async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openLanding(page);
   await page.getByLabel("Open navigation menu", { exact: true }).click();
   const navigation = page.getByRole("navigation", { name: "Mobile navigation", exact: true });
   const popupPromise = context.waitForEvent("page");
@@ -205,7 +240,7 @@ test("modifier-click opens a section in another tab without dismissing the origi
 
 test("pressing a menu link keeps it open through pointer focus transfer until activation", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openLanding(page);
   const trigger = page.locator('summary[aria-controls="landing-mobile-navigation"]');
   await trigger.click();
   const navigation = page.getByRole("navigation", { name: "Mobile navigation", exact: true });
@@ -235,7 +270,7 @@ test.describe("touch navigation", () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
 
   test("tapping the disclosure preserves trigger focus and activates section links", async ({ page }) => {
-    await page.goto("/");
+    await openLanding(page);
     const trigger = page.locator('summary[aria-controls="landing-mobile-navigation"]');
     const panel = page.locator("#landing-mobile-navigation");
     await trigger.tap();
@@ -258,7 +293,7 @@ test.describe("touch navigation", () => {
 test("mobile menu actions remain reachable on narrow and short screens", async ({ page }) => {
   for (const viewport of [{ width: 320, height: 568 }, { width: 600, height: 320 }]) {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await openLanding(page);
     await page.getByLabel("Open navigation menu", { exact: true }).click();
     const navigation = page.getByRole("navigation", { name: "Mobile navigation", exact: true });
     const settings = navigation.getByRole("link", { name: "Settings", exact: true });
@@ -280,7 +315,7 @@ for (const source of ["mobile menu", "page sections", "desktop navigation"] as c
   test(`${source} smoothly scrolls to the section, moves focus, and preserves browser history`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize({ width: source === "desktop navigation" ? 1440 : 390, height: 844 });
-    await page.goto("/");
+    await openLanding(page);
     if (source === "mobile menu") await page.getByLabel("Open navigation menu", { exact: true }).click();
     const navigation = page.getByRole("navigation", {
       name: source === "mobile menu" ? "Mobile navigation" : source === "page sections" ? "Page sections" : "Main navigation",
@@ -314,7 +349,7 @@ for (const source of ["mobile menu", "page sections", "desktop navigation"] as c
 
 test("page sections moves focus to the animated hosting section", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openLanding(page);
   const navigation = page.getByRole("navigation", { name: "Page sections", exact: true });
   await navigation.getByRole("link", { name: "04 — Host a session", exact: true }).click();
 
@@ -328,7 +363,7 @@ test("page sections moves focus to the animated hosting section", async ({ page 
 test("reduced motion skips scrolling animation while keeping section focus and menu dismissal", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openLanding(page);
   await page.getByLabel("Open navigation menu", { exact: true }).click();
   const navigation = page.getByRole("navigation", { name: "Mobile navigation", exact: true });
   const positions = await captureSectionScroll(page, navigation.getByRole("link", { name: "How it works", exact: true }));
@@ -346,7 +381,7 @@ test("the hero action and practical details do not overlap at short and wide des
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const viewport of [{ width: 1366, height: 768 }, { width: 1599, height: 768 }, { width: 1920, height: 900 }]) {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await openLanding(page);
 
     const action = page.getByRole("link", { name: "Browse sessions", exact: true });
     const facts = page.getByRole("list", { name: "What you can do with Booking", exact: true });
@@ -364,7 +399,7 @@ test("the hero action and practical details do not overlap at short and wide des
 test("the hero loads the intended mobile and desktop artwork", async ({ page }) => {
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await openLanding(page);
 
     const artwork = page.getByRole("region", { name: "Find your next game.", exact: true }).locator("picture img");
     await expect(artwork).toBeVisible();
@@ -379,7 +414,7 @@ test.describe("host court motion", () => {
 
   test("the court runs while visible and preserves a manual pause across scrolling", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/");
+    await openLanding(page);
 
     const host = page.locator("#host");
     const ball = host.getByTestId("court-ball");
@@ -421,7 +456,7 @@ test.describe("host court motion", () => {
   });
 
   test("the court pauses when the document becomes hidden", async ({ page }) => {
-    await page.goto("/");
+    await openLanding(page);
     const host = page.locator("#host");
     const ball = host.getByTestId("court-ball");
     await host.scrollIntoViewIfNeeded();
@@ -449,7 +484,7 @@ test.describe("host court motion", () => {
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto("/");
+      await openLanding(page);
 
       const host = page.locator("#host");
       const ball = host.getByTestId("court-ball");

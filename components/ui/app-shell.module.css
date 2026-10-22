@@ -1,0 +1,5 @@
+.wallet:not(:global(.dark *)) {
+  --background: 0 0% 97%;
+  --muted: 0 0% 96%;
+  --accent: 0 0% 96%;
+}

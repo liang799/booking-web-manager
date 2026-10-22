@@ -12,6 +12,7 @@ beforeEach(() => {
   driver.query.mockImplementation(async (statement: string, values: unknown[]) => {
     if (statement.includes("from wallets")) return { rows: [{ wallet_id: `wallet-${values[0]}` }] };
     if (statement.includes("from wallet_balances")) return { rows: [{ wallet_id: values[0], available_cents: "2500" }] };
+    if (statement.includes("from payout_attempts")) return { rows: [{ pending_cents: "1850" }] };
     return { rows: [] };
   });
   vi.stubEnv("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:55322/postgres");
@@ -27,9 +28,10 @@ test("shares lazy infrastructure while resolving each caller's wallet independen
   for (const userId of ["first", "second"]) {
     expect(await dependencies.walletSummary.forUser(userId)).toEqual({
       walletId: `wallet-${userId}`, userId, availableBalanceCents: 2500,
-      heldBalanceCents: 0, activeHolds: [], currency: "SGD",
+      heldBalanceCents: 0, pendingPayoutCents: 1850, activeHolds: [], currency: "SGD",
     });
-    expect(driver.query).toHaveBeenLastCalledWith(expect.stringContaining("from hold_balances"), [`wallet-${userId}`]);
+    expect(driver.query).toHaveBeenCalledWith(expect.stringContaining("from hold_balances"), [`wallet-${userId}`]);
+    expect(driver.query).toHaveBeenLastCalledWith(expect.stringContaining("from payout_attempts"), [userId]);
   }
   expect(driver.createPoolProvider).toHaveBeenCalledOnce();
 });

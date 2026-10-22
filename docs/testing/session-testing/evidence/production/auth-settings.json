@@ -1,0 +1,13 @@
+{
+  "recordedAt": "2026-10-20T08:50:20.845872+00:00",
+  "observedAt": null,
+  "timestampNote": "The completed settings request did not retain its timestamp; recordedAt is when this evidence was saved.",
+  "source": "Production Supabase public Auth settings endpoint, accessed read-only with anonymous client configuration exposed by the public application.",
+  "method": "GET",
+  "settingsAvailable": true,
+  "external": {
+    "email": true
+  },
+  "mailer_autoconfirm": true,
+  "sanitization": "No URL, client key, credential, or bundle content retained."
+}

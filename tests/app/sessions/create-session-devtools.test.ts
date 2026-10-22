@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { connectSessionDevtools } from "@/app/sessions/create/create-session-devtools";
-import { createSessionStore, type CreateSessionStoreOptions, type CreateSessionStoreState } from "@/app/sessions/create/create-session-store";
+import { creationScreen, createSessionStore, type CreateSessionStoreOptions, type CreateSessionStoreState } from "@/app/sessions/create/create-session-store";
 import { emptySessionDraft } from "@/app/sessions/create/model";
+import { savedDraftStorageKey } from "@/app/sessions/create/saved-session-draft";
 import type { CreateSession } from "@/app/sessions/create/transport";
 
 const complete = {
@@ -34,7 +35,7 @@ function extension() {
   vi.stubGlobal("window", { __REDUX_DEVTOOLS_EXTENSION__: { connect } });
   return { connections, connect };
 }
-function setup(options: Partial<CreateSessionStoreOptions> = {}) {
+function setup(options: Partial<CreateSessionStoreOptions> = {}, initialize = true) {
   const values = new Map<string, string>();
   const storage = {
     getItem: vi.fn((key: string) => values.get(key) ?? null),
@@ -45,7 +46,8 @@ function setup(options: Partial<CreateSessionStoreOptions> = {}) {
     userId: "alice", initialDraft: complete, initialStep: 3, getStorage: () => storage,
     now: () => Date.parse("2045-06-16T00:00:00Z"), newId: () => "submission-1", ...options,
   });
-  return { store, storage };
+  if (initialize) void store.getState().initialize();
+  return { store, storage, values };
 }
 const cleanups: Array<() => void> = [];
 function attach(store: ReturnType<typeof createSessionStore>) {
@@ -79,9 +81,64 @@ describe("Create-session Redux DevTools connection", () => {
 
     store.getState().advance();
     store.getState().back();
-    expect(devtools.connections[0]!.send.mock.calls.map(([action, state]) => [action.type, state.step])).toEqual([
-      ["session/next", 2], ["session/back", 1],
+    expect(devtools.connections[0]!.send.mock.calls.map(([action, state]) => [action.type, creationScreen(state)])).toEqual([
+      ["session/next", "settings"], ["session/back", "venue"],
     ]);
+  });
+
+  test("records post-mount initialization once as a named transition", async () => {
+    const devtools = extension();
+    const { store, storage } = setup({ initialStep: 1 }, false);
+    expect(store.getState().workflow.status).toBe("initializing");
+    expect(storage.getItem).not.toHaveBeenCalled();
+    attach(store);
+    const client = devtools.connections[0]!;
+    expect(client.init).toHaveBeenCalledWith(expect.objectContaining({ workflow: { status: "initializing" } }));
+
+    await store.getState().initialize();
+    await store.getState().initialize();
+    expect(client.send).toHaveBeenCalledExactlyOnceWith({ type: "session/initialized" }, expect.objectContaining({
+      workflow: expect.objectContaining({ status: "editing", editor: { screen: "schedule", duration: { mode: "preset", value: "120" } } }),
+    }));
+    expect(storage.getItem).toHaveBeenCalledOnce();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  test("records desktop screens, schedule, duration, and explicit draft saving by name", () => {
+    const devtools = extension();
+    const { store, storage } = setup({ initialStep: 1 });
+    attach(store);
+    const client = devtools.connections[0]!;
+    storage.getItem.mockClear();
+
+    store.getState().advance("desktop");
+    store.getState().advance("desktop");
+    store.getState().back("desktop");
+    store.getState().back("desktop");
+    store.getState().chooseDuration("custom");
+    store.getState().changeDuration("75");
+    store.getState().changeSchedule({ startTime: "22:30" });
+    expect(storage.setItem).not.toHaveBeenCalled();
+    store.getState().saveDraft();
+
+    expect(client.send.mock.calls.map(([action, state]) => [action.type, creationScreen(state)])).toEqual([
+      ["session/next", "venue"],
+      ["session/next", "settings"],
+      ["session/back", "venue"],
+      ["session/back", "schedule"],
+      ["session/durationModeChanged", "schedule"],
+      ["session/durationChanged", "schedule"],
+      ["session/scheduleChanged", "schedule"],
+      ["session/draftSaved", "schedule"],
+    ]);
+    expect(client.send.mock.calls.at(-1)![1]).toMatchObject({
+      workflow: { status: "editing", editor: { screen: "schedule", duration: { mode: "custom", value: "75" } } },
+      savedSnapshot: { desktopStep: 1, duration: "75", durationMode: "custom" }, saveResult: { status: "saved" },
+    });
+    expect(storage.getItem).not.toHaveBeenCalled();
+    expect(storage.setItem).toHaveBeenCalledOnce();
+    expect(storage.removeItem).not.toHaveBeenCalled();
   });
 
   test.each([
@@ -119,7 +176,7 @@ describe("Create-session Redux DevTools connection", () => {
     await store.getState().submit(vi.fn<CreateSession>().mockResolvedValue(failure));
 
     expect(devtools.connections[0]!.send).toHaveBeenLastCalledWith({ type: "session/submitRejected" }, expect.objectContaining({
-      workflow: { status: "editing", errors: {}, failure },
+      workflow: expect.objectContaining({ status: "editing", editor: { screen: "pricing", duration: { mode: "preset", value: "120" } }, errors: {}, failure }),
     }));
   });
 
@@ -197,8 +254,9 @@ describe("Create-session Redux DevTools connection", () => {
     client.jumpTo(submittingSnapshot);
     expect(store.getState().workflow.status).toBe("submitting");
     client.jumpTo(editingSnapshot);
-    expect(store.getState()).toMatchObject({ draft: complete, step: 3, workflow: { status: "editing" } });
-    for (const action of ["change", "advance", "back", "restartAfterRecovery", "submit"] as const) {
+    expect(store.getState()).toMatchObject({ draft: complete, workflow: { status: "editing" } });
+    expect(creationScreen(store.getState())).toBe("pricing");
+    for (const action of ["initialize", "change", "changeSchedule", "chooseDuration", "changeDuration", "advance", "back", "saveDraft", "restartAfterRecovery", "submit"] as const) {
       expect(store.getState()[action]).toBe(original[action]);
     }
     expect(client.send).not.toHaveBeenCalled();
@@ -206,6 +264,39 @@ describe("Create-session Redux DevTools connection", () => {
     expect(client.send).toHaveBeenCalledExactlyOnceWith({ type: "session/change" }, store.getState());
     expect(store.getState().draft.venueName).toBe("Edited after time travel");
     expect(create).not.toHaveBeenCalled();
+    expect(storage.getItem).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  test("time travel through saved snapshots never reads or rewrites the saved draft", () => {
+    const devtools = extension();
+    const { store, storage, values } = setup({ initialStep: 1 });
+    attach(store);
+    const client = devtools.connections[0]!;
+    store.getState().saveDraft();
+    const firstSavedSnapshot = JSON.stringify(store.getState());
+    store.getState().chooseDuration("custom");
+    store.getState().changeDuration("75");
+    store.getState().advance("desktop");
+    store.getState().saveDraft();
+    const secondSavedSnapshot = JSON.stringify(store.getState());
+    const stored = values.get(savedDraftStorageKey("alice"));
+    const savedAction = store.getState().saveDraft;
+    client.send.mockClear();
+    storage.getItem.mockClear();
+    storage.setItem.mockClear();
+    storage.removeItem.mockClear();
+
+    client.jumpTo(firstSavedSnapshot);
+    expect(store.getState()).toMatchObject({ savedSnapshot: { desktopStep: 1, duration: "120", durationMode: "preset" }, saveResult: { status: "saved" } });
+    expect(creationScreen(store.getState())).toBe("schedule");
+    client.jumpTo(secondSavedSnapshot);
+    expect(store.getState()).toMatchObject({ savedSnapshot: { desktopStep: 2, duration: "75", durationMode: "custom" }, saveResult: { status: "saved" } });
+    expect(creationScreen(store.getState())).toBe("venue");
+    expect(store.getState().saveDraft).toBe(savedAction);
+    expect(client.send).not.toHaveBeenCalled();
+    expect(values.get(savedDraftStorageKey("alice"))).toBe(stored);
     expect(storage.getItem).not.toHaveBeenCalled();
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();

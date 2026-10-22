@@ -150,7 +150,7 @@ describe("UC1-02 Authenticate User", () => {
       expect(response.headers.get("location")).toBe("http://localhost/login?next=%2Fgroups%3Ftab%3Dmine");
     });
 
-    test.each(["/profile", "/profile/edit", "/groups", "/groups/join/abc123", "/sessions", "/sessions/create", "/wallet"])(
+    test.each(["/profile", "/profile/edit", "/groups", "/groups/join/abc123", "/sessions", "/sessions/create", "/wallet", "/payouts", "/payouts?onboarding=return"])(
       "keeps anonymous requests to %s behind login",
       async (path) => {
         vi.mocked(createServerClient).mockReturnValue(fakeSupabase({ user: null }) as never);
@@ -161,7 +161,7 @@ describe("UC1-02 Authenticate User", () => {
       },
     );
 
-    test.each(["/missing-after-logout", "/sessions-missing", "/profile-missing", "/groups-missing", "/wallet-missing"])(
+    test.each(["/missing-after-logout", "/sessions-missing", "/profile-missing", "/groups-missing", "/wallet-missing", "/payouts-missing"])(
       "lets anonymous requests to unknown route %s reach the not-found page",
       async (path) => {
         vi.mocked(createServerClient).mockReturnValue(fakeSupabase({ user: null }) as never);
@@ -293,7 +293,7 @@ describe("UC1-02 Authenticate User", () => {
       expect(result).toBe(true);
     });
 
-    test.each(["/profile", "/profile/help", "/groups", "/wallet", "/groups/join/abc123"])(
+    test.each(["/profile", "/profile/help", "/groups", "/wallet", "/payouts", "/groups/join/abc123"])(
       "%s requires a login",
       (path) => {
         // Act

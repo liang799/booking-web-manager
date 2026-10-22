@@ -21,6 +21,7 @@ export const walletSummarySchema = z.object({
   userId: uuidSchema,
   availableBalanceCents: centsSchema,
   heldBalanceCents: centsSchema,
+  pendingPayoutCents: centsSchema,
   currency: z.literal("SGD"),
   activeHolds: z.array(activeHoldSchema),
 });
@@ -43,6 +44,7 @@ export const walletTransactionSchema = z.object({
   externalReference: z.string().nullable(),
   holdId: uuidSchema.nullable(),
   payoutId: uuidSchema.nullable(),
+  sport: z.string().min(1).optional(),
 });
 
 export const walletTransactionsResponseSchema = z.object({

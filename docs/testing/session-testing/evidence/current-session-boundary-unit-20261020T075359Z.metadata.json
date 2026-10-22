@@ -1,0 +1,25 @@
+{
+  "startedAt": "2026-10-20T07:53:59.969050+00:00",
+  "finishedAt": "2026-10-20T07:54:02.234324+00:00",
+  "commit": "135064c0244fc684c9773ff947d8bf44e60f085e",
+  "command": [
+    "rtk",
+    "proxy",
+    "npx",
+    "vitest",
+    "run",
+    "--project",
+    "unit",
+    "tests/lib/sessions/postgres-session-discovery-reader.test.ts",
+    "tests/app/discover/query.test.ts",
+    "tests/app/sessions/session-visibility-action.test.ts",
+    "tests/app/sessions/session-visibility-route.test.ts",
+    "tests/app/sessions/management-openapi.test.ts",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile.json=output/session-testing/evidence/current-session-boundary-unit-20261020T075359Z.json"
+  ],
+  "exitCode": 0,
+  "consolePath": "output/session-testing/evidence/current-session-boundary-unit-20261020T075359Z.log",
+  "jsonPath": "output/session-testing/evidence/current-session-boundary-unit-20261020T075359Z.json"
+}

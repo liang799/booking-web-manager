@@ -53,7 +53,7 @@ test("mobile search preserves drafts and history, disables pending actions, and 
     expect(new URL(page.url()).searchParams.get("returnTo")).toBe(origin);
     await expect(page.getByRole("navigation", { name: "Main", exact: true })).toBeHidden();
 
-    const input = page.getByRole("searchbox", { name: "Search sports or venues", exact: true });
+    const input = page.getByRole("searchbox", { name: "Search sessions by sport or venue", exact: true });
     const filters = page.getByRole("button", { name: "Filters", exact: true });
     const sports = page.getByRole("group", { name: "Choose a sport", exact: true });
     const results = page.getByRole("region", { name: "Upcoming sessions", exact: true });
@@ -131,7 +131,7 @@ test("mobile search preserves drafts and history, disables pending actions, and 
     await page.reload();
     await page.getByRole("link", { name: "Back to previous page", exact: true }).click();
     await expectLocation(page, origin);
-    await expect(page.getByRole("heading", { name: "Upcoming Bookings", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Upcoming Bookings", level: 1, exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Home", exact: true })).toHaveAttribute("aria-current", "page");
   } finally {
     releaseRequest?.();
@@ -156,19 +156,32 @@ test("search pagination preserves the query and return destination while sport c
     const origin = "/?date=2043-04-02";
     await login(page, user, origin);
     await page.getByRole("link", { name: "Search sessions", exact: true }).click();
-    const input = page.getByRole("searchbox", { name: "Search sports or venues", exact: true });
+    const input = page.getByRole("searchbox", { name: "Search sessions by sport or venue", exact: true });
     const results = page.getByRole("region", { name: "Upcoming sessions", exact: true });
     await input.fill(tag);
     await input.press("Enter");
     await expect(page).toHaveURL(new RegExp(`q=${tag}`));
+    await expect(results).toHaveAttribute("aria-busy", "false");
     await expect(results.getByRole("listitem")).toHaveCount(20);
-    await page.getByRole("button", { name: "Filters", exact: true }).click();
+    const filterButton = page.getByRole("button", { name: "Filters", exact: true });
+    await expect(filterButton).toBeEnabled();
+    await filterButton.click();
     await page.getByLabel("Date", { exact: true }).fill("2043-04-02");
     await page.getByLabel("Region", { exact: true }).selectOption("West");
-    await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+    const applyButton = page.getByRole("button", { name: "Apply filters", exact: true });
+    await expect(applyButton).toBeEnabled();
+    await applyButton.click();
     await expect(page).toHaveURL(/region=West/);
-    await page.getByRole("button", { name: "Next page", exact: true }).click();
+    await expect(filterButton).toHaveAttribute("aria-expanded", "false");
+    await expect(results).toHaveAttribute("aria-busy", "false");
+    await expect(page.locator('[aria-label="Applied filters"]')).toContainText("West");
+    await expect(results.getByRole("listitem")).toHaveCount(20);
+    const nextButton = page.getByRole("button", { name: "Next page", exact: true });
+    await expect(nextButton).toBeVisible();
+    await expect(nextButton).toBeEnabled();
+    await nextButton.click();
     await expect(page).toHaveURL(/cursor=/);
+    await expect(results).toHaveAttribute("aria-busy", "false");
     const params = new URL(page.url()).searchParams;
     expect(params.get("q")).toBe(tag);
     expect(params.get("date")).toBe("2043-04-02");
@@ -182,7 +195,11 @@ test("search pagination preserves the query and return destination while sport c
     await expect(results.getByText(`${tag} row 01`, { exact: false })).toBeVisible();
     await page.goForward();
     await expect(results.getByText(`${tag} row 21`, { exact: false })).toBeVisible();
-    await page.getByRole("group", { name: "Choose a sport", exact: true }).getByRole("button", { name: "Tennis", exact: true }).click();
+    await expect(results).toHaveAttribute("aria-busy", "false");
+    const tennisButton = page.getByRole("group", { name: "Choose a sport", exact: true }).getByRole("button", { name: "Tennis", exact: true });
+    await expect(tennisButton).toBeEnabled();
+    await tennisButton.click();
+    await expect(results).toHaveAttribute("aria-busy", "false");
     await expect(page.getByText("No sessions found", { exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.has("cursor")).toBe(false);
     expect(new URL(page.url()).searchParams.get("q")).toBe(tag);
@@ -224,8 +241,8 @@ test("Discover returns to another app page and uses Home for direct or rejected 
     const navigation = page.getByRole("navigation", { name: "Main", exact: true });
     await expect(navigation.getByRole("link", { name: "Discover", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByRole("link", { name: "Home", exact: true })).not.toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
-    await expect(page.getByRole("searchbox", { name: "Search sports or venues" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Upcoming sessions", exact: true })).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Search sessions by sport or venue" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Upcoming sessions" })).toHaveAttribute("aria-busy", "false");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("discover-search-desktop.png") });
