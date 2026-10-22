@@ -1,0 +1,484 @@
+{
+  "target": "https://booking-web-manager.vercel.app (production, main as deployed on 20 October 2026)",
+  "browser": "Chromium 1194 (Playwright), headless, 1280x900",
+  "accounts": "Three test accounts (A, B, C) created for this run; all three were deleted through the app at the end. Two test groups were created and archived.",
+  "redaction": "Invitation tokens are replaced by <token>; test account emails and passwords are omitted.",
+  "observations": [
+    {
+      "id": "G01",
+      "subcase": "create group",
+      "observed": "now on /groups; Groups Lab4 Friday Badminton ← Back to groups Members (1) Marcus Lim (you) Joined 20 Oct 2026 Owner Invitation link Anyone with this link can join the group. Copy link Make a new link Turn link off Group settings Group n; invitation link missing",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:45:32.836Z"
+    },
+    {
+      "id": "G01",
+      "subcase": "group page",
+      "observed": "opened /groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2; members 1 (owner); invitation link /groups/join/<token>",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:49:26.601Z"
+    },
+    {
+      "id": "G02",
+      "subcase": "create 61 chars",
+      "observed": "no error; now on /groups",
+      "url": "/groups",
+      "at": "2026-10-20T12:45:24.384Z"
+    },
+    {
+      "id": "G02",
+      "subcase": "create empty",
+      "observed": "Enter a group name",
+      "url": "/groups",
+      "at": "2026-10-20T12:44:59.719Z"
+    },
+    {
+      "id": "G02",
+      "subcase": "create spaces",
+      "observed": "Enter a group name",
+      "url": "/groups",
+      "at": "2026-10-20T12:45:15.995Z"
+    },
+    {
+      "id": "G02",
+      "subcase": "rename 60 chars",
+      "observed": "field holds 60 characters; Group name saved.",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:49:33.571Z"
+    },
+    {
+      "id": "G02",
+      "subcase": "rename 61 chars",
+      "observed": "field holds 60 characters; Group name saved.",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:49:30.099Z"
+    },
+    {
+      "id": "G03",
+      "subcase": "join via link",
+      "observed": "preview: Groups Join a group You have been invited to Lab4 Friday Badminton 1 member You can leave only by asking the owner to remove you. Join Lab4 Friday Badminton; after Join: on /groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2; Members (2)",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:54:20.770Z"
+    },
+    {
+      "id": "G04",
+      "subcase": "same link again",
+      "observed": "url /groups/join/<token>; Groups Join a group You have been invited to Lab4 Friday Badminton 2 members You're already a member of this group. Open group",
+      "url": "/groups/join/<token>",
+      "at": "2026-10-20T12:54:27.545Z"
+    },
+    {
+      "id": "G05",
+      "subcase": "new link works (account B)",
+      "observed": "joined; Members (3)",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:57:31.668Z"
+    },
+    {
+      "id": "G05",
+      "subcase": "old link after re-enable",
+      "observed": "Groups Join a group This invitation link is invalid or has been turned off. Ask the group owner for a new one. Go to my groups",
+      "url": "/groups/join/<token>",
+      "at": "2026-10-20T12:54:52.998Z"
+    },
+    {
+      "id": "G05",
+      "subcase": "old link while off (member C)",
+      "observed": "Groups Join a group This invitation link is invalid or has been turned off. Ask the group owner for a new one. Go to my groups",
+      "url": "/groups/join/<token>",
+      "at": "2026-10-20T12:54:42.636Z"
+    },
+    {
+      "id": "G05",
+      "subcase": "turn link off",
+      "observed": "buttons now: Remove, Turn link on (new link), Save name, Archive group",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:54:37.055Z"
+    },
+    {
+      "id": "G05",
+      "subcase": "turn link on",
+      "observed": "new link differs from old: true",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:54:45.265Z"
+    },
+    {
+      "id": "G06",
+      "subcase": "member view",
+      "observed": "buttons: Copy link; rename field absent; invitation link shown",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:54:20.880Z"
+    },
+    {
+      "id": "G07",
+      "subcase": "owner view with one member",
+      "observed": "members listed: Members (2) Marcus Lim (you) Joined 20 Oct 2026 Owner M Joined 20 Oct 2026 Remove Invitation link Anyone with this link can join the group. Copy link Make a new link T; Remove member buttons: 0",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:54:34.381Z"
+    },
+    {
+      "id": "G08",
+      "subcase": "archive group without sessions",
+      "observed": "dialog: Archive this group? The invitation link is turned off and the group can no longer be changed. Members keep their history. Cancel Archive group Close; after: Groups GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG ← Back to groupsArchived Members (1) Marcus Lim (you) Joined 20 Oct 2026 Owner; buttons left: none; link field absent",
+      "url": "/groups/b308e4d6-0732-4585-9e59-ade76a652204",
+      "at": "2026-10-20T12:59:08.547Z"
+    },
+    {
+      "id": "L01",
+      "subcase": "valid login (account A)",
+      "observed": "now on /; heading \"Upcoming Bookings\"",
+      "url": "/",
+      "at": "2026-10-20T12:57:38.699Z"
+    },
+    {
+      "id": "L02",
+      "subcase": "unknown email",
+      "observed": "url /login; Invalid email or password.; email field kept: true",
+      "url": "/login",
+      "at": "2026-10-20T12:57:53.075Z"
+    },
+    {
+      "id": "L02",
+      "subcase": "wrong password",
+      "observed": "url /login; Invalid email or password.; email field kept: true",
+      "url": "/login",
+      "at": "2026-10-20T12:57:45.898Z"
+    },
+    {
+      "id": "L04",
+      "subcase": "deleted account then /profile",
+      "observed": "url /login?next=/profile",
+      "url": "/login?next=%2Fprofile",
+      "at": "2026-10-20T12:59:41.327Z"
+    },
+    {
+      "id": "L05",
+      "subcase": "/groups",
+      "observed": "redirected to /login?next=/groups",
+      "url": "/login?next=%2Fgroups",
+      "at": "2026-10-20T12:39:47.982Z"
+    },
+    {
+      "id": "L05",
+      "subcase": "/payouts",
+      "observed": "redirected to /login",
+      "url": "/login",
+      "at": "2026-10-20T12:39:54.375Z"
+    },
+    {
+      "id": "L05",
+      "subcase": "/profile",
+      "observed": "redirected to /login?next=/profile",
+      "url": "/login?next=%2Fprofile",
+      "at": "2026-10-20T12:39:45.821Z"
+    },
+    {
+      "id": "L05",
+      "subcase": "/sessions",
+      "observed": "redirected to /login?next=/sessions",
+      "url": "/login?next=%2Fsessions",
+      "at": "2026-10-20T12:39:49.826Z"
+    },
+    {
+      "id": "L05",
+      "subcase": "/wallet",
+      "observed": "redirected to /login?next=/wallet",
+      "url": "/login?next=%2Fwallet",
+      "at": "2026-10-20T12:39:51.964Z"
+    },
+    {
+      "id": "L06",
+      "subcase": "/",
+      "observed": "HTTP 200; opened /; heading \"Find your next game.\"",
+      "url": "/",
+      "at": "2026-10-20T12:39:59.752Z"
+    },
+    {
+      "id": "L06",
+      "subcase": "/discover",
+      "observed": "HTTP 200; opened /discover; heading \"Find Your Next Game\"",
+      "url": "/discover",
+      "at": "2026-10-20T12:40:01.644Z"
+    },
+    {
+      "id": "L06",
+      "subcase": "/privacy",
+      "observed": "HTTP 200; opened /privacy; heading \"Privacy and security\"",
+      "url": "/privacy",
+      "at": "2026-10-20T12:40:04.976Z"
+    },
+    {
+      "id": "L06",
+      "subcase": "/terms",
+      "observed": "HTTP 200; opened /terms; heading \"Terms and conditions\"",
+      "url": "/terms",
+      "at": "2026-10-20T12:40:03.388Z"
+    },
+    {
+      "id": "L07",
+      "subcase": "next=//evil.example",
+      "observed": "landed on https://booking-web-manager.vercel.app/",
+      "url": "/",
+      "at": "2026-10-20T12:58:07.954Z"
+    },
+    {
+      "id": "L07",
+      "subcase": "next=https://evil.example",
+      "observed": "landed on https://booking-web-manager.vercel.app/",
+      "url": "/",
+      "at": "2026-10-20T12:58:00.879Z"
+    },
+    {
+      "id": "M01",
+      "subcase": "settings page",
+      "observed": "Account Settings ML Marcus Lim Reliability 5.0 / High Sessions joined 0 Attendance rate – Preferences SP Preferred sports Badminton RG Preferred regions West NT Session notifications Not available in this browser Account settings Manage your profile, activity, | links: /profile/edit, /wallet, /privacy, /profile/help, /terms, /profile/delete",
+      "url": "/profile",
+      "at": "2026-10-20T12:42:27.825Z"
+    },
+    {
+      "id": "M02",
+      "subcase": "Alex Tan; Tennis+Futsal; East",
+      "observed": "Settings shows: Account Settings AT Alex Tan Reliability 5.0 / High Sessions joined 0 Attendance rate – Preferences SP Preferred sports Futsal, Tennis RG Preferred regions East NT Session notifications Not available ",
+      "url": "/profile",
+      "at": "2026-10-20T12:42:46.073Z"
+    },
+    {
+      "id": "M03",
+      "subcase": "60 chars",
+      "observed": "no message; stored name \"60 chars\", sports Tennis, regions East",
+      "url": "/profile",
+      "at": "2026-10-20T12:48:07.938Z"
+    },
+    {
+      "id": "M03",
+      "subcase": "61 chars",
+      "observed": "Please fix the highlighted fields. / Keep your name under 60 characters; stored name \"Alex Tan\", sports Tennis, regions East",
+      "url": "/profile",
+      "at": "2026-10-20T12:48:26.618Z"
+    },
+    {
+      "id": "M03",
+      "subcase": "empty",
+      "observed": "Please fix the highlighted fields. / Enter your name; stored name \"Alex Tan\", sports Tennis, regions East",
+      "url": "/profile",
+      "at": "2026-10-20T12:47:27.531Z"
+    },
+    {
+      "id": "M03",
+      "subcase": "spaces",
+      "observed": "Please fix the highlighted fields. / Enter your name; stored name \"Alex Tan\", sports Tennis, regions East",
+      "url": "/profile",
+      "at": "2026-10-20T12:47:48.070Z"
+    },
+    {
+      "id": "M04",
+      "subcase": "no regions",
+      "observed": "Please fix the highlighted fields. / Choose at least one region; stored name \"Alex Tan\", sports Tennis, regions East",
+      "url": "/profile",
+      "at": "2026-10-20T12:49:06.185Z"
+    },
+    {
+      "id": "M04",
+      "subcase": "no sports",
+      "observed": "Please fix the highlighted fields. / Choose at least one sport; stored name \"Alex Tan\", sports Tennis, regions East",
+      "url": "/profile",
+      "at": "2026-10-20T12:48:46.482Z"
+    },
+    {
+      "id": "M05",
+      "subcase": "email status and resend",
+      "observed": "Settings Email address ← Back to settings Your email address is verified. Browse sessions Create a session | no resend button shown",
+      "url": "/profile/email",
+      "at": "2026-10-20T12:44:05.232Z"
+    },
+    {
+      "id": "M07",
+      "subcase": "help questions and links",
+      "observed": "10 of 10 answers opened; links: /profile, /discover, /wallet, /profile/email, /profile/delete, /terms, /privacy",
+      "url": "/profile/help",
+      "at": "2026-10-20T12:44:51.993Z"
+    },
+    {
+      "id": "R01",
+      "subcase": "valid registration",
+      "observed": "url /; heading \"Upcoming Bookings\"; Booking. Find your next game. Home Discover My sessions Wallet Groups Settings ML Marcus Lim Reliability 5.0 Log out Booking. Make time to play. Upcoming Bookings You have no upcoming bookings. Singapore weather 24-hour forecast Forecast temperature range: 25–34°C Thundery Showers Forecast period (S",
+      "url": "/",
+      "at": "2026-10-20T12:40:32.872Z"
+    },
+    {
+      "id": "R02",
+      "subcase": "7 chars",
+      "observed": "Please fix the highlighted fields. / Use at least 8 characters",
+      "url": "/register",
+      "at": "2026-10-20T12:39:11.551Z"
+    },
+    {
+      "id": "R02",
+      "subcase": "72 chars",
+      "observed": "continued to \"Your profile\"",
+      "url": "/register",
+      "at": "2026-10-20T12:39:17.054Z"
+    },
+    {
+      "id": "R02",
+      "subcase": "72 chars at login (account B)",
+      "observed": "lower-case email + 72-char password: now on / ",
+      "url": "/",
+      "at": "2026-10-20T12:57:23.907Z"
+    },
+    {
+      "id": "R02",
+      "subcase": "73 chars",
+      "observed": "Please fix the highlighted fields. / Use 72 characters or fewer",
+      "url": "/register",
+      "at": "2026-10-20T12:39:19.331Z"
+    },
+    {
+      "id": "R02",
+      "subcase": "8 chars",
+      "observed": "continued to \"Your profile\"",
+      "url": "/register",
+      "at": "2026-10-20T12:39:14.156Z"
+    },
+    {
+      "id": "R03",
+      "subcase": "1 char (account C)",
+      "observed": "name \"M\" accepted; account created; sidebar shows M",
+      "url": "/groups/join/<token>",
+      "at": "2026-10-20T12:50:24.437Z"
+    },
+    {
+      "id": "R03",
+      "subcase": "60 chars (account B)",
+      "observed": "url /; no error; name length 60",
+      "url": "/",
+      "at": "2026-10-20T12:57:10.827Z"
+    },
+    {
+      "id": "R03",
+      "subcase": "61 chars",
+      "observed": "Please fix the highlighted fields. / Keep your name under 60 characters",
+      "url": "/register",
+      "at": "2026-10-20T12:39:40.684Z"
+    },
+    {
+      "id": "R03",
+      "subcase": "empty",
+      "observed": "Please fix the highlighted fields. / Enter your name",
+      "url": "/register",
+      "at": "2026-10-20T12:39:29.732Z"
+    },
+    {
+      "id": "R03",
+      "subcase": "spaces",
+      "observed": "Please fix the highlighted fields. / Enter your name",
+      "url": "/register",
+      "at": "2026-10-20T12:39:34.764Z"
+    },
+    {
+      "id": "R04",
+      "subcase": "Marcus@Example.COM",
+      "observed": "accepted; continued to \"Your profile\"; submitted as \"Marcus@Example.COM\"",
+      "url": "/register",
+      "at": "2026-10-20T12:39:24.556Z"
+    },
+    {
+      "id": "R04",
+      "subcase": "mixed case stored",
+      "observed": "Settings email: ?; name shown in full: true",
+      "url": "/profile",
+      "at": "2026-10-20T12:57:16.716Z"
+    },
+    {
+      "id": "R04",
+      "subcase": "not-an-email",
+      "observed": "Please fix the highlighted fields. / Enter a valid email address",
+      "url": "/register",
+      "at": "2026-10-20T12:39:21.995Z"
+    },
+    {
+      "id": "R05",
+      "subcase": "existing email (account A)",
+      "observed": "url /register; An account with this email already exists. Log in instead; links: Log in instead -> /login; Terms -> /terms; Privacy Policy -> /privacy; Login -> /login",
+      "url": "/register",
+      "at": "2026-10-20T12:57:01.637Z"
+    },
+    {
+      "id": "R06",
+      "subcase": "back then forward",
+      "observed": "after Back: region East, email lab4.draft@example.com, password 11 chars; after forward: name \"Draft Name\", sport Futsal; nothing submitted",
+      "url": "/register",
+      "at": "2026-10-20T12:39:44.009Z"
+    },
+    {
+      "id": "R07",
+      "subcase": "group invitation, then register",
+      "observed": "logged out: sent to /login?next=/groups/join/<token>; after sign-up landed on /groups/join/<token>; heading \"Join a group\"; no error",
+      "url": "/groups/join/<token>",
+      "at": "2026-10-20T12:50:24.363Z"
+    },
+    {
+      "id": "X01",
+      "subcase": "after archiving every owned group",
+      "observed": "delete button offered: 1",
+      "url": "/profile/delete",
+      "at": "2026-10-20T13:01:31.928Z"
+    },
+    {
+      "id": "X01",
+      "subcase": "after archiving one group",
+      "observed": "Settings Delete account ← Back to settings Available balance S$0.00 Held for sessions S$0.00 Active commitments 0 You must complete your active sessions, use or withdraw your remaining funds, and archive any groups you own before deleting your account. Still to sort out: Groups you own that aren't a",
+      "url": "/profile/delete",
+      "at": "2026-10-20T12:59:14.877Z"
+    },
+    {
+      "id": "X01",
+      "subcase": "owns two groups",
+      "observed": "Settings Delete account ← Back to settings Available balance S$0.00 Held for sessions S$0.00 Active commitments 0 You must complete your active sessions, use or withdraw your remaining funds, and archive any groups you own before deleting your account. Still to sort out: Groups you own that aren't archived 2 Go to wallet Go to my groups; delete button offered: 0",
+      "url": "/profile/delete",
+      "at": "2026-10-20T12:58:54.052Z"
+    },
+    {
+      "id": "X04",
+      "subcase": "account A after archiving its groups",
+      "observed": "after: /login?deleted=1 ",
+      "url": "/login?deleted=1",
+      "at": "2026-10-20T13:01:51.332Z"
+    },
+    {
+      "id": "X04",
+      "subcase": "account B (group member only)",
+      "observed": "after: /login?deleted=1 ",
+      "url": "/login?deleted=1",
+      "at": "2026-10-20T13:02:03.320Z"
+    },
+    {
+      "id": "X04",
+      "subcase": "account C, nothing outstanding",
+      "observed": "page: Settings Delete account ← Back to settings Available balance S$0.00 Held for sessions S$0.00 Active commitments 0 Deleting your account will: remove your name, email and preferences, and log you out for good; keep past session and wallet records, without your name, for audit; forfeit any wallet balance that has not been withdrawn. Delete my account; dialog: Delete your account? This cannot be undone. Your name, email and preferences are removed and you will be logged out. Any wallet balance that has not been withdrawn is forfeited. WALLET BALANCE YOU WOULD FORFEIT S$0.00 Cancel Yes, delete my account Close; after: /login?deleted=1 Log in Welcome back. Your next game awaits. Your account has been deleted. Email Password Log in New to Booking? Create ",
+      "url": "/login?deleted=1",
+      "at": "2026-10-20T12:59:26.316Z"
+    },
+    {
+      "id": "X04",
+      "subcase": "group after C deleted (owner view)",
+      "observed": "Members (3) Marcus Lim (you) Joined 20 Oct 2026 Owner Deleted user Joined 20 Oct 2026 Remove Bernadette Tan Hui Min Lab Four Boundary Check Name Sixty ch Joined 20 Oct 2026 Remove Invitation link Anyone with",
+      "url": "/groups/c6ea6ea1-b35f-4dd2-abb6-f3ad125074d2",
+      "at": "2026-10-20T12:59:47.046Z"
+    },
+    {
+      "id": "X04",
+      "subcase": "old session after deletion",
+      "observed": "/profile now /login?next=%2Fprofile",
+      "url": "/login?next=%2Fprofile",
+      "at": "2026-10-20T12:59:27.976Z"
+    },
+    {
+      "id": "X05",
+      "subcase": "deleted account C logs in",
+      "observed": "url /login; Invalid email or password.",
+      "url": "/login",
+      "at": "2026-10-20T12:59:39.240Z"
+    }
+  ]
+}

@@ -1,0 +1,251 @@
+{
+  "target": "https://booking-web-manager.vercel.app",
+  "started_at_utc": "2026-10-20T09:37:02.820Z",
+  "authentication": "Normal password sign-in for the newly approved Neoh Session QA account using the public Supabase anon client. Tokens held only in process memory. Credentials excluded.",
+  "scope": "Six visibility parser checks against a synthetic nonexistent UUID, one anonymous visibility guard, one creation payout guard, and two account fixture reads. No existing session identifiers used.",
+  "observations": [
+    {
+      "id": "API01",
+      "case": "V03 unauthenticated",
+      "observed_at_utc": "2026-10-20T09:37:04.866Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+        "authenticated": false,
+        "body": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "expected": {
+        "status": 401,
+        "code": "UNAUTHENTICATED"
+      },
+      "actual": {
+        "status": 401,
+        "code": "UNAUTHENTICATED",
+        "message": "Authentication is required"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API02",
+      "case": "V07 invalid UUID",
+      "observed_at_utc": "2026-10-20T09:37:05.189Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/not-a-uuid/visibility",
+        "authenticated": true,
+        "body": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "expected": {
+        "status": 400,
+        "code": "INVALID_REQUEST"
+      },
+      "actual": {
+        "status": 400,
+        "code": "INVALID_REQUEST",
+        "message": "Invalid session visibility request"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API03",
+      "case": "V07 lowercase enum",
+      "observed_at_utc": "2026-10-20T09:37:05.360Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+        "authenticated": true,
+        "body": {
+          "visibility": "public"
+        }
+      },
+      "expected": {
+        "status": 400,
+        "code": "INVALID_REQUEST"
+      },
+      "actual": {
+        "status": 400,
+        "code": "INVALID_REQUEST",
+        "message": "Invalid session visibility request"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API04",
+      "case": "V07 null enum",
+      "observed_at_utc": "2026-10-20T09:37:05.492Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+        "authenticated": true,
+        "body": {
+          "visibility": null
+        }
+      },
+      "expected": {
+        "status": 400,
+        "code": "INVALID_REQUEST"
+      },
+      "actual": {
+        "status": 400,
+        "code": "INVALID_REQUEST",
+        "message": "Invalid session visibility request"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API05",
+      "case": "V07 missing enum",
+      "observed_at_utc": "2026-10-20T09:37:05.756Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+        "authenticated": true,
+        "body": {}
+      },
+      "expected": {
+        "status": 400,
+        "code": "INVALID_REQUEST"
+      },
+      "actual": {
+        "status": 400,
+        "code": "INVALID_REQUEST",
+        "message": "Invalid session visibility request"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API06",
+      "case": "V07 valid PUBLIC parser",
+      "observed_at_utc": "2026-10-20T09:37:06.052Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+        "authenticated": true,
+        "body": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "expected": {
+        "status": 404,
+        "code": "NOT_FOUND"
+      },
+      "actual": {
+        "status": 404,
+        "code": "NOT_FOUND",
+        "message": "Session was not found"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API07",
+      "case": "V07 valid PRIVATE parser",
+      "observed_at_utc": "2026-10-20T09:37:06.203Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/sessions/00000000-0000-4000-8000-000000000000/visibility",
+        "authenticated": true,
+        "body": {
+          "visibility": "PRIVATE"
+        }
+      },
+      "expected": {
+        "status": 404,
+        "code": "NOT_FOUND"
+      },
+      "actual": {
+        "status": 404,
+        "code": "NOT_FOUND",
+        "message": "Session was not found"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API08",
+      "case": "Fixture payout availability",
+      "observed_at_utc": "2026-10-20T09:37:06.597Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/payouts/account",
+        "authenticated": true
+      },
+      "expected": {
+        "status": 503,
+        "code": "PAYOUTS_UNAVAILABLE"
+      },
+      "actual": {
+        "status": 503,
+        "code": "PAYOUTS_UNAVAILABLE",
+        "message": "Payouts are not available yet"
+      },
+      "result": "BLOCKED",
+      "meaning": "Observed deployment availability blocker; not a successful payout-setup test."
+    },
+    {
+      "id": "API09",
+      "case": "C07 incomplete payout",
+      "observed_at_utc": "2026-10-20T09:37:07.169Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sessions",
+        "authenticated": true,
+        "body": {
+          "idempotencyKey": "session-qa-payout-guard-6f1d81cc-87b3-407e-af2b-edab636d0985",
+          "booking": {
+            "venueName": "QA Session Test 2026-10-20 Neoh",
+            "region": "West",
+            "sport": "Badminton",
+            "startAt": "2026-11-01T10:00:00.000Z",
+            "endAt": "2026-11-01T12:00:00.000Z",
+            "totalCostCents": 1001
+          },
+          "config": {
+            "totalSlots": 3,
+            "minimumHeadcount": 2,
+            "pricePerSlotCents": 333,
+            "visibility": "PRIVATE"
+          }
+        }
+      },
+      "expected": {
+        "status": 409,
+        "code": "PAYOUT_ACCOUNT_NOT_READY"
+      },
+      "actual": {
+        "status": 409,
+        "code": "PAYOUT_ACCOUNT_NOT_READY",
+        "message": "A session needs a completed payout account"
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "API10",
+      "case": "C07 hosted reload supplemental",
+      "observed_at_utc": "2026-10-20T09:37:07.334Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/sessions/hosted",
+        "authenticated": true
+      },
+      "expected": {
+        "status": 200,
+        "code": null
+      },
+      "actual": {
+        "status": 200,
+        "code": null,
+        "session_count": 0
+      },
+      "result": "PASS"
+    }
+  ],
+  "hosted_projection_keys": [
+    "sessions",
+    "awaitingAttendance"
+  ],
+  "completed_at_utc": "2026-10-20T09:37:07.335Z",
+  "limitations": "Valid visibility enums reached a nonexistent-session response, not persistence. Hosted API read is an application projection, not a database query. No payout configuration change, provider onboarding or transfer performed. No created session, participant, refund, cancellation or concurrency fixture."
+}

@@ -1,0 +1,21 @@
+Browser tab: 1, Title: "Payout account | Booking Web Manager", URL: "https://booking-web-manager.vercel.app/payouts".
+1 AXWebArea Payout account | Booking Web Manager, URL: booking-web-manager.vercel.app/payouts
+	2 container
+		3 text Payout account | Booking Web Manager
+		4 container
+			5 link Description: Booking., Value: booking-web-manager.vercel.app/
+			6 link Description: Search sessions, Value: booking-web-manager.vercel.app/discover?returnTo=%2F
+			7 pop up button (collapsed) Description: Open account menu, Secondary Actions: Expand
+			8 container Main
+				9 link Description: Home, Value: booking-web-manager.vercel.app/
+				10 link Description: Sessions, Value: booking-web-manager.vercel.app/sessions
+				11 link Description: Wallet, Value: booking-web-manager.vercel.app/wallet
+				12 link Description: Settings, Value: booking-web-manager.vercel.app/profile
+		13 container
+			14 link Description: Wallet, Value: booking-web-manager.vercel.app/wallet
+			15 heading Payout account, Value: 1
+				16 text Payout account
+			17 text Payouts aren't available yet. Please try again later.
+			18 button Try again
+
+The focused UI element is 1 AXWebArea Payout account | Booking Web Manager, URL: booking-web-manager.vercel.app/payouts

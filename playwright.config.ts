@@ -2,13 +2,23 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: ["**/session-api-unavailable.spec.ts", "**/api-documentation.spec.ts", "**/public-resources.spec.ts", "**/landing-page.spec.ts"],
+  testMatch: ["**/session-api-unavailable.spec.ts", "**/api-documentation.spec.ts", "**/public-resources.spec.ts", "**/landing-page.spec.ts", "**/sessions-timeline.spec.ts"],
   fullyParallel: false,
   workers: 1,
   retries: 0,
   timeout: 30_000,
   reporter: [["list"], ["html", { open: "never" }]],
   projects: [
+    {
+      name: "sessions-timeline",
+      testMatch: "**/sessions-timeline.spec.ts",
+      use: { trace: "retain-on-failure" },
+    },
+    {
+      name: "sessions-timeline-webkit",
+      testMatch: "**/sessions-timeline.spec.ts",
+      use: { browserName: "webkit", trace: "retain-on-failure" },
+    },
     {
       name: "session-api-unavailable",
       testMatch: "**/session-api-unavailable.spec.ts",

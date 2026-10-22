@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MobileNavigationProvider } from "@/components/ui/mobile-navigation";
 import { ThemeProvider } from "./_components/theme-provider";
 import "./globals.css";
 
@@ -17,7 +18,9 @@ export default function RootLayout({
         <link rel="preload" href="/fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body className="bg-background font-sans text-foreground antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <MobileNavigationProvider>{children}</MobileNavigationProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

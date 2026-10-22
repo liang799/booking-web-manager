@@ -1,0 +1,504 @@
+{
+  "generatedAt": "2026-10-20T12:18:57.170Z",
+  "observations": [
+    {
+      "id": "D01",
+      "name": "nothing outstanding",
+      "technique": "valid EP / shared nominal",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222"
+      },
+      "expected": {
+        "outcome": "DELETED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login"
+        ],
+        "profileStatus": "INACTIVE"
+      },
+      "actual": {
+        "outcome": "DELETED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login"
+        ],
+        "profileStatus": "INACTIVE"
+      }
+    },
+    {
+      "id": "D02",
+      "name": "available balance one cent",
+      "technique": "BVA available min+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "availableBalance": 1
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D03",
+      "name": "available balance negative",
+      "technique": "BVA available min-1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "availableBalance": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D04",
+      "name": "available balance maximum safe cents",
+      "technique": "BVA available max",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "availableBalance": 9007199254740991
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D05",
+      "name": "held balance one cent",
+      "technique": "BVA held min+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "heldBalance": 1
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D06",
+      "name": "held balance negative",
+      "technique": "BVA held min-1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "heldBalance": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D07",
+      "name": "one active commitment",
+      "technique": "BVA commitments min+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeCommitments": 1
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D08",
+      "name": "negative commitments",
+      "technique": "BVA commitments min-1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeCommitments": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D09",
+      "name": "fractional commitments",
+      "technique": "invalid numeric EP",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeCommitments": 1.5
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D10",
+      "name": "commitments at maximum safe integer",
+      "technique": "BVA commitments max",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeCommitments": 9007199254740991
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D11",
+      "name": "commitments above maximum safe integer",
+      "technique": "BVA commitments max+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeCommitments": 9007199254740992
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D12",
+      "name": "one unsettled hosted session",
+      "technique": "BVA hosted min+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "unsettledOwnedSessions": 1
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D13",
+      "name": "negative unsettled hosted sessions",
+      "technique": "BVA hosted min-1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "unsettledOwnedSessions": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D14",
+      "name": "one pending payout",
+      "technique": "BVA payouts min+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "pendingPayouts": 1
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D15",
+      "name": "negative pending payouts",
+      "technique": "BVA payouts min-1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "pendingPayouts": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D16",
+      "name": "one unarchived owned group",
+      "technique": "BVA groups min+1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeOwnedGroups": 1
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D17",
+      "name": "negative owned groups",
+      "technique": "BVA groups min-1",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeOwnedGroups": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D18",
+      "name": "owned groups is not a number",
+      "technique": "invalid nonfinite EP",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "activeOwnedGroups": "NaN"
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D19",
+      "name": "every obligation outstanding",
+      "technique": "invalid EP / combined",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "availableBalance": 500,
+        "heldBalance": 900,
+        "activeCommitments": 2,
+        "unsettledOwnedSessions": 1,
+        "pendingPayouts": 1,
+        "activeOwnedGroups": 3
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D20",
+      "name": "invalid fact alongside an outstanding one",
+      "technique": "invalid EP / validation precedes blocking",
+      "input": {
+        "walletId": "22222222-2222-4222-8222-222222222222",
+        "availableBalance": 500,
+        "activeCommitments": -1
+      },
+      "expected": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "INVALID_INPUT",
+        "steps": [
+          "check"
+        ],
+        "profileStatus": "ACTIVE"
+      }
+    },
+    {
+      "id": "D21",
+      "name": "wallet never created and nothing outstanding",
+      "technique": "valid EP / no wallet",
+      "input": {
+        "walletId": null
+      },
+      "expected": {
+        "outcome": "DELETED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login"
+        ],
+        "profileStatus": "INACTIVE"
+      },
+      "actual": {
+        "outcome": "DELETED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login"
+        ],
+        "profileStatus": "INACTIVE"
+      }
+    }
+  ]
+}

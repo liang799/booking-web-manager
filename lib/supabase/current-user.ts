@@ -14,7 +14,10 @@ export interface CurrentUser {
   readonly profileName: string;
   readonly preferredSports: readonly string[];
   readonly preferredRegions: readonly string[];
-  /** 0–100 from the domain. Everyone has the starting score until attendance history exists (UC2-06). */
+  /**
+   * @deprecated Always the starting score (100): this lookup has no participation history.
+   * Show the real score with loadReliabilityScore (app/profile/reliability.ts).
+   */
   readonly reliabilityScore: number;
 }
 
