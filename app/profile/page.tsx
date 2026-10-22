@@ -1,3 +1,7 @@
+import { CircleHelp, FileText, Heart, MapPin, Pencil, ReceiptText, ShieldCheck, Trash2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { initials } from "@/components/ui/initials";
+import { ReliabilityBadge } from "@/components/ui/reliability-badge";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { PushNotificationsRow } from "@/app/commit/_components/push-notifications-row";
@@ -53,13 +57,13 @@ export default async function ProfilePage() {
             <h2 className="text-xl font-semibold">Preferences</h2>
             <div className="divide-y overflow-hidden rounded-lg border bg-card">
               <SettingsRow
-                code="SP"
+                icon={Heart}
                 title="Preferred sports"
                 description={listOrPrompt(user.preferredSports)}
                 href="/profile/edit"
               />
               <SettingsRow
-                code="RG"
+                icon={MapPin}
                 title="Preferred regions"
                 description={listOrPrompt(user.preferredRegions)}
                 href="/profile/edit"
@@ -75,15 +79,15 @@ export default async function ProfilePage() {
             <p className="text-sm text-muted-foreground">Manage your profile, activity, and support preferences.</p>
           </div>
           <div className="divide-y overflow-hidden rounded-lg border bg-card">
-            <SettingsRow code="EP" title="Edit profile" href="/profile/edit" />
-            <SettingsRow code="TH" title="Transaction history" href="/wallet" />
-            <SettingsRow code="PR" title="Privacy and security" href="/privacy" />
-            <SettingsRow code="HS" title="Help and support" href="/profile/help" />
-            <SettingsRow code="TC" title="Terms and conditions" href="/terms" />
+            <SettingsRow icon={Pencil} title="Edit profile" href="/profile/edit" />
+            <SettingsRow icon={ReceiptText} title="Transaction history" href="/wallet" />
+            <SettingsRow icon={ShieldCheck} title="Privacy and security" href="/privacy" />
+            <SettingsRow icon={CircleHelp} title="Help and support" href="/profile/help" />
+            <SettingsRow icon={FileText} title="Terms and conditions" href="/terms" />
           </div>
           <div className="overflow-hidden rounded-lg border border-destructive/30">
             <SettingsRow
-              code="DA"
+              icon={Trash2}
               title="Delete account"
               description="Remove your personal details and close your account"
               href="/profile/delete"
