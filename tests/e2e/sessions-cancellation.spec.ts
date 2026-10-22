@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { cancellationFixture, addCancellationParticipant, cancellationSql, type CancellationIdentity } from "../support/cancellation-fixtures";
 import { sessionTestContext } from "../support/session-test-context";
+import { openHostedSession } from "./session-overview-helpers";
 
 async function login(page: Page, identity: CancellationIdentity, destination: string) {
   await page.goto(`/login?next=${encodeURIComponent(destination)}`);
@@ -15,6 +16,9 @@ async function login(page: Page, identity: CancellationIdentity, destination: st
 }
 function row(page: Page, venueName: string) {
   return page.getByRole("listitem").filter({ hasText: venueName });
+}
+function cancellationDialog(page: Page) {
+  return page.getByRole("dialog", { name: /^(Cancel session\?|Check cancellation result)$/ });
 }
 function mutationResponse(page: Page, sessionId: string) {
   return page.waitForResponse((response) => response.request().method() === "POST"
@@ -36,12 +40,13 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     await search.focus();
     const url = participantPage.url();
     await page.setViewportSize({ width: 390, height: 844 });
-    await login(page, fixture.booker, "/sessions");
+    await login(page, fixture.booker, "/sessions?tab=hosting");
+    await openHostedSession(page, fixture.venueName);
     await expect(row(page, fixture.venueName).getByRole("button", { name: "Make private" })).toHaveCount(0);
     const trigger = row(page, fixture.venueName).getByRole("button", { name: "Cancel session", exact: true });
     await trigger.focus();
     await page.keyboard.press("Enter");
-    const dialog = page.getByRole("dialog");
+    const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("10.00");
     await expect(dialog).toContainText("2 participants will receive a refund");
     await expect(dialog).toContainText("venue booking cancellation separately");
@@ -67,7 +72,8 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     await expect(search).toBeFocused();
     expect(participantPage.url()).toBe(url);
     await expect(page.getByRole("status")).toContainText("Session cancelled");
-    await expect(row(page, fixture.venueName)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Cancel session", exact: true })).toHaveCount(0);
+    await expect(row(page, fixture.venueName)).toContainText("Cancelled");
     for (const participant of fixture.participants) {
       expect((await context.pool.query("select available_cents from wallet_balances where wallet_id=$1", [participant.walletId])).rows[0].available_cents).toBe("500");
     }
@@ -83,9 +89,10 @@ test("changed roster requires a fresh preview and another confirmation", async (
   const context = sessionTestContext();
   try {
     const fixture = await cancellationFixture(context);
-    await login(page, fixture.booker, "/sessions");
+    await login(page, fixture.booker, "/sessions?tab=hosting");
+    await openHostedSession(page, fixture.venueName);
     await row(page, fixture.venueName).getByRole("button", { name: "Cancel session" }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("5.00");
     await addCancellationParticipant(cancellationSql(context), fixture.sessionId, await context.identity(false));
     await dialog.getByRole("button", { name: "Confirm cancellation" }).click();
@@ -105,9 +112,10 @@ test("lost committed response survives reload and replays the identical financia
   const context = sessionTestContext();
   try {
     const fixture = await cancellationFixture(context);
-    await login(page, fixture.booker, "/sessions");
+    await login(page, fixture.booker, "/sessions?tab=hosting");
+    await openHostedSession(page, fixture.venueName);
     await row(page, fixture.venueName).getByRole("button", { name: "Cancel session" }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("5.00");
     let intercepted = false;
     let confirmedSubmission: unknown;
@@ -130,9 +138,9 @@ test("lost committed response survives reload and replays the identical financia
     expect((await context.pool.query("select status from sessions where session_id=$1", [fixture.sessionId])).rows[0].status).toBe("CANCELLED");
     await page.unroute(cancellationUrl);
     await page.reload();
-    await expect(page.getByRole("dialog")).toContainText("Retry the cancellation you already confirmed");
+    await expect(cancellationDialog(page)).toContainText("Retry the cancellation you already confirmed");
     const replay = mutationResponse(page, fixture.sessionId);
-    await page.getByRole("dialog").getByRole("button", { name: "Retry cancellation" }).click();
+    await cancellationDialog(page).getByRole("button", { name: "Retry cancellation" }).click();
     const incoming = (await replay).request().postData() ?? "";
     expect(JSON.parse(incoming)).toEqual(confirmedSubmission);
     expect(incoming).toContain(JSON.parse(saved!).idempotencyKey);

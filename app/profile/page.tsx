@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
-import { initials } from "@/components/ui/initials";
-import { PageHeader } from "@/components/ui/page-header";
-import { ReliabilityBadge } from "@/components/ui/reliability-badge";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { PushNotificationsRow } from "@/app/commit/_components/push-notifications-row";
 import { SettingsRow } from "./_components/settings-row";
+import { loadReliabilityScore } from "./reliability";
 
 /** Shows a saved list as "Badminton, Tennis", or a prompt when nothing is saved yet. */
 function listOrPrompt(values: readonly string[]): string {
@@ -15,6 +13,7 @@ function listOrPrompt(values: readonly string[]): string {
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (user === null) redirect("/login");
+  const reliabilityScore = await loadReliabilityScore(user.id);
 
   return (
     <>
@@ -31,7 +30,11 @@ export default async function ProfilePage() {
               </div>
               <div className="min-w-0 space-y-3">
                 <h2 className="truncate text-xl font-semibold">{user.displayName}</h2>
-                <ReliabilityBadge score={user.reliabilityScore} />
+                {reliabilityScore === null ? (
+                  <p className="text-sm text-muted-foreground">Reliability score unavailable right now.</p>
+                ) : (
+                  <ReliabilityBadge score={reliabilityScore} />
+                )}
                 <dl className="flex flex-wrap gap-x-8 gap-y-2">
                   <div className="flex flex-col-reverse">
                     <dt className="text-xs text-muted-foreground">Sessions joined</dt>

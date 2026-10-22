@@ -1,13 +1,21 @@
+"use client";
+
+import { ArrowUpRight, ChevronRight, CircleArrowUp, CircleDot, CirclePlus, Plus } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { InfoNote } from "@/components/ui/info-note";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Money } from "@/components/ui/money";
-import type { WalletSummary, WalletTransactionKind, WalletTransactionsPage } from "../wallet-transport";
+import type { WalletSummary, WalletTransactionsPage } from "../wallet-transport";
+import { WalletTransactions } from "./wallet-transactions";
+import { singaporeDateTime } from "./wallet-activity";
+import { WalletMoney } from "./wallet-money";
+import styles from "./wallet-view.module.css";
 
-/** One part of the wallet screen: still loading, loaded, or failed (optionally because the login expired). */
+/** Each resource loads independently; an expired login replaces its stale data. */
 export type WalletLoadState<T> =
   | { readonly status: "loading" }
   | { readonly status: "ready"; readonly data: T }
@@ -20,116 +28,144 @@ export interface WalletViewProps {
   readonly moreError: string | null;
   readonly onRetry: () => void;
   readonly onLoadMore: () => void;
-  /** The top-up form, when Stripe is configured; otherwise a "coming soon" note is shown. */
+  /** Existing PayNow form; absence shows the coming-soon notice when Add funds is opened. */
   readonly topUp?: React.ReactNode;
 }
 
-const kindLabels: Readonly<Record<WalletTransactionKind, string>> = {
-  TOP_UP: "Top-up",
-  LOCK: "Held for a session",
-  RELEASE: "Session share released",
-  REFUND: "Refund",
-  FORFEIT: "Forfeited share",
-  PAYOUT: "Payout",
-};
-
-const singaporeDateTime = new Intl.DateTimeFormat("en-SG", {
-  timeZone: "Asia/Singapore", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit",
-});
-
-/**
- * UC1-05 wallet overview: available and held balances, money held per session and the
- * transaction history. Display only: WalletController loads the data and handles actions.
- */
+/** UC1-05 presentation and local filters. Data fetching and payment state stay with their owners. */
 export function WalletView({ summary, history, loadingMore, moreError, onRetry, onLoadMore, topUp }: WalletViewProps) {
+  const [topUpOpen, setTopUpOpen] = useState(false);
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 pb-10 pt-6 md:px-8 md:pt-10">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Wallet</h1>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your balance, money held for sessions you&apos;ve joined, and every movement of funds.</p>
+    <div className={styles.page}>
+      <header className={styles.heading}>
+        <h1 className={styles.breadcrumb}>Wallet <span aria-hidden="true">/</span></h1>
       </header>
-
-      <section aria-labelledby="balance-heading" className="mb-8">
+      <div className={styles.overview}>
+      <section aria-labelledby="balance-heading" className={styles.balanceSection}>
         <h2 id="balance-heading" className="sr-only">Balance</h2>
-        {summary.status === "loading" && <LoadingSpinner label="Loading your balance…" />}
-        {summary.status === "error" && <LoadError message={summary.message} signIn={summary.signIn} onRetry={onRetry} />}
+        {summary.status === "loading" && <div className={styles.loadingCard}><LoadingSpinner label="Loading your balance…" /></div>}
+        {summary.status === "error" && <div className={styles.statePanel}><LoadError message={summary.message} signIn={summary.signIn} onRetry={onRetry} /></div>}
         {summary.status === "ready" && <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border bg-card p-4 md:p-6">
-              <p className="text-sm text-muted-foreground">Available</p>
-              <Money cents={summary.data.availableBalanceCents} className="mt-1 block text-3xl font-bold" />
-              <p className="mt-2 text-xs text-muted-foreground">You can use this to join sessions.</p>
+          <div className={styles.balanceCard}>
+            <BalanceArtwork />
+            <div className={styles.balanceMain}>
+              <p className={styles.eyebrow}>Available balance</p>
+              <WalletMoney cents={summary.data.availableBalanceCents} className={styles.balanceAmount} />
+              <p className={styles.balanceHint}>Available for new bookings</p>
             </div>
-            <div className="rounded-lg border bg-card p-4 md:p-6">
-              <p className="text-sm text-muted-foreground">Held for sessions</p>
-              <Money cents={summary.data.heldBalanceCents} className="mt-1 block text-3xl font-bold" />
-              <p className="mt-2 text-xs text-muted-foreground">Reserved until attendance is verified, then released to the booker.</p>
+            <dl className={styles.balanceStats}>
+              <div>
+                <dt>Held</dt>
+                <dd><WalletMoney cents={summary.data.heldBalanceCents} /></dd>
+              </div>
+              <div>
+                <dt title="Withdrawals being processed">Pending<span className="sr-only"> withdrawals</span></dt>
+                <dd>{summary.data.pendingPayoutCents === undefined
+                  ? <span aria-label="Pending withdrawals unavailable">—</span>
+                  : <WalletMoney cents={summary.data.pendingPayoutCents} />}</dd>
+              </div>
+            </dl>
+            <div className={styles.balanceActions}>
+              <Button className={styles.addFunds} aria-expanded={topUpOpen} aria-controls="wallet-top-up" onClick={() => setTopUpOpen((open) => !open)}>
+                <CirclePlus className={styles.mobileInline} aria-hidden="true" /><Plus className={styles.desktopInline} aria-hidden="true" />Add funds
+              </Button>
+              <Button asChild variant="outline" className={styles.payoutAction}>
+                <Link href="/payouts"><CircleArrowUp className={`${styles.mobileInline} ${styles.withdrawIcon}`} aria-hidden="true" /><ArrowUpRight className={styles.desktopInline} aria-hidden="true" /><span className={styles.mobileInline}>Withdraw</span><span className={styles.desktopInline}>Payouts</span></Link>
+              </Button>
             </div>
           </div>
-          {topUp ?? <InfoNote icon className="mt-3">Topping up with PayNow is coming soon.</InfoNote>}
+          {/* Preserve the form's draft and pending attempt when collapsed. Inline disclosure
+              also lets Stripe's payment overlay manage its focus normally. */}
+          <div id="wallet-top-up" hidden={!topUpOpen} className={styles.topUp}>
+            {topUp ?? <InfoNote icon>Topping up with PayNow is coming soon.</InfoNote>}
+          </div>
         </>}
       </section>
-
-      <section aria-labelledby="payout-heading" className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
-        <div className="min-w-0 flex-1">
-          <h2 id="payout-heading" className="font-semibold">Payout account</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Needed to create sessions and receive the shares players pay you.</p>
-        </div>
-        <Button asChild variant="outline" className="min-h-11 shrink-0"><Link href="/payouts">Manage payouts</Link></Button>
-      </section>
-
-      {summary.status === "ready" && (
-        <section aria-labelledby="holds-heading" className="mb-8">
-          <h2 id="holds-heading" className="mb-3 text-lg font-semibold">Held for sessions</h2>
-          {summary.data.activeHolds.length === 0
-            ? <EmptyState title="Nothing held right now" description="When you join a session, its share is held here until attendance is verified." />
-            : <ul className="space-y-3">
-              {summary.data.activeHolds.map((hold) => (
-                <li key={hold.holdId} className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="break-words font-medium">{hold.venueName ?? "Session"}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {hold.sport ?? "Session"}{hold.startAt && <> · <time dateTime={hold.startAt}>{singaporeDateTime.format(new Date(hold.startAt))}</time> SGT</>}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <Money cents={hold.heldCents} className="font-semibold" />
-                    {hold.heldCents !== hold.originalCents && <p className="text-xs text-muted-foreground">of <Money cents={hold.originalCents} /></p>}
-                  </div>
-                </li>
-              ))}
-            </ul>}
-        </section>
-      )}
-
-      <section aria-labelledby="history-heading">
-        <h2 id="history-heading" className="mb-3 text-lg font-semibold">Transactions</h2>
-        {history.status === "loading" && <LoadingSpinner label="Loading transactions…" />}
-        {history.status === "error" && <LoadError message={history.message} signIn={history.signIn} onRetry={onRetry} />}
-        {history.status === "ready" && (history.data.items.length === 0
-          ? <EmptyState title="No transactions yet" description="Top-ups, held shares, refunds and payouts will appear here." />
-          : <>
-            <ul aria-label="Transactions" className="divide-y overflow-hidden rounded-lg border bg-card">
-              {history.data.items.map((item) => (
-                <li key={item.transactionId} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="font-medium">{kindLabels[item.kind]}</p>
-                    <p className="text-xs text-muted-foreground"><time dateTime={item.occurredAt}>{singaporeDateTime.format(new Date(item.occurredAt))}</time> SGT</p>
-                  </div>
-                  <Money cents={item.amountCents} className="shrink-0 font-semibold" />
-                </li>
-              ))}
-            </ul>
-            {moreError && <div className="mt-3"><ErrorMessage>{moreError}</ErrorMessage></div>}
-            {history.data.nextCursor !== null && (
-              <Button variant="outline" className="mt-3 min-h-11" disabled={loadingMore} onClick={onLoadMore}>
-                {loadingMore ? "Loading…" : "Load more"}
-              </Button>
-            )}
-          </>)}
-      </section>
+        {summary.status === "ready" && <Holds summary={summary.data} />}
+      </div>
+        <WalletTransactions history={history} loadingMore={loadingMore} moreError={moreError} onLoadMore={onLoadMore}
+          error={history.status === "error" ? <LoadError message={history.message} signIn={history.signIn} onRetry={onRetry} /> : undefined} />
     </div>
   );
+}
+
+function Holds({ summary }: { readonly summary: WalletSummary }) {
+  return (
+    <section id="wallet-holds" aria-label="Held for sessions" className={styles.holds}>
+      <div className={styles.holdsHeader}>
+        <div>
+          <h2><span className={styles.mobileInline}>Funds in use</span><span className={styles.desktopInline}>Funds on hold</span><span className={styles.holdCount}>{summary.activeHolds.length}</span></h2>
+          <p className={styles.holdsDescription}>Reserved for upcoming sessions</p>
+        </div>
+        <WalletMoney cents={summary.heldBalanceCents} className={styles.holdsTotal} />
+      </div>
+      {summary.activeHolds.length === 0
+        ? <EmptyState title="Nothing held right now" description="When you join a session, its share is held here until attendance is verified." />
+        : <ul className={styles.holdList}>
+          {summary.activeHolds.map((hold) => (
+            <li key={hold.holdId}>
+              <Link href={`/sessions/${encodeURIComponent(hold.sessionId)}`} className={styles.holdLink}>
+                <span className={styles.holdIcon} aria-hidden="true">{hold.sport === "Badminton" ? <Shuttlecock /> : <CircleDot size={22} strokeWidth={1.2} />}</span>
+                <span className={styles.holdPhoto} data-surface={hold.sport === "Tennis" ? "clay" : "grass"} aria-hidden="true">
+                  <Image src={hold.sport === "Tennis" ? "/images/sports/tennis.jpg" : "/images/landing-court.webp"} fill sizes="64px" alt="" />
+                </span>
+                <div className={styles.holdDetails}>
+                  <p className={styles.holdName}><span className={styles.mobileInline}>{hold.sport && `${hold.sport} · `}</span>{hold.venueName ?? "Session"}</p>
+                  {hold.startAt && <p className={styles.holdDate}><time dateTime={hold.startAt}><span className={styles.desktopInline}>{singaporeDateTime.format(new Date(hold.startAt))}</span><span className={styles.mobileInline}>{mobileHoldDate(hold.startAt)}</span></time></p>}
+                </div>
+                <div className={styles.holdAmount}>
+                  <WalletMoney cents={hold.heldCents} />
+                  <p className={hold.heldCents === hold.originalCents ? styles.heldCaption : undefined}>{hold.heldCents !== hold.originalCents ? <>of <WalletMoney cents={hold.originalCents} /></> : "held"}</p>
+                </div>
+                <ChevronRight className={styles.holdChevron} size={16} strokeWidth={1.5} aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>}
+    </section>
+  );
+}
+
+function mobileHoldDate(timestamp: string) {
+  const date = new Date(timestamp);
+  const dayFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Singapore", year: "numeric", month: "2-digit", day: "2-digit" });
+  const tomorrow = new Date(Date.now() + 86_400_000);
+  const day = dayFormat.format(date) === dayFormat.format(new Date()) ? "Today"
+    : dayFormat.format(date) === dayFormat.format(tomorrow) ? "Tomorrow"
+    : new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", day: "numeric", month: "short" }).format(date);
+  const time = new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", hour: "numeric", minute: "2-digit", hour12: true }).format(date).toUpperCase();
+  return `${day} · ${time}`;
+}
+
+function Shuttlecock() {
+  return <svg width="22" height="24" viewBox="0 0 24 26" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m7.2 19.2 4.6 3.1M8.5 17.4l4.7 3.3M7 19.4c-3.7.9-3.5 4.2-1.1 4.6 1.5.3 3.3-1 4.5-2.5L7 19.4Z" />
+    <path d="M8 18 9.2 4.9c.3-1.9 2.6-1.6 2.7.1l.4 9.3M10 19l6-14c.7-1.6 2.9-.6 2.2 1.1l-4.6 11.6M12 21l9.3-8.2c1.3-1.4-.4-3-1.7-1.8L10 19" />
+  </svg>;
+}
+
+/** Layered translucent ribbons match the desktop artwork; mobile has a static dark surface. */
+function BalanceArtwork() {
+  const grainId = useId();
+  return <div className={styles.cardArtwork} aria-hidden="true">
+    <svg className={styles.cardWaves} viewBox="0 0 700 285" preserveAspectRatio="none">
+      <defs>
+        <filter id={grainId}><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="3" stitchTiles="stitch" /><feColorMatrix type="saturate" values="0" /></filter>
+      </defs>
+      <g className={styles.waveBack}>
+        <path d="M280 285C366 215 373 189 454 191C584 198 538 21 700 5V285Z" fill="#a1a798" fillOpacity=".15" />
+        <path d="M348 285C409 220 439 219 465 157C518 26 574 137 700 126V285Z" fill="#9ba291" fillOpacity=".15" />
+        <path d="M416 285C515 224 527 159 573 107C617 58 653 61 700 59V285Z" fill="#929a87" fillOpacity=".16" />
+      </g>
+      <g className={styles.waveFront}>
+        <path d="M385 285C478 231 484 200 535 195C609 189 599 124 700 126V285Z" fill="#8c9582" fillOpacity=".18" />
+        <path d="M468 285C523 237 562 217 592 190C630 157 654 151 700 163V285Z" fill="#818c76" fillOpacity=".20" />
+        <path d="M512 285C557 248 596 232 631 220C666 208 681 219 700 215V285Z" fill="#77836c" fillOpacity=".13" />
+        <path d="M470 285C513 239 538 218 592 190C632 170 661 155 700 161M547 285C581 257 608 237 644 225C663 218 683 216 700 219" stroke="#fff" strokeOpacity=".36" strokeWidth="1" fill="none" />
+      </g>
+      <rect width="700" height="285" filter={`url(#${grainId})`} opacity=".035" />
+    </svg>
+  </div>;
 }
 
 function LoadError({ message, signIn, onRetry }: { readonly message: string; readonly signIn: boolean; readonly onRetry: () => void }) {

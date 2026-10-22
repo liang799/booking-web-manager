@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { LedgerTransaction, Money } from "@/domain";
+import { Money } from "@/domain";
 import { GetWalletSummary } from "@/use-cases/wallet/GetWalletSummary";
 import { ListWalletTransactions } from "@/use-cases/wallet/ListWalletTransactions";
 import { CreateWalletTopUp } from "@/use-cases/wallet/CreateWalletTopUp";
@@ -14,6 +14,7 @@ function reader() {
       walletId: "wallet-a", availableBalance: Money.fromCents(2500),
     }),
     listActiveHolds: vi.fn<WalletReader["listActiveHolds"]>().mockResolvedValue([]),
+    getPendingPayoutAmount: vi.fn<WalletReader["getPendingPayoutAmount"]>().mockResolvedValue(Money.fromCents(0)),
     listWalletTransactions: vi.fn<WalletReader["listWalletTransactions"]>().mockResolvedValue([]),
   };
 }
@@ -32,22 +33,24 @@ describe("UC1-05 wallet workflows", () => {
       holdId: `hold-${index}`, sessionId: `session-${index}`,
       heldAmount: Money.fromCents(cents), originalAmount: Money.fromCents(500), createdAt: now,
     })));
+    reads.getPendingPayoutAmount.mockResolvedValue(Money.fromCents(1850));
 
     const result = await new GetWalletSummary(reads).forUser("user-a");
 
     expect(result).toMatchObject({ walletId: "wallet-a", userId: "user-a",
-      availableBalanceCents: 2500, heldBalanceCents: 350, currency: "SGD" });
+      availableBalanceCents: 2500, heldBalanceCents: 350, pendingPayoutCents: 1850, currency: "SGD" });
     expect(result.activeHolds[0]).toMatchObject({ heldCents: 100, originalCents: 500, createdAt: now });
     expect(reads.findWalletIdByUserId).toHaveBeenCalledWith("user-a");
     expect(reads.getWalletBalance).toHaveBeenCalledWith("wallet-a");
     expect(reads.listActiveHolds).toHaveBeenCalledWith("wallet-a");
+    expect(reads.getPendingPayoutAmount).toHaveBeenCalledWith("user-a");
   });
 
   test("keeps an empty wallet at zero before its first ledger entry", async () => {
     const reads = reader();
     reads.getWalletBalance.mockResolvedValue(null);
     expect(await new GetWalletSummary(reads).forUser("user-a")).toMatchObject({
-      availableBalanceCents: 0, heldBalanceCents: 0, activeHolds: [],
+      availableBalanceCents: 0, heldBalanceCents: 0, pendingPayoutCents: 0, activeHolds: [],
     });
   });
 
@@ -61,23 +64,25 @@ describe("UC1-05 wallet workflows", () => {
     await expect(run).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(reads.getWalletBalance).not.toHaveBeenCalled();
     expect(reads.listActiveHolds).not.toHaveBeenCalled();
+    expect(reads.getPendingPayoutAmount).not.toHaveBeenCalled();
     expect(reads.listWalletTransactions).not.toHaveBeenCalled();
     expect(payments.createIntent).not.toHaveBeenCalled();
   });
 
   test("returns history continuation from the final entry and forwards the owner's cursor", async () => {
     const reads = reader();
-    reads.listWalletTransactions.mockResolvedValue([new LedgerTransaction({
-      transactionId: "entry-a", walletId: "wallet-a", kind: "TOP_UP", amount: Money.fromCents(2000),
-      occurredAt: now, idempotencyKey: "credit-a",
-    })]);
+    reads.listWalletTransactions.mockResolvedValue([{
+      transactionId: "entry-a", walletId: "wallet-a", kind: "LOCK", amount: Money.fromCents(2000),
+      occurredAt: now, idempotencyKey: "lock-a", sport: "Badminton",
+      externalReference: undefined, holdId: "hold-a", payoutId: undefined,
+    }]);
     const before = new Date("2026-10-18T00:00:00Z");
 
     const result = await new ListWalletTransactions(reads).forUser("user-a", { limit: 1, before });
 
     expect(reads.listWalletTransactions).toHaveBeenCalledWith({ walletId: "wallet-a", limit: 1, occurredBefore: before });
-    expect(result).toEqual({ items: [{ transactionId: "entry-a", kind: "TOP_UP", amountCents: 2000,
-      occurredAt: now, idempotencyKey: "credit-a", externalReference: null, holdId: null, payoutId: null }],
+    expect(result).toEqual({ items: [{ transactionId: "entry-a", kind: "LOCK", amountCents: 2000,
+      occurredAt: now, idempotencyKey: "lock-a", externalReference: null, holdId: "hold-a", payoutId: null, sport: "Badminton" }],
     nextCursor: now });
   });
 
@@ -107,5 +112,12 @@ describe("UC1-05 wallet workflows", () => {
       amountCents: 2000, idempotencyKey: "retry-a",
     })).rejects.toBe(failure);
     expect(payments.createIntent).not.toHaveBeenCalled();
+  });
+
+  test("does not turn unavailable pending withdrawals into a zero balance", async () => {
+    const reads = reader();
+    const failure = new Error("pending payout read failed");
+    reads.getPendingPayoutAmount.mockRejectedValue(failure);
+    await expect(new GetWalletSummary(reads).forUser("user-a")).rejects.toBe(failure);
   });
 });

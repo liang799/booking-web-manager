@@ -29,7 +29,7 @@ const sessions: readonly Question[] = [
   },
   {
     question: "When does the booker get paid?",
-    answer: <>After attendance is confirmed. The booker confirms who came; if they don&apos;t, it is confirmed automatically 72 hours after the session ends. If a booker cancels a session or removes you, your share is refunded to your wallet.</>,
+    answer: <>After attendance is confirmed. The booker confirms who came; if they don&apos;t, it is confirmed automatically 72 hours after the session ends. The booker then withdraws the money from <Link href="/payouts">Payouts</Link>. If a booker cancels a session or removes you, your share is refunded to your wallet.</>,
   },
   {
     question: "What is my reliability score?",
@@ -40,7 +40,7 @@ const sessions: readonly Question[] = [
 const account: readonly Question[] = [
   {
     question: "How do I add money to my wallet?",
-    answer: <>Topping up with PayNow is coming soon. You can already see your balances and history in your <Link href="/wallet">wallet</Link>.</>,
+    answer: <>Open your <Link href="/wallet">wallet</Link> and choose Pay with PayNow. Enter between S$1.00 and S$1,000.00, then scan the QR code with your banking app. Your balance updates a few seconds after you pay.</>,
   },
   {
     question: "How do I turn notifications on or off?",

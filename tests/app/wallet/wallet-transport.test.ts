@@ -8,6 +8,7 @@ const summary = {
   userId: "22222222-2222-4222-8222-222222222222",
   availableBalanceCents: 2500,
   heldBalanceCents: 1250,
+  pendingPayoutCents: 1850,
   currency: "SGD",
   activeHolds: [{
     holdId: "33333333-3333-4333-8333-333333333333", sessionId: "44444444-4444-4444-8444-444444444444",
@@ -32,10 +33,19 @@ describe("UC1-05 wallet transport", () => {
     const result = await walletTransport.loadSummary();
 
     // Assert
-    expect(result).toEqual({ status: "ready", data: expect.objectContaining({ availableBalanceCents: 2500, heldBalanceCents: 1250 }) });
+    expect(result).toEqual({ status: "ready", data: expect.objectContaining({
+      availableBalanceCents: 2500, heldBalanceCents: 1250, pendingPayoutCents: 1850,
+    }) });
     expect(fetcher).toHaveBeenCalledWith("/api/wallet", expect.objectContaining({ credentials: "same-origin", cache: "no-store" }));
     // The API reads the login from the cookies; the page never handles the token.
     expect(fetcher.mock.calls[0]?.[1]).not.toHaveProperty("headers");
+  });
+
+  test("preserves an omitted pending withdrawal amount from an older response as unknown", async () => {
+    fetcher.mockResolvedValueOnce(Response.json({ ...summary, pendingPayoutCents: undefined }));
+    const result = await walletTransport.loadSummary();
+    expect(result.status).toBe("ready");
+    if (result.status === "ready") expect(result.data.pendingPayoutCents).toBeUndefined();
   });
 
   test("stops the request when React Query cancels it", async () => {
@@ -88,6 +98,10 @@ describe("UC1-05 wallet transport", () => {
   test.each([
     ["a fractional amount", { ...summary, availableBalanceCents: 12.5 }],
     ["a missing balance", { ...summary, availableBalanceCents: undefined }],
+    ["negative pending withdrawals", { ...summary, pendingPayoutCents: -1 }],
+    ["fractional pending withdrawals", { ...summary, pendingPayoutCents: 18.5 }],
+    ["unsafe pending withdrawals", { ...summary, pendingPayoutCents: Number.MAX_SAFE_INTEGER + 1 }],
+    ["null pending withdrawals", { ...summary, pendingPayoutCents: null }],
   ])("rejects a summary with %s instead of showing a wrong balance", async (_name, body) => {
     // Arrange
     fetcher.mockResolvedValueOnce(Response.json(body));

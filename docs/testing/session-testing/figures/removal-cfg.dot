@@ -1,0 +1,17 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", margin="0.08", pad="0.08", nodesep="0.18", ranksep="0.30", size="8.8,3.45", dpi=220, fontname="Arial", fontsize=12];
+  node [shape=box, style="rounded,filled", fillcolor="#f0f0f0", color="#555555", fontcolor="black", fontname="Arial", fontsize=10.5, penwidth=1.0, margin="0.07,0.05"];
+  edge [color="#333333", fontcolor="black", fontname="Arial", fontsize=9, arrowsize=0.6, penwidth=1.0];
+  R0 [shape=oval, label="R0\nCallback entry"];
+  R1 [shape=box, label="R1\nLoad + authorize\nVersion + domain removal"];
+  R2 [shape=diamond, label="R2\nPreview version\ndifferent?"];
+  R3 [shape=box, label="R3\nThrow stale\npreview conflict"];
+  R4 [shape=box, label="R4\nAppend refund + save\nReturn REMOVED"];
+  R5 [shape=oval, label="R5\nExit"];
+  R0 -> R1;
+  R1 -> R2;
+  R2 -> R3 [label="T"];
+  R2 -> R4 [label="F"];
+  R3 -> R5;
+  R4 -> R5;
+}
