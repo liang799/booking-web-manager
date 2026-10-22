@@ -1,0 +1,225 @@
+{
+  "generatedAt": "2026-10-20T12:18:57.177Z",
+  "observations": [
+    {
+      "id": "WB-D1",
+      "input": "First check: 1 active commitment",
+      "predictedPath": "A0 A1 A2 A11",
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profile": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check"
+        ],
+        "profile": "ACTIVE"
+      }
+    },
+    {
+      "id": "WB-D2",
+      "input": "Nothing outstanding at either check",
+      "predictedPath": "A0 A1 A3 A4 A6 A7 A11",
+      "expected": {
+        "outcome": "DELETED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login"
+        ],
+        "profile": "INACTIVE"
+      },
+      "actual": {
+        "outcome": "DELETED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login"
+        ],
+        "profile": "INACTIVE"
+      }
+    },
+    {
+      "id": "WB-D3",
+      "input": "First check clear; re-check finds 100c available",
+      "predictedPath": "A0 A1 A3 A4 A5 A11",
+      "expected": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "restore"
+        ],
+        "profile": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "BLOCKED",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "restore"
+        ],
+        "profile": "ACTIVE"
+      }
+    },
+    {
+      "id": "WB-D4",
+      "input": "Login removal throws; restore succeeds",
+      "predictedPath": "A0 A1 A3 A4 A6 A8 A9 A11",
+      "expected": {
+        "outcome": "Error(auth service unavailable)",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login",
+          "restore"
+        ],
+        "profile": "ACTIVE"
+      },
+      "actual": {
+        "outcome": "Error(auth service unavailable)",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login",
+          "restore"
+        ],
+        "profile": "ACTIVE"
+      }
+    },
+    {
+      "id": "WB-D5",
+      "input": "Login removal throws; restore also throws",
+      "predictedPath": "A0 A1 A3 A4 A6 A8 A10 A11",
+      "expected": {
+        "outcome": "AggregateError(2)",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login",
+          "restore"
+        ],
+        "profile": "INACTIVE"
+      },
+      "actual": {
+        "outcome": "AggregateError(2)",
+        "steps": [
+          "check",
+          "deactivate",
+          "check",
+          "delete-login",
+          "restore"
+        ],
+        "profile": "INACTIVE"
+      }
+    },
+    {
+      "id": "WB-J1",
+      "input": "Token matches no group",
+      "predictedPath": "J0 J1 J2 J10",
+      "expected": {
+        "outcome": "INVALID_INVITATION",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      },
+      "actual": {
+        "outcome": "INVALID_INVITATION",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      }
+    },
+    {
+      "id": "WB-J2",
+      "input": "Old link of an archived group",
+      "predictedPath": "J0 J1 J3 J4 J10",
+      "expected": {
+        "outcome": "INVALID_STATE",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      },
+      "actual": {
+        "outcome": "INVALID_STATE",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      }
+    },
+    {
+      "id": "WB-J3",
+      "input": "Active group whose link was turned off",
+      "predictedPath": "J0 J1 J3 J5 J6 J10",
+      "expected": {
+        "outcome": "INVALID_INVITATION",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      },
+      "actual": {
+        "outcome": "INVALID_INVITATION",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      }
+    },
+    {
+      "id": "WB-J4",
+      "input": "Existing member opens the valid link",
+      "predictedPath": "J0 J1 J3 J5 J7 J8 J10",
+      "expected": {
+        "outcome": "ALREADY_MEMBER",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      },
+      "actual": {
+        "outcome": "ALREADY_MEMBER",
+        "saves": 0,
+        "members": [
+          "owner"
+        ]
+      }
+    },
+    {
+      "id": "WB-J5",
+      "input": "New user opens the valid link",
+      "predictedPath": "J0 J1 J3 J5 J7 J9 J10",
+      "expected": {
+        "outcome": "JOINED",
+        "saves": 1,
+        "members": [
+          "owner",
+          "newcomer"
+        ]
+      },
+      "actual": {
+        "outcome": "JOINED",
+        "saves": 1,
+        "members": [
+          "owner",
+          "newcomer"
+        ]
+      }
+    }
+  ]
+}
