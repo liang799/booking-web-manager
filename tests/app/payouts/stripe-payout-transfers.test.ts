@@ -82,6 +82,33 @@ describe("StripePayoutTransfers", () => {
       { stripeAccount: "acct_1", idempotencyKey: '["UC1-08:instant","payout-1"]' },
     );
   });
+
+  test("declines simulated account transfers without making outbound Stripe calls", async () => {
+    // Arrange
+    const { stripe, create, list } = fakeStripe({ existing: [] });
+    const simulatedReq = { ...request, accountReference: "acct_simulated_user123" };
+
+    // Act & Assert
+    await expect(new StripePayoutTransfers(stripe).transfer(simulatedReq)).rejects.toMatchObject({
+      name: "PayoutDeclinedError",
+      reason: "simulated_account_not_supported_by_stripe",
+    });
+    expect(create).not.toHaveBeenCalled();
+    expect(list).not.toHaveBeenCalled();
+  });
+
+  test("declines simulated account instant payouts without making outbound Stripe calls", async () => {
+    // Arrange
+    const { stripe, payout } = fakeStripe({ existing: [] });
+    const simulatedReq = { ...request, accountReference: "acct_simulated_user123" };
+
+    // Act & Assert
+    await expect(new StripePayoutTransfers(stripe).instantPayout(simulatedReq)).rejects.toMatchObject({
+      name: "PayoutDeclinedError",
+      reason: "simulated_account_not_supported_by_stripe",
+    });
+    expect(payout).not.toHaveBeenCalled();
+  });
 });
 
 function fakeStripe(options: { existing: { id: string }[]; createFailure?: Error }) {

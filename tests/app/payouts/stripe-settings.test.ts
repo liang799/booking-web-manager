@@ -1,7 +1,10 @@
 import type Stripe from "stripe";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { readStripeSettings } from "@/app/payouts/stripe-client";
-import { stripeAccountState } from "@/app/payouts/stripe-payout-account-provider";
+import {
+  StripePayoutAccountProvider,
+  stripeAccountState,
+} from "@/app/payouts/stripe-payout-account-provider";
 
 describe("readStripeSettings", () => {
   test("leaves payments unavailable without a secret key", () => {
@@ -82,6 +85,43 @@ describe("stripeAccountState", () => {
 
     // Assert
     expect(state.rejected).toBe(false);
+  });
+});
+
+describe("StripePayoutAccountProvider simulated account handling", () => {
+  test("marks simulated accounts as rejected so caller can transition without Stripe errors", async () => {
+    // Arrange
+    const retrieve = vi.fn();
+    const fakeStripe = { accounts: { retrieve } } as unknown as Stripe;
+    const provider = new StripePayoutAccountProvider(fakeStripe);
+
+    // Act
+    const state = await provider.getAccount("acct_simulated_user456");
+
+    // Assert
+    expect(state).toEqual({
+      accountReference: "acct_simulated_user456",
+      payoutsEnabled: false,
+      rejected: true,
+      instantPayoutsAvailable: false,
+    });
+    expect(retrieve).not.toHaveBeenCalled();
+  });
+
+  test("rejects onboarding link creation for simulated account references", async () => {
+    // Arrange
+    const create = vi.fn();
+    const fakeStripe = { accountLinks: { create } } as unknown as Stripe;
+    const provider = new StripePayoutAccountProvider(fakeStripe);
+
+    // Act & Assert
+    await expect(
+      provider.createOnboardingLink("acct_simulated_user456", {
+        returnUrl: "http://localhost/return",
+        refreshUrl: "http://localhost/refresh",
+      }),
+    ).rejects.toThrow("Simulated payout accounts cannot generate Stripe Connect onboarding links");
+    expect(create).not.toHaveBeenCalled();
   });
 });
 
