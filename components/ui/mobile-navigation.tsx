@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { NavigationIcon } from "./navigation-icon";
+import { cn } from "@/lib/utils";
 import styles from "./mobile-navigation.module.css";
 
 const destinations = [
@@ -71,7 +72,7 @@ export function MobileNavigationProvider({ children }: { readonly children: Reac
 }
 
 /** Real route links with one travelling selection pill; routing never waits for the animation. */
-export function MobileNavigation({ pathname, enabled = true }: { readonly pathname: string; readonly enabled?: boolean }) {
+export function MobileNavigation({ pathname, enabled = true, compact = false }: { readonly pathname: string; readonly enabled?: boolean; readonly compact?: boolean }) {
   const activeIndex = selectedIndex(pathname);
   const previous = useContext(PreviousSelection);
   const localPrevious = useRef<SelectionSnapshot | null>(null);
@@ -128,7 +129,7 @@ export function MobileNavigation({ pathname, enabled = true }: { readonly pathna
   }, [activeIndex, enabled, selection]);
 
   return (
-    <nav className={styles.navigation} aria-label="Main">
+    <nav className={cn(styles.navigation, compact && styles.compact)} aria-label="Main">
       <div
         ref={trackRef}
         className={styles.track}
