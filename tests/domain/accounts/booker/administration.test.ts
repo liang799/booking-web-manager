@@ -27,6 +27,7 @@ describe("Booker", () => {
 
   test("assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession", () => {
     // Input
+    const cancellationTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const booker = createTestUser({
       userId: "booker",
@@ -34,11 +35,13 @@ describe("Booker", () => {
     }).asBooker();
     const previousState = sessionState(bookingSession);
 
+    booker.assertCanCancel(bookingSession, cancellationTime);
+
     // Log
-    booker.assertCanCancel(bookingSession, hoursBeforeSessionStart(48));
+    const currentState = sessionState(bookingSession);
 
     // Oracle
-    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(currentState).toEqual(previousState);
   });
 
   test("assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure", () => {
@@ -62,15 +65,17 @@ describe("Booker", () => {
     }).asBooker();
     const previousState = sessionState(bookingSession);
 
-    // Log
     booker.assertCanChangeVisibility(
       bookingSession,
       "PRIVATE",
       hoursBeforeSessionStart(48),
     );
 
+    // Log
+    const currentState = sessionState(bookingSession);
+
     // Oracle
-    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(currentState).toEqual(previousState);
   });
 
   test("assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure", () => {
@@ -100,26 +105,29 @@ describe("Booker", () => {
     });
     const booker = readyBooker();
     const previousState = sessionState(bookingSession);
-    const failure = new DomainError(
-      "INVALID_STATE",
-      "Second cancellation failed",
-    );
+
+    // Simulate Ben's cancellation failing after Alice has been processed.
     const cancelBen = vi
       .spyOn(
         bookingSession.participantList.requireParticipation("p-ben"),
         "cancel",
       )
       .mockImplementationOnce(() => {
-        throw failure;
+        throw new DomainError("INVALID_STATE", "Second cancellation failed");
       });
 
     try {
       // Log & Oracle
       expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
-        failure,
+        new DomainError("INVALID_STATE", "Second cancellation failed"),
       );
+
+      // Log
+      const currentState = sessionState(bookingSession);
+
+      // Oracle
       expect(cancelBen).toHaveBeenCalledOnce();
-      expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(currentState).toEqual(previousState);
     } finally {
       cancelBen.mockRestore();
     }
@@ -133,23 +141,21 @@ describe("Booker", () => {
       waitlistedUserIds: ["waiting"],
     });
     const booker = readyBooker();
-    const failure = new DomainError(
-      "INVALID_STATE",
-      "Second cancellation failed",
-    );
+
+    // Simulate a failed first cancellation before exercising the retry.
     const cancelBen = vi
       .spyOn(
         bookingSession.participantList.requireParticipation("p-ben"),
         "cancel",
       )
       .mockImplementationOnce(() => {
-        throw failure;
+        throw new DomainError("INVALID_STATE", "Second cancellation failed");
       });
 
     // Establish a rejected cancellation before exercising the retry.
     try {
       expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
-        failure,
+        new DomainError("INVALID_STATE", "Second cancellation failed"),
       );
     } finally {
       cancelBen.mockRestore();
@@ -196,11 +202,13 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
-    // Log
     booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
 
+    // Log
+    const visibility = bookingSession.visibility;
+
     // Oracle
-    expect(bookingSession.visibility).toBe("PRIVATE");
+    expect(visibility).toBe("PRIVATE");
   });
 
   test("changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState", () => {

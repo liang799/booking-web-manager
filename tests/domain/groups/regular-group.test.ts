@@ -49,13 +49,16 @@ describe("RegularGroup", () => {
       const details = groupDetails({ memberships });
       const group = new RegularGroup(details);
 
-      // Log
+      // Attempt to alter the supplied membership collection and date.
       memberships[0]?.joinedAt.setUTCFullYear(2000);
       memberships.pop();
 
+      // Log
+      const storedMemberships = group.memberships;
+
       // Oracle
-      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
-      expect(group.memberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
+      expect(storedMemberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(storedMemberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
     });
 
     test("memberships_WhenReturnedMembershipsAreMutated_PreservesMembersAndDates", () => {
@@ -63,13 +66,16 @@ describe("RegularGroup", () => {
       const group = newGroup();
       const returnedMemberships = group.memberships as GroupMembership[];
 
-      // Log
+      // Attempt to alter the returned membership collection and date.
       returnedMemberships[0]?.joinedAt.setUTCFullYear(2000);
       returnedMemberships.pop();
 
+      // Log
+      const storedMemberships = group.memberships;
+
       // Oracle
-      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
-      expect(group.memberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
+      expect(storedMemberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(storedMemberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
     });
   });
 
@@ -231,11 +237,13 @@ describe("RegularGroup", () => {
       // Input
       const group = newGroup();
 
-      // Log
       group.rename({ actorId: "owner", name: "Saturday tennis" });
 
+      // Log
+      const updatedName = group.name;
+
       // Oracle
-      expect(group.name).toBe("Saturday tennis");
+      expect(updatedName).toBe("Saturday tennis");
     });
 
     test("rename_WhenNameIsBlank_RejectsWithoutChangingState", () => {
@@ -284,11 +292,13 @@ describe("RegularGroup", () => {
         now: now(),
       });
 
-      // Log
       group.removeMember({ actorId: "owner", userId: "player" });
 
+      // Log
+      const remainingMembers = group.memberships.map((member) => member.userId);
+
       // Oracle
-      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(remainingMembers).toEqual(["owner"]);
     });
 
     test("removeMember_WhenTargetIsOwner_RejectsWithoutChangingState", () => {
@@ -355,14 +365,20 @@ describe("RegularGroup", () => {
       // Input
       const group = newGroup();
 
-      // Log
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
 
+      // Log
+      const archivedState = {
+        status: group.status,
+        invitationActive: group.invitationActive,
+        memberIds: group.memberships.map((member) => member.userId),
+      };
+
       // Oracle
-      expect(group.status).toBe("ARCHIVED");
-      expect(group.invitationActive).toBe(false);
-      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(archivedState.status).toBe("ARCHIVED");
+      expect(archivedState.invitationActive).toBe(false);
+      expect(archivedState.memberIds).toEqual(["owner"]);
     });
   });
 
@@ -373,11 +389,13 @@ describe("RegularGroup", () => {
       group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
       group.join({ userId: "ben", invitationToken: "first-token", now: now() });
 
-      // Log
       group.leave({ userId: "aisha" });
 
+      // Log
+      const remainingMembers = group.memberships.map((member) => member.userId);
+
       // Oracle
-      expect(group.memberships.map((member) => member.userId)).toEqual([
+      expect(remainingMembers).toEqual([
         "owner",
         "ben",
       ]);

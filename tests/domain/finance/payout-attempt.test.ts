@@ -114,7 +114,7 @@ describe("PayoutAttempt", () => {
         providerReference: "provider",
       });
 
-      // Log
+      // Attempt to alter supplied and returned settlement data.
       completedAt.setTime(0);
       payout.completedAt?.setTime(0);
       (
@@ -126,11 +126,18 @@ describe("PayoutAttempt", () => {
       ).bankAccountReference = "changed";
       (payout.lines as unknown[]).pop();
 
+      // Log
+      const recordedSettlement = {
+        completedAt: payout.completedAt,
+        destination: payout.destination,
+        lines: payout.lines,
+      };
+
       // Oracle
-      expect(payout.completedAt).toEqual(requestedAt);
-      expect(payout.destination.bankAccountReference).toBe("bank");
-      expect(payout.lines).toHaveLength(1);
-      expect(payout.lines[0]?.amount.toCents()).toBe(100);
+      expect(recordedSettlement.completedAt).toEqual(requestedAt);
+      expect(recordedSettlement.destination.bankAccountReference).toBe("bank");
+      expect(recordedSettlement.lines).toHaveLength(1);
+      expect(recordedSettlement.lines[0]?.amount.toCents()).toBe(100);
     });
 
     test("create_WhenRequestDateIsMutated_PreservesRequestedBatch", () => {
@@ -138,13 +145,17 @@ describe("PayoutAttempt", () => {
       const source = batch();
       const payout = PayoutAttempt.create(source);
 
-      // Log
+      // Attempt to alter the supplied and returned request dates.
       source.requestedAt.setTime(0);
       payout.requestedAt.setTime(0);
 
+      // Log
+      const requestedAmount = payout.amount;
+      const storedRequestedAt = payout.requestedAt;
+
       // Oracle
-      expect(payout.amount.toCents()).toBe(100);
-      expect(payout.requestedAt).toEqual(requestedAt);
+      expect(requestedAmount.toCents()).toBe(100);
+      expect(storedRequestedAt).toEqual(requestedAt);
     });
   });
 

@@ -20,14 +20,16 @@ describe("ParticipantList", () => {
     const list = new Session(sessionDetails({ participations }))
       .participantList;
 
-    // Log
     participations.reverse();
     participations.pop();
     (list.participations as Participation[]).pop();
     (list.participations as Participation[]).reverse();
 
+    // Log
+    const preservedParticipations = list.participations;
+
     // Oracle
-    expect(list.participations).toEqual([alice, ben]);
+    expect(preservedParticipations).toEqual([alice, ben]);
     expect(list.requireParticipation("p-alice")).toBe(alice);
     expect(list.findByUserId("alice")).toBe(alice);
     expect(list.requireParticipation("p-ben")).toBe(ben);

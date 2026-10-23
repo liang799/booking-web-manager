@@ -95,18 +95,23 @@ describe("User", () => {
     };
     const user = new User(details);
 
-    // Log
+    // Attempt to alter the supplied objects and membership list.
     details.wallet = fundedWallet("alice", 0);
     details.reliabilityScore = ReliabilityScore.from(0);
     memberGroupIds.push("other");
 
+    // Log
+    const loadedWallet = user.wallet;
+    const loadedScore = user.reliabilityScore;
+    const loadedMemberships = user.memberGroupIds;
+
     // Oracle
-    expect(user.wallet).toBe(wallet);
-    expect(user.wallet.walletId).toBe("w-alice");
-    expect(user.wallet.getAvailableBalance().toCents()).toBe(700);
-    expect(user.reliabilityScore).toBe(reliabilityScore);
-    expect(user.reliabilityScore.toNumber()).toBe(80);
-    expect(user.memberGroupIds).toEqual(["group"]);
+    expect(loadedWallet).toBe(wallet);
+    expect(loadedWallet.walletId).toBe("w-alice");
+    expect(loadedWallet.getAvailableBalance().toCents()).toBe(700);
+    expect(loadedScore).toBe(reliabilityScore);
+    expect(loadedScore.toNumber()).toBe(80);
+    expect(loadedMemberships).toEqual(["group"]);
   });
 
   test("memberGroupIds_WhenReturnedArrayChanges_PreservesMemberships", () => {
@@ -119,11 +124,14 @@ describe("User", () => {
     );
     const memberships = user.memberGroupIds as string[];
 
-    // Log
+    // Attempt to alter the returned collection.
     memberships.push("injected");
 
+    // Log
+    const storedMemberships = user.memberGroupIds;
+
     // Oracle
-    expect(user.memberGroupIds).toEqual(["group"]);
+    expect(storedMemberships).toEqual(["group"]);
   });
 
   test("wallet_WhenReassignmentIsAttempted_PreservesLoadedWallet", () => {

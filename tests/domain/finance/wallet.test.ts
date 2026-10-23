@@ -15,14 +15,17 @@ describe("Wallet", () => {
       const input = { walletId: "wallet", userId: "owner", transactions: [] };
       const wallet = new Wallet(input);
 
-      // Log
+      // Attempt to alter the supplied identity.
       input.walletId = "changed";
       input.userId = "changed";
+
+      // Log
       const identityChanged = Reflect.set(wallet, "walletId", "changed");
+      const storedIdentity = { walletId: wallet.walletId, userId: wallet.userId };
 
       // Oracle
-      expect(wallet.walletId).toBe("wallet");
-      expect(wallet.userId).toBe("owner");
+      expect(storedIdentity.walletId).toBe("wallet");
+      expect(storedIdentity.userId).toBe("owner");
       expect(identityChanged).toBe(false);
     });
 
@@ -311,21 +314,25 @@ describe("Wallet", () => {
       const history = [credit];
       const fundedWallet = wallet(history);
 
-      // Log
+      // Attempt to alter supplied and returned transaction data.
       history.length = 0;
       (fundedWallet.transactions as LedgerTransaction[]).push(
         entry("extra", "TOP_UP", 100),
       );
-      const amountChanged = Reflect.set(credit, "amount", Money.fromCents(0));
       credit.occurredAt.setTime(0);
+
+      // Log
+      const amountChanged = Reflect.set(credit, "amount", Money.fromCents(0));
+      const storedTransactions = fundedWallet.transactions;
+      const availableFunds = fundedWallet.getAvailableBalance();
 
       // Oracle
       expect(amountChanged).toBe(false);
-      expect(fundedWallet.transactions).toEqual([credit]);
-      expect(fundedWallet.transactions[0]?.occurredAt.toISOString()).toBe(
+      expect(storedTransactions).toEqual([credit]);
+      expect(storedTransactions[0]?.occurredAt.toISOString()).toBe(
         "2026-10-01T10:00:00.000Z",
       );
-      expect(fundedWallet.getAvailableBalance().toCents()).toBe(700);
+      expect(availableFunds.toCents()).toBe(700);
     });
   });
 });

@@ -54,12 +54,15 @@ describe("Money", () => {
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Log
     first.add(second);
 
+    // Log
+    const firstCents = first.toCents();
+    const secondCents = second.toCents();
+
     // Oracle
-    expect(first.toCents()).toBe(500);
-    expect(second.toCents()).toBe(700);
+    expect(firstCents).toBe(500);
+    expect(secondCents).toBe(700);
   });
 
   test("subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference", () => {
@@ -102,11 +105,14 @@ describe("Money", () => {
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Log
     first.subtract(second);
 
+    // Log
+    const firstCents = first.toCents();
+    const secondCents = second.toCents();
+
     // Oracle
-    expect(first.toCents()).toBe(500);
-    expect(second.toCents()).toBe(700);
+    expect(firstCents).toBe(500);
+    expect(secondCents).toBe(700);
   });
 });

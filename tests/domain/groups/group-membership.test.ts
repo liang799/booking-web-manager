@@ -23,12 +23,15 @@ describe("GroupMembership", () => {
     const joinedAt = now();
     const membership = new GroupMembership({ userId: "owner", joinedAt });
 
-    // Log
+    // Attempt to alter the supplied and returned dates.
     joinedAt.setUTCFullYear(2000);
     membership.joinedAt.setUTCFullYear(2000);
 
+    // Log
+    const storedJoinedAt = membership.joinedAt;
+
     // Oracle
-    expect(membership.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
+    expect(storedJoinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
   });
 });
 

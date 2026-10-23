@@ -48,16 +48,18 @@ describe("Session", () => {
       }),
     );
 
-    // Log
     bookingSession.autoVerifyAttendance(automaticVerificationDueAt);
 
-    // Oracle
-    expect(
-      bookingSession.participantList.participations.map((participation) => [
+    // Log
+    const attendanceRecords = bookingSession.participantList.participations.map(
+      (participation) => [
         participation.attendance,
         participation.verificationMethod,
-      ]),
-    ).toEqual([
+      ],
+    );
+
+    // Oracle
+    expect(attendanceRecords).toEqual([
       ["ABSENT", "BOOKER"],
       ["ATTENDED", "AUTOMATIC"],
     ]);

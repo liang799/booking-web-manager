@@ -12,17 +12,27 @@ describe("LedgerTransaction", () => {
     const input = transactionDetails();
     const transaction = new LedgerTransaction(input);
 
-    // Log
+    // Attempt to alter the supplied and returned transaction dates.
     input.occurredAt.setTime(0);
     transaction.occurredAt.setTime(0);
 
+    // Log
+    const recordedTransaction = {
+      transactionId: transaction.transactionId,
+      walletId: transaction.walletId,
+      kind: transaction.kind,
+      idempotencyKey: transaction.idempotencyKey,
+      amount: transaction.amount,
+      occurredAt: transaction.occurredAt,
+    };
+
     // Oracle
-    expect(transaction.transactionId).toBe("transaction");
-    expect(transaction.walletId).toBe("wallet");
-    expect(transaction.kind).toBe("TOP_UP");
-    expect(transaction.idempotencyKey).toBe("key");
-    expect(transaction.amount.toCents()).toBe(500);
-    expect(transaction.occurredAt).toEqual(new Date("2026-10-01"));
+    expect(recordedTransaction.transactionId).toBe("transaction");
+    expect(recordedTransaction.walletId).toBe("wallet");
+    expect(recordedTransaction.kind).toBe("TOP_UP");
+    expect(recordedTransaction.idempotencyKey).toBe("key");
+    expect(recordedTransaction.amount.toCents()).toBe(500);
+    expect(recordedTransaction.occurredAt).toEqual(new Date("2026-10-01"));
   });
 
   test("constructor_WhenAmountIsZero_ThrowsDomainError", () => {

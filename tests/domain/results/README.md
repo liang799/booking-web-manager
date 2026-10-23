@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 22:03:03 SGT**
-(`2026-10-23T14:03:03.143Z`). All **599 tests in 43 files passed**.
+Snapshot run: **23 October 2026, 22:21:45 SGT**
+(`2026-10-23T14:21:45.464Z`). All **599 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
@@ -12,7 +12,7 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `f8b5409d7dd2aee2cd4e4aa13ae1b0a900309235ebfd883187bcb1ca6bb6584c`.
+  `96cc324e7053cefc40d8ee5550950773a3832f9afc8fbd036244584af9016123`.
 - [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
   mapped to 599 final cases, including before/after assertion expressions for
   changed explicit scenarios.
@@ -32,6 +32,12 @@ The tables describe **assertion-verified observations**. For example, a passing
 match establishes only the listed fields; a tolerance check establishes an
 approximate value; a reference check establishes the same or a different
 instance. Rejection snapshots establish that the observed state is unchanged.
+
+Input lists domain data and commands, excluding spy configuration and cleanup.
+Log's observation bindings identify the source expressions that captured actual
+results or state; its verified outcomes describe what the assertions establish.
+A void command appears before the named observation in the test. The labels
+identify test ingredients rather than execution phases.
 
 Vitest's standard report records status and failures, not successful return
 values. These tables interpret the executed source assertions alongside their
@@ -68,6 +74,11 @@ in 45 files**. This cleanup preserves both sets of cases and assertions:
 The mapping was reconciled by source path and test identity. Assertion changes
 were reviewed, including cases with renamed local variables; equal test counts
 alone were not used as coverage evidence.
+
+The follow-up correction to Input and Log preserved all 599 final case names
+and all 1,228 assertions (1,220 outcome assertions and eight prerequisite
+assertions). Fault-injection oracles construct independent expected errors
+inline, retaining their original error-equality checks.
 
 ## Other validation
 

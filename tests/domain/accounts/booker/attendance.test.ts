@@ -18,17 +18,19 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
-    // Log
     booker.verifyAttendance(bookingSession, {
       marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
       now: attendanceVerificationTime,
     });
 
+    // Log
+    const aliceAttendance =
+      bookingSession.participantList.requireParticipation("p-alice").attendance;
+    const sessionStatus = bookingSession.status;
+
     // Oracle
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").attendance,
-    ).toBe("ATTENDED");
-    expect(bookingSession.status).toBe("AWAITING_PAYOUT");
+    expect(aliceAttendance).toBe("ATTENDED");
+    expect(sessionStatus).toBe("AWAITING_PAYOUT");
   });
 
   test("verifyAttendance_WhenSessionHasNotEnded_RejectsWithoutChangingState", () => {
@@ -86,13 +88,15 @@ describe("Booker", () => {
       now: attendanceVerificationTime,
     });
 
-    // Log
     readyBooker().verifyAttendance(bookingSession, {
       marks: [{ participationId: "p-ben", attendance: "ABSENT" }],
       now: attendanceVerificationTime,
     });
 
+    // Log
+    const sessionStatus = bookingSession.status;
+
     // Oracle
-    expect(bookingSession.status).toBe("AWAITING_PAYOUT");
+    expect(sessionStatus).toBe("AWAITING_PAYOUT");
   });
 });

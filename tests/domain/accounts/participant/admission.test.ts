@@ -172,14 +172,12 @@ describe("Participant", () => {
       const previousState = sessionState(bookingSession);
       const awaiting =
         bookingSession.participantList.requireParticipation("p-alice");
-      const failure = new DomainError(
-        "INVALID_STATE",
-        "Replacement refund failed",
-      );
+
+      // Simulate the replacement refund failing during admission.
       const refund = vi
         .spyOn(awaiting, "refundReplacement")
         .mockImplementationOnce(() => {
-          throw failure;
+          throw new DomainError("INVALID_STATE", "Replacement refund failed");
         });
 
       try {
@@ -192,9 +190,16 @@ describe("Participant", () => {
               holdId: "h-replacement",
               now: replacementJoinTime,
             }),
-        ).toThrow(failure);
+        ).toThrow(
+          new DomainError("INVALID_STATE", "Replacement refund failed"),
+        );
+
+        // Log
+        const currentState = sessionState(bookingSession);
+
+        // Oracle
         expect(refund).toHaveBeenCalledOnce();
-        expect(sessionState(bookingSession)).toEqual(previousState);
+        expect(currentState).toEqual(previousState);
       } finally {
         refund.mockRestore();
       }

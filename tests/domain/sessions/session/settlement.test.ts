@@ -71,7 +71,9 @@ describe("Session", () => {
     // Input
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousState = sessionState(bookingSession);
-    const failure = vi
+
+    // Simulate Ben's settlement failing after Alice's release is prepared.
+    const settleBen = vi
       .spyOn(
         bookingSession.participantList.requireParticipation("p-ben"),
         "settleHold",
@@ -90,9 +92,14 @@ describe("Session", () => {
           message: "Second line rejected",
         }),
       );
-      expect(sessionState(bookingSession)).toEqual(previousState);
+
+      // Log
+      const currentState = sessionState(bookingSession);
+
+      // Oracle
+      expect(currentState).toEqual(previousState);
     } finally {
-      failure.mockRestore();
+      settleBen.mockRestore();
     }
   });
 
@@ -100,7 +107,9 @@ describe("Session", () => {
     // Input
     const completionTime = sessionEndsAt;
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
-    const failure = vi
+
+    // Simulate Ben's settlement failing after Alice's release is prepared.
+    const settleBen = vi
       .spyOn(
         bookingSession.participantList.requireParticipation("p-ben"),
         "settleHold",
@@ -113,7 +122,7 @@ describe("Session", () => {
         bookingSession.completeSettlement("out", completionTime),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
     } finally {
-      failure.mockRestore();
+      settleBen.mockRestore();
     }
 
     // Log
@@ -216,17 +225,20 @@ describe("Session", () => {
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousList = bookingSession.participantList;
 
-    // Log
     bookingSession.failSettlement("out", sessionEndsAt);
 
+    // Log
+    const payoutState = sessionState(bookingSession);
+    const participantList = bookingSession.participantList;
+
     // Oracle
-    expect(bookingSession.status).toBe("AWAITING_PAYOUT");
-    expect(bookingSession.pendingSettlement).toBeUndefined();
-    expect(bookingSession.participantList).toBe(previousList);
-    expect(bookingSession.payoutAttemptIds).toEqual(["out"]);
-    expect(bookingSession.payoutIdempotencyKeys).toEqual(["key"]);
+    expect(payoutState.status).toBe("AWAITING_PAYOUT");
+    expect(payoutState.pendingSettlement).toBeUndefined();
+    expect(participantList).toBe(previousList);
+    expect(payoutState.payoutAttemptIds).toEqual(["out"]);
+    expect(payoutState.payoutIdempotencyKeys).toEqual(["key"]);
     expect(
-      bookingSession.participantList.participations.map(
+      participantList.participations.map(
         (participation) => participation.hold?.state,
       ),
     ).toEqual(["HELD", "HELD"]);

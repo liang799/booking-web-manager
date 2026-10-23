@@ -680,7 +680,23 @@
           "line": 85
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.wallet).toBe(wallet)",
+        "expect(user.wallet.walletId).toBe(\"w-alice\")",
+        "expect(user.wallet.getAvailableBalance().toCents()).toBe(700)",
+        "expect(user.reliabilityScore).toBe(reliabilityScore)",
+        "expect(user.reliabilityScore.toNumber()).toBe(80)",
+        "expect(user.memberGroupIds).toEqual([\"group\"])"
+      ],
+      "assertionsAfter": [
+        "expect(loadedWallet).toBe(wallet)",
+        "expect(loadedWallet.walletId).toBe(\"w-alice\")",
+        "expect(loadedWallet.getAvailableBalance().toCents()).toBe(700)",
+        "expect(loadedScore).toBe(reliabilityScore)",
+        "expect(loadedScore.toNumber()).toBe(80)",
+        "expect(loadedMemberships).toEqual([\"group\"])"
+      ]
     },
     {
       "before": {
@@ -691,10 +707,16 @@
         {
           "file": "tests/domain/accounts/user-related-data.test.ts",
           "name": "memberGroupIds_WhenReturnedArrayChanges_PreservesMemberships",
-          "line": 112
+          "line": 117
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.memberGroupIds).toEqual([\"group\"])"
+      ],
+      "assertionsAfter": [
+        "expect(storedMemberships).toEqual([\"group\"])"
+      ]
     },
     {
       "before": {
@@ -705,7 +727,7 @@
         {
           "file": "tests/domain/accounts/user-related-data.test.ts",
           "name": "wallet_WhenReassignmentIsAttempted_PreservesLoadedWallet",
-          "line": 129
+          "line": 137
         }
       ],
       "reason": "Preserved",
@@ -729,7 +751,7 @@
         {
           "file": "tests/domain/accounts/user-related-data.test.ts",
           "name": "reliabilityScore_WhenReassignmentIsAttempted_PreservesLoadedScore",
-          "line": 144
+          "line": 152
         }
       ],
       "reason": "Preserved",
@@ -753,7 +775,7 @@
         {
           "file": "tests/domain/accounts/user-related-data.test.ts",
           "name": "create_WhenRegistering_EstablishesWalletAndEmptyHistory",
-          "line": 161
+          "line": 169
         }
       ],
       "reason": "Preserved",
@@ -873,7 +895,15 @@
           "line": 105
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect([...user.preferredSports]).toEqual([\"Tennis\"])",
+        "expect([...user.preferredRegions]).toEqual([\"West\"])"
+      ],
+      "assertionsAfter": [
+        "expect(storedSports).toEqual([\"Tennis\"])",
+        "expect(storedRegions).toEqual([\"West\"])"
+      ]
     },
     {
       "before": {
@@ -884,7 +914,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "create_WhenRegistrationIsValid_ReturnsAnActiveUser",
-          "line": 126
+          "line": 130
         }
       ],
       "reason": "Preserved"
@@ -898,10 +928,18 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "create_WhenSourcePreferencesChange_PreservesStoredPreferences",
-          "line": 144
+          "line": 148
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect([...user.preferredSports]).toEqual([\"Tennis\"])",
+        "expect([...user.preferredRegions]).toEqual([\"West\"])"
+      ],
+      "assertionsAfter": [
+        "expect(storedSports).toEqual([\"Tennis\"])",
+        "expect(storedRegions).toEqual([\"West\"])"
+      ]
     },
     {
       "before": {
@@ -912,10 +950,16 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updateProfile_WhenVerifiedEmailChanges_RequiresFreshVerification",
-          "line": 168
+          "line": 176
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.emailVerified).toBe(false)"
+      ],
+      "assertionsAfter": [
+        "expect(emailVerified).toBe(false)"
+      ]
     },
     {
       "before": {
@@ -926,10 +970,16 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updateProfile_WhenVerifiedEmailIsUnchanged_PreservesVerification",
-          "line": 179
+          "line": 189
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.emailVerified).toBe(true)"
+      ],
+      "assertionsAfter": [
+        "expect(emailVerified).toBe(true)"
+      ]
     },
     {
       "before": {
@@ -940,10 +990,18 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updateProfile_WhenAccountIsActive_ReplacesEmail",
-          "line": 190
+          "line": 202
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.email).toBe(email)",
+        "expect(user.email?.toString()).toBe(\"new@example.com\")"
+      ],
+      "assertionsAfter": [
+        "expect(updatedEmail).toBe(email)",
+        "expect(updatedEmail?.toString()).toBe(\"new@example.com\")"
+      ]
     },
     {
       "before": {
@@ -954,7 +1012,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState",
-          "line": 203
+          "line": 217
         }
       ],
       "reason": "Preserved"
@@ -968,10 +1026,18 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions",
-          "line": 216
+          "line": 230
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect([...user.preferredSports]).toEqual([\"Tennis\"])",
+        "expect([...user.preferredRegions]).toEqual([\"West\"])"
+      ],
+      "assertionsAfter": [
+        "expect(updatedSports).toEqual([\"Tennis\"])",
+        "expect(updatedRegions).toEqual([\"West\"])"
+      ]
     },
     {
       "before": {
@@ -982,7 +1048,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState",
-          "line": 231
+          "line": 248
         }
       ],
       "reason": "Preserved"
@@ -996,7 +1062,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState",
-          "line": 246
+          "line": 263
         }
       ],
       "reason": "Preserved"
@@ -1010,10 +1076,16 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "preferredSports_WhenReturnedSetChanges_PreservesStoredPreferences",
-          "line": 262
+          "line": 279
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect([...user.preferredSports]).toEqual([\"Tennis\"])"
+      ],
+      "assertionsAfter": [
+        "expect(storedSports).toEqual([\"Tennis\"])"
+      ]
     },
     {
       "before": {
@@ -1024,10 +1096,16 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences",
-          "line": 279
+          "line": 299
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect([...user.preferredRegions]).toEqual([\"West\"])"
+      ],
+      "assertionsAfter": [
+        "expect(storedRegions).toEqual([\"West\"])"
+      ]
     },
     {
       "before": {
@@ -1038,10 +1116,20 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
-          "line": 298
+          "line": 321
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.payoutAccount?.setupStatus).toBe(\"PENDING\")",
+        "expect(user.payoutAccount?.payoutAccountId).toBe(\"account\")",
+        "expect(user.payoutAccount?.userId).toBe(\"owner\")"
+      ],
+      "assertionsAfter": [
+        "expect(pendingAccount?.setupStatus).toBe(\"PENDING\")",
+        "expect(pendingAccount?.payoutAccountId).toBe(\"account\")",
+        "expect(pendingAccount?.userId).toBe(\"owner\")"
+      ]
     },
     {
       "before": {
@@ -1052,7 +1140,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState",
-          "line": 314
+          "line": 339
         }
       ],
       "reason": "Preserved"
@@ -1066,7 +1154,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 333
+          "line": 358
         }
       ],
       "reason": "Preserved"
@@ -1080,10 +1168,20 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete",
-          "line": 353
+          "line": 378
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.payoutAccount?.setupStatus).toBe(\"COMPLETE\")",
+        "expect(destination.payoutAccountId).toBe(\"replacement\")",
+        "expect(destination.bankAccountReference).toBe(\"replacement-bank\")"
+      ],
+      "assertionsAfter": [
+        "expect(completedAccount?.setupStatus).toBe(\"COMPLETE\")",
+        "expect(destination.payoutAccountId).toBe(\"replacement\")",
+        "expect(destination.bankAccountReference).toBe(\"replacement-bank\")"
+      ]
     },
     {
       "before": {
@@ -1094,7 +1192,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
-          "line": 376
+          "line": 403
         }
       ],
       "reason": "Preserved"
@@ -1108,7 +1206,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 396
+          "line": 424
         }
       ],
       "reason": "Preserved"
@@ -1122,7 +1220,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput",
-          "line": 406
+          "line": 434
         }
       ],
       "reason": "Preserved"
@@ -1136,7 +1234,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState",
-          "line": 422
+          "line": 450
         }
       ],
       "reason": "Preserved"
@@ -1150,7 +1248,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 439
+          "line": 467
         }
       ],
       "reason": "Preserved"
@@ -1164,7 +1262,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 449
+          "line": 477
         }
       ],
       "reason": "Preserved"
@@ -1178,7 +1276,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 466
+          "line": 494
         }
       ],
       "reason": "Preserved"
@@ -1192,7 +1290,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination",
-          "line": 476
+          "line": 504
         }
       ],
       "reason": "Preserved"
@@ -1206,7 +1304,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount",
-          "line": 498
+          "line": 526
         }
       ],
       "reason": "Preserved"
@@ -1220,7 +1318,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations",
-          "line": 516
+          "line": 544
         }
       ],
       "reason": "Preserved"
@@ -1234,7 +1332,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations",
-          "line": 532
+          "line": 560
         }
       ],
       "reason": "Preserved"
@@ -1248,7 +1346,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations",
-          "line": 548
+          "line": 576
         }
       ],
       "reason": "Preserved"
@@ -1262,7 +1360,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput",
-          "line": 564
+          "line": 592
         }
       ],
       "reason": "Preserved"
@@ -1276,7 +1374,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput",
-          "line": 580
+          "line": 608
         }
       ],
       "reason": "Preserved"
@@ -1290,7 +1388,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations",
-          "line": 596
+          "line": 624
         }
       ],
       "reason": "Preserved"
@@ -1304,7 +1402,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput",
-          "line": 612
+          "line": 640
         }
       ],
       "reason": "Preserved"
@@ -1318,7 +1416,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput",
-          "line": 628
+          "line": 656
         }
       ],
       "reason": "Preserved"
@@ -1332,7 +1430,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations",
-          "line": 644
+          "line": 672
         }
       ],
       "reason": "Preserved"
@@ -1346,7 +1444,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput",
-          "line": 657
+          "line": 685
         }
       ],
       "reason": "Preserved"
@@ -1360,7 +1458,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput",
-          "line": 670
+          "line": 698
         }
       ],
       "reason": "Preserved"
@@ -1374,7 +1472,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations",
-          "line": 686
+          "line": 714
         }
       ],
       "reason": "Preserved"
@@ -1388,7 +1486,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput",
-          "line": 702
+          "line": 730
         }
       ],
       "reason": "Preserved"
@@ -1402,7 +1500,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput",
-          "line": 718
+          "line": 746
         }
       ],
       "reason": "Preserved"
@@ -1416,10 +1514,22 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenNoObligationsRemain_AnonymisesProfile",
-          "line": 734
+          "line": 762
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.accountStatus).toBe(\"INACTIVE\")",
+        "expect(user.email).toBeNull()",
+        "expect([...user.preferredSports]).toEqual([])",
+        "expect([...user.preferredRegions]).toEqual([])"
+      ],
+      "assertionsAfter": [
+        "expect(deactivatedProfile.status).toBe(\"INACTIVE\")",
+        "expect(deactivatedProfile.email).toBeNull()",
+        "expect(deactivatedProfile.sports).toEqual([])",
+        "expect(deactivatedProfile.regions).toEqual([])"
+      ]
     },
     {
       "before": {
@@ -1430,10 +1540,22 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity",
-          "line": 752
+          "line": 787
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(user.userId).toBe(\"owner\")",
+        "expect(user.wallet).toBe(wallet)",
+        "expect(user.payoutAccount).toBe(payoutAccount)",
+        "expect(user.payoutAccount?.bankAccountReference).toBe(\"bank\")"
+      ],
+      "assertionsAfter": [
+        "expect(retainedIdentity.userId).toBe(\"owner\")",
+        "expect(retainedIdentity.wallet).toBe(wallet)",
+        "expect(retainedIdentity.payoutAccount).toBe(payoutAccount)",
+        "expect(retainedIdentity.payoutAccount?.bankAccountReference).toBe(\"bank\")"
+      ]
     },
     {
       "before": {
@@ -1444,10 +1566,16 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAlreadyInactive_LeavesStateUnchanged",
-          "line": 773
+          "line": 814
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(accountStateOf(user)).toEqual(before)"
+      ],
+      "assertionsAfter": [
+        "expect(repeatedDeactivationState).toEqual(before)"
+      ]
     },
     {
       "before": {
@@ -1489,7 +1617,23 @@
           "line": 10
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(transaction.transactionId).toBe(\"transaction\")",
+        "expect(transaction.walletId).toBe(\"wallet\")",
+        "expect(transaction.kind).toBe(\"TOP_UP\")",
+        "expect(transaction.idempotencyKey).toBe(\"key\")",
+        "expect(transaction.amount.toCents()).toBe(500)",
+        "expect(transaction.occurredAt).toEqual(new Date(\"2026-10-01\"))"
+      ],
+      "assertionsAfter": [
+        "expect(recordedTransaction.transactionId).toBe(\"transaction\")",
+        "expect(recordedTransaction.walletId).toBe(\"wallet\")",
+        "expect(recordedTransaction.kind).toBe(\"TOP_UP\")",
+        "expect(recordedTransaction.idempotencyKey).toBe(\"key\")",
+        "expect(recordedTransaction.amount.toCents()).toBe(500)",
+        "expect(recordedTransaction.occurredAt).toEqual(new Date(\"2026-10-01\"))"
+      ]
     },
     {
       "before": {
@@ -1500,7 +1644,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenAmountIsZero_ThrowsDomainError",
-          "line": 28
+          "line": 38
         }
       ],
       "reason": "Preserved"
@@ -1514,7 +1658,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenAmountIsNegative_ThrowsDomainError",
-          "line": 36
+          "line": 46
         }
       ],
       "reason": "Preserved"
@@ -1528,7 +1672,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenTransactionIdIsBlank_ThrowsDomainError",
-          "line": 44
+          "line": 54
         }
       ],
       "reason": "Preserved"
@@ -1542,7 +1686,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenIdempotencyKeyIsBlank_ThrowsDomainError",
-          "line": 52
+          "line": 62
         }
       ],
       "reason": "Preserved"
@@ -1556,7 +1700,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenWalletIdIsBlank_ThrowsDomainError",
-          "line": 60
+          "line": 70
         }
       ],
       "reason": "Preserved"
@@ -1570,7 +1714,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenHoldIdIsBlank_ThrowsDomainError",
-          "line": 68
+          "line": 78
         }
       ],
       "reason": "Preserved"
@@ -1584,7 +1728,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenPayoutIdIsBlank_ThrowsDomainError",
-          "line": 76
+          "line": 86
         }
       ],
       "reason": "Preserved"
@@ -1598,7 +1742,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenExternalReferenceIsBlank_ThrowsDomainError",
-          "line": 84
+          "line": 94
         }
       ],
       "reason": "Preserved"
@@ -1612,7 +1756,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenKindIsUnknown_ThrowsDomainError",
-          "line": 92
+          "line": 102
         }
       ],
       "reason": "Preserved"
@@ -1626,7 +1770,7 @@
         {
           "file": "tests/domain/finance/ledger-transaction.test.ts",
           "name": "constructor_WhenDateIsInvalid_ThrowsRangeError",
-          "line": 102
+          "line": 112
         }
       ],
       "reason": "Preserved"
@@ -1843,7 +1987,19 @@
           "line": 104
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(payout.completedAt).toEqual(requestedAt)",
+        "expect(payout.destination.bankAccountReference).toBe(\"bank\")",
+        "expect(payout.lines).toHaveLength(1)",
+        "expect(payout.lines[0]?.amount.toCents()).toBe(100)"
+      ],
+      "assertionsAfter": [
+        "expect(recordedSettlement.completedAt).toEqual(requestedAt)",
+        "expect(recordedSettlement.destination.bankAccountReference).toBe(\"bank\")",
+        "expect(recordedSettlement.lines).toHaveLength(1)",
+        "expect(recordedSettlement.lines[0]?.amount.toCents()).toBe(100)"
+      ]
     },
     {
       "before": {
@@ -1854,10 +2010,18 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "create_WhenRequestDateIsMutated_PreservesRequestedBatch",
-          "line": 136
+          "line": 143
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(payout.amount.toCents()).toBe(100)",
+        "expect(payout.requestedAt).toEqual(requestedAt)"
+      ],
+      "assertionsAfter": [
+        "expect(requestedAmount.toCents()).toBe(100)",
+        "expect(storedRequestedAt).toEqual(requestedAt)"
+      ]
     },
     {
       "before": {
@@ -1868,7 +2032,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "requestedIntent_WhenPayoutIsRequested_ContainsDurableRequestDetails",
-          "line": 152
+          "line": 163
         }
       ],
       "reason": "Preserved"
@@ -1882,7 +2046,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenRestoredPayoutHasFailed_ThrowsStalePayout",
-          "line": 169
+          "line": 180
         }
       ],
       "reason": "Preserved"
@@ -1896,7 +2060,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenSameCallbackIsRepeated_CompletesOnlyOnce",
-          "line": 184
+          "line": 195
         }
       ],
       "reason": "Preserved",
@@ -1920,7 +2084,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenProviderReferenceConflicts_ThrowsPayoutConflict",
-          "line": 202
+          "line": 213
         }
       ],
       "reason": "Preserved"
@@ -1934,7 +2098,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenRestoredCompletionMatches_ReturnsFalse",
-          "line": 213
+          "line": 224
         }
       ],
       "reason": "Preserved"
@@ -1948,7 +2112,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenFailureHasBeenRecorded_RejectsLateCallback",
-          "line": 237
+          "line": 248
         }
       ],
       "reason": "Preserved"
@@ -1962,7 +2126,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "fail_WhenRestoredFailureMatches_ReturnsFalse",
-          "line": 250
+          "line": 261
         }
       ],
       "reason": "Preserved",
@@ -1984,7 +2148,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "fail_WhenSameCallbackIsRepeated_FailsOnlyOnce",
-          "line": 268
+          "line": 279
         }
       ],
       "reason": "Preserved",
@@ -2011,7 +2175,17 @@
           "line": 13
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(wallet.walletId).toBe(\"wallet\")",
+        "expect(wallet.userId).toBe(\"owner\")",
+        "expect(identityChanged).toBe(false)"
+      ],
+      "assertionsAfter": [
+        "expect(storedIdentity.walletId).toBe(\"wallet\")",
+        "expect(storedIdentity.userId).toBe(\"owner\")",
+        "expect(identityChanged).toBe(false)"
+      ]
     },
     {
       "before": {
@@ -2022,7 +2196,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenWalletIdIsBlank_ThrowsDomainError",
-          "line": 29
+          "line": 32
         }
       ],
       "reason": "Preserved"
@@ -2036,7 +2210,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenUserIdIsBlank_ThrowsDomainError",
-          "line": 37
+          "line": 40
         }
       ],
       "reason": "Preserved"
@@ -2050,7 +2224,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenBalanceWouldBeNegative_ThrowsInvalidInput",
-          "line": 45
+          "line": 48
         }
       ],
       "reason": "Preserved"
@@ -2064,7 +2238,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenFundsExceedSafeIntegerRange_ThrowsRangeError",
-          "line": 58
+          "line": 61
         }
       ],
       "reason": "Preserved"
@@ -2078,7 +2252,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenHistoryIsMissing_ThrowsInvalidInput",
-          "line": 69
+          "line": 72
         }
       ],
       "reason": "Preserved"
@@ -2092,7 +2266,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenHistoryIsNull_ThrowsInvalidInput",
-          "line": 83
+          "line": 86
         }
       ],
       "reason": "Preserved"
@@ -2106,7 +2280,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenHistoryIsNotAnArray_ThrowsInvalidInput",
-          "line": 97
+          "line": 100
         }
       ],
       "reason": "Preserved"
@@ -2120,7 +2294,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenEntryBelongsToAnotherWallet_ThrowsInvalidInput",
-          "line": 111
+          "line": 114
         }
       ],
       "reason": "Preserved"
@@ -2134,7 +2308,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenEntryHasNoWallet_ThrowsInvalidInput",
-          "line": 125
+          "line": 128
         }
       ],
       "reason": "Preserved"
@@ -2148,7 +2322,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "constructor_WhenTransactionIdsAreDuplicated_ThrowsInvalidInput",
-          "line": 141
+          "line": 144
         }
       ],
       "reason": "Preserved"
@@ -2162,7 +2336,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIsEmpty_ReturnsZero",
-          "line": 160
+          "line": 163
         }
       ],
       "reason": "Preserved",
@@ -2182,7 +2356,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIncludesTopUp_ReturnsSpendableBalance",
-          "line": 171
+          "line": 174
         }
       ],
       "reason": "Preserved"
@@ -2196,7 +2370,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIncludesRefund_ReturnsSpendableBalance",
-          "line": 185
+          "line": 188
         }
       ],
       "reason": "Preserved"
@@ -2210,7 +2384,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIncludesLock_ReturnsSpendableBalance",
-          "line": 199
+          "line": 202
         }
       ],
       "reason": "Preserved"
@@ -2224,7 +2398,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIncludesPayout_ReturnsSpendableBalance",
-          "line": 213
+          "line": 216
         }
       ],
       "reason": "Preserved"
@@ -2238,7 +2412,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIncludesRelease_ReturnsSpendableBalance",
-          "line": 227
+          "line": 230
         }
       ],
       "reason": "Preserved"
@@ -2252,7 +2426,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHistoryIncludesForfeit_ReturnsSpendableBalance",
-          "line": 241
+          "line": 244
         }
       ],
       "reason": "Preserved"
@@ -2266,7 +2440,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenHoldsAreRefundedReleasedOrForfeited_AppliesEachMovementOnce",
-          "line": 255
+          "line": 258
         }
       ],
       "reason": "Preserved"
@@ -2280,7 +2454,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenExactAvailableAmountIsSpent_ReturnsZero",
-          "line": 275
+          "line": 278
         }
       ],
       "reason": "Preserved"
@@ -2294,7 +2468,7 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "getAvailableBalance_WhenTransactionOrderChanges_PreservesExactBalance",
-          "line": 289
+          "line": 292
         }
       ],
       "reason": "Preserved"
@@ -2308,10 +2482,22 @@
         {
           "file": "tests/domain/finance/wallet.test.ts",
           "name": "transactions_WhenInputsAndOutputsAreMutated_PreservesHistoryAndFunds",
-          "line": 308
+          "line": 311
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(amountChanged).toBe(false)",
+        "expect(fundedWallet.transactions).toEqual([credit])",
+        "expect(fundedWallet.transactions[0]?.occurredAt.toISOString()).toBe( \"2026-10-01T10:00:00.000Z\", )",
+        "expect(fundedWallet.getAvailableBalance().toCents()).toBe(700)"
+      ],
+      "assertionsAfter": [
+        "expect(amountChanged).toBe(false)",
+        "expect(storedTransactions).toEqual([credit])",
+        "expect(storedTransactions[0]?.occurredAt.toISOString()).toBe( \"2026-10-01T10:00:00.000Z\", )",
+        "expect(availableFunds.toCents()).toBe(700)"
+      ]
     },
     {
       "before": {
@@ -2358,7 +2544,7 @@
         "expect(membership.joinedAt).toEqual(now())"
       ],
       "assertionsAfter": [
-        "expect(membership.joinedAt).toEqual(new Date(\"2026-09-15T00:00:00Z\"))"
+        "expect(storedJoinedAt).toEqual(new Date(\"2026-09-15T00:00:00Z\"))"
       ]
     },
     {
@@ -2459,8 +2645,8 @@
         "expect(group.memberships[0]?.joinedAt).toEqual(now())"
       ],
       "assertionsAfter": [
-        "expect(group.memberships.map((member) => member.userId)).toEqual([\"owner\"])",
-        "expect(group.memberships[0]?.joinedAt).toEqual(new Date(\"2026-09-15T00:00:00Z\"))"
+        "expect(storedMemberships.map((member) => member.userId)).toEqual([\"owner\"])",
+        "expect(storedMemberships[0]?.joinedAt).toEqual(new Date(\"2026-09-15T00:00:00Z\"))"
       ]
     },
     {
@@ -2472,7 +2658,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "memberships_WhenReturnedMembershipsAreMutated_PreservesMembersAndDates",
-          "line": 61
+          "line": 64
         }
       ],
       "reason": "Preserved",
@@ -2481,8 +2667,8 @@
         "expect(group.memberships[0]?.joinedAt).toEqual(now())"
       ],
       "assertionsAfter": [
-        "expect(group.memberships.map((member) => member.userId)).toEqual([\"owner\"])",
-        "expect(group.memberships[0]?.joinedAt).toEqual(new Date(\"2026-09-15T00:00:00Z\"))"
+        "expect(storedMemberships.map((member) => member.userId)).toEqual([\"owner\"])",
+        "expect(storedMemberships[0]?.joinedAt).toEqual(new Date(\"2026-09-15T00:00:00Z\"))"
       ]
     },
     {
@@ -2494,7 +2680,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenMemberJoinsAgain_PreservesSingleMembership",
-          "line": 77
+          "line": 83
         }
       ],
       "reason": "Preserved"
@@ -2508,7 +2694,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation",
-          "line": 104
+          "line": 110
         }
       ],
       "reason": "Preserved"
@@ -2522,7 +2708,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenTokenWasRotated_ThrowsInvalidInvitation",
-          "line": 121
+          "line": 127
         }
       ],
       "reason": "Preserved"
@@ -2536,7 +2722,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenRevokedInvitationIsRotated_AcceptsNewToken",
-          "line": 142
+          "line": 148
         }
       ],
       "reason": "Preserved"
@@ -2550,7 +2736,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 162
+          "line": 168
         }
       ],
       "reason": "Preserved"
@@ -2564,7 +2750,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 179
+          "line": 185
         }
       ],
       "reason": "Preserved"
@@ -2578,7 +2764,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 191
+          "line": 197
         }
       ],
       "reason": "Preserved"
@@ -2592,7 +2778,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 204
+          "line": 210
         }
       ],
       "reason": "Preserved"
@@ -2606,7 +2792,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 218
+          "line": 224
         }
       ],
       "reason": "Preserved"
@@ -2620,10 +2806,16 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenOwnerProvidesName_UpdatesName",
-          "line": 230
+          "line": 236
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(group.name).toBe(\"Saturday tennis\")"
+      ],
+      "assertionsAfter": [
+        "expect(updatedName).toBe(\"Saturday tennis\")"
+      ]
     },
     {
       "before": {
@@ -2634,7 +2826,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenNameIsBlank_RejectsWithoutChangingState",
-          "line": 241
+          "line": 249
         }
       ],
       "reason": "Preserved"
@@ -2648,7 +2840,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 253
+          "line": 261
         }
       ],
       "reason": "Preserved"
@@ -2662,7 +2854,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 266
+          "line": 274
         }
       ],
       "reason": "Preserved"
@@ -2676,7 +2868,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner",
-          "line": 278
+          "line": 286
         }
       ],
       "reason": "Preserved",
@@ -2685,7 +2877,7 @@
         "expect(group.memberships[0]?.userId).toBe(\"owner\")"
       ],
       "assertionsAfter": [
-        "expect(group.memberships.map((member) => member.userId)).toEqual([\"owner\"])"
+        "expect(remainingMembers).toEqual([\"owner\"])"
       ]
     },
     {
@@ -2697,7 +2889,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenTargetIsOwner_RejectsWithoutChangingState",
-          "line": 294
+          "line": 304
         }
       ],
       "reason": "Preserved"
@@ -2711,7 +2903,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenMemberIsMissing_RejectsWithoutChangingState",
-          "line": 306
+          "line": 316
         }
       ],
       "reason": "Preserved"
@@ -2725,7 +2917,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 318
+          "line": 328
         }
       ],
       "reason": "Preserved"
@@ -2739,7 +2931,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState",
-          "line": 330
+          "line": 340
         }
       ],
       "reason": "Preserved"
@@ -2753,7 +2945,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState",
-          "line": 342
+          "line": 352
         }
       ],
       "reason": "Preserved"
@@ -2767,7 +2959,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent",
-          "line": 354
+          "line": 364
         }
       ],
       "reason": "Preserved",
@@ -2777,9 +2969,9 @@
         "expect(group.memberships).toHaveLength(1)"
       ],
       "assertionsAfter": [
-        "expect(group.status).toBe(\"ARCHIVED\")",
-        "expect(group.invitationActive).toBe(false)",
-        "expect(group.memberships.map((member) => member.userId)).toEqual([\"owner\"])"
+        "expect(archivedState.status).toBe(\"ARCHIVED\")",
+        "expect(archivedState.invitationActive).toBe(false)",
+        "expect(archivedState.memberIds).toEqual([\"owner\"])"
       ]
     },
     {
@@ -2791,10 +2983,16 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenMemberLeaves_RemovesOnlyThatMember",
-          "line": 370
+          "line": 386
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(group.memberships.map((member) => member.userId)).toEqual([ \"owner\", \"ben\", ])"
+      ],
+      "assertionsAfter": [
+        "expect(remainingMembers).toEqual([ \"owner\", \"ben\", ])"
+      ]
     },
     {
       "before": {
@@ -2805,7 +3003,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenUserIsOwner_RejectsWithoutChangingState",
-          "line": 386
+          "line": 404
         }
       ],
       "reason": "Preserved"
@@ -2819,7 +3017,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenUserIsNotAMember_RejectsWithoutChangingState",
-          "line": 399
+          "line": 417
         }
       ],
       "reason": "Preserved"
@@ -2833,7 +3031,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 411
+          "line": 429
         }
       ],
       "reason": "Preserved"
@@ -2847,7 +3045,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain",
-          "line": 432
+          "line": 450
         }
       ],
       "reason": "Preserved",
@@ -3749,7 +3947,25 @@
           "line": 11
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(list.participations).toEqual([alice, ben])",
+        "expect(list.requireParticipation(\"p-alice\")).toBe(alice)",
+        "expect(list.findByUserId(\"alice\")).toBe(alice)",
+        "expect(list.requireParticipation(\"p-ben\")).toBe(ben)",
+        "expect(list.findByUserId(\"ben\")).toBe(ben)",
+        "expect(list.committedCount).toBe(2)",
+        "expect(list.nextQueueSequence).toBe(1)"
+      ],
+      "assertionsAfter": [
+        "expect(preservedParticipations).toEqual([alice, ben])",
+        "expect(list.requireParticipation(\"p-alice\")).toBe(alice)",
+        "expect(list.findByUserId(\"alice\")).toBe(alice)",
+        "expect(list.requireParticipation(\"p-ben\")).toBe(ben)",
+        "expect(list.findByUserId(\"ben\")).toBe(ben)",
+        "expect(list.committedCount).toBe(2)",
+        "expect(list.nextQueueSequence).toBe(1)"
+      ]
     },
     {
       "before": {
@@ -3760,7 +3976,7 @@
         {
           "file": "tests/domain/sessions/participant-list.test.ts",
           "name": "nextWaitlisted_WhenHydrationOrderDiffersFromQueue_SelectsLowestSequence",
-          "line": 39
+          "line": 41
         }
       ],
       "reason": "Preserved"
@@ -3774,7 +3990,7 @@
         {
           "file": "tests/domain/sessions/participant-list.test.ts",
           "name": "oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder",
-          "line": 78
+          "line": 80
         }
       ],
       "reason": "Preserved"
@@ -3788,7 +4004,7 @@
         {
           "file": "tests/domain/sessions/participant-list.test.ts",
           "name": "oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal",
-          "line": 121
+          "line": 123
         }
       ],
       "reason": "Preserved",
@@ -4613,7 +4829,13 @@
           "line": 28
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
+      ],
+      "assertionsAfter": [
+        "expect(currentState).toEqual(previousState)"
+      ]
     },
     {
       "before": {
@@ -4624,7 +4846,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
-          "line": 44
+          "line": 47
         }
       ],
       "reason": "Preserved",
@@ -4646,10 +4868,16 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
-          "line": 56
+          "line": 59
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
+      ],
+      "assertionsAfter": [
+        "expect(currentState).toEqual(previousState)"
+      ]
     },
     {
       "before": {
@@ -4660,7 +4888,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
-          "line": 76
+          "line": 81
         }
       ],
       "reason": "Preserved",
@@ -4682,7 +4910,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
-          "line": 94
+          "line": 99
         }
       ],
       "reason": "Preserved",
@@ -4692,9 +4920,9 @@
         "expect(sessionState(bookingSession)).toEqual(previousState)"
       ],
       "assertionsAfter": [
-        "expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow( failure, )",
+        "expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow( new DomainError(\"INVALID_STATE\", \"Second cancellation failed\"), )",
         "expect(cancelBen).toHaveBeenCalledOnce()",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
+        "expect(currentState).toEqual(previousState)"
       ]
     },
     {
@@ -4706,7 +4934,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
-          "line": 128
+          "line": 136
         }
       ],
       "reason": "Preserved",
@@ -4717,7 +4945,7 @@
         "expect( bookingSession.participantList.participations.every( (participation) => participation.status === \"CANCELLED\", ), ).toBe(true)"
       ],
       "assertionsAfter": [
-        "expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow( failure, )",
+        "expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow( new DomainError(\"INVALID_STATE\", \"Second cancellation failed\"), )",
         "expect( cancellation.instructions.map((instruction) => instruction.kind), ).toEqual([\"REFUND\", \"REFUND\"])",
         "expect(bookingSession.status).toBe(\"CANCELLED\")",
         "expect( bookingSession.participantList.participations.map( (participation) => participation.status, ), ).toEqual([\"CANCELLED\", \"CANCELLED\", \"CANCELLED\"])"
@@ -4732,7 +4960,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
-          "line": 173
+          "line": 179
         }
       ],
       "reason": "Preserved",
@@ -4754,10 +4982,16 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
-          "line": 190
+          "line": 196
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(bookingSession.visibility).toBe(\"PRIVATE\")"
+      ],
+      "assertionsAfter": [
+        "expect(visibility).toBe(\"PRIVATE\")"
+      ]
     },
     {
       "before": {
@@ -4768,7 +5002,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
-          "line": 206
+          "line": 214
         }
       ],
       "reason": "Preserved"
@@ -4782,7 +5016,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
-          "line": 225
+          "line": 233
         }
       ],
       "reason": "Preserved",
@@ -4806,7 +5040,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
-          "line": 252
+          "line": 260
         }
       ],
       "reason": "Preserved"
@@ -4820,7 +5054,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
-          "line": 269
+          "line": 277
         }
       ],
       "reason": "Preserved"
@@ -4834,7 +5068,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 298
+          "line": 306
         }
       ],
       "reason": "Preserved"
@@ -4848,7 +5082,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
-          "line": 310
+          "line": 318
         }
       ],
       "reason": "Preserved",
@@ -4879,7 +5113,15 @@
           "line": 12
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect( bookingSession.participantList.requireParticipation(\"p-alice\").attendance, ).toBe(\"ATTENDED\")",
+        "expect(bookingSession.status).toBe(\"AWAITING_PAYOUT\")"
+      ],
+      "assertionsAfter": [
+        "expect(aliceAttendance).toBe(\"ATTENDED\")",
+        "expect(sessionStatus).toBe(\"AWAITING_PAYOUT\")"
+      ]
     },
     {
       "before": {
@@ -4890,7 +5132,7 @@
         {
           "file": "tests/domain/accounts/booker/attendance.test.ts",
           "name": "verifyAttendance_WhenSessionHasNotEnded_RejectsWithoutChangingState",
-          "line": 34
+          "line": 36
         }
       ],
       "reason": "Preserved"
@@ -4904,7 +5146,7 @@
         {
           "file": "tests/domain/accounts/booker/attendance.test.ts",
           "name": "verifyAttendance_WhenLaterMarkConflicts_RejectsWithoutChangingState",
-          "line": 53
+          "line": 55
         }
       ],
       "reason": "Preserved"
@@ -4918,10 +5160,16 @@
         {
           "file": "tests/domain/accounts/booker/attendance.test.ts",
           "name": "verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout",
-          "line": 78
+          "line": 80
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(bookingSession.status).toBe(\"AWAITING_PAYOUT\")"
+      ],
+      "assertionsAfter": [
+        "expect(sessionStatus).toBe(\"AWAITING_PAYOUT\")"
+      ]
     },
     {
       "before": {
@@ -5584,7 +5832,15 @@
           "line": 52
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(first.toCents()).toBe(500)",
+        "expect(second.toCents()).toBe(700)"
+      ],
+      "assertionsAfter": [
+        "expect(firstCents).toBe(500)",
+        "expect(secondCents).toBe(700)"
+      ]
     },
     {
       "before": {
@@ -5595,7 +5851,7 @@
         {
           "file": "tests/domain/finance/money/money-arithmetic.test.ts",
           "name": "subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference",
-          "line": 65
+          "line": 68
         }
       ],
       "reason": "Preserved"
@@ -5609,7 +5865,7 @@
         {
           "file": "tests/domain/finance/money/money-arithmetic.test.ts",
           "name": "subtract_WhenAmountIsNegative_IncreasesValue",
-          "line": 77
+          "line": 80
         }
       ],
       "reason": "Preserved"
@@ -5623,7 +5879,7 @@
         {
           "file": "tests/domain/finance/money/money-arithmetic.test.ts",
           "name": "subtract_WhenSubtractingZero_ReturnsNewInstance",
-          "line": 88
+          "line": 91
         }
       ],
       "reason": "Preserved",
@@ -5644,10 +5900,18 @@
         {
           "file": "tests/domain/finance/money/money-arithmetic.test.ts",
           "name": "subtract_WhenAppliedToOperands_PreservesBothValues",
-          "line": 100
+          "line": 103
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(first.toCents()).toBe(500)",
+        "expect(second.toCents()).toBe(700)"
+      ],
+      "assertionsAfter": [
+        "expect(firstCents).toBe(500)",
+        "expect(secondCents).toBe(700)"
+      ]
     },
     {
       "before": {
@@ -6828,7 +7092,17 @@
           "line": 12
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(bookingSession.participantList.findByUserId(\"booker\")).toBe( bookerAdmission, )",
+        "expect( bookingSession.participantList.participations.map( (entry) => entry.status, ), ).toEqual([ \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", ])",
+        "expect(bookingSession.getAvailableSlots(bookerJoinedAt)).toBe(0)"
+      ],
+      "assertionsAfter": [
+        "expect(participantList.findByUserId(\"booker\")).toBe(bookerAdmission)",
+        "expect( participantList.participations.map((entry) => entry.status), ).toEqual([ \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", \"COMMITTED\", ])",
+        "expect(availableSlots).toBe(0)"
+      ]
     },
     {
       "before": {
@@ -6839,10 +7113,24 @@
         {
           "file": "tests/domain/sessions/session/admission.test.ts",
           "name": "recordAdmission_WhenSessionIsFull_RecordsWaitlistedParticipation",
-          "line": 57
+          "line": 56
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect( bookingSession.participantList.requireParticipation(\"p-waiting\"), ).toBe(waiting)",
+        "expect(bookingSession.participantList.nextWaitlisted()).toBe(waiting)",
+        "expect(bookingSession.participantList.committedCount).toBe(8)",
+        "expect(bookingSession.participantList.nextQueueSequence).toBe(2)",
+        "expect(bookingSession.getAvailableSlots(waitlistedAt)).toBe(0)"
+      ],
+      "assertionsAfter": [
+        "expect(participantList.requireParticipation(\"p-waiting\")).toBe(waiting)",
+        "expect(participantList.nextWaitlisted()).toBe(waiting)",
+        "expect(participantList.committedCount).toBe(8)",
+        "expect(participantList.nextQueueSequence).toBe(2)",
+        "expect(availableSlots).toBe(0)"
+      ]
     },
     {
       "before": {
@@ -6884,7 +7172,13 @@
           "line": 38
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect( bookingSession.participantList.participations.map((participation) => [ participation.attendance, participation.verificationMethod, ]), ).toEqual([ [\"ABSENT\", \"BOOKER\"], [\"ATTENDED\", \"AUTOMATIC\"], ])"
+      ],
+      "assertionsAfter": [
+        "expect(attendanceRecords).toEqual([ [\"ABSENT\", \"BOOKER\"], [\"ATTENDED\", \"AUTOMATIC\"], ])"
+      ]
     },
     {
       "before": {
@@ -7513,7 +7807,31 @@
           "line": 193
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(() => bookingSession.recordAdmission(invalidAdmission, undefined, benJoinedAt), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
+        "expect(bookingSession.participantList).not.toBe(previousList)",
+        "expect(bookingSession.participantList.requireParticipation(\"p-ben\")).toBe( validAdmission, )",
+        "expect(bookingSession.participantList.findByUserId(\"ben\")).toBe( validAdmission, )",
+        "expect(bookingSession.participantList.committedCount).toBe(2)",
+        "expect(previousList.participations).toEqual([alice])",
+        "expect(previousList.requireParticipation(\"p-alice\")).toBe(alice)",
+        "expect(previousList.findByUserId(\"ben\")).toBeUndefined()",
+        "expect(previousList.committedCount).toBe(1)",
+        "expect(previousList.nextQueueSequence).toBe(1)"
+      ],
+      "assertionsAfter": [
+        "expect(() => bookingSession.recordAdmission(invalidAdmission, undefined, benJoinedAt), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
+        "expect(currentList).not.toBe(previousList)",
+        "expect(currentList.requireParticipation(\"p-ben\")).toBe(validAdmission)",
+        "expect(currentList.findByUserId(\"ben\")).toBe(validAdmission)",
+        "expect(currentList.committedCount).toBe(2)",
+        "expect(previousList.participations).toEqual([alice])",
+        "expect(previousList.requireParticipation(\"p-alice\")).toBe(alice)",
+        "expect(previousList.findByUserId(\"ben\")).toBeUndefined()",
+        "expect(previousList.committedCount).toBe(1)",
+        "expect(previousList.nextQueueSequence).toBe(1)"
+      ]
     },
     {
       "before": {
@@ -7524,7 +7842,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 236
+          "line": 234
         }
       ],
       "reason": "Preserved"
@@ -7538,7 +7856,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState",
-          "line": 258
+          "line": 256
         }
       ],
       "reason": "Preserved"
@@ -7552,7 +7870,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState",
-          "line": 277
+          "line": 275
         }
       ],
       "reason": "Preserved"
@@ -7566,7 +7884,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState",
-          "line": 300
+          "line": 298
         }
       ],
       "reason": "Preserved"
@@ -7580,7 +7898,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged",
-          "line": 338
+          "line": 336
         }
       ],
       "reason": "Preserved"
@@ -7594,7 +7912,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged",
-          "line": 374
+          "line": 372
         }
       ],
       "reason": "Preserved",
@@ -7616,7 +7934,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges",
-          "line": 415
+          "line": 413
         }
       ],
       "reason": "Preserved"
@@ -7630,7 +7948,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges",
-          "line": 456
+          "line": 454
         }
       ],
       "reason": "Preserved"
@@ -7644,7 +7962,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState",
-          "line": 497
+          "line": 495
         }
       ],
       "reason": "Preserved"
@@ -7658,7 +7976,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState",
-          "line": 528
+          "line": 526
         }
       ],
       "reason": "Preserved"
@@ -7672,7 +7990,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState",
-          "line": 551
+          "line": 549
         }
       ],
       "reason": "Preserved"
@@ -7686,7 +8004,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged",
-          "line": 576
+          "line": 574
         }
       ],
       "reason": "Preserved",
@@ -7708,7 +8026,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 599
+          "line": 597
         }
       ],
       "reason": "Preserved"
@@ -7722,7 +8040,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged",
-          "line": 617
+          "line": 615
         }
       ],
       "reason": "Preserved"
@@ -7736,7 +8054,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged",
-          "line": 636
+          "line": 634
         }
       ],
       "reason": "Preserved"
@@ -7750,7 +8068,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied",
-          "line": 652
+          "line": 650
         }
       ],
       "reason": "Preserved"
@@ -7764,7 +8082,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState",
-          "line": 683
+          "line": 681
         }
       ],
       "reason": "Preserved"
@@ -7778,7 +8096,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged",
-          "line": 702
+          "line": 700
         }
       ],
       "reason": "Preserved"
@@ -7792,7 +8110,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged",
-          "line": 726
+          "line": 724
         }
       ],
       "reason": "Preserved"
@@ -7991,7 +8309,15 @@
           "line": 70
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(() => bookingSession.completeSettlement(\"out\", sessionEndsAt), ).toThrow( expect.objectContaining({ code: \"INVALID_STATE\", message: \"Second line rejected\", }), )",
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
+      ],
+      "assertionsAfter": [
+        "expect(() => bookingSession.completeSettlement(\"out\", sessionEndsAt), ).toThrow( expect.objectContaining({ code: \"INVALID_STATE\", message: \"Second line rejected\", }), )",
+        "expect(currentState).toEqual(previousState)"
+      ]
     },
     {
       "before": {
@@ -8002,7 +8328,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenSecondHoldFailureIsRetried_ReleasesAllHolds",
-          "line": 99
+          "line": 106
         }
       ],
       "reason": "Preserved"
@@ -8016,7 +8342,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds",
-          "line": 132
+          "line": 141
         }
       ],
       "reason": "Preserved"
@@ -8030,7 +8356,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity",
-          "line": 178
+          "line": 187
         }
       ],
       "reason": "Preserved"
@@ -8044,10 +8370,26 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory",
-          "line": 214
+          "line": 223
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(bookingSession.status).toBe(\"AWAITING_PAYOUT\")",
+        "expect(bookingSession.pendingSettlement).toBeUndefined()",
+        "expect(bookingSession.participantList).toBe(previousList)",
+        "expect(bookingSession.payoutAttemptIds).toEqual([\"out\"])",
+        "expect(bookingSession.payoutIdempotencyKeys).toEqual([\"key\"])",
+        "expect( bookingSession.participantList.participations.map( (participation) => participation.hold?.state, ), ).toEqual([\"HELD\", \"HELD\"])"
+      ],
+      "assertionsAfter": [
+        "expect(payoutState.status).toBe(\"AWAITING_PAYOUT\")",
+        "expect(payoutState.pendingSettlement).toBeUndefined()",
+        "expect(participantList).toBe(previousList)",
+        "expect(payoutState.payoutAttemptIds).toEqual([\"out\"])",
+        "expect(payoutState.payoutIdempotencyKeys).toEqual([\"key\"])",
+        "expect( participantList.participations.map( (participation) => participation.hold?.state, ), ).toEqual([\"HELD\", \"HELD\"])"
+      ]
     },
     {
       "before": {
@@ -8109,7 +8451,17 @@
           "line": 150
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(() => createTestUser({ userId: \"replacement\" }) .asParticipant() .join(bookingSession, { participationId: \"p-replacement\", holdId: \"h-replacement\", now: replacementJoinTime, }), ).toThrow(failure)",
+        "expect(refund).toHaveBeenCalledOnce()",
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
+      ],
+      "assertionsAfter": [
+        "expect(() => createTestUser({ userId: \"replacement\" }) .asParticipant() .join(bookingSession, { participationId: \"p-replacement\", holdId: \"h-replacement\", now: replacementJoinTime, }), ).toThrow( new DomainError(\"INVALID_STATE\", \"Replacement refund failed\"), )",
+        "expect(refund).toHaveBeenCalledOnce()",
+        "expect(currentState).toEqual(previousState)"
+      ]
     },
     {
       "before": {
@@ -8120,7 +8472,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenFundsExactlyCoverShare_CommitsAndEmitsLock",
-          "line": 203
+          "line": 208
         }
       ],
       "reason": "Preserved"
@@ -8134,7 +8486,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenSessionIsFullAndUserHasNoFunds_JoinsWaitlistWithoutLockingFunds",
-          "line": 231
+          "line": 236
         }
       ],
       "reason": "Preserved"
@@ -8148,7 +8500,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenWaitersExistAndSlotIsAvailable_QueuesBehindExistingWaiters",
-          "line": 263
+          "line": 268
         }
       ],
       "reason": "Preserved"
@@ -8162,7 +8514,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReloadedWalletIncludesPriorLock_RejectsWithoutChangingState",
-          "line": 293
+          "line": 298
         }
       ],
       "reason": "Preserved"
@@ -8176,7 +8528,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState",
-          "line": 337
+          "line": 342
         }
       ],
       "reason": "Preserved",
@@ -8198,7 +8550,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState",
-          "line": 360
+          "line": 365
         }
       ],
       "reason": "Preserved",
@@ -8220,7 +8572,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet",
-          "line": 387
+          "line": 392
         }
       ],
       "reason": "Preserved"
@@ -8234,7 +8586,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsInactive_RejectsWithoutChangingState",
-          "line": 415
+          "line": 420
         }
       ],
       "reason": "Preserved",
@@ -8256,7 +8608,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenFundsAreOneCentBelowShare_RejectsWithoutChangingState",
-          "line": 435
+          "line": 440
         }
       ],
       "reason": "Preserved",
@@ -8278,7 +8630,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState",
-          "line": 455
+          "line": 460
         }
       ],
       "reason": "Preserved"
@@ -8292,7 +8644,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenPrivateRoomTokenMatches_CommitsApplicant",
-          "line": 485
+          "line": 490
         }
       ],
       "reason": "Preserved"
@@ -8306,7 +8658,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReturningWaiterUsesDifferentId_RejectsWithoutChangingState",
-          "line": 510
+          "line": 515
         }
       ],
       "reason": "Preserved"
@@ -8320,7 +8672,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition",
-          "line": 540
+          "line": 545
         }
       ],
       "reason": "Preserved"
@@ -8334,7 +8686,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsAlreadyCommitted_RejectsWithoutChangingState",
-          "line": 595
+          "line": 600
         }
       ],
       "reason": "Preserved"
@@ -8348,7 +8700,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState",
-          "line": 614
+          "line": 619
         }
       ],
       "reason": "Preserved"
@@ -8362,7 +8714,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 641
+          "line": 646
         }
       ],
       "reason": "Preserved"
@@ -8376,7 +8728,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenNamedInviteeAcceptsNewerPrivateInvitation_RefundsOnlyTheirInviter",
-          "line": 659
+          "line": 664
         }
       ],
       "reason": "Preserved"
@@ -8390,7 +8742,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenInvitationWasAcceptedAndOrdinarySlotIsAvailable_RejectsWithoutChangingState",
-          "line": 722
+          "line": 727
         }
       ],
       "reason": "Preserved"
@@ -8404,7 +8756,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenInvitationWasAcceptedAndSessionIsFull_RejectsWithoutWaitlisting",
-          "line": 762
+          "line": 767
         }
       ],
       "reason": "Preserved"
@@ -8418,7 +8770,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenParticipantWasRemoved_RejectsWithoutChangingState",
-          "line": 806
+          "line": 811
         }
       ],
       "reason": "Preserved"
@@ -8541,7 +8893,19 @@
           "line": 203
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect(() => createTestUser({ userId: \"first-waiter\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-promoted\", now: promotionTime, }), ).toThrow(failure)",
+        "expect(refund).toHaveBeenCalledOnce()",
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
+        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"first-waiter\", )"
+      ],
+      "assertionsAfter": [
+        "expect(() => createTestUser({ userId: \"first-waiter\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-promoted\", now: promotionTime, }), ).toThrow( new DomainError(\"INVALID_STATE\", \"Replacement refund failed\"), )",
+        "expect(refund).toHaveBeenCalledOnce()",
+        "expect(currentState).toEqual(previousState)",
+        "expect(nextWaiterId).toBe(\"first-waiter\")"
+      ]
     },
     {
       "before": {
@@ -8552,7 +8916,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenLoadedUserDoesNotMatchNextWaiter_RejectsWithoutChangingState",
-          "line": 250
+          "line": 254
         }
       ],
       "reason": "Preserved"
@@ -8566,7 +8930,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenReloadedWaiterHasFunds_PromotesFromUpdatedWallet",
-          "line": 278
+          "line": 282
         }
       ],
       "reason": "Preserved"
@@ -8580,7 +8944,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstWaiterCannotPay_SkipsThemAndSelectsNextWaiter",
-          "line": 323
+          "line": 327
         }
       ],
       "reason": "Preserved"
@@ -8594,7 +8958,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter",
-          "line": 361
+          "line": 365
         }
       ],
       "reason": "Preserved"
@@ -8608,7 +8972,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenParticipantChoosesOpenWaitlist_AdmitsFirstWaiterAndRefundsTheirShare",
-          "line": 405
+          "line": 409
         }
       ],
       "reason": "Preserved",
@@ -8642,7 +9006,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenTwoParticipantsChooseOpenWaitlist_RefundsEarlierWithdrawal",
-          "line": 464
+          "line": 468
         }
       ],
       "reason": "Preserved"
@@ -8853,8 +9217,8 @@
         "expect(bookingSession.participantList.nextWaitlisted()).toBeUndefined()"
       ],
       "assertionsAfter": [
-        "expect( bookingSession.participantList.requireParticipation(\"p-alice\").status, ).toBe(\"LEFT_WAITLIST\")",
-        "expect(bookingSession.participantList.nextWaitlisted()).toBeUndefined()"
+        "expect(aliceStatus).toBe(\"LEFT_WAITLIST\")",
+        "expect(nextWaiter).toBeUndefined()"
       ]
     },
     {
@@ -8866,7 +9230,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "join_WhenOnlyAvailableSeatIsReserved_JoinsOrdinaryWaitlistWithoutTakingReservation",
-          "line": 32
+          "line": 34
         }
       ],
       "reason": "Preserved"
@@ -8880,10 +9244,20 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenParticipantOwnsWaitingEntry_LeavesWithoutChangingCommitments",
-          "line": 71
+          "line": 73
         }
       ],
-      "reason": "Preserved"
+      "reason": "Preserved",
+      "assertionsBefore": [
+        "expect( bookingSession.participantList.participations.map( (entry) => entry.status, ), ).toEqual([\"COMMITTED\", \"COMMITTED\", \"LEFT_WAITLIST\"])",
+        "expect( bookingSession.participantList.nextWaitlisted()?.userId, ).toBeUndefined()",
+        "expect(bookingSession.getAvailableSlots(waitlistDepartureTime)).toBe(0)"
+      ],
+      "assertionsAfter": [
+        "expect(participationStatuses).toEqual([\"COMMITTED\", \"COMMITTED\", \"LEFT_WAITLIST\"])",
+        "expect(nextWaiterId).toBeUndefined()",
+        "expect(availableSlots).toBe(0)"
+      ]
     },
     {
       "before": {
@@ -8894,7 +9268,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenEntryBelongsToAnotherParticipant_RejectsWithoutChangingState",
-          "line": 98
+          "line": 100
         }
       ],
       "reason": "Preserved"
@@ -8908,7 +9282,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState",
-          "line": 117
+          "line": 119
         }
       ],
       "reason": "Preserved",

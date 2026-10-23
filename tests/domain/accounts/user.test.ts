@@ -114,13 +114,17 @@ describe("User", () => {
         }),
       );
 
-      // Log
+      // Attempt to alter the supplied preference sets.
       sports.clear();
       regions.clear();
 
+      // Log
+      const storedSports = [...user.preferredSports];
+      const storedRegions = [...user.preferredRegions];
+
       // Oracle
-      expect([...user.preferredSports]).toEqual(["Tennis"]);
-      expect([...user.preferredRegions]).toEqual(["West"]);
+      expect(storedSports).toEqual(["Tennis"]);
+      expect(storedRegions).toEqual(["West"]);
     });
 
     test("create_WhenRegistrationIsValid_ReturnsAnActiveUser", () => {
@@ -154,13 +158,17 @@ describe("User", () => {
         preferredRegions: regions,
       });
 
-      // Log
+      // Attempt to alter the supplied preference sets.
       sports.clear();
       regions.clear();
 
+      // Log
+      const storedSports = [...user.preferredSports];
+      const storedRegions = [...user.preferredRegions];
+
       // Oracle
-      expect([...user.preferredSports]).toEqual(["Tennis"]);
-      expect([...user.preferredRegions]).toEqual(["West"]);
+      expect(storedSports).toEqual(["Tennis"]);
+      expect(storedRegions).toEqual(["West"]);
     });
   });
 
@@ -169,22 +177,26 @@ describe("User", () => {
       // Input
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
-      // Log
       user.updateProfile({ email: new Email("new@example.com") });
 
+      // Log
+      const emailVerified = user.emailVerified;
+
       // Oracle
-      expect(user.emailVerified).toBe(false);
+      expect(emailVerified).toBe(false);
     });
 
     test("updateProfile_WhenVerifiedEmailIsUnchanged_PreservesVerification", () => {
       // Input
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
-      // Log
       user.updateProfile({ email: new Email("owner@example.com") });
 
+      // Log
+      const emailVerified = user.emailVerified;
+
       // Oracle
-      expect(user.emailVerified).toBe(true);
+      expect(emailVerified).toBe(true);
     });
 
     test("updateProfile_WhenAccountIsActive_ReplacesEmail", () => {
@@ -192,12 +204,14 @@ describe("User", () => {
       const user = createActiveUser();
       const email = new Email("new@example.com");
 
-      // Log
       user.updateProfile({ email });
 
+      // Log
+      const updatedEmail = user.email;
+
       // Oracle
-      expect(user.email).toBe(email);
-      expect(user.email?.toString()).toBe("new@example.com");
+      expect(updatedEmail).toBe(email);
+      expect(updatedEmail?.toString()).toBe("new@example.com");
     });
 
     test("updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
@@ -217,15 +231,18 @@ describe("User", () => {
       // Input
       const user = createActiveUser();
 
-      // Log
       user.updatePreferences({
         preferredSports: new Set(["Tennis"]),
         preferredRegions: new Set(["West"]),
       });
 
+      // Log
+      const updatedSports = [...user.preferredSports];
+      const updatedRegions = [...user.preferredRegions];
+
       // Oracle
-      expect([...user.preferredSports]).toEqual(["Tennis"]);
-      expect([...user.preferredRegions]).toEqual(["West"]);
+      expect(updatedSports).toEqual(["Tennis"]);
+      expect(updatedRegions).toEqual(["West"]);
     });
 
     test("updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState", () => {
@@ -269,11 +286,14 @@ describe("User", () => {
       );
       const exposedSports = user.preferredSports as Set<string>;
 
-      // Log
+      // Attempt to alter the returned preference set.
       exposedSports.clear();
 
+      // Log
+      const storedSports = [...user.preferredSports];
+
       // Oracle
-      expect([...user.preferredSports]).toEqual(["Tennis"]);
+      expect(storedSports).toEqual(["Tennis"]);
     });
 
     test("preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences", () => {
@@ -286,11 +306,14 @@ describe("User", () => {
       );
       const exposedRegions = user.preferredRegions as Set<string>;
 
-      // Log
+      // Attempt to alter the returned preference set.
       exposedRegions.clear();
 
+      // Log
+      const storedRegions = [...user.preferredRegions];
+
       // Oracle
-      expect([...user.preferredRegions]).toEqual(["West"]);
+      expect(storedRegions).toEqual(["West"]);
     });
   });
 
@@ -299,16 +322,18 @@ describe("User", () => {
       // Input
       const user = createActiveUser();
 
-      // Log
       user.beginPayoutSetup({
         payoutAccountId: "account",
         providerAccountReference: "provider",
       });
 
+      // Log
+      const pendingAccount = user.payoutAccount;
+
       // Oracle
-      expect(user.payoutAccount?.setupStatus).toBe("PENDING");
-      expect(user.payoutAccount?.payoutAccountId).toBe("account");
-      expect(user.payoutAccount?.userId).toBe("owner");
+      expect(pendingAccount?.setupStatus).toBe("PENDING");
+      expect(pendingAccount?.payoutAccountId).toBe("account");
+      expect(pendingAccount?.userId).toBe("owner");
     });
 
     test("beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState", () => {
@@ -359,16 +384,18 @@ describe("User", () => {
       });
       user.failPayoutSetup();
 
-      // Log
       user.beginPayoutSetup({
         payoutAccountId: "replacement",
         providerAccountReference: "other-provider",
       });
       user.completePayoutSetup("replacement-bank");
+
+      // Log
+      const completedAccount = user.payoutAccount;
       const destination = user.payoutDestination();
 
       // Oracle
-      expect(user.payoutAccount?.setupStatus).toBe("COMPLETE");
+      expect(completedAccount?.setupStatus).toBe("COMPLETE");
       expect(destination.payoutAccountId).toBe("replacement");
       expect(destination.bankAccountReference).toBe("replacement-bank");
     });
@@ -382,8 +409,9 @@ describe("User", () => {
       });
       const pendingAccount = user.payoutAccount;
 
-      // Log
       user.completePayoutSetup("bank");
+
+      // Log
       const completedAccount = user.payoutAccount;
 
       // Oracle
@@ -739,14 +767,21 @@ describe("User", () => {
         preferredRegions: new Set(["West"]),
       });
 
-      // Log
       user.deactivate(deactivationWithoutObligations());
 
+      // Log
+      const deactivatedProfile = {
+        status: user.accountStatus,
+        email: user.email,
+        sports: [...user.preferredSports],
+        regions: [...user.preferredRegions],
+      };
+
       // Oracle
-      expect(user.accountStatus).toBe("INACTIVE");
-      expect(user.email).toBeNull();
-      expect([...user.preferredSports]).toEqual([]);
-      expect([...user.preferredRegions]).toEqual([]);
+      expect(deactivatedProfile.status).toBe("INACTIVE");
+      expect(deactivatedProfile.email).toBeNull();
+      expect(deactivatedProfile.sports).toEqual([]);
+      expect(deactivatedProfile.regions).toEqual([]);
     });
 
     test("deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity", () => {
@@ -760,14 +795,20 @@ describe("User", () => {
       const wallet = user.wallet;
       const payoutAccount = user.payoutAccount;
 
-      // Log
       user.deactivate(deactivationWithoutObligations());
 
+      // Log
+      const retainedIdentity = {
+        userId: user.userId,
+        wallet: user.wallet,
+        payoutAccount: user.payoutAccount,
+      };
+
       // Oracle
-      expect(user.userId).toBe("owner");
-      expect(user.wallet).toBe(wallet);
-      expect(user.payoutAccount).toBe(payoutAccount);
-      expect(user.payoutAccount?.bankAccountReference).toBe("bank");
+      expect(retainedIdentity.userId).toBe("owner");
+      expect(retainedIdentity.wallet).toBe(wallet);
+      expect(retainedIdentity.payoutAccount).toBe(payoutAccount);
+      expect(retainedIdentity.payoutAccount?.bankAccountReference).toBe("bank");
     });
 
     test("deactivate_WhenAlreadyInactive_LeavesStateUnchanged", () => {
@@ -776,11 +817,13 @@ describe("User", () => {
       user.deactivate(deactivationWithoutObligations());
       const before = accountStateOf(user);
 
-      // Log
       user.deactivate(deactivationWithoutObligations());
 
+      // Log
+      const repeatedDeactivationState = accountStateOf(user);
+
       // Oracle
-      expect(accountStateOf(user)).toEqual(before);
+      expect(repeatedDeactivationState).toEqual(before);
     });
   });
 });

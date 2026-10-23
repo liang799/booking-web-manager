@@ -40,14 +40,18 @@ the data or commands, **Log** is the actual output, and **Oracle** is the expect
 output. The lecture's code example captures a result before comparing it with
 the expected value in an assertion.
 
-Write `// Input`, `// Log`, and `// Oracle` comments with blank lines between
-the sections:
+Use `// Input`, `// Log`, and `// Oracle` to identify these ingredients:
 
-- **Input:** create the subject, starting state, and command data.
-- **Log:** execute the behavior and capture its result or observe public state.
+- **Input:** declare the subject's starting state and the data or commands it receives.
+- **Log:** capture an actual return value or read the resulting public state into
+  a named variable. A bare call to a void method is a command, not an output.
 - **Oracle:** compare that observation with concrete expected values directly
   in assertions. Derive expectations from the business rule, independently of
   the implementation being tested.
+
+These labels describe what the code represents, rather than renaming
+Arrange/Act/Assert phases. For a method that returns a value, execution and
+observation can share the assignment:
 
 ```ts
 test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
@@ -62,6 +66,40 @@ test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
   expect(result.toCents()).toBe(1200);
 });
 ```
+
+For a void method, issue the command before Log, then capture what actually
+changed (or remained unchanged), as SC2002's Combatant examples capture hit
+points and attack values after commands:
+
+```ts
+test("assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession", () => {
+  // Input
+  const cancellationTime = hoursBeforeSessionStart(48);
+  const bookingSession = createTestSession({ committedUserIds: ["alice"] });
+  const booker = createTestUser({
+    userId: "booker",
+    emailVerified: false,
+  }).asBooker();
+  const previousState = sessionState(bookingSession);
+
+  booker.assertCanCancel(bookingSession, cancellationTime);
+
+  // Log
+  const currentState = sessionState(bookingSession);
+
+  // Oracle
+  expect(currentState).toEqual(previousState);
+});
+```
+
+Test instrumentation, such as spies and injected failures, is separate from
+domain input. Introduce it with a brief comment explaining the failure being
+simulated. Construct a simulated thrown error inside the stub and state the
+expected code or message directly in the exception assertion. Avoid a shared
+`failure` object serving as both the stub's output and its own expected result.
+Restore spies in `finally`. Keep before/after `sessionState` comparisons for
+rejection atomicity; the captured before-state is the baseline the Oracle must
+preserve, and the after-state is the Log.
 
 Keep each test independent: use fresh objects, with all prerequisite state
 established inside that test or a small construction fixture. A test must work

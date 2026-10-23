@@ -16,17 +16,19 @@ describe("Participant", () => {
       emailVerified: false,
     }).asParticipant();
 
-    // Log
     alice.leaveWaitlist(bookingSession, {
       participationId: "p-alice",
       now: hoursBeforeSessionStart(48),
     });
 
+    // Log
+    const aliceStatus =
+      bookingSession.participantList.requireParticipation("p-alice").status;
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+
     // Oracle
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").status,
-    ).toBe("LEFT_WAITLIST");
-    expect(bookingSession.participantList.nextWaitlisted()).toBeUndefined();
+    expect(aliceStatus).toBe("LEFT_WAITLIST");
+    expect(nextWaiter).toBeUndefined();
   });
 
   test("join_WhenOnlyAvailableSeatIsReserved_JoinsOrdinaryWaitlistWithoutTakingReservation", () => {
@@ -77,22 +79,22 @@ describe("Participant", () => {
     });
     const participant = createTestUser({ userId: "waiting" }).asParticipant();
 
-    // Log
     participant.leaveWaitlist(bookingSession, {
       participationId: "p-waiting",
       now: waitlistDepartureTime,
     });
 
+    // Log
+    const participationStatuses = bookingSession.participantList.participations.map(
+      (entry) => entry.status,
+    );
+    const nextWaiterId = bookingSession.participantList.nextWaitlisted()?.userId;
+    const availableSlots = bookingSession.getAvailableSlots(waitlistDepartureTime);
+
     // Oracle
-    expect(
-      bookingSession.participantList.participations.map(
-        (entry) => entry.status,
-      ),
-    ).toEqual(["COMMITTED", "COMMITTED", "LEFT_WAITLIST"]);
-    expect(
-      bookingSession.participantList.nextWaitlisted()?.userId,
-    ).toBeUndefined();
-    expect(bookingSession.getAvailableSlots(waitlistDepartureTime)).toBe(0);
+    expect(participationStatuses).toEqual(["COMMITTED", "COMMITTED", "LEFT_WAITLIST"]);
+    expect(nextWaiterId).toBeUndefined();
+    expect(availableSlots).toBe(0);
   });
 
   test("leaveWaitlist_WhenEntryBelongsToAnotherParticipant_RejectsWithoutChangingState", () => {

@@ -26,21 +26,20 @@ describe("Session", () => {
       });
       const bookerAdmission = committedParticipation(bookingSession, "booker");
 
-      // Log
       bookingSession.recordAdmission(
         bookerAdmission,
         undefined,
         bookerJoinedAt,
       );
 
+      // Log
+      const participantList = bookingSession.participantList;
+      const availableSlots = bookingSession.getAvailableSlots(bookerJoinedAt);
+
       // Oracle
-      expect(bookingSession.participantList.findByUserId("booker")).toBe(
-        bookerAdmission,
-      );
+      expect(participantList.findByUserId("booker")).toBe(bookerAdmission);
       expect(
-        bookingSession.participantList.participations.map(
-          (entry) => entry.status,
-        ),
+        participantList.participations.map((entry) => entry.status),
       ).toEqual([
         "COMMITTED",
         "COMMITTED",
@@ -51,7 +50,7 @@ describe("Session", () => {
         "COMMITTED",
         "COMMITTED",
       ]);
-      expect(bookingSession.getAvailableSlots(bookerJoinedAt)).toBe(0);
+      expect(availableSlots).toBe(0);
     });
 
     test("recordAdmission_WhenSessionIsFull_RecordsWaitlistedParticipation", () => {
@@ -77,17 +76,18 @@ describe("Session", () => {
         queueSequence: 1,
       });
 
-      // Log
       bookingSession.recordAdmission(waiting, undefined, waitlistedAt);
 
+      // Log
+      const participantList = bookingSession.participantList;
+      const availableSlots = bookingSession.getAvailableSlots(waitlistedAt);
+
       // Oracle
-      expect(
-        bookingSession.participantList.requireParticipation("p-waiting"),
-      ).toBe(waiting);
-      expect(bookingSession.participantList.nextWaitlisted()).toBe(waiting);
-      expect(bookingSession.participantList.committedCount).toBe(8);
-      expect(bookingSession.participantList.nextQueueSequence).toBe(2);
-      expect(bookingSession.getAvailableSlots(waitlistedAt)).toBe(0);
+      expect(participantList.requireParticipation("p-waiting")).toBe(waiting);
+      expect(participantList.nextWaitlisted()).toBe(waiting);
+      expect(participantList.committedCount).toBe(8);
+      expect(participantList.nextQueueSequence).toBe(2);
+      expect(availableSlots).toBe(0);
     });
   });
 

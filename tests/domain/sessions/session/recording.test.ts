@@ -214,18 +214,16 @@ describe("Session", () => {
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
     const validAdmission = committedParticipation(bookingSession, "ben");
 
-    // Log
     bookingSession.recordAdmission(validAdmission, undefined, benJoinedAt);
 
+    // Log
+    const currentList = bookingSession.participantList;
+
     // Oracle
-    expect(bookingSession.participantList).not.toBe(previousList);
-    expect(bookingSession.participantList.requireParticipation("p-ben")).toBe(
-      validAdmission,
-    );
-    expect(bookingSession.participantList.findByUserId("ben")).toBe(
-      validAdmission,
-    );
-    expect(bookingSession.participantList.committedCount).toBe(2);
+    expect(currentList).not.toBe(previousList);
+    expect(currentList.requireParticipation("p-ben")).toBe(validAdmission);
+    expect(currentList.findByUserId("ben")).toBe(validAdmission);
+    expect(currentList.committedCount).toBe(2);
     expect(previousList.participations).toEqual([alice]);
     expect(previousList.requireParticipation("p-alice")).toBe(alice);
     expect(previousList.findByUserId("ben")).toBeUndefined();
