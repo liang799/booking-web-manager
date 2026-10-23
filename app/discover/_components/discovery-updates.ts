@@ -5,7 +5,7 @@ export interface DiscoveryExpiry {
 }
 
 export interface DiscoveryUpdates {
-  /** Called after a router transition settles, including failed reads. */
+  /** Called after a read or foreground navigation settles, including failed reads. */
   complete(): void;
   /** Reconcile a server result; elapsed read time conservatively accounts for transport delay. */
   expireAt(expiry: DiscoveryExpiry | null, elapsedReadMs?: number): void;
