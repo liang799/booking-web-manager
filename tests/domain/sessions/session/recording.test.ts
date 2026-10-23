@@ -47,7 +47,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.recordAdmission(admission, undefined, danaTriedToJoinAt),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges", () => {
@@ -78,9 +83,16 @@ describe("Session", () => {
     expect(() =>
       bookingSession.recordAdmission(admission, undefined, caraTriedToJoinAt),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(bookingSession.participantList).toBe(previousList);
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.getAvailableSlots(caraTriedToJoinAt)).toBe(1);
+
+    // Log
+    const currentList = bookingSession.participantList;
+    const currentState = sessionState(bookingSession);
+    const availableSlots = bookingSession.getAvailableSlots(caraTriedToJoinAt);
+
+    // Oracle
+    expect(currentList).toBe(previousList);
+    expect(currentState).toEqual(previousState);
+    expect(availableSlots).toBe(1);
   });
 
   test("recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges", () => {
@@ -121,7 +133,12 @@ describe("Session", () => {
         danaTriedToAcceptAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState", () => {
@@ -176,18 +193,36 @@ describe("Session", () => {
         benTriedToJoinAt,
       ),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-    expect(bookingSession.participantList).toBe(previousList);
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(previousList.requireParticipation("p-alice")).toBe(alice);
-    expect(previousList.findByUserId("alice")).toBe(alice);
-    expect(previousList.findByUserId("ben")).toBeUndefined();
+
+    // Log
+    const currentList = bookingSession.participantList;
+    const currentState = sessionState(bookingSession);
+    const aliceByParticipationId = previousList.requireParticipation("p-alice");
+    const aliceByUserId = previousList.findByUserId("alice");
+    const benByUserId = previousList.findByUserId("ben");
+
+    // Oracle
+    expect(currentList).toBe(previousList);
+    expect(currentState).toEqual(previousState);
+    expect(aliceByParticipationId).toBe(alice);
+    expect(aliceByUserId).toBe(alice);
+    expect(benByUserId).toBeUndefined();
+
+    // Log & Oracle
     expect(() => previousList.requireParticipation("p-ben")).toThrow(
       expect.objectContaining({ code: "NOT_FOUND" }),
     );
-    expect(previousList.committedCount).toBe(1);
-    expect(previousList.nextQueueSequence).toBe(1);
-    expect(previousList.nextWaitlisted()).toBeUndefined();
-    expect(previousList.oldestAwaitingReplacement()).toBeUndefined();
+
+    // Log
+    const { committedCount, nextQueueSequence } = previousList;
+    const nextWaiter = previousList.nextWaitlisted();
+    const oldestReplacement = previousList.oldestAwaitingReplacement();
+
+    // Oracle
+    expect(committedCount).toBe(1);
+    expect(nextQueueSequence).toBe(1);
+    expect(nextWaiter).toBeUndefined();
+    expect(oldestReplacement).toBeUndefined();
   });
 
   test("recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList", () => {
@@ -214,21 +249,28 @@ describe("Session", () => {
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
     const validAdmission = committedParticipation(bookingSession, "ben");
 
-    bookingSession.recordAdmission(validAdmission, undefined, benJoinedAt);
-
     // Log
+    bookingSession.recordAdmission(validAdmission, undefined, benJoinedAt);
     const currentList = bookingSession.participantList;
+
+    const recordedBen = currentList.requireParticipation("p-ben");
+    const benByUserId = currentList.findByUserId("ben");
+    const preservedParticipations = previousList.participations;
+    const aliceInPreviousList = previousList.requireParticipation("p-alice");
+    const benInPreviousList = previousList.findByUserId("ben");
+    const preservedCommittedCount = previousList.committedCount;
+    const preservedNextQueueSequence = previousList.nextQueueSequence;
 
     // Oracle
     expect(currentList).not.toBe(previousList);
-    expect(currentList.requireParticipation("p-ben")).toBe(validAdmission);
-    expect(currentList.findByUserId("ben")).toBe(validAdmission);
+    expect(recordedBen).toBe(validAdmission);
+    expect(benByUserId).toBe(validAdmission);
     expect(currentList.committedCount).toBe(2);
-    expect(previousList.participations).toEqual([alice]);
-    expect(previousList.requireParticipation("p-alice")).toBe(alice);
-    expect(previousList.findByUserId("ben")).toBeUndefined();
-    expect(previousList.committedCount).toBe(1);
-    expect(previousList.nextQueueSequence).toBe(1);
+    expect(preservedParticipations).toEqual([alice]);
+    expect(aliceInPreviousList).toBe(alice);
+    expect(benInPreviousList).toBeUndefined();
+    expect(preservedCommittedCount).toBe(1);
+    expect(preservedNextQueueSequence).toBe(1);
   });
 
   test("recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
@@ -250,7 +292,12 @@ describe("Session", () => {
         admissionAttemptedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState", () => {
@@ -269,7 +316,12 @@ describe("Session", () => {
         hoursBeforeSessionStart(48),
       ),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState", () => {
@@ -289,10 +341,15 @@ describe("Session", () => {
         hoursBeforeSessionStart(48),
       ),
     ).toThrow(expect.objectContaining({ code: "WAITLIST_NOT_HEAD" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "waiting",
-    );
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const nextWaiterUserId =
+      bookingSession.participantList.nextWaitlisted()?.userId;
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(nextWaiterUserId).toBe("waiting");
   });
 
   test("recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState", () => {
@@ -330,7 +387,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.recordAdmission(admission, undefined, waitlistedAt),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged", () => {
@@ -366,7 +428,12 @@ describe("Session", () => {
         replacementTriedToJoinAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged", () => {
@@ -407,7 +474,12 @@ describe("Session", () => {
         replacementTriedToJoinAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges", () => {
@@ -447,8 +519,14 @@ describe("Session", () => {
         choiceChangeAttemptedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(bookingSession.participantList).toBe(previousList);
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentList = bookingSession.participantList;
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentList).toBe(previousList);
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges", () => {
@@ -488,8 +566,14 @@ describe("Session", () => {
         choiceChangeAttemptedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(bookingSession.participantList).toBe(previousList);
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentList = bookingSession.participantList;
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentList).toBe(previousList);
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState", () => {
@@ -520,7 +604,12 @@ describe("Session", () => {
         transitionAttemptedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState", () => {
@@ -543,7 +632,12 @@ describe("Session", () => {
         removalAttemptedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState", () => {
@@ -568,7 +662,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.recordParticipationTransition(existing, departed),
     ).toThrow(expect.objectContaining({ code: "SESSION_CLOSED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged", () => {
@@ -591,7 +690,12 @@ describe("Session", () => {
         cancellationAttemptedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
@@ -609,7 +713,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.recordCancellation([cancelled], cancellationAttemptedAt),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged", () => {
@@ -628,7 +737,12 @@ describe("Session", () => {
         attendanceRecordedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged", () => {
@@ -644,7 +758,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.recordAttendance([verified], attendanceAttemptedAt),
     ).toThrow(expect.objectContaining({ code: "SESSION_NOT_ENDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied", () => {
@@ -672,10 +791,15 @@ describe("Session", () => {
         attendanceRecordedAt,
       ),
     ).toThrow(expect.objectContaining({ code: "ATTENDANCE_CONFLICT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben").attendance,
-    ).toBe("UNVERIFIED");
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const benAttendance =
+      bookingSession.participantList.requireParticipation("p-ben").attendance;
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(benAttendance).toBe("UNVERIFIED");
   });
 
   test("recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState", () => {
@@ -694,7 +818,12 @@ describe("Session", () => {
         hoursBeforeSessionStart(48),
       ),
     ).toThrow(expect.objectContaining({ code: "SESSION_NOT_ENDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged", () => {
@@ -718,7 +847,12 @@ describe("Session", () => {
         sessionEndsAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged", () => {
@@ -745,7 +879,12 @@ describe("Session", () => {
         sessionEndsAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 });
 

@@ -24,15 +24,17 @@ describe("Participant", () => {
       holdId: "h-alice",
       now: hoursBeforeSessionStart(48),
     });
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const committedCount = bookingSession.participantList.committedCount;
 
     // Oracle
     expect(promotion.kind).toBe("PROMOTED");
     expect(promotion.instructions).toHaveLength(1);
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").status,
-    ).toBe("COMMITTED");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe("ben");
-    expect(bookingSession.participantList.committedCount).toBe(1);
+    expect(aliceParticipation.status).toBe("COMMITTED");
+    expect(nextWaiter?.userId).toBe("ben");
+    expect(committedCount).toBe(1);
   });
 
   test("promoteFromWaitlist_WhenFirstWaiterHasPendingInvitation_RejectsWithoutAcceptingOrMovingQueue", () => {
@@ -61,22 +63,26 @@ describe("Participant", () => {
           now: promotionTime,
         }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara").status,
-    ).toBe("WAITLISTED");
-    expect(
-      bookingSession.participantList.personalReplacementForInvitee("cara")
-        ?.participationId,
-    ).toBe("p-ben");
-    expect(bookingSession.participantList.committedCount).toBe(1);
-    expect(bookingSession.getAvailableSlots(promotionTime)).toBe(0);
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "cara",
-    );
-    expect(bookingSession.participantList.nextQueueSequence).toBe(
-      queueSequence,
-    );
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const caraParticipation =
+      bookingSession.participantList.requireParticipation("p-cara");
+    const caraInvitation =
+      bookingSession.participantList.personalReplacementForInvitee("cara");
+    const committedCount = bookingSession.participantList.committedCount;
+    const availableSlots = bookingSession.getAvailableSlots(promotionTime);
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(caraParticipation.status).toBe("WAITLISTED");
+    expect(caraInvitation?.participationId).toBe("p-ben");
+    expect(committedCount).toBe(1);
+    expect(availableSlots).toBe(0);
+    expect(nextWaiter?.userId).toBe("cara");
+    expect(nextQueueSequence).toBe(queueSequence);
   });
 
   test("promoteFromWaitlist_WhenOnlyVacancyIsReserved_RejectsWithoutMovingTheQueue", () => {
@@ -104,10 +110,14 @@ describe("Participant", () => {
           now: promotionTime,
         }),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "dana",
-    );
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(nextWaiter?.userId).toBe("dana");
   });
 
   test("promoteFromWaitlist_WhenAnOlderWithdrawalIsReserved_RefundsOnlyTheOpenWithdrawal", () => {
@@ -140,6 +150,12 @@ describe("Participant", () => {
         holdId: "h-dana",
         now: promotionTime,
       });
+    const danaParticipation =
+      bookingSession.participantList.requireParticipation("p-dana");
+    const benParticipation =
+      bookingSession.participantList.requireParticipation("p-ben");
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const availableSlots = bookingSession.getAvailableSlots(promotionTime);
 
     // Oracle
     expect(promotion.kind).toBe("PROMOTED");
@@ -147,17 +163,10 @@ describe("Participant", () => {
     expect(
       promotion.instructions.map((instruction) => instruction.kind),
     ).toEqual(["LOCK", "REFUND"]);
-    expect(
-      bookingSession.participantList.requireParticipation("p-dana")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben").hold?.state,
-    ).toBe("AWAITING_REPLACEMENT");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "evan",
-    );
-    expect(bookingSession.getAvailableSlots(promotionTime)).toBe(0);
+    expect(danaParticipation.replacesParticipationId).toBe("p-alice");
+    expect(benParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
+    expect(nextWaiter?.userId).toBe("evan");
+    expect(availableSlots).toBe(0);
   });
 
   test("promoteFromWaitlist_WhenQueueIsEmpty_ReturnsNoneBeforeValidatingHoldId", () => {
@@ -172,10 +181,11 @@ describe("Participant", () => {
         holdId: "",
         now: hoursBeforeSessionStart(48),
       });
+    const currentState = sessionState(bookingSession);
 
     // Oracle
     expect(promotion).toEqual({ kind: "NONE", instructions: [] });
-    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(currentState).toEqual(previousState);
   });
 
   test("promoteFromWaitlist_WhenSessionHasStartedAndQueueIsEmpty_RejectsBeforeReturningNone", () => {
@@ -197,7 +207,12 @@ describe("Participant", () => {
         message: "The session has started",
       }),
     );
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("promoteFromWaitlist_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged", () => {
@@ -276,7 +291,12 @@ describe("Participant", () => {
           now: promotionTime,
         }),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("promoteFromWaitlist_WhenReloadedWaiterHasFunds_PromotesFromUpdatedWallet", () => {
@@ -315,13 +335,17 @@ describe("Participant", () => {
         holdId: "h-cara",
         now: promotionTime,
       });
+    const unfundedUserAvailableFunds =
+      unfundedUser.wallet.getAvailableBalance();
+    const reloadedUserAvailableFunds =
+      reloadedUser.wallet.getAvailableBalance();
 
     // Oracle
     expect(waitlistAdmission.kind).toBe("WAITLISTED");
     expect(promotion.kind).toBe("PROMOTED");
     expect(promotion.instructions[0]?.walletId).toBe("w-cara");
-    expect(unfundedUser.wallet.getAvailableBalance().toCents()).toBe(0);
-    expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(500);
+    expect(unfundedUserAvailableFunds.toCents()).toBe(0);
+    expect(reloadedUserAvailableFunds.toCents()).toBe(500);
   });
 
   test("promoteFromWaitlist_WhenFirstWaiterCannotPay_SkipsThemAndSelectsNextWaiter", () => {
@@ -342,6 +366,11 @@ describe("Participant", () => {
       holdId: "h-cara",
       now: promotionTime,
     });
+    const caraParticipation =
+      bookingSession.participantList.requireParticipation("p-cara");
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
+    const availableSlots = bookingSession.getAvailableSlots(promotionTime);
 
     // Oracle
     expect(promotion).toEqual({
@@ -350,16 +379,10 @@ describe("Participant", () => {
       reason: "INSUFFICIENT_FUNDS",
       instructions: [],
     });
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara").status,
-    ).toBe("LEFT_WAITLIST");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "dana",
-    );
-    expect(bookingSession.participantList.nextQueueSequence).toBe(
-      queueSequence,
-    );
-    expect(bookingSession.getAvailableSlots(promotionTime)).toBe(1);
+    expect(caraParticipation.status).toBe("LEFT_WAITLIST");
+    expect(nextWaiter?.userId).toBe("dana");
+    expect(nextQueueSequence).toBe(queueSequence);
+    expect(availableSlots).toBe(1);
   });
 
   test("promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter", () => {
@@ -386,6 +409,9 @@ describe("Participant", () => {
       holdId: "h-dana",
       now: nextPromotionTime,
     });
+    const danaParticipation =
+      bookingSession.participantList.requireParticipation("p-dana");
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
 
     // Oracle
     expect(promotion.kind).toBe("PROMOTED");
@@ -398,12 +424,8 @@ describe("Participant", () => {
       }),
     ]);
     expect(promotion.instructions[0]?.amount.toCents()).toBe(500);
-    expect(
-      bookingSession.participantList.requireParticipation("p-dana").status,
-    ).toBe("COMMITTED");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "evan",
-    );
+    expect(danaParticipation.status).toBe("COMMITTED");
+    expect(nextWaiter?.userId).toBe("evan");
   });
 
   test("promoteFromWaitlist_WhenParticipantChoosesOpenWaitlist_AdmitsFirstWaiterAndRefundsTheirShare", () => {
@@ -432,6 +454,8 @@ describe("Participant", () => {
       bookingSession.participantList.requireParticipation("p-ben");
     const danaParticipation =
       bookingSession.participantList.requireParticipation("p-dana");
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
 
     // Oracle
     expect(promotion).toMatchObject({
@@ -457,12 +481,8 @@ describe("Participant", () => {
     expect(benParticipation.hold?.state).toBe("REFUNDED");
     expect(danaParticipation.hold?.state).toBe("HELD");
     expect(danaParticipation.replacesParticipationId).toBe("p-ben");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "evan",
-    );
-    expect(bookingSession.participantList.nextQueueSequence).toBe(
-      queueSequence,
-    );
+    expect(nextWaiter?.userId).toBe("evan");
+    expect(nextQueueSequence).toBe(queueSequence);
   });
 
   test("promoteFromWaitlist_WhenTwoParticipantsChooseOpenWaitlist_RefundsEarlierWithdrawal", () => {

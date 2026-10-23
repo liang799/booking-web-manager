@@ -27,24 +27,25 @@ describe("Booker", () => {
         nextQueueSequence: session.participantList.nextQueueSequence,
       }),
     );
+    const sessionStatus = session.status;
+    const aliceParticipation =
+      session.participantList.requireParticipation("p-alice");
+    const caraParticipation =
+      session.participantList.requireParticipation("p-cara");
+    const restoredAlice =
+      restoredSession.participantList.requireParticipation("p-alice");
 
     // Oracle
-    expect(session.status).toBe("CANCELLED");
-    expect(session.participantList.requireParticipation("p-alice")).toBe(
-      removed,
-    );
+    expect(sessionStatus).toBe("CANCELLED");
+    expect(aliceParticipation).toBe(removed);
     expect(
       cancellation.instructions.map((instruction) => [
         instruction.participationId,
         instruction.amount.toCents(),
       ]),
     ).toEqual([["p-ben", 500]]);
-    expect(session.participantList.requireParticipation("p-cara").status).toBe(
-      "CANCELLED",
-    );
-    expect(
-      restoredSession.participantList.requireParticipation("p-alice").status,
-    ).toBe("REMOVED");
+    expect(caraParticipation.status).toBe("CANCELLED");
+    expect(restoredAlice.status).toBe("REMOVED");
   });
 
   test("cancel_WhenRosterHasPreviouslyCancelledParticipant_PreservesTerminalHold", () => {
@@ -59,11 +60,11 @@ describe("Booker", () => {
       session,
       hoursBeforeSessionStart(24),
     );
+    const aliceParticipation =
+      session.participantList.requireParticipation("p-alice");
 
     // Oracle
-    expect(session.participantList.requireParticipation("p-alice")).toBe(
-      closed,
-    );
+    expect(aliceParticipation).toBe(closed);
     expect(cancellation.instructions).toEqual([]);
   });
 });

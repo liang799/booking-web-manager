@@ -26,18 +26,20 @@ describe("Session", () => {
       });
       const bookerAdmission = committedParticipation(bookingSession, "booker");
 
+      // Log
       bookingSession.recordAdmission(
         bookerAdmission,
         undefined,
         bookerJoinedAt,
       );
 
-      // Log
       const participantList = bookingSession.participantList;
       const availableSlots = bookingSession.getAvailableSlots(bookerJoinedAt);
 
+      const recordedBooker = participantList.findByUserId("booker");
+
       // Oracle
-      expect(participantList.findByUserId("booker")).toBe(bookerAdmission);
+      expect(recordedBooker).toBe(bookerAdmission);
       expect(
         participantList.participations.map((entry) => entry.status),
       ).toEqual([
@@ -76,15 +78,17 @@ describe("Session", () => {
         queueSequence: 1,
       });
 
-      bookingSession.recordAdmission(waiting, undefined, waitlistedAt);
-
       // Log
+      bookingSession.recordAdmission(waiting, undefined, waitlistedAt);
       const participantList = bookingSession.participantList;
       const availableSlots = bookingSession.getAvailableSlots(waitlistedAt);
 
+      const recordedWaiter = participantList.requireParticipation("p-waiting");
+      const nextWaiter = participantList.nextWaitlisted();
+
       // Oracle
-      expect(participantList.requireParticipation("p-waiting")).toBe(waiting);
-      expect(participantList.nextWaitlisted()).toBe(waiting);
+      expect(recordedWaiter).toBe(waiting);
+      expect(nextWaiter).toBe(waiting);
       expect(participantList.committedCount).toBe(8);
       expect(participantList.nextQueueSequence).toBe(2);
       expect(availableSlots).toBe(0);

@@ -42,9 +42,12 @@ the expected value in an assertion.
 
 Use `// Input`, `// Log`, and `// Oracle` to identify these ingredients:
 
-- **Input:** declare the subject's starting state and the data or commands it receives.
-- **Log:** capture an actual return value or read the resulting public state into
-  a named variable. A bare call to a void method is a command, not an output.
+- **Input:** declare the subject's starting state and command data. Keep any
+  prerequisite transitions here.
+- **Log:** execute the behavior being tested and capture its actual return value
+  or resulting public state together in one block. For a void method, put the
+  command immediately before the named state observation. Capture any additional
+  outcome queries here too, before comparing them in Oracle.
 - **Oracle:** compare that observation with concrete expected values directly
   in assertions. Derive expectations from the business rule, independently of
   the implementation being tested.
@@ -67,7 +70,8 @@ test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
 });
 ```
 
-For a void method, group the command and its immediately captured result under
+Apply this grouping throughout the domain suite. For a void method, group the
+command and its immediately captured result under `// Log` or
 `// Log change result`. This keeps the change beside the observation, as
 SC2002's Combatant examples capture hit points and attack values after commands:
 
@@ -122,9 +126,10 @@ test("completeSetup_WhenSetupIsPending_ReturnsCompletedCopy", () => {
 
   // Log
   const completedAccount = pendingAccount.completeSetup("bank");
+  const originalSetupStatus = pendingAccount.setupStatus;
 
   // Oracle
-  expect(pendingAccount.setupStatus).toBe("PENDING");
+  expect(originalSetupStatus).toBe("PENDING");
   expect(completedAccount).not.toBe(pendingAccount);
   expect(completedAccount.setupStatus).toBe("COMPLETE");
   expect(completedAccount.bankAccountReference).toBe("bank");
@@ -138,7 +143,9 @@ observes the thrown error, and compares it with the expected error. Keep this
 direct assertion instead of adding an error-capture helper.
 Run the assertion while the subject is in the state named by the test; do not
 save an action callback and invoke it after subsequent state changes. When
-atomicity matters, also assert that rejection leaves state unchanged.
+atomicity matters, capture the resulting state in a following Log block and
+compare it with the before-state under Oracle. The capture must happen after
+the exception assertion has executed the rejected command.
 
 Reuse fixtures for routine defaults, but keep scenario-specific inputs and
 transitions in the test. Put small local helper functions below the tests.
@@ -178,13 +185,14 @@ test("completeSettlement_WhenPayoutIsPending_ReleasesHeldShares", () => {
 
   // Log
   const completion = session.completeSettlement("out", sessionEndsAt);
+  const status = session.status;
+  const pendingSettlement = session.pendingSettlement;
+  const holdStates = session.participantList.participations.map((p) => p.hold?.state);
 
   // Oracle
-  expect(session.status).toBe("SETTLED");
-  expect(session.pendingSettlement).toBeUndefined();
-  expect(
-    session.participantList.participations.map((p) => p.hold?.state),
-  ).toEqual(["RELEASED", "RELEASED"]);
+  expect(status).toBe("SETTLED");
+  expect(pendingSettlement).toBeUndefined();
+  expect(holdStates).toEqual(["RELEASED", "RELEASED"]);
   expect(
     completion.instructions.map(({ kind, amount }) => [kind, amount.toCents()]),
   ).toEqual([["RELEASE", 500], ["RELEASE", 500]]);
@@ -202,7 +210,10 @@ identifies the next waiter. Session hydration still takes arrays through
 `sessionDetails`.
 
 ```ts
+// Log
 const aliceParticipation = bookingSession.participantList.requireParticipation("p-alice");
+
+// Oracle
 expect(aliceParticipation.status).toBe("COMMITTED");
 ```
 

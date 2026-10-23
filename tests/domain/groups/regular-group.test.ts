@@ -49,11 +49,10 @@ describe("RegularGroup", () => {
       const details = groupDetails({ memberships });
       const group = new RegularGroup(details);
 
+      // Log
       // Attempt to alter the supplied membership collection and date.
       memberships[0]?.joinedAt.setUTCFullYear(2000);
       memberships.pop();
-
-      // Log
       const storedMemberships = group.memberships;
 
       // Oracle
@@ -66,11 +65,10 @@ describe("RegularGroup", () => {
       const group = newGroup();
       const returnedMemberships = group.memberships as GroupMembership[];
 
+      // Log
       // Attempt to alter the returned membership collection and date.
       returnedMemberships[0]?.joinedAt.setUTCFullYear(2000);
       returnedMemberships.pop();
-
-      // Log
       const storedMemberships = group.memberships;
 
       // Oracle
@@ -95,16 +93,19 @@ describe("RegularGroup", () => {
         invitationToken: "first-token",
         now: now(),
       });
+      const groupStatus = group.status;
+      const memberships = group.memberships;
+      const memberIds = memberships.map((member) => member.userId);
 
       // Oracle
-      expect(group.status).toBe("ACTIVE");
-      expect(group.memberships.map((member) => member.userId)).toEqual([
+      expect(groupStatus).toBe("ACTIVE");
+      expect(memberIds).toEqual([
         "owner",
         "player",
       ]);
       expect(firstJoin).toBe("JOINED");
       expect(repeatedJoin).toBe("ALREADY_MEMBER");
-      expect(group.memberships).toHaveLength(2);
+      expect(memberships).toHaveLength(2);
     });
 
     test("join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation", () => {
@@ -121,7 +122,12 @@ describe("RegularGroup", () => {
           now: now(),
         }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INVITATION" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("join_WhenTokenWasRotated_ThrowsInvalidInvitation", () => {
@@ -142,7 +148,12 @@ describe("RegularGroup", () => {
           now: now(),
         }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INVITATION" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("join_WhenRevokedInvitationIsRotated_AcceptsNewToken", () => {
@@ -179,7 +190,12 @@ describe("RegularGroup", () => {
           now: now(),
         }),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
@@ -191,7 +207,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.rotateInvitation({ actorId: "other", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
@@ -204,7 +225,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.rotateInvitation({ actorId: "owner", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
@@ -216,7 +242,12 @@ describe("RegularGroup", () => {
       expect(() => group.revokeInvitation("other")).toThrow(
         expect.objectContaining({ code: "UNAUTHORIZED" }),
       );
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
   });
 
@@ -230,16 +261,20 @@ describe("RegularGroup", () => {
       expect(() =>
         group.rename({ actorId: "other", name: "New name" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("rename_WhenOwnerProvidesName_UpdatesName", () => {
       // Input
       const group = newGroup();
 
-      group.rename({ actorId: "owner", name: "Saturday tennis" });
-
       // Log
+      group.rename({ actorId: "owner", name: "Saturday tennis" });
       const updatedName = group.name;
 
       // Oracle
@@ -255,7 +290,12 @@ describe("RegularGroup", () => {
       expect(() => group.rename({ actorId: "owner", name: " " })).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("rename_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
@@ -268,7 +308,12 @@ describe("RegularGroup", () => {
       expect(() => group.rename({ actorId: "owner", name: "New" })).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
@@ -280,7 +325,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.removeMember({ actorId: "other", userId: "owner" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner", () => {
@@ -292,9 +342,8 @@ describe("RegularGroup", () => {
         now: now(),
       });
 
-      group.removeMember({ actorId: "owner", userId: "player" });
-
       // Log
+      group.removeMember({ actorId: "owner", userId: "player" });
       const remainingMembers = group.memberships.map((member) => member.userId);
 
       // Oracle
@@ -310,7 +359,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.removeMember({ actorId: "owner", userId: "owner" }),
       ).toThrow(expect.objectContaining({ code: "OWNER_REMOVAL" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("removeMember_WhenMemberIsMissing_RejectsWithoutChangingState", () => {
@@ -322,7 +376,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.removeMember({ actorId: "owner", userId: "missing" }),
       ).toThrow(expect.objectContaining({ code: "NOT_FOUND" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("archive_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
@@ -334,7 +393,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.archive({ actorId: "other", unsettledLinkedSessions: 0 }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState", () => {
@@ -346,7 +410,12 @@ describe("RegularGroup", () => {
       expect(() =>
         group.archive({ actorId: "owner", unsettledLinkedSessions: 1 }),
       ).toThrow(expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState", () => {
@@ -358,17 +427,21 @@ describe("RegularGroup", () => {
       expect(() =>
         group.archive({ actorId: "owner", unsettledLinkedSessions: -1 }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent", () => {
       // Input
       const group = newGroup();
 
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
-
       // Log
+      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       const archivedState = {
         status: group.status,
         invitationActive: group.invitationActive,
@@ -389,9 +462,8 @@ describe("RegularGroup", () => {
       group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
       group.join({ userId: "ben", invitationToken: "first-token", now: now() });
 
-      group.leave({ userId: "aisha" });
-
       // Log
+      group.leave({ userId: "aisha" });
       const remainingMembers = group.memberships.map((member) => member.userId);
 
       // Oracle
@@ -411,7 +483,12 @@ describe("RegularGroup", () => {
       expect(() => group.leave({ userId: "owner" })).toThrow(
         expect.objectContaining({ code: "OWNER_REMOVAL" }),
       );
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("leave_WhenUserIsNotAMember_RejectsWithoutChangingState", () => {
@@ -423,7 +500,12 @@ describe("RegularGroup", () => {
       expect(() => group.leave({ userId: "stranger" })).toThrow(
         expect.objectContaining({ code: "NOT_FOUND" }),
       );
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("leave_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
@@ -444,7 +526,12 @@ describe("RegularGroup", () => {
       expect(() => group.leave({ userId: "aisha" })).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
-      expect(groupState(group)).toEqual(before);
+
+      // Log
+      const rejectedGroupState = groupState(group);
+
+      // Oracle
+      expect(rejectedGroupState).toEqual(before);
     });
 
     test("join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain", () => {
@@ -459,10 +546,11 @@ describe("RegularGroup", () => {
         invitationToken: "first-token",
         now: now(),
       });
+      const memberIds = group.memberships.map((member) => member.userId);
 
       // Oracle
       expect(readmission).toBe("JOINED");
-      expect(group.memberships.map((member) => member.userId)).toEqual([
+      expect(memberIds).toEqual([
         "owner",
         "aisha",
       ]);

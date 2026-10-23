@@ -224,9 +224,10 @@ describe("ReliabilityScore", () => {
 
     // Log
     const numericScore = score.toNumber();
+    const frozen = Object.isFrozen(score);
 
     // Oracle
-    expect(Object.isFrozen(score)).toBe(true);
+    expect(frozen).toBe(true);
     expect(numericScore).toBe(66.66666666666667);
   });
 });

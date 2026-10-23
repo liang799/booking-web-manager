@@ -43,11 +43,13 @@ describe("PayoutAccount", () => {
 
     // Log
     const completedAccount = pendingAccount.completeSetup("bank");
+    const originalStatus = pendingAccount.setupStatus;
+    const originalBankReference = pendingAccount.bankAccountReference;
 
     // Oracle
     expect(completedAccount).not.toBe(pendingAccount);
-    expect(pendingAccount.setupStatus).toBe("PENDING");
-    expect(pendingAccount.bankAccountReference).toBeUndefined();
+    expect(originalStatus).toBe("PENDING");
+    expect(originalBankReference).toBeUndefined();
     expect(completedAccount.setupStatus).toBe("COMPLETE");
     expect(completedAccount.bankAccountReference).toBe("bank");
   });

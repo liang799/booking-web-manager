@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 22:44:20 SGT**
-(`2026-10-23T14:44:20.412Z`). All **600 tests in 43 files passed**.
+Snapshot run: **23 October 2026, 23:07:50 SGT**
+(`2026-10-23T15:07:50.235Z`). All **600 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
@@ -12,7 +12,7 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `3ac6ae27ff79a4ac9906b0d47e544906a6562a1e58d67a6bb1241a0fe82e5ee4`.
+  `fcbe38849d8fd7ee17b886e24f01513cae36a3901de3242b7d9bb841236e1aa8`.
 - [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
   mapped to 599 retained scenarios, plus one new visibility-change case.
   Includes before/after assertion expressions for changed explicit scenarios.
@@ -36,9 +36,10 @@ instance. Rejection snapshots establish that the observed state is unchanged.
 Input lists domain data and commands, excluding spy configuration and cleanup.
 Log's observation bindings identify the source expressions that captured actual
 results or state; its verified outcomes describe what the assertions establish.
-A `Log change result` block can group a void command with its immediately
-captured state. The labels identify test ingredients rather than execution
-phases.
+Throughout the suite, Log groups the tested action with its captured return
+value or public state. A void command sits immediately before its state
+observation under `Log` or `Log change result`; Oracle compares that observation
+with the expected outcome. Prerequisite transitions remain in Input.
 
 Vitest's standard report records status and failures, not successful return
 values. These tables interpret the executed source assertions alongside their
@@ -79,12 +80,14 @@ The mapping was reconciled by source path and test identity. Assertion changes
 were reviewed, including cases with renamed local variables; equal test counts
 alone were not used as coverage evidence.
 
-The follow-up correction to Input and Log preserved all 599 final case names
-and all 1,228 assertions (1,220 outcome assertions and eight prerequisite
-assertions). Fault-injection oracles construct independent expected errors
-inline, retaining their original error-equality checks.
-The added visibility-change case brings the current total to 600 cases and
-1,229 assertions.
+The final suite contains **600 cases and 1,229 assertions**, including eight
+prerequisite assertions. The suite-wide Log grouping retains every case name,
+matcher, negation, expected argument, and underlying observed expression from
+the preceding cleanup revision (`10bacbc`). Named captures replace inline
+outcome queries without changing what is checked. Rejection-state captures
+remain after the exception assertion that executes the rejected command.
+Fault-injection oracles construct independent expected errors inline, retaining
+their original error-equality checks.
 
 ## Other validation
 

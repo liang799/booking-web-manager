@@ -15,11 +15,10 @@ describe("Wallet", () => {
       const input = { walletId: "wallet", userId: "owner", transactions: [] };
       const wallet = new Wallet(input);
 
+      // Log
       // Attempt to alter the supplied identity.
       input.walletId = "changed";
       input.userId = "changed";
-
-      // Log
       const identityChanged = Reflect.set(wallet, "walletId", "changed");
       const storedIdentity = { walletId: wallet.walletId, userId: wallet.userId };
 
@@ -314,14 +313,13 @@ describe("Wallet", () => {
       const history = [credit];
       const fundedWallet = wallet(history);
 
+      // Log
       // Attempt to alter supplied and returned transaction data.
       history.length = 0;
       (fundedWallet.transactions as LedgerTransaction[]).push(
         entry("extra", "TOP_UP", 100),
       );
       credit.occurredAt.setTime(0);
-
-      // Log
       const amountChanged = Reflect.set(credit, "amount", Money.fromCents(0));
       const storedTransactions = fundedWallet.transactions;
       const availableFunds = fundedWallet.getAvailableBalance();

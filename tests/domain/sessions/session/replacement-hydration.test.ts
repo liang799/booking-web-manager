@@ -127,13 +127,16 @@ describe("Session", () => {
     // Log
     const restored = new Session(details);
 
+    const benInvitation =
+      restored.participantList.personalReplacementForInvitee("ben");
+    const availableSlots =
+      restored.getAvailableSlots(hoursBeforeSessionStart(38));
+
     // Oracle
     expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
+    expect(benInvitation).toBeUndefined();
     expect(restored.participantList.committedCount).toBe(1);
-    expect(restored.getAvailableSlots(hoursBeforeSessionStart(38))).toBe(1);
+    expect(availableSlots).toBe(1);
   });
 
   test("constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed", () => {
@@ -154,16 +157,17 @@ describe("Session", () => {
     // Log
     const restored = new Session(details);
 
+    const benInvitation =
+      restored.participantList.personalReplacementForInvitee("ben");
+    const replacedParticipationId = restored.participantList
+      .requireParticipation("p-ben").replacesParticipationId;
+    const availableSlots = restored.getAvailableSlots(availabilityCheckedAt);
+
     // Oracle
     expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(
-      restored.participantList.requireParticipation("p-ben")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(restored.getAvailableSlots(availabilityCheckedAt)).toBe(2);
+    expect(benInvitation).toBeUndefined();
+    expect(replacedParticipationId).toBe("p-alice");
+    expect(availableSlots).toBe(2);
   });
 
   test("constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed", () => {
@@ -182,16 +186,17 @@ describe("Session", () => {
     // Log
     const restored = new Session(details);
 
+    const benInvitation =
+      restored.participantList.personalReplacementForInvitee("ben");
+    const replacedParticipationId = restored.participantList
+      .requireParticipation("p-ben").replacesParticipationId;
+    const availableSlots = restored.getAvailableSlots(availabilityCheckedAt);
+
     // Oracle
     expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(
-      restored.participantList.requireParticipation("p-ben")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(restored.getAvailableSlots(availabilityCheckedAt)).toBe(2);
+    expect(benInvitation).toBeUndefined();
+    expect(replacedParticipationId).toBe("p-alice");
+    expect(availableSlots).toBe(2);
   });
 
   test("constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory", () => {
@@ -211,19 +216,19 @@ describe("Session", () => {
     // Log
     const restored = new Session(details);
 
+    const benInvitation =
+      restored.participantList.personalReplacementForInvitee("ben");
+    const replacedParticipationId = restored.participantList
+      .requireParticipation("p-ben").replacesParticipationId;
+    const aliceHoldState =
+      restored.participantList.requireParticipation("p-alice").hold?.state;
+
     // Oracle
     expect(restored.status).toBe("CANCELLED");
     expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(
-      restored.participantList.requireParticipation("p-ben")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(
-      restored.participantList.requireParticipation("p-alice").hold?.state,
-    ).toBe("REFUNDED");
+    expect(benInvitation).toBeUndefined();
+    expect(replacedParticipationId).toBe("p-alice");
+    expect(aliceHoldState).toBe("REFUNDED");
   });
 });
 

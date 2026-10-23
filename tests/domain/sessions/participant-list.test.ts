@@ -20,22 +20,27 @@ describe("ParticipantList", () => {
     const list = new Session(sessionDetails({ participations }))
       .participantList;
 
+    // Log
     participations.reverse();
     participations.pop();
     (list.participations as Participation[]).pop();
     (list.participations as Participation[]).reverse();
 
-    // Log
     const preservedParticipations = list.participations;
+    const aliceByParticipationId = list.requireParticipation("p-alice");
+    const aliceByUserId = list.findByUserId("alice");
+    const benByParticipationId = list.requireParticipation("p-ben");
+    const benByUserId = list.findByUserId("ben");
+    const { committedCount, nextQueueSequence } = list;
 
     // Oracle
     expect(preservedParticipations).toEqual([alice, ben]);
-    expect(list.requireParticipation("p-alice")).toBe(alice);
-    expect(list.findByUserId("alice")).toBe(alice);
-    expect(list.requireParticipation("p-ben")).toBe(ben);
-    expect(list.findByUserId("ben")).toBe(ben);
-    expect(list.committedCount).toBe(2);
-    expect(list.nextQueueSequence).toBe(1);
+    expect(aliceByParticipationId).toBe(alice);
+    expect(aliceByUserId).toBe(alice);
+    expect(benByParticipationId).toBe(ben);
+    expect(benByUserId).toBe(ben);
+    expect(committedCount).toBe(2);
+    expect(nextQueueSequence).toBe(1);
   });
 
   test("nextWaitlisted_WhenHydrationOrderDiffersFromQueue_SelectsLowestSequence", () => {
@@ -68,13 +73,16 @@ describe("ParticipantList", () => {
 
     // Log
     const nextWaiter = list.nextWaitlisted();
+    const preservedParticipations = list.participations;
+    const benByUserId = list.findByUserId("ben");
+    const { committedCount, nextQueueSequence } = list;
 
     // Oracle
     expect(nextWaiter).toBe(ben);
-    expect(list.participations).toEqual([alice, ben, cara]);
-    expect(list.findByUserId("ben")).toBe(nextWaiter);
-    expect(list.committedCount).toBe(0);
-    expect(list.nextQueueSequence).toBe(4);
+    expect(preservedParticipations).toEqual([alice, ben, cara]);
+    expect(benByUserId).toBe(nextWaiter);
+    expect(committedCount).toBe(0);
+    expect(nextQueueSequence).toBe(4);
   });
 
   test("oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder", () => {
@@ -107,17 +115,21 @@ describe("ParticipantList", () => {
 
     // Log
     const oldestReplacement = list.oldestAwaitingReplacement();
+    const preservedParticipations = list.participations;
+    const benByUserId = list.findByUserId("ben");
+    const committedCount = list.committedCount;
+    const nextWaiter = list.nextWaitlisted();
 
     // Oracle
     expect(oldestReplacement).toBe(withdrawnBen);
-    expect(list.participations).toEqual([
+    expect(preservedParticipations).toEqual([
       refundedCara,
       withdrawnBen,
       withdrawnAlice,
     ]);
-    expect(list.findByUserId("ben")).toBe(oldestReplacement);
-    expect(list.committedCount).toBe(0);
-    expect(list.nextWaitlisted()).toBeUndefined();
+    expect(benByUserId).toBe(oldestReplacement);
+    expect(committedCount).toBe(0);
+    expect(nextWaiter).toBeUndefined();
   });
 
   test("oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal", () => {
@@ -144,10 +156,12 @@ describe("ParticipantList", () => {
 
     // Log
     const oldestReplacement = list.oldestAwaitingReplacement();
+    const reservedCount = list.reservedCount;
+    const caraInvitation = list.personalReplacementForInvitee("cara");
 
     // Oracle
     expect(oldestReplacement).toBe(benOpenWithdrawal);
-    expect(list.reservedCount).toBe(1);
-    expect(list.personalReplacementForInvitee("cara")).toBe(aliceInvitation);
+    expect(reservedCount).toBe(1);
+    expect(caraInvitation).toBe(aliceInvitation);
   });
 });

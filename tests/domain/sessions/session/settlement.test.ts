@@ -31,16 +31,24 @@ describe("Session", () => {
     expect(() =>
       bookingSession.completeSettlement("out", sessionEndsAt),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList).toBe(previousList);
-    expect(bookingSession.status).toBe("PAYOUT_PENDING");
-    expect(bookingSession.payoutAttemptIds).toEqual(["out"]);
-    expect(bookingSession.payoutIdempotencyKeys).toEqual(["key"]);
-    expect(
-      bookingSession.participantList.participations.map(
-        (participation) => participation.hold?.state,
-      ),
-    ).toEqual(["HELD", "HELD"]);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const currentList = bookingSession.participantList;
+    const sessionStatus = bookingSession.status;
+    const payoutAttemptIds = bookingSession.payoutAttemptIds;
+    const payoutIdempotencyKeys = bookingSession.payoutIdempotencyKeys;
+    const holdStates = bookingSession.participantList.participations.map(
+      (participation) => participation.hold?.state,
+    );
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(currentList).toBe(previousList);
+    expect(sessionStatus).toBe("PAYOUT_PENDING");
+    expect(payoutAttemptIds).toEqual(["out"]);
+    expect(payoutIdempotencyKeys).toEqual(["key"]);
+    expect(holdStates).toEqual(["HELD", "HELD"]);
   });
 
   test("completeSettlement_WhenCallbackIsStale_RejectsWithoutChangingState", () => {
@@ -52,7 +60,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.completeSettlement("stale", sessionEndsAt),
     ).toThrow(expect.objectContaining({ code: "STALE_PAYOUT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("completeSettlement_WhenCompletionDateIsInvalid_LeavesAllHoldsPending", () => {
@@ -64,7 +77,12 @@ describe("Session", () => {
     expect(() =>
       bookingSession.completeSettlement("out", new Date(Number.NaN)),
     ).toThrow(DomainError);
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("completeSettlement_WhenSecondHoldFails_PreservesAllHolds", () => {
@@ -127,15 +145,17 @@ describe("Session", () => {
 
     // Log
     const completion = bookingSession.completeSettlement("out", completionTime);
+    const settledParticipations = bookingSession.participantList.participations;
+    const pendingSettlement = bookingSession.pendingSettlement;
 
     // Oracle
     expect(completion.instructions).toHaveLength(2);
     expect(
-      bookingSession.participantList.participations.map(
+      settledParticipations.map(
         (participation) => participation.hold?.state,
       ),
     ).toEqual(["RELEASED", "RELEASED"]);
-    expect(bookingSession.pendingSettlement).toBeUndefined();
+    expect(pendingSettlement).toBeUndefined();
   });
 
   test("completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds", () => {
@@ -163,6 +183,11 @@ describe("Session", () => {
 
     // Log
     const completion = bookingSession.completeSettlement("out", completionTime);
+    const sessionStatus = bookingSession.status;
+    const settledParticipations = bookingSession.participantList.participations;
+    const aliceReliability = bookingSession.participantList
+      .requireParticipation("p-alice")
+      .reliabilityOutcome(reliabilityEvaluationTime);
 
     // Oracle
     expect(
@@ -171,17 +196,13 @@ describe("Session", () => {
     expect(
       completion.instructions.map((instruction) => instruction.payoutId),
     ).toEqual(["out", "out"]);
-    expect(bookingSession.status).toBe("SETTLED");
+    expect(sessionStatus).toBe("SETTLED");
     expect(
-      bookingSession.participantList.participations.map(
+      settledParticipations.map(
         (participation) => participation.hold?.state,
       ),
     ).toEqual(["FORFEITED", "RELEASED"]);
-    expect(
-      bookingSession.participantList
-        .requireParticipation("p-alice")
-        .reliabilityOutcome(reliabilityEvaluationTime)?.value,
-    ).toBe(0);
+    expect(aliceReliability?.value).toBe(0);
   });
 
   test("completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity", () => {
@@ -203,6 +224,9 @@ describe("Session", () => {
       "retry",
       sessionEndsAt,
     );
+    const alice =
+      bookingSession.participantList.requireParticipation("p-alice");
+    const { status, pendingSettlement } = bookingSession;
 
     // Oracle
     expect(completion.instructions).toEqual([
@@ -212,12 +236,10 @@ describe("Session", () => {
         payoutId: "retry",
       }),
     ]);
-    const alice =
-      bookingSession.participantList.requireParticipation("p-alice");
     expect(alice.hold?.payoutId).toBe("retry");
     expect(alice.hold?.state).toBe("RELEASED");
-    expect(bookingSession.status).toBe("SETTLED");
-    expect(bookingSession.pendingSettlement).toBeUndefined();
+    expect(status).toBe("SETTLED");
+    expect(pendingSettlement).toBeUndefined();
   });
 
   test("failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory", () => {
@@ -225,9 +247,8 @@ describe("Session", () => {
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousList = bookingSession.participantList;
 
-    bookingSession.failSettlement("out", sessionEndsAt);
-
     // Log
+    bookingSession.failSettlement("out", sessionEndsAt);
     const payoutState = sessionState(bookingSession);
     const participantList = bookingSession.participantList;
 

@@ -114,6 +114,7 @@ describe("PayoutAttempt", () => {
         providerReference: "provider",
       });
 
+      // Log
       // Attempt to alter supplied and returned settlement data.
       completedAt.setTime(0);
       payout.completedAt?.setTime(0);
@@ -125,8 +126,6 @@ describe("PayoutAttempt", () => {
         payout.destination as { bankAccountReference: string }
       ).bankAccountReference = "changed";
       (payout.lines as unknown[]).pop();
-
-      // Log
       const recordedSettlement = {
         completedAt: payout.completedAt,
         destination: payout.destination,
@@ -145,11 +144,10 @@ describe("PayoutAttempt", () => {
       const source = batch();
       const payout = PayoutAttempt.create(source);
 
+      // Log
       // Attempt to alter the supplied and returned request dates.
       source.requestedAt.setTime(0);
       payout.requestedAt.setTime(0);
-
-      // Log
       const requestedAmount = payout.amount;
       const storedRequestedAt = payout.requestedAt;
 
@@ -202,12 +200,14 @@ describe("PayoutAttempt", () => {
         "provider-result",
         requestedAt,
       );
+      const payoutStatus = payout.status;
+      const providerReference = payout.providerReference;
 
       // Oracle
       expect(completed).toBe(true);
       expect(repeatedCompletion).toBe(false);
-      expect(payout.status).toBe("COMPLETED");
-      expect(payout.providerReference).toBe("provider-result");
+      expect(payoutStatus).toBe("COMPLETED");
+      expect(providerReference).toBe("provider-result");
     });
 
     test("complete_WhenProviderReferenceConflicts_ThrowsPayoutConflict", () => {
@@ -237,11 +237,14 @@ describe("PayoutAttempt", () => {
         "provider-result",
         requestedAt,
       );
+      const payoutStatus = payout.status;
+      const payoutAmount = payout.amount;
+      const providerReference = payout.providerReference;
 
       // Oracle
-      expect(payout.status).toBe("COMPLETED");
-      expect(payout.amount.toCents()).toBe(100);
-      expect(payout.providerReference).toBe("provider-result");
+      expect(payoutStatus).toBe("COMPLETED");
+      expect(payoutAmount.toCents()).toBe(100);
+      expect(providerReference).toBe("provider-result");
       expect(repeatedCompletion).toBe(false);
     });
 
@@ -269,11 +272,13 @@ describe("PayoutAttempt", () => {
 
       // Log
       const repeatedFailure = payout.fail("failure", requestedAt);
+      const payoutStatus = payout.status;
+      const failureReason = payout.failureReason;
 
       // Oracle
       expect(repeatedFailure).toBe(false);
-      expect(payout.status).toBe("FAILED");
-      expect(payout.failureReason).toBe("failure");
+      expect(payoutStatus).toBe("FAILED");
+      expect(failureReason).toBe("failure");
     });
 
     test("fail_WhenSameCallbackIsRepeated_FailsOnlyOnce", () => {
@@ -283,12 +288,14 @@ describe("PayoutAttempt", () => {
       // Log
       const failed = payout.fail("timeout", requestedAt);
       const repeatedFailure = payout.fail("timeout", requestedAt);
+      const payoutStatus = payout.status;
+      const failureReason = payout.failureReason;
 
       // Oracle
       expect(failed).toBe(true);
       expect(repeatedFailure).toBe(false);
-      expect(payout.status).toBe("FAILED");
-      expect(payout.failureReason).toBe("timeout");
+      expect(payoutStatus).toBe("FAILED");
+      expect(failureReason).toBe("timeout");
     });
   });
 });

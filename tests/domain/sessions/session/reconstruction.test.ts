@@ -41,14 +41,17 @@ describe("Session", () => {
       aliceParticipation.committedAt?.setFullYear(2000);
       aliceParticipation.hold?.createdAt.setFullYear(2000);
 
+      const restoredAlice =
+        restoredSession.participantList.requireParticipation("p-alice");
+      const preservedCommittedAt = aliceParticipation.committedAt;
+      const preservedHoldCreatedAt = aliceParticipation.hold?.createdAt;
+
       // Oracle
       expect(restoredSession.participantList.participations).toHaveLength(1);
-      expect(
-        restoredSession.participantList.requireParticipation("p-alice"),
-      ).toBe(aliceParticipation);
+      expect(restoredAlice).toBe(aliceParticipation);
       expect(restoredSession.booking.startAt).toEqual(sessionStartsAt);
-      expect(aliceParticipation.committedAt).toEqual(committedAt);
-      expect(aliceParticipation.hold?.createdAt).toEqual(committedAt);
+      expect(preservedCommittedAt).toEqual(committedAt);
+      expect(preservedHoldCreatedAt).toEqual(committedAt);
       expect(restoredSession.payoutAttemptIds).toEqual(["earlier"]);
       expect(restoredSession.payoutIdempotencyKeys).toEqual(["earlier-key"]);
       expect(restoredSession.participantList.nextQueueSequence).toBe(1);
@@ -192,15 +195,15 @@ describe("Session", () => {
       // Log
       const restoredSession = new Session(details);
 
+      const restoredHoldState = restoredSession.participantList
+        .requireParticipation("p-alice").hold?.state;
+
       // Oracle
       expect(restoredSession.status).toBe("AWAITING_PAYOUT");
       expect(restoredSession.pendingSettlement).toBeUndefined();
       expect(restoredSession.payoutAttemptIds).toEqual(["out"]);
       expect(restoredSession.payoutIdempotencyKeys).toEqual(["key"]);
-      expect(
-        restoredSession.participantList.requireParticipation("p-alice").hold
-          ?.state,
-      ).toBe("HELD");
+      expect(restoredHoldState).toBe("HELD");
     });
 
     test("constructor_WhenRosterIsDuplicated_ThrowsDomainError", () => {
@@ -413,10 +416,11 @@ describe("Session", () => {
       // Log
       const restoredSession = new Session(details);
 
+      const nextWaiterUserId =
+        restoredSession.participantList.nextWaitlisted()?.userId;
+
       // Oracle
-      expect(restoredSession.participantList.nextWaitlisted()?.userId).toBe(
-        "queued-user",
-      );
+      expect(nextWaiterUserId).toBe("queued-user");
     });
 
     test("constructor_WhenPendingBatchBelongsToAnotherSession_ThrowsDomainError", () => {
@@ -490,20 +494,16 @@ describe("Session", () => {
         exposedBatch.destination as { bankAccountReference: string }
       ).bankAccountReference = "changed-again";
       (exposedBatch.lines as unknown[]).pop();
+      const preservedBatch = restoredSession.pendingSettlement;
+      const { payoutAttemptIds, payoutIdempotencyKeys } = restoredSession;
 
       // Oracle
-      expect(restoredSession.pendingSettlement?.requestedAt).toEqual(
-        sessionEndsAt,
-      );
-      expect(
-        restoredSession.pendingSettlement?.destination.bankAccountReference,
-      ).toBe("bank");
-      expect(restoredSession.pendingSettlement?.lines).toHaveLength(1);
-      expect(
-        restoredSession.pendingSettlement?.lines[0]?.amount.toCents(),
-      ).toBe(500);
-      expect(restoredSession.payoutAttemptIds).toEqual(["out"]);
-      expect(restoredSession.payoutIdempotencyKeys).toEqual(["key"]);
+      expect(preservedBatch?.requestedAt).toEqual(sessionEndsAt);
+      expect(preservedBatch?.destination.bankAccountReference).toBe("bank");
+      expect(preservedBatch?.lines).toHaveLength(1);
+      expect(preservedBatch?.lines[0]?.amount.toCents()).toBe(500);
+      expect(payoutAttemptIds).toEqual(["out"]);
+      expect(payoutIdempotencyKeys).toEqual(["key"]);
     });
   });
 
@@ -519,17 +519,18 @@ describe("Session", () => {
         "out",
         sessionEndsAt,
       );
+      const restoredStatus = restoredSession.status;
+      const originalStatus = originalSession.status;
+      const originalHold =
+        originalSession.participantList.requireParticipation("p-alice").hold;
 
       // Oracle
       expect(completion.instructions.map((line) => line.kind)).toEqual([
         "RELEASE",
       ]);
-      expect(restoredSession.status).toBe("SETTLED");
-      expect(originalSession.status).toBe("PAYOUT_PENDING");
-      expect(
-        originalSession.participantList.requireParticipation("p-alice").hold
-          ?.state,
-      ).toBe("HELD");
+      expect(restoredStatus).toBe("SETTLED");
+      expect(originalStatus).toBe("PAYOUT_PENDING");
+      expect(originalHold?.state).toBe("HELD");
     });
   });
 });

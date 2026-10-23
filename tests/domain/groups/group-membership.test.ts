@@ -23,11 +23,10 @@ describe("GroupMembership", () => {
     const joinedAt = now();
     const membership = new GroupMembership({ userId: "owner", joinedAt });
 
+    // Log
     // Attempt to alter the supplied and returned dates.
     joinedAt.setUTCFullYear(2000);
     membership.joinedAt.setUTCFullYear(2000);
-
-    // Log
     const storedJoinedAt = membership.joinedAt;
 
     // Oracle

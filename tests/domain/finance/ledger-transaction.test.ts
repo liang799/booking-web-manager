@@ -12,11 +12,10 @@ describe("LedgerTransaction", () => {
     const input = transactionDetails();
     const transaction = new LedgerTransaction(input);
 
+    // Log
     // Attempt to alter the supplied and returned transaction dates.
     input.occurredAt.setTime(0);
     transaction.occurredAt.setTime(0);
-
-    // Log
     const recordedTransaction = {
       transactionId: transaction.transactionId,
       walletId: transaction.walletId,

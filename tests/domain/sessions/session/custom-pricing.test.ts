@@ -27,6 +27,9 @@ describe("Session", () => {
       holdId: "h-alice",
       now: hoursBeforeSessionStart(48),
     });
+    const aliceHold =
+      session.participantList.requireParticipation("p-alice").hold;
+    const bookingShare = session.bookingShare;
 
     // Oracle
     expect(
@@ -35,12 +38,8 @@ describe("Session", () => {
         amount.toCents(),
       ]),
     ).toEqual([["LOCK", 750]]);
-    expect(
-      session.participantList
-        .requireParticipation("p-alice")
-        .hold?.amount.toCents(),
-    ).toBe(750);
-    expect(session.bookingShare.toCents()).toBe(750);
+    expect(aliceHold?.amount.toCents()).toBe(750);
+    expect(bookingShare.toCents()).toBe(750);
   });
 
   test("withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice", () => {
@@ -65,6 +64,8 @@ describe("Session", () => {
       participationId: "p-alice",
       now: hoursBeforeSessionStart(31),
     });
+    const aliceHold =
+      session.participantList.requireParticipation("p-alice").hold;
 
     // Oracle
     expect(
@@ -73,9 +74,7 @@ describe("Session", () => {
         amount.toCents(),
       ]),
     ).toEqual([["REFUND", 750]]);
-    expect(
-      session.participantList.requireParticipation("p-alice").hold?.state,
-    ).toBe("REFUNDED");
+    expect(aliceHold?.state).toBe("REFUNDED");
   });
 
   test("cancel_WhenCustomPriceWasCollected_RefundsTheFullHold", () => {
@@ -97,6 +96,7 @@ describe("Session", () => {
 
     // Log
     const cancellation = booker.cancel(session, hoursBeforeSessionStart(30));
+    const bookingShare = session.bookingShare;
 
     // Oracle
     expect(
@@ -105,7 +105,7 @@ describe("Session", () => {
         amount.toCents(),
       ]),
     ).toEqual([["REFUND", 750]]);
-    expect(session.bookingShare.toCents()).toBe(750);
+    expect(bookingShare.toCents()).toBe(750);
   });
 
   test("preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount", () => {
@@ -135,15 +135,16 @@ describe("Session", () => {
       idempotencyKey: "key",
       now: sessionEndsAt,
     });
+    const sessionStatus = session.status;
+    const aliceHold =
+      session.participantList.requireParticipation("p-alice").hold;
 
     // Oracle
     expect(
       payout?.lines.map(({ kind, amount }) => [kind, amount.toCents()]),
     ).toEqual([["RELEASE", 750]]);
-    expect(session.status).toBe("PAYOUT_PENDING");
-    expect(
-      session.participantList.requireParticipation("p-alice").hold?.state,
-    ).toBe("HELD");
+    expect(sessionStatus).toBe("PAYOUT_PENDING");
+    expect(aliceHold?.state).toBe("HELD");
   });
 
   test("completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount", () => {
@@ -174,6 +175,8 @@ describe("Session", () => {
 
     // Log
     const completion = session.completeSettlement("out", sessionEndsAt);
+    const aliceHold =
+      session.participantList.requireParticipation("p-alice").hold;
 
     // Oracle
     expect(
@@ -182,8 +185,6 @@ describe("Session", () => {
         amount.toCents(),
       ]),
     ).toEqual([["RELEASE", 750]]);
-    expect(
-      session.participantList.requireParticipation("p-alice").hold?.state,
-    ).toBe("RELEASED");
+    expect(aliceHold?.state).toBe("RELEASED");
   });
 });

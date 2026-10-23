@@ -247,10 +247,13 @@ describe("Participation", () => {
         "previous",
       );
 
+      const queuedStatus = queued.status;
+      const queuedHold = queued.hold;
+
       // Oracle
       expect(committed.replacesParticipationId).toBe("previous");
-      expect(queued.status).toBe("WAITLISTED");
-      expect(queued.hold).toBeUndefined();
+      expect(queuedStatus).toBe("WAITLISTED");
+      expect(queuedHold).toBeUndefined();
     });
 
     test("withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund", () => {
@@ -265,13 +268,19 @@ describe("Participation", () => {
         "ben",
       );
 
+      const withdrawnHoldState = withdrawn.hold?.state;
+      const withdrawnReplacementMode = withdrawn.replacementMode;
+      const withdrawnInviteeId = withdrawn.replacementInviteeId;
+      const originalStatus = committed.status;
+      const originalInviteeId = committed.replacementInviteeId;
+
       // Oracle
       expect(withdrawn.status).toBe("WITHDRAWN");
-      expect(withdrawn.hold?.state).toBe("REFUNDED");
-      expect(withdrawn.replacementMode).toBe("DIRECT_INVITE");
-      expect(withdrawn.replacementInviteeId).toBe("ben");
-      expect(committed.status).toBe("COMMITTED");
-      expect(committed.replacementInviteeId).toBeUndefined();
+      expect(withdrawnHoldState).toBe("REFUNDED");
+      expect(withdrawnReplacementMode).toBe("DIRECT_INVITE");
+      expect(withdrawnInviteeId).toBe("ben");
+      expect(originalStatus).toBe("COMMITTED");
+      expect(originalInviteeId).toBeUndefined();
     });
 
     test("withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement", () => {
@@ -286,11 +295,15 @@ describe("Participation", () => {
         "ben",
       );
 
+      const withdrawnHoldState = withdrawn.hold?.state;
+      const withdrawnInviteeId = withdrawn.replacementInviteeId;
+      const originalHoldState = committed.hold?.state;
+
       // Oracle
       expect(withdrawn.status).toBe("WITHDRAWN");
-      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
-      expect(withdrawn.replacementInviteeId).toBe("ben");
-      expect(committed.hold?.state).toBe("HELD");
+      expect(withdrawnHoldState).toBe("AWAITING_REPLACEMENT");
+      expect(withdrawnInviteeId).toBe("ben");
+      expect(originalHoldState).toBe("HELD");
     });
 
     test("withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace", () => {
@@ -307,9 +320,16 @@ describe("Participation", () => {
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "OPEN_SLOT"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-      expect(withdrawn.replacementMode).toBe("DIRECT_INVITE");
-      expect(withdrawn.replacementInviteeId).toBe("ben");
-      expect(withdrawn.hold?.state).toBe("REFUNDED");
+
+      // Log
+      const withdrawnReplacementMode = withdrawn.replacementMode;
+      const withdrawnInviteeId = withdrawn.replacementInviteeId;
+      const withdrawnHoldState = withdrawn.hold?.state;
+
+      // Oracle
+      expect(withdrawnReplacementMode).toBe("DIRECT_INVITE");
+      expect(withdrawnInviteeId).toBe("ben");
+      expect(withdrawnHoldState).toBe("REFUNDED");
     });
 
     test("withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation", () => {
@@ -325,9 +345,16 @@ describe("Participation", () => {
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "DIRECT_INVITE", "ben"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-      expect(withdrawn.replacementMode).toBe("OPEN_SLOT");
-      expect(withdrawn.replacementInviteeId).toBeUndefined();
-      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
+
+      // Log
+      const withdrawnReplacementMode = withdrawn.replacementMode;
+      const withdrawnInviteeId = withdrawn.replacementInviteeId;
+      const withdrawnHoldState = withdrawn.hold?.state;
+
+      // Oracle
+      expect(withdrawnReplacementMode).toBe("OPEN_SLOT");
+      expect(withdrawnInviteeId).toBeUndefined();
+      expect(withdrawnHoldState).toBe("AWAITING_REPLACEMENT");
     });
 
     test("cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata", () => {
@@ -343,11 +370,13 @@ describe("Participation", () => {
       // Log
       const cancelled = withdrawn.cancel(withdrawn.hold!.refund(settledAt));
 
+      const withdrawnInviteeId = withdrawn.replacementInviteeId;
+
       // Oracle
       expect(cancelled.status).toBe("CANCELLED");
       expect(cancelled.replacementMode).toBeUndefined();
       expect(cancelled.replacementInviteeId).toBeUndefined();
-      expect(withdrawn.replacementInviteeId).toBe("ben");
+      expect(withdrawnInviteeId).toBe("ben");
     });
 
     test("refundReplacement_WhenReplacementIsFound_ReturnsNewChild", () => {
@@ -363,10 +392,14 @@ describe("Participation", () => {
       // Log
       const finalized = withdrawn.refundReplacement(settledAt);
 
+      const originalStatus = committed.status;
+      const originalHoldState = committed.hold?.state;
+      const withdrawnHoldState = withdrawn.hold?.state;
+
       // Oracle
-      expect(committed.status).toBe("COMMITTED");
-      expect(committed.hold?.state).toBe("HELD");
-      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
+      expect(originalStatus).toBe("COMMITTED");
+      expect(originalHoldState).toBe("HELD");
+      expect(withdrawnHoldState).toBe("AWAITING_REPLACEMENT");
       expect(finalized.hold?.state).toBe("REFUNDED");
       expect(finalized.replacementInviteeId).toBe("ben");
     });
@@ -388,11 +421,13 @@ describe("Participation", () => {
       // Log
       const expired = withdrawn.expireReplacement(settledAt);
 
+      const withdrawnHoldState = withdrawn.hold?.state;
+
       // Oracle
       expect(expired).not.toBe(withdrawn);
       expect(expired.hold?.state).toBe("FORFEITURE_DUE");
       expect(expired.replacementInviteeId).toBe("ben");
-      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
+      expect(withdrawnHoldState).toBe("AWAITING_REPLACEMENT");
     });
 
     test("settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy", () => {
@@ -408,12 +443,15 @@ describe("Participation", () => {
       // Log
       const finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt);
 
+      const withdrawnHoldState = withdrawn.hold?.state;
+      const reliabilityValue = finalized.reliabilityOutcome(settledAt)?.value;
+
       // Oracle
       expect(finalized).not.toBe(withdrawn);
-      expect(withdrawn.hold?.state).toBe("FORFEITURE_DUE");
+      expect(withdrawnHoldState).toBe("FORFEITURE_DUE");
       expect(finalized.hold?.state).toBe("FORFEITED");
       expect(finalized.hold?.payoutId).toBe("payout");
-      expect(finalized.reliabilityOutcome(settledAt)?.value).toBe(0);
+      expect(reliabilityValue).toBe(0);
     });
 
     test("settleHold_WhenAttendanceIsUnverified_RejectsRelease", () => {
@@ -434,9 +472,11 @@ describe("Participation", () => {
       // Log
       const settled = attended.settleHold("RELEASE", "payout", settledAt);
 
+      const verifiedHoldState = attended.hold?.state;
+
       // Oracle
       expect(settled.hold?.state).toBe("RELEASED");
-      expect(attended.hold?.state).toBe("HELD");
+      expect(verifiedHoldState).toBe("HELD");
     });
 
     test("settleHold_WhenParticipantAttended_RejectsForfeiture", () => {

@@ -54,9 +54,8 @@ describe("Money", () => {
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    first.add(second);
-
     // Log
+    first.add(second);
     const firstCents = first.toCents();
     const secondCents = second.toCents();
 
@@ -105,9 +104,8 @@ describe("Money", () => {
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    first.subtract(second);
-
     // Log
+    first.subtract(second);
     const firstCents = first.toCents();
     const secondCents = second.toCents();
 

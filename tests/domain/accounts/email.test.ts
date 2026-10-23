@@ -206,12 +206,14 @@ describe("Email", () => {
       "toString",
       () => "other@example.com",
     );
+    const frozen = Object.isFrozen(email);
+    const storedAddress = email.toString();
 
     // Oracle
-    expect(Object.isFrozen(email)).toBe(true);
+    expect(frozen).toBe(true);
     expect(valueChanged).toBe(false);
     expect(methodChanged).toBe(false);
-    expect(email.toString()).toBe("owner@example.com");
+    expect(storedAddress).toBe("owner@example.com");
   });
 
   test("equals_WhenSameText_ReturnsTrue", () => {

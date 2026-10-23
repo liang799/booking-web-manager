@@ -35,12 +35,12 @@ describe("Participant", () => {
       holdId: "h-cara",
       now: hoursBeforeSessionStart(9),
     });
+    const caraParticipation =
+      bookingSession.participantList.requireParticipation("p-cara");
 
     // Oracle
     expect(admission.kind).toBe("COMMITTED");
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara").status,
-    ).toBe("COMMITTED");
+    expect(caraParticipation.status).toBe("COMMITTED");
   });
 
   test("join_WhenNamedInviteeHasPendingInvitation_RejectsUntilExplicitAcceptance", () => {
@@ -74,17 +74,23 @@ describe("Participant", () => {
         now: joinTime,
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList.findByUserId("cara")).toBeUndefined();
-    expect(
-      bookingSession.participantList.personalReplacementForInvitee("cara")
-        ?.participationId,
-    ).toBe("p-ben");
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("AWAITING_REPLACEMENT");
-    expect(bookingSession.getAvailableSlots(joinTime)).toBe(1);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const caraParticipation =
+      bookingSession.participantList.findByUserId("cara");
+    const caraInvitation =
+      bookingSession.participantList.personalReplacementForInvitee("cara");
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
+    const availableSlots = bookingSession.getAvailableSlots(joinTime);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(caraParticipation).toBeUndefined();
+    expect(caraInvitation?.participationId).toBe("p-ben");
+    expect(aliceParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
+    expect(availableSlots).toBe(1);
   });
 
   test("acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat", () => {
@@ -112,12 +118,17 @@ describe("Participant", () => {
           now: acceptanceTime,
         }),
     ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben")
-        .replacementInviteeId,
-    ).toBe("cara");
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
+    const benParticipation =
+      bookingSession.participantList.requireParticipation("p-ben");
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(availableSlots).toBe(0);
+    expect(benParticipation.replacementInviteeId).toBe("cara");
   });
 
   test("acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat", () => {
@@ -144,8 +155,11 @@ describe("Participant", () => {
         holdId: "h-cara",
         now: acceptanceTime,
       });
-
     const cara = bookingSession.participantList.requireParticipation("p-cara");
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
+    const committedCount = bookingSession.participantList.committedCount;
+    const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
 
     // Oracle
     expect(admission.kind).toBe("COMMITTED");
@@ -156,14 +170,10 @@ describe("Participant", () => {
     expect(cara.status).toBe("COMMITTED");
     expect(cara.queueSequence).toBe(2);
     expect(cara.replacesParticipationId).toBe("p-ben");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "dana",
-    );
-    expect(bookingSession.participantList.nextQueueSequence).toBe(
-      queueSequence,
-    );
-    expect(bookingSession.participantList.committedCount).toBe(2);
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
+    expect(nextWaiter?.userId).toBe("dana");
+    expect(nextQueueSequence).toBe(queueSequence);
+    expect(committedCount).toBe(2);
+    expect(availableSlots).toBe(0);
   });
 
   test("acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition", () => {
@@ -194,12 +204,17 @@ describe("Participant", () => {
         now: acceptanceTime,
       }),
     ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara")
-        .queueSequence,
-    ).toBe(2);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
+    const caraParticipation =
+      bookingSession.participantList.requireParticipation("p-cara");
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(availableSlots).toBe(0);
+    expect(caraParticipation.queueSequence).toBe(2);
   });
 
   test("acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation", () => {
@@ -229,7 +244,12 @@ describe("Participant", () => {
         now: acceptanceTime,
       }),
     ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation", () => {
@@ -267,7 +287,12 @@ describe("Participant", () => {
         now: acceptanceTime,
       }),
     ).toThrow(expect.objectContaining({ code: "LOW_RELIABILITY" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation", () => {
@@ -293,7 +318,12 @@ describe("Participant", () => {
           now: acceptanceTime,
         }),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal", () => {
@@ -328,6 +358,14 @@ describe("Participant", () => {
         holdId: "h-cara",
         now: acceptanceTime,
       });
+    const caraParticipation =
+      bookingSession.participantList.requireParticipation("p-cara");
+    const benParticipation =
+      bookingSession.participantList.requireParticipation("p-ben");
+    const refundedHoldState = refundedHold?.state;
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
+    const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
 
     // Oracle
     expect(admission.kind).toBe("COMMITTED");
@@ -335,19 +373,11 @@ describe("Participant", () => {
     expect(
       admission.instructions.map((instruction) => instruction.kind),
     ).toEqual(["LOCK"]);
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara")
-        .replacesParticipationId,
-    ).toBe("p-ben");
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben").hold,
-    ).toBe(refundedHold);
-    expect(refundedHold?.state).toBe("REFUNDED");
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("AWAITING_REPLACEMENT");
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(1);
+    expect(caraParticipation.replacesParticipationId).toBe("p-ben");
+    expect(benParticipation.hold).toBe(refundedHold);
+    expect(refundedHoldState).toBe("REFUNDED");
+    expect(aliceParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
+    expect(availableSlots).toBe(1);
   });
 
   test("acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat", () => {
@@ -378,8 +408,16 @@ describe("Participant", () => {
         now: repeatAcceptanceTime,
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList.committedCount).toBe(1);
-    expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const committedCount = bookingSession.participantList.committedCount;
+    const availableSlots =
+      bookingSession.getAvailableSlots(repeatAcceptanceTime);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(committedCount).toBe(1);
+    expect(availableSlots).toBe(1);
   });
 });

@@ -16,12 +16,11 @@ describe("Participant", () => {
       emailVerified: false,
     }).asParticipant();
 
+    // Log
     alice.leaveWaitlist(bookingSession, {
       participationId: "p-alice",
       now: hoursBeforeSessionStart(48),
     });
-
-    // Log
     const aliceStatus =
       bookingSession.participantList.requireParticipation("p-alice").status;
     const nextWaiter = bookingSession.participantList.nextWaitlisted();
@@ -53,6 +52,11 @@ describe("Participant", () => {
         holdId: "h-dana",
         now: joinTime,
       });
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const benParticipation =
+      bookingSession.participantList.requireParticipation("p-ben");
+    const committedCount = bookingSession.participantList.committedCount;
+    const availableSlots = bookingSession.getAvailableSlots(joinTime);
 
     // Oracle
     expect(admission).toEqual({
@@ -60,14 +64,10 @@ describe("Participant", () => {
       participationId: "p-dana",
       instructions: [],
     });
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "dana",
-    );
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben").hold?.state,
-    ).toBe("AWAITING_REPLACEMENT");
-    expect(bookingSession.participantList.committedCount).toBe(1);
-    expect(bookingSession.getAvailableSlots(joinTime)).toBe(0);
+    expect(nextWaiter?.userId).toBe("dana");
+    expect(benParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
+    expect(committedCount).toBe(1);
+    expect(availableSlots).toBe(0);
   });
 
   test("leaveWaitlist_WhenParticipantOwnsWaitingEntry_LeavesWithoutChangingCommitments", () => {
@@ -79,12 +79,11 @@ describe("Participant", () => {
     });
     const participant = createTestUser({ userId: "waiting" }).asParticipant();
 
+    // Log
     participant.leaveWaitlist(bookingSession, {
       participationId: "p-waiting",
       now: waitlistDepartureTime,
     });
-
-    // Log
     const participationStatuses = bookingSession.participantList.participations.map(
       (entry) => entry.status,
     );
@@ -113,7 +112,12 @@ describe("Participant", () => {
         now: hoursBeforeSessionStart(48),
       }),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState", () => {
@@ -130,6 +134,11 @@ describe("Participant", () => {
         now: hoursBeforeSessionStart(48),
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 });

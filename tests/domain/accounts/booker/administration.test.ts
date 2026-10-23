@@ -19,10 +19,12 @@ describe("Booker", () => {
 
     // Log
     const cancellation = booker.cancel(session, cancellationTime);
+    const bookerId = session.bookerId;
+    const sessionStatus = session.status;
 
     // Oracle
-    expect(session.bookerId).toBe(booker.userId);
-    expect(session.status).toBe("CANCELLED");
+    expect(bookerId).toBe(booker.userId);
+    expect(sessionStatus).toBe("CANCELLED");
     expect(cancellation.instructions).toEqual([]);
   });
 
@@ -36,9 +38,8 @@ describe("Booker", () => {
     }).asBooker();
     const previousState = sessionState(bookingSession);
 
-    booker.assertCanCancel(bookingSession, cancellationTime);
-
     // Log
+    booker.assertCanCancel(bookingSession, cancellationTime);
     const currentState = sessionState(bookingSession);
 
     // Oracle
@@ -54,7 +55,12 @@ describe("Booker", () => {
     expect(() =>
       readyBooker().assertCanCancel(bookingSession, sessionStartsAt),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility", () => {
@@ -66,13 +72,12 @@ describe("Booker", () => {
     }).asBooker();
     const previousState = sessionState(bookingSession);
 
+    // Log
     booker.assertCanChangeVisibility(
       bookingSession,
       "PRIVATE",
       hoursBeforeSessionStart(48),
     );
-
-    // Log
     const currentState = sessionState(bookingSession);
 
     // Oracle
@@ -94,7 +99,12 @@ describe("Booker", () => {
         hoursBeforeSessionStart(48),
       ),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus", () => {
@@ -164,17 +174,17 @@ describe("Booker", () => {
 
     // Log
     const cancellation = booker.cancel(bookingSession, cancellationTime);
+    const sessionStatus = bookingSession.status;
+    const participations = bookingSession.participantList.participations;
 
     // Oracle
     expect(
       cancellation.instructions.map((instruction) => instruction.kind),
     ).toEqual(["REFUND", "REFUND"]);
-    expect(bookingSession.status).toBe("CANCELLED");
-    expect(
-      bookingSession.participantList.participations.map(
-        (participation) => participation.status,
-      ),
-    ).toEqual(["CANCELLED", "CANCELLED", "CANCELLED"]);
+    expect(sessionStatus).toBe("CANCELLED");
+    expect(participations.map((participation) => participation.status)).toEqual(
+      ["CANCELLED", "CANCELLED", "CANCELLED"],
+    );
   });
 
   test("cancel_WhenOwnerIsInactive_StillCancelsAndRefunds", () => {
@@ -188,9 +198,10 @@ describe("Booker", () => {
 
     // Log
     const cancellation = booker.cancel(bookingSession, cancellationTime);
+    const sessionStatus = bookingSession.status;
 
     // Oracle
-    expect(bookingSession.status).toBe("CANCELLED");
+    expect(sessionStatus).toBe("CANCELLED");
     expect(cancellation.instructions[0]?.kind).toBe("REFUND");
   });
 
@@ -244,7 +255,12 @@ describe("Booker", () => {
         visibilityChangeTime,
       ),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds", () => {
@@ -262,15 +278,12 @@ describe("Booker", () => {
       "p-alice",
       removalTime,
     );
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
 
     // Oracle
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").status,
-    ).toBe("REMOVED");
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("REFUNDED");
+    expect(aliceParticipation.status).toBe("REMOVED");
+    expect(aliceParticipation.hold?.state).toBe("REFUNDED");
     expect(removal.instructions[0]?.kind).toBe("REFUND");
   });
 
@@ -288,7 +301,12 @@ describe("Booker", () => {
         removalTime,
       ),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("removeParticipant_WhenBookerRemovesParticipant_RefundsHold", () => {
@@ -329,7 +347,12 @@ describe("Booker", () => {
     expect(() => readyBooker().cancel(bookingSession, sessionStartsAt)).toThrow(
       expect.objectContaining({ code: "SESSION_STARTED" }),
     );
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue", () => {
@@ -349,20 +372,19 @@ describe("Booker", () => {
 
     // Log
     const cancellation = readyBooker().cancel(bookingSession, cancellationTime);
+    const sessionStatus = bookingSession.status;
+    const nextWaiter = bookingSession.participantList.nextWaitlisted();
+    const participations = bookingSession.participantList.participations;
 
     // Oracle
     expect(cancellation.instructions).toHaveLength(2);
     expect(
       cancellation.instructions.map((instruction) => instruction.kind),
     ).toEqual(["REFUND", "REFUND"]);
-    expect(bookingSession.status).toBe("CANCELLED");
+    expect(sessionStatus).toBe("CANCELLED");
+    expect(nextWaiter?.userId).toBeUndefined();
     expect(
-      bookingSession.participantList.nextWaitlisted()?.userId,
-    ).toBeUndefined();
-    expect(
-      bookingSession.participantList.participations.map(
-        (participation) => participation.hold?.state,
-      ),
+      participations.map((participation) => participation.hold?.state),
     ).toEqual(["REFUNDED", "REFUNDED", undefined]);
   });
 });

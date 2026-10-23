@@ -41,7 +41,12 @@ describe("Booker", () => {
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState", () => {
@@ -65,7 +70,12 @@ describe("Booker", () => {
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending", () => {
@@ -93,18 +103,18 @@ describe("Booker", () => {
       idempotencyKey: "key",
       now: payoutTime,
     });
+    const sessionStatus = bookingSession.status;
+    const participations = bookingSession.participantList.participations;
 
     // Oracle
-    expect(bookingSession.status).toBe("PAYOUT_PENDING");
+    expect(sessionStatus).toBe("PAYOUT_PENDING");
     expect(payout?.destination).toEqual(destination);
     expect(payout?.lines.map((line) => line.kind)).toEqual([
       "FORFEIT",
       "RELEASE",
     ]);
     expect(
-      bookingSession.participantList.participations.map(
-        (participation) => participation.hold?.state,
-      ),
+      participations.map((participation) => participation.hold?.state),
     ).toEqual(["FORFEITURE_DUE", "HELD"]);
   });
 
@@ -122,7 +132,12 @@ describe("Booker", () => {
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "PAYOUT_IN_PROGRESS" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutIdIsReused_RejectsWithoutChangingState", () => {
@@ -140,7 +155,12 @@ describe("Booker", () => {
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState", () => {
@@ -164,7 +184,12 @@ describe("Booker", () => {
           "A payout idempotency key can only be used once for this session",
       }),
     );
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedAttemptIsRetriedWithNewIdentity_RecordsRetry", () => {
@@ -185,24 +210,27 @@ describe("Booker", () => {
       idempotencyKey: "retry-key",
       now: payoutTime,
     });
+    const sessionStatus = bookingSession.status;
+    const pendingSettlement = bookingSession.pendingSettlement;
+    const payoutAttemptIds = bookingSession.payoutAttemptIds;
+    const payoutIdempotencyKeys = bookingSession.payoutIdempotencyKeys;
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
+    const benParticipation =
+      bookingSession.participantList.requireParticipation("p-ben");
+    const participations = bookingSession.participantList.participations;
 
     // Oracle
     expect(retryBatch?.payoutId).toBe("retry");
     expect(retryBatch?.idempotencyKey).toBe("retry-key");
-    expect(bookingSession.status).toBe("PAYOUT_PENDING");
-    expect(bookingSession.pendingSettlement?.payoutId).toBe("retry");
-    expect(bookingSession.payoutAttemptIds).toEqual(["out", "retry"]);
-    expect(bookingSession.payoutIdempotencyKeys).toEqual(["key", "retry-key"]);
+    expect(sessionStatus).toBe("PAYOUT_PENDING");
+    expect(pendingSettlement?.payoutId).toBe("retry");
+    expect(payoutAttemptIds).toEqual(["out", "retry"]);
+    expect(payoutIdempotencyKeys).toEqual(["key", "retry-key"]);
+    expect(aliceParticipation.hold).toBe(aliceHold);
+    expect(benParticipation.hold).toBe(benHold);
     expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold,
-    ).toBe(aliceHold);
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben").hold,
-    ).toBe(benHold);
-    expect(
-      bookingSession.participantList.participations.map(
-        (participation) => participation.hold?.state,
-      ),
+      participations.map((participation) => participation.hold?.state),
     ).toEqual(["HELD", "HELD"]);
   });
 
@@ -242,12 +270,11 @@ describe("Booker", () => {
       idempotencyKey: "key",
       now: payoutTime,
     });
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
 
     // Oracle
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("FORFEITURE_DUE");
+    expect(aliceParticipation.hold?.state).toBe("FORFEITURE_DUE");
     expect(payout?.lines).toMatchObject([{ kind: "FORFEIT" }]);
   });
 
@@ -275,11 +302,15 @@ describe("Booker", () => {
     expect(() => readyBooker().preparePayout(bookingSession, command)).toThrow(
       expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }),
     );
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("AWAITING_REPLACEMENT");
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(aliceParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
   });
 
   test("preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied", () => {
@@ -311,9 +342,16 @@ describe("Booker", () => {
     expect(() =>
       readyBooker("foreign").preparePayout(bookingSession, command),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.payoutAttemptIds).toEqual([]);
-    expect(bookingSession.payoutIdempotencyKeys).toEqual([]);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+    const payoutAttemptIds = bookingSession.payoutAttemptIds;
+    const payoutIdempotencyKeys = bookingSession.payoutIdempotencyKeys;
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
+    expect(payoutAttemptIds).toEqual([]);
+    expect(payoutIdempotencyKeys).toEqual([]);
   });
 
   test("preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt", () => {
@@ -347,18 +385,19 @@ describe("Booker", () => {
 
     // Log
     const payout = readyBooker().preparePayout(bookingSession, command);
+    const aliceParticipation =
+      bookingSession.participantList.requireParticipation("p-alice");
+    const payoutAttemptIds = bookingSession.payoutAttemptIds;
+    const payoutIdempotencyKeys = bookingSession.payoutIdempotencyKeys;
 
     // Oracle
     expect(payout?.lines.map((line) => line.kind)).toEqual([
       "FORFEIT",
       "RELEASE",
     ]);
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("FORFEITURE_DUE");
-    expect(bookingSession.payoutAttemptIds).toEqual(["out"]);
-    expect(bookingSession.payoutIdempotencyKeys).toEqual(["key"]);
+    expect(aliceParticipation.hold?.state).toBe("FORFEITURE_DUE");
+    expect(payoutAttemptIds).toEqual(["out"]);
+    expect(payoutIdempotencyKeys).toEqual(["key"]);
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedPayoutId", () => {
@@ -380,7 +419,12 @@ describe("Booker", () => {
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey", () => {
@@ -402,7 +446,12 @@ describe("Booker", () => {
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_AllowsNewIdentityIndependentlyOfSource", () => {
@@ -424,15 +473,20 @@ describe("Booker", () => {
       idempotencyKey: "retry-key",
       now: payoutTime,
     });
+    const sessionStatus = restoredSession.status;
+    const currentPendingSettlement = restoredSession.pendingSettlement;
+    const payoutAttemptIds = restoredSession.payoutAttemptIds;
+    const payoutIdempotencyKeys = restoredSession.payoutIdempotencyKeys;
+    const currentState = sessionState(originalSession);
 
     // Oracle
     expect(retryBatch?.payoutId).toBe("retry");
     expect(retryBatch?.idempotencyKey).toBe("retry-key");
-    expect(restoredSession.status).toBe("PAYOUT_PENDING");
-    expect(restoredSession.pendingSettlement?.payoutId).toBe("retry");
-    expect(restoredSession.payoutAttemptIds).toEqual(["out", "retry"]);
-    expect(restoredSession.payoutIdempotencyKeys).toEqual(["key", "retry-key"]);
-    expect(sessionState(originalSession)).toEqual(sourceState);
+    expect(sessionStatus).toBe("PAYOUT_PENDING");
+    expect(currentPendingSettlement?.payoutId).toBe("retry");
+    expect(payoutAttemptIds).toEqual(["out", "retry"]);
+    expect(payoutIdempotencyKeys).toEqual(["key", "retry-key"]);
+    expect(currentState).toEqual(sourceState);
   });
 });
 

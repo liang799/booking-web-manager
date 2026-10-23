@@ -18,12 +18,11 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
+    // Log
     booker.verifyAttendance(bookingSession, {
       marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
       now: attendanceVerificationTime,
     });
-
-    // Log
     const aliceAttendance =
       bookingSession.participantList.requireParticipation("p-alice").attendance;
     const sessionStatus = bookingSession.status;
@@ -49,7 +48,12 @@ describe("Booker", () => {
         now: attendanceVerificationTime,
       }),
     ).toThrow(expect.objectContaining({ code: "SESSION_NOT_ENDED" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("verifyAttendance_WhenLaterMarkConflicts_RejectsWithoutChangingState", () => {
@@ -74,7 +78,12 @@ describe("Booker", () => {
         now: attendanceVerificationTime,
       }),
     ).toThrow(expect.objectContaining({ code: "ATTENDANCE_CONFLICT" }));
-    expect(sessionState(bookingSession)).toEqual(previousState);
+
+    // Log
+    const currentState = sessionState(bookingSession);
+
+    // Oracle
+    expect(currentState).toEqual(previousState);
   });
 
   test("verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout", () => {
@@ -88,12 +97,11 @@ describe("Booker", () => {
       now: attendanceVerificationTime,
     });
 
+    // Log
     readyBooker().verifyAttendance(bookingSession, {
       marks: [{ participationId: "p-ben", attendance: "ABSENT" }],
       now: attendanceVerificationTime,
     });
-
-    // Log
     const sessionStatus = bookingSession.status;
 
     // Oracle

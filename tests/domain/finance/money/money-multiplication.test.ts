@@ -8,10 +8,11 @@ describe("Money", () => {
 
     // Log
     const product = money.multiply(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(product.toCents()).toBe(1500);
-    expect(money.toCents()).toBe(500);
+    expect(sourceCents).toBe(500);
   });
 
   test("multiply_WhenFactorIsNegative_ReturnsProductAndPreservesSource", () => {
@@ -20,10 +21,11 @@ describe("Money", () => {
 
     // Log
     const product = money.multiply(-3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(product.toCents()).toBe(-1500);
-    expect(money.toCents()).toBe(500);
+    expect(sourceCents).toBe(500);
   });
 
   test("multiply_WhenFactorIsZero_ReturnsProductAndPreservesSource", () => {
@@ -32,10 +34,11 @@ describe("Money", () => {
 
     // Log
     const product = money.multiply(0);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(product.toCents()).toBe(0);
-    expect(money.toCents()).toBe(500);
+    expect(sourceCents).toBe(500);
   });
 
   test("multiply_WhenFactorIsOne_ReturnsNewInstance", () => {

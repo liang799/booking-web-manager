@@ -8,10 +8,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(333);
-    expect(money.toCents()).toBe(1001);
+    expect(sourceCents).toBe(1001);
   });
 
   test("divideFloor_WhenPositiveRemainderIsDividedByOne_ReturnsNewInstance", () => {
@@ -32,10 +33,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(-334);
-    expect(money.toCents()).toBe(-1001);
+    expect(sourceCents).toBe(-1001);
   });
 
   test("divideFloor_WhenNegativeRemainderIsDividedByOne_ReturnsNewInstance", () => {
@@ -56,10 +58,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(334);
-    expect(money.toCents()).toBe(1002);
+    expect(sourceCents).toBe(1002);
   });
 
   test("divideFloor_WhenPositiveExactDivisionIsDividedByOne_ReturnsNewInstance", () => {
@@ -80,10 +83,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(-334);
-    expect(money.toCents()).toBe(-1002);
+    expect(sourceCents).toBe(-1002);
   });
 
   test("divideFloor_WhenNegativeExactDivisionIsDividedByOne_ReturnsNewInstance", () => {
@@ -104,10 +108,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(0);
-    expect(money.toCents()).toBe(1);
+    expect(sourceCents).toBe(1);
   });
 
   test("divideFloor_WhenPositiveCentIsDividedByOne_ReturnsNewInstance", () => {
@@ -128,10 +133,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(-1);
-    expect(money.toCents()).toBe(-1);
+    expect(sourceCents).toBe(-1);
   });
 
   test("divideFloor_WhenNegativeCentIsDividedByOne_ReturnsNewInstance", () => {
@@ -152,10 +158,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(3);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(0);
-    expect(money.toCents()).toBe(0);
+    expect(sourceCents).toBe(0);
   });
 
   test("divideFloor_WhenZeroIsDividedByOne_ReturnsNewInstance", () => {
@@ -176,10 +183,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(2);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(4503599627370495);
-    expect(money.toCents()).toBe(Number.MAX_SAFE_INTEGER);
+    expect(sourceCents).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   test("divideFloor_WhenMaximumSafeIntegerIsDividedByOne_ReturnsNewInstance", () => {
@@ -200,10 +208,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(2);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(-4503599627370496);
-    expect(money.toCents()).toBe(Number.MIN_SAFE_INTEGER);
+    expect(sourceCents).toBe(Number.MIN_SAFE_INTEGER);
   });
 
   test("divideFloor_WhenMinimumSafeIntegerIsDividedByOne_ReturnsNewInstance", () => {
@@ -224,10 +233,11 @@ describe("Money", () => {
 
     // Log
     const quotient = money.divideFloor(Number.MAX_SAFE_INTEGER);
+    const sourceCents = money.toCents();
 
     // Oracle
     expect(quotient.toCents()).toBe(0);
-    expect(money.toCents()).toBe(Number.MAX_SAFE_INTEGER - 1);
+    expect(sourceCents).toBe(Number.MAX_SAFE_INTEGER - 1);
   });
 
   test("divideFloor_WhenJustBelowMaximumDivisorIsDividedByOne_ReturnsNewInstance", () => {

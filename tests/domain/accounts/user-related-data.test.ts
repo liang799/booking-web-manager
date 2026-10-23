@@ -95,20 +95,20 @@ describe("User", () => {
     };
     const user = new User(details);
 
+    // Log
     // Attempt to alter the supplied objects and membership list.
     details.wallet = fundedWallet("alice", 0);
     details.reliabilityScore = ReliabilityScore.from(0);
     memberGroupIds.push("other");
-
-    // Log
     const loadedWallet = user.wallet;
+    const availableBalance = loadedWallet.getAvailableBalance();
     const loadedScore = user.reliabilityScore;
     const loadedMemberships = user.memberGroupIds;
 
     // Oracle
     expect(loadedWallet).toBe(wallet);
     expect(loadedWallet.walletId).toBe("w-alice");
-    expect(loadedWallet.getAvailableBalance().toCents()).toBe(700);
+    expect(availableBalance.toCents()).toBe(700);
     expect(loadedScore).toBe(reliabilityScore);
     expect(loadedScore.toNumber()).toBe(80);
     expect(loadedMemberships).toEqual(["group"]);
@@ -124,10 +124,9 @@ describe("User", () => {
     );
     const memberships = user.memberGroupIds as string[];
 
+    // Log
     // Attempt to alter the returned collection.
     memberships.push("injected");
-
-    // Log
     const storedMemberships = user.memberGroupIds;
 
     // Oracle
@@ -142,11 +141,13 @@ describe("User", () => {
 
     // Log
     const walletReassigned = Reflect.set(user, "wallet", replacement);
+    const retainedWallet = user.wallet;
+    const availableBalance = retainedWallet.getAvailableBalance();
 
     // Oracle
     expect(walletReassigned).toBe(false);
-    expect(user.wallet).toBe(wallet);
-    expect(user.wallet.getAvailableBalance().toCents()).toBe(700);
+    expect(retainedWallet).toBe(wallet);
+    expect(availableBalance.toCents()).toBe(700);
   });
 
   test("reliabilityScore_WhenReassignmentIsAttempted_PreservesLoadedScore", () => {
@@ -159,11 +160,12 @@ describe("User", () => {
 
     // Log
     const scoreReassigned = Reflect.set(user, "reliabilityScore", replacement);
+    const retainedScore = user.reliabilityScore;
 
     // Oracle
     expect(scoreReassigned).toBe(false);
-    expect(user.reliabilityScore).toBe(reliabilityScore);
-    expect(user.reliabilityScore.toNumber()).toBe(80);
+    expect(retainedScore).toBe(reliabilityScore);
+    expect(retainedScore.toNumber()).toBe(80);
   });
 
   test("create_WhenRegistering_EstablishesWalletAndEmptyHistory", () => {
@@ -177,6 +179,7 @@ describe("User", () => {
 
     // Log
     const user = User.create(details);
+    const availableBalance = user.wallet.getAvailableBalance();
 
     // Oracle
     expect(user.userId).toBe("new-user");
@@ -184,7 +187,7 @@ describe("User", () => {
     expect(user.email?.toString()).toBe("new@example.com");
     expect(user.wallet.walletId).toBe("new-wallet");
     expect(user.wallet.transactions).toEqual([]);
-    expect(user.wallet.getAvailableBalance().toCents()).toBe(0);
+    expect(availableBalance.toCents()).toBe(0);
     expect(user.reliabilityScore.toNumber()).toBe(100);
     expect(user.memberGroupIds).toEqual([]);
   });
