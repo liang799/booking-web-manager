@@ -1,10 +1,11 @@
-import { DomainError } from "@/domain";
+import { DomainError, Session } from "@/domain";
 import { describe, expect, test, vi } from "vitest";
 import {
   hoursBeforeSessionStart,
   createTestUser,
   readyBooker,
   createTestSession,
+  sessionDetails,
   sessionState,
   sessionStartsAt,
 } from "../../sessions/session/session-fixtures";
@@ -191,6 +192,24 @@ describe("Booker", () => {
     // Oracle
     expect(bookingSession.status).toBe("CANCELLED");
     expect(cancellation.instructions[0]?.kind).toBe("REFUND");
+  });
+
+  test("changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate", () => {
+    // Input
+    const visibilityChangeTime = hoursBeforeSessionStart(48);
+    const bookingSession = new Session(sessionDetails({ visibility: "PUBLIC" }));
+    const booker = createTestUser({
+      userId: "booker",
+      emailVerified: false,
+    }).asBooker();
+
+    booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
+
+    // Log
+    const visibility = bookingSession.visibility;
+
+    // Oracle
+    expect(visibility).toBe("PRIVATE");
   });
 
   test("changeVisibility_WhenOwnerIsInactive_StillChangesVisibility", () => {

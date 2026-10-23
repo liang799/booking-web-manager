@@ -72,23 +72,22 @@ changed (or remained unchanged), as SC2002's Combatant examples capture hit
 points and attack values after commands:
 
 ```ts
-test("assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession", () => {
+test("changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate", () => {
   // Input
-  const cancellationTime = hoursBeforeSessionStart(48);
-  const bookingSession = createTestSession({ committedUserIds: ["alice"] });
+  const visibilityChangeTime = hoursBeforeSessionStart(48);
+  const bookingSession = new Session(sessionDetails({ visibility: "PUBLIC" }));
   const booker = createTestUser({
     userId: "booker",
     emailVerified: false,
   }).asBooker();
-  const previousState = sessionState(bookingSession);
 
-  booker.assertCanCancel(bookingSession, cancellationTime);
+  booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
 
   // Log
-  const currentState = sessionState(bookingSession);
+  const visibility = bookingSession.visibility;
 
   // Oracle
-  expect(currentState).toEqual(previousState);
+  expect(visibility).toBe("PRIVATE");
 });
 ```
 
@@ -274,14 +273,14 @@ a tests-only cleanup.
 
 ## Result snapshots
 
-The **2026-10-23** snapshot covers **599 passing cases across 43 files**. Each
+The **2026-10-23** snapshot covers **600 passing cases across 43 files**. Each
 table has a linked Name and Location, Input, Oracle (expected result), Log
 (actual outcome verified by assertions), and separate execution status.
 
 | Area | Cases | Tables |
 |---|---:|---|
 | Accounts | 94 | [Account cases](./accounts/README.md) |
-| Booker | 53 | [Booker cases](./accounts/booker/README.md) |
+| Booker | 54 | [Booker cases](./accounts/booker/README.md) |
 | Participant | 77 | [Participant cases](./accounts/participant/README.md) |
 | Finance | 55 | [Finance cases](./finance/README.md) |
 | Money | 83 | [Money cases](./finance/money/README.md) |

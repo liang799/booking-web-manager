@@ -1,10 +1,10 @@
 {
   "baselineRevision": "00f6c88462e16ffce8f91dd78b72aa649918e9f7",
   "baselineTests": 598,
-  "finalTests": 599,
+  "finalTests": 600,
   "baselineFiles": 45,
   "finalFiles": 43,
-  "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The original 593-case baseline is retained along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values.",
+  "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The original 593-case baseline is retained along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values. Additions are listed separately from retained baseline coverage.",
   "mappings": [
     {
       "before": {
@@ -15,7 +15,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions",
-          "line": 13
+          "line": 14
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -4826,7 +4826,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession",
-          "line": 28
+          "line": 29
         }
       ],
       "reason": "Preserved",
@@ -4846,7 +4846,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
-          "line": 47
+          "line": 48
         }
       ],
       "reason": "Preserved",
@@ -4868,7 +4868,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
-          "line": 59
+          "line": 60
         }
       ],
       "reason": "Preserved",
@@ -4888,7 +4888,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
-          "line": 81
+          "line": 82
         }
       ],
       "reason": "Preserved",
@@ -4910,7 +4910,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
-          "line": 99
+          "line": 100
         }
       ],
       "reason": "Preserved",
@@ -4934,7 +4934,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
-          "line": 136
+          "line": 137
         }
       ],
       "reason": "Preserved",
@@ -4960,7 +4960,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
-          "line": 179
+          "line": 180
         }
       ],
       "reason": "Preserved",
@@ -4982,7 +4982,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
-          "line": 196
+          "line": 215
         }
       ],
       "reason": "Preserved",
@@ -5002,7 +5002,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
-          "line": 214
+          "line": 233
         }
       ],
       "reason": "Preserved"
@@ -5016,7 +5016,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
-          "line": 233
+          "line": 252
         }
       ],
       "reason": "Preserved",
@@ -5040,7 +5040,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
-          "line": 260
+          "line": 279
         }
       ],
       "reason": "Preserved"
@@ -5054,7 +5054,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
-          "line": 277
+          "line": 296
         }
       ],
       "reason": "Preserved"
@@ -5068,7 +5068,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 306
+          "line": 325
         }
       ],
       "reason": "Preserved"
@@ -5082,7 +5082,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
-          "line": 318
+          "line": 337
         }
       ],
       "reason": "Preserved",
@@ -9646,6 +9646,17 @@
         }
       ],
       "reason": "Preserved"
+    }
+  ],
+  "additions": [
+    {
+      "file": "tests/domain/accounts/booker/administration.test.ts",
+      "name": "changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
+      "line": 197,
+      "reason": "Added an explicit PUBLIC-to-PRIVATE command scenario for an unverified owner; retained the separate permission-check scenario.",
+      "assertions": [
+        "expect(visibility).toBe(\"PRIVATE\")"
+      ]
     }
   ]
 }
