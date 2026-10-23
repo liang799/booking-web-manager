@@ -67,9 +67,9 @@ test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
 });
 ```
 
-For a void method, issue the command before Log, then capture what actually
-changed (or remained unchanged), as SC2002's Combatant examples capture hit
-points and attack values after commands:
+For a void method, group the command and its immediately captured result under
+`// Log change result`. This keeps the change beside the observation, as
+SC2002's Combatant examples capture hit points and attack values after commands:
 
 ```ts
 test("changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate", () => {
@@ -81,9 +81,8 @@ test("changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate", () 
     emailVerified: false,
   }).asBooker();
 
+  // Log change result
   booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
-
-  // Log
   const visibility = bookingSession.visibility;
 
   // Oracle

@@ -203,9 +203,8 @@ describe("Booker", () => {
       emailVerified: false,
     }).asBooker();
 
+    // Log change result
     booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
-
-    // Log
     const visibility = bookingSession.visibility;
 
     // Oracle
@@ -221,9 +220,8 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
+    // Log change result
     booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
-
-    // Log
     const visibility = bookingSession.visibility;
 
     // Oracle

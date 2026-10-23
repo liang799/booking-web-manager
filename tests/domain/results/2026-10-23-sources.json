@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "digest": "112a5ed4a2b061fc46590f95e5468fc5ac6a79ce7a695a0c7cdfe04f5aa16d38",
+  "digest": "3ac6ae27ff79a4ac9906b0d47e544906a6562a1e58d67a6bb1241a0fe82e5ee4",
   "files": {
     "domain/accounts/booker.ts": "5ff925e4fdcab3cc1ca3c90f5bd77ebd740e90ec806bee88e75d8f29aec6145f",
     "domain/accounts/booking-account-eligibility.ts": "9cbf127166a8c3f3ee602915b45459b211b937261f058466d6a797b5c68d9075",
@@ -43,7 +43,7 @@
     "domain/shared/types.ts": "782f34c5772f92a146b67bf338801925bfa40871b0b05bcc13f73189f2d45a22",
     "package-lock.json": "40a50eae1884fbb786ef547ff00658901504b01dc0feeb771c973869fe95f989",
     "package.json": "a44202f348c47d55c0780403250eabb150066c7b0e7646b3694e98d716790c04",
-    "tests/domain/accounts/booker/administration.test.ts": "05d23ea05717f366c78b6ea1b563494701dbea27321c0910ddf68022798026da",
+    "tests/domain/accounts/booker/administration.test.ts": "91c2545e528724f802d841d7faae6d4b14eb219ebc86f042d58507d5c6eca583",
     "tests/domain/accounts/booker/attendance.test.ts": "c90a3a54bcb4bb78d1ae4c7fb02485af548c755ac121e2c3f3376df4f2478bf3",
     "tests/domain/accounts/booker/authorization.test.ts": "1a4970bbe9f7fb4b3c2b817f87fc2fbbb5bf17e2d9d66a90e7e2441635c4e757",
     "tests/domain/accounts/booker/cancellation-history.test.ts": "cb078a20f3b3c625149612df028890b11811251049477e4a31b8df0f85c2a8e6",

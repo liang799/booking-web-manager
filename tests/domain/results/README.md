@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 22:38:57 SGT**
-(`2026-10-23T14:38:57.874Z`). All **600 tests in 43 files passed**.
+Snapshot run: **23 October 2026, 22:44:20 SGT**
+(`2026-10-23T14:44:20.412Z`). All **600 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
@@ -12,7 +12,7 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `112a5ed4a2b061fc46590f95e5468fc5ac6a79ce7a695a0c7cdfe04f5aa16d38`.
+  `3ac6ae27ff79a4ac9906b0d47e544906a6562a1e58d67a6bb1241a0fe82e5ee4`.
 - [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
   mapped to 599 retained scenarios, plus one new visibility-change case.
   Includes before/after assertion expressions for changed explicit scenarios.
@@ -36,8 +36,9 @@ instance. Rejection snapshots establish that the observed state is unchanged.
 Input lists domain data and commands, excluding spy configuration and cleanup.
 Log's observation bindings identify the source expressions that captured actual
 results or state; its verified outcomes describe what the assertions establish.
-A void command appears before the named observation in the test. The labels
-identify test ingredients rather than execution phases.
+A `Log change result` block can group a void command with its immediately
+captured state. The labels identify test ingredients rather than execution
+phases.
 
 Vitest's standard report records status and failures, not successful return
 values. These tables interpret the executed source assertions alongside their

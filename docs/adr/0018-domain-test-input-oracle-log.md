@@ -16,9 +16,10 @@ matcher executes the command and checks its thrown error. Independent cases
 use fresh state and remain executable without earlier tests.
 
 Input, Log, and Oracle identify test ingredients, not renamed execution phases.
-A void command runs before Log; Log then records the public state or query
-result used in the assertion. A value-returning command may be captured directly
-in Log. Fault-injection stubs and spy cleanup are test instrumentation, explained
+A void command and the resulting state observation may share a
+`// Log change result` block, keeping execution beside the captured output.
+A value-returning command may be captured directly in Log.
+Fault-injection stubs and spy cleanup are test instrumentation, explained
 separately from domain input. Simulated errors are constructed inside stubs;
 their expected codes or messages appear directly in the Oracle.
 
