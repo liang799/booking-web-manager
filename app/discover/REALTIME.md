@@ -4,14 +4,27 @@ UC2-01 / UC2-03a. This replaces the original one-second polling strategy.
 
 ## Boundaries
 
-The domain, use cases, database reader, HTTP endpoint and public response contract
-are unchanged. The URL still owns committed filters/cursors; server props own
-results; the mounted form owns unsubmitted drafts. There is no second client-side
-copy of the discovery result and no React Query migration in this change.
+The domain, use cases, database reader, HTTP endpoint, query parameters and
+listing JSON are unchanged. Successful discovery responses add `X-Server-Time`
+clock metadata as a header. The URL owns committed filters/cursors; the controller
+owns the displayed outcome, seeded from server props and replaced by validated
+API results for that query. The mounted form owns unsubmitted drafts. This is a
+controlled page outcome, with no client query cache or React Query migration.
 
 `public.sessions` trigger -> Supabase Broadcast -> infrastructure subscription ->
-app refresh scheduler -> `router.refresh()` -> existing `loadDiscoveryScreen` ->
-`DiscoverSessions.searchPublic` -> existing public projection.
+app refresh scheduler -> `GET /api/sessions` with the committed query -> existing
+`DiscoverSessions.searchPublic` -> existing public projection -> controller outcome.
+Initial page rendering continues through `loadDiscoveryScreen` and the same use
+case. Filtering and pagination remain server responsibilities.
+
+Background reads use an explicit fetch Promise. Local production-build testing
+with the installed Next 15.5 runtime reproduced a `router.refresh()` transition
+remaining pending after the streamed response completed. The symptom matches
+[Next.js issue #86055](https://github.com/vercel/next.js/issues/86055). A scheduler
+that waited for that transition could block later invalidations indefinitely.
+The request's settlement now releases the in-flight state, and teardown aborts
+the request and ignores stale completion. This avoids relying on framework
+transition completion for background network work without patching the framework.
 
 The new database trigger is a persistence notification adapter, not a business
 workflow. `realtime.send` writes a transactional database message; it makes no
@@ -46,10 +59,12 @@ optional authentication cannot block the notification subscription.
 
 Events coalesce over 250 ms. An initial catch-up read and another invalidation on
 subscription acknowledgement cover changes around page loading and connection.
-In-flight refreshes never overlap; an event during a
+In-flight reads never overlap; an event during a
 read or foreground navigation remains pending for a subsequent refresh. Sustained
 events do not keep resetting the debounce window. Existing error presentation,
 foreground loading, URL history, drafts, focus, scroll and cursor behavior remain.
+The displayed outcome is updated only while the request still belongs to the
+mounted controller and committed query.
 
 Hidden/offline pages unsubscribe and catch up on return. Channel failures retry
 with exponential backoff (one to thirty seconds); disposal cancels pending retries
@@ -59,12 +74,13 @@ A 30-second reconciliation timer repairs missed events and supports deployments
 without Realtime settings or service availability. At idle this is about two
 background reads per minute instead of sixty, plus connection/resume reads.
 A separate timer refreshes at the first displayed session's start time because
-clock-driven expiry does not generate a database change. The server supplies that
-start and its current time as page-only metadata; the browser schedules the
+clock-driven expiry does not generate a database change. Initial rendering
+supplies the start and current server time as page metadata; later successful
+API reads supply `X-Server-Time` in Unix milliseconds. The browser schedules the
 remaining duration using its monotonic clock. Refresh throttling uses the same
 monotonic clock, so changing the device's wall clock does not delay events or
 expiry. A response still containing an expired session rearms a bounded retry.
-This does not change the public discovery API projection.
+The clock header is additive; the public discovery JSON projection is unchanged.
 
 The existing three-second visibility target applies to a healthy visible online
 page with Realtime configured and delivering events. The 30-second degraded-mode
@@ -110,7 +126,9 @@ require changing session data or permissions.
 
 Unit tests cover scheduler coalescing, in-flight invalidations, navigation guards,
 visibility/connectivity, expiry across clock skew and wall-clock changes, cleanup,
-adapter retries and optional settings.
+adapter retries and optional settings. API tests verify the response-time clock
+header and unchanged success/error JSON; client/controller tests cover background
+response validation, explicit request completion and stale-response cleanup.
 `tests/integration/discovery-realtime.test.ts` uses the actual disposable Realtime
 service to verify anonymous delivery, private/past/closed exclusions, unchanged
 writes, rollback, payload privacy and retained table restrictions. Before running
@@ -142,5 +160,6 @@ stack; do not run them against a hosted or production project.
 ## Deliberately unchanged
 
 No changes to SQL pagination, domain authorization, wallet/booking mutations,
-HTTP contracts, component markup, shared UI, CSS, images or design revisions.
+HTTP query/body schemas, component markup, shared UI, CSS, images or design revisions.
+The HTTP addition is the successful-response `X-Server-Time` header described above.
 The existing all-matches discovery query is still a separate scalability concern.

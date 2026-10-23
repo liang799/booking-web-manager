@@ -38,7 +38,6 @@ export async function prepareSessionRealtime(environment) {
   const settings = disposableSettings(environment);
   const topic = `session-tests:ready:${randomUUID()}`;
   const nonce = randomUUID();
-  const deadline = Date.now() + 15_000;
   const pool = new Pool({
     connectionString: settings.databaseUrl,
     max: 1,
@@ -76,6 +75,7 @@ export async function prepareSessionRealtime(environment) {
         }
       });
     });
+    const deadline = Date.now() + 15_000;
     while (!delivered && Date.now() < deadline) {
       if (channelFailure) throw channelFailure;
       await pool.query("select realtime.send($1::jsonb, 'ready', $2, false)", [JSON.stringify({ nonce }), topic]);

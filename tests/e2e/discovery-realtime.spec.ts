@@ -57,18 +57,37 @@ for (const offset of [-60_000, 60_000]) {
       const booker = await context.identity(false);
       const venue = `Clock-skew-${randomUUID().slice(0, 8)}`;
       const sessionId = await insertSession(context, booker.userId, venue, "PUBLIC");
-      // Browser timers keep advancing normally; only its wall clock differs from the server.
-      await page.clock.install({ time: Date.now() + offset });
+      // Shift only wall time, retaining native browser timers and performance.now.
+      // A complete fake-clock installation also changes the scheduler under test.
+      await page.addInitScript((offsetMs) => {
+        globalThis.Date = new Proxy(Date, {
+          construct(target, args, newTarget) {
+            return Reflect.construct(target, args.length === 0 ? [target.now() + offsetMs] : args, newTarget);
+          },
+          apply(target) { return new target(target.now() + offsetMs).toString(); },
+          get(target, property, receiver) {
+            return property === "now" ? () => target.now() + offsetMs : Reflect.get(target, property, receiver);
+          },
+        });
+      }, offset);
       const result = await context.pool.query<{ start_at: Date }>(
         "update sessions set start_at=statement_timestamp() + interval '7 seconds', end_at=statement_timestamp() + interval '2 hours 7 seconds' where session_id=$1 returning start_at",
         [sessionId],
       );
       const startsAt = result.rows[0]!.start_at.getTime();
+      let backgroundRouteRefreshes = 0;
+      page.on("request", request => {
+        if (new URL(request.url()).pathname === "/discover" && request.headers().rsc === "1") {
+          backgroundRouteRefreshes += 1;
+        }
+      });
       await page.goto(`/discover?q=${venue}`, { waitUntil: "domcontentloaded" });
       await expect(card(page, venue)).toBeVisible();
       await expect(card(page, venue)).toHaveCount(0, { timeout: Math.max(1, startsAt + 3_000 - Date.now()) });
       expect(Date.now()).toBeGreaterThanOrEqual(startsAt);
       expect(Date.now() - startsAt).toBeLessThanOrEqual(3_000);
+      // Background reads must settle independently of Next's streamed route transitions.
+      expect(backgroundRouteRefreshes).toBe(0);
     } finally {
       await context.pool.end();
     }

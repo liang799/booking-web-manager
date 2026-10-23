@@ -19,6 +19,12 @@ describe("session discovery OpenAPI contract", () => {
     expect(operation?.description).toContain("and full sessions");
     expect(operation?.description).toContain("OneMap resolution is separate work");
     expect(operation?.description).toContain("case-insensitive literal substring");
+    expect(operation?.responses["200"]).toMatchObject({
+      headers: {
+        "Cache-Control": { schema: { type: "string", enum: ["no-store"] } },
+        "X-Server-Time": { schema: { type: "string", pattern: "^[0-9]+$" } },
+      },
+    });
     const query = operation?.parameters?.find((parameter) => "name" in parameter && parameter.name === "q");
     expect(query).toMatchObject({ in: "query", required: false, schema: { type: "string", maxLength: 100, example: "Jurong" } });
     expect(parseDiscoveryQuery(new URLSearchParams({ q: "Jurong", sport: "Badminton", region: "West" }))).toMatchObject({

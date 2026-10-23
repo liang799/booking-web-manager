@@ -198,14 +198,18 @@ test("background visibility updates preserve pagination and do not jump to an ea
     await page.getByRole("button", { name: "Next page", exact: true }).click();
     await expect(page).toHaveURL(/cursor=/);
     const url = page.url();
+    const committedQuery = new URL(url).searchParams;
     await expect(row(page, `${tag} row 20`)).toBeVisible();
     expect((await patch(request, booker, last, "PRIVATE")).status()).toBe(200);
     await expect(row(page, `${tag} row 20`)).toHaveCount(0, { timeout: 3000 });
     // Listen before the PATCH; gate matching refresh requests on its success.
-    const refreshRequest = page.waitForRequest(async (candidate) =>
-      new URL(candidate.url()).pathname === "/discover" && candidate.resourceType() === "fetch" &&
-      (await visibilityUpdate).status() === 200,
-    );
+    const refreshRequest = page.waitForRequest(async (candidate) => {
+      const requested = new URL(candidate.url());
+      return requested.pathname === "/api/sessions" && candidate.method() === "GET" &&
+        requested.searchParams.get("q") === committedQuery.get("q") &&
+        requested.searchParams.get("cursor") === committedQuery.get("cursor") &&
+        (await visibilityUpdate).status() === 200;
+    });
     const visibilityUpdate = patch(request, booker, early, "PUBLIC");
     expect((await visibilityUpdate).status()).toBe(200);
     await refreshRequest;
@@ -233,8 +237,8 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
     const intercepted = new Promise<void>((resolve) => { announce = resolve; });
     const gate = new Promise<void>((resolve) => { release = resolve; });
     let paused = false;
-    await page.route("**/discover?**", async (route) => {
-      if (!paused && route.request().resourceType() === "fetch" && new URL(route.request().url()).searchParams.get("q") === first) {
+    await page.route("**/api/sessions?**", async (route) => {
+      if (!paused && route.request().method() === "GET" && new URL(route.request().url()).searchParams.get("q") === first) {
         paused = true;
         const response = await route.fetch();
         announce?.();
@@ -255,14 +259,13 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
     await expect(page).toHaveURL(new RegExp(`q=${second}`));
     await expect(row(page, second)).toBeVisible();
     await expect(row(page, first)).toHaveCount(0);
-    await page.unroute("**/discover?**");
+    await page.unroute("**/api/sessions?**");
     let discoveryRequestsAfterLeaving = 0;
     page.on("request", (request) => {
       const url = new URL(request.url());
-      // The Sessions shell prefetches its Discover navigation link. Count
-      // refreshes of the departed committed query, rather than link prefetches.
-      if (url.pathname === "/discover" && url.searchParams.get("q") === second &&
-          request.resourceType() === "fetch" && !request.headers()["next-router-prefetch"])
+      // Background reads target the committed API query; route prefetches are separate.
+      if (url.pathname === "/api/sessions" && url.searchParams.get("q") === second &&
+          request.method() === "GET")
         discoveryRequestsAfterLeaving++;
     });
     await page.goto("/sessions");
