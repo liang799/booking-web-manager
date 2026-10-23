@@ -169,8 +169,11 @@ describe("PayoutAttempt", () => {
     });
 
     test("complete_WhenProviderReferenceConflicts_ThrowsPayoutConflict", () => {
-      const payout = PayoutAttempt.create(batch());
-      payout.complete("provider-result", requestedAt);
+      const payout = new PayoutAttempt(payoutDetails({
+        status: "COMPLETED",
+        completedAt: requestedAt,
+        providerReference: "provider-result",
+      }));
 
       expect(() => payout.complete("other-result", requestedAt)).toThrow(
         expect.objectContaining({ code: "PAYOUT_CONFLICT" }),
@@ -199,8 +202,11 @@ describe("PayoutAttempt", () => {
     });
 
     test("complete_WhenFailureHasBeenRecorded_RejectsLateCallback", () => {
-      const payout = PayoutAttempt.create(batch());
-      payout.fail("timeout", requestedAt);
+      const payout = new PayoutAttempt(payoutDetails({
+        status: "FAILED",
+        failedAt: requestedAt,
+        failureReason: "timeout",
+      }));
 
       expect(() => payout.complete("late", requestedAt)).toThrow(
         expect.objectContaining({ code: "STALE_PAYOUT" }),

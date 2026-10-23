@@ -19,6 +19,10 @@ and observations whose timing matters. Void commands can be followed by direct
 public-state assertions. Keep rejection and unchanged-state assertions together.
 Fresh fixtures and explicit prerequisites make every case independent; retries
 and idempotency may legitimately require multiple calls.
+Fixtures construct prerequisite state through validated constructors instead
+of replaying unrelated workflows. Keep the transition under test visible, and
+give a former setup-only success path its own focused case when needed to
+preserve coverage.
 
 The [domain testing guide](../../tests/domain/README.md) holds the maintained
 convention and examples. Adjacent README tables retain Lecture 16's Input,

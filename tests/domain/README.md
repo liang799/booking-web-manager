@@ -23,8 +23,8 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
   it. Line count alone is not a reason to split a cohesive entity's tests.
 - Name each test `method_WhenCondition_ExpectedResult`. Use `constructor` for
   construction and the property name for a getter. Use `test` consistently.
-- Give each test one observable domain behavior. Arrange prerequisite transitions
-  before exercising that behavior; split cases that independently check joining,
+- Give each test one observable domain behavior. Construct its prerequisite state
+  with fixtures before exercising that behavior; split cases that independently check joining,
   withdrawal, promotion, or payout completion.
 - Keep multiple assertions when they describe the same outcome, such as a
   cancellation's status, refunds, and roster changes. Give reconstruction and
@@ -158,8 +158,11 @@ idempotency behavior merely because it needs multiple calls.
 
 ## Fixtures and visible inputs
 
-Reuse small fixtures for routine construction. Keep scenario-defining amounts,
-dates, identities, invalid fields, and transitions visible. Preserve exported
+Reuse small fixtures for routine construction. A test that needs a withdrawn
+participant, failed payout account, or archived group should start in that state
+instead of replaying the workflow that produced it. Prefer validated constructors
+inside those fixtures. Keep scenario-defining amounts, dates, identities, invalid
+fields, and the transition being tested visible. Preserve exported
 fixture defaults because use-case and other suites consume them. Keep local
 helpers below the tests; avoid setup hooks or builders that hide the scenario.
 
@@ -190,6 +193,41 @@ readyBooker().verifyAttendance(bookingSession, {
 
 expect(bookingSession.status).toBe("AWAITING_PAYOUT");
 ```
+
+`participationOverrides` replaces named roster entries in place, retaining their
+order. State fixtures such as `withdrawnParticipation`, `removedParticipation`,
+`cancelledParticipation`, and `leftWaitlistedParticipation` describe existing
+history. Declare the financial state explicitly rather than having a fixture
+calculate the withdrawal rule:
+
+```ts
+const bookingSession = createTestSession({
+  committedUserIds: ["alice", "ben"],
+  participationOverrides: {
+    alice: withdrawnParticipation("alice", {
+      withdrawnAt: hoursBeforeSessionStart(10),
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
+      holdState: "AWAITING_REPLACEMENT",
+    }),
+  },
+});
+```
+
+Verified, withdrawn, removed, and cancelled participation fixtures default to a
+500-cent platform hold committed 48 hours before start. Pass session terms for a
+different share or holding account. `committedParticipation` uses the supplied
+session terms; `leftWaitlistedParticipation` has queue metadata and no hold.
+Refunded withdrawals default their settlement time to the withdrawal time;
+specify `settledAt` for a later replacement refund. Closed committed entries
+require their refund time. Fixture state must match the scenario, including
+attendance metadata, queue sequence, replacement history, and hold identity.
+
+Keep repeated calls when they establish the behavior: retries after injected
+failures, idempotency, stale-source rejection, role liveness, or mutation isolation.
+Do not replace an asserted earlier result with an invented fixture result. If
+moving a prerequisite removes the only exercised success path of a method, give
+that transition a focused test of its own.
 
 Keep explicit wallet and transaction-history setup when that history is being
 tested. Use `createTestSession` for routine state built through validated
@@ -272,18 +310,18 @@ The table vocabulary follows *Lecture 16: Testing Introduction*, slides 15–18.
 Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
-The **2026-10-24** snapshot covers **603 passing cases across 43 files**. Each
+The **2026-10-24** snapshot covers **607 passing cases across 43 files**. Each
 table has a linked Name and Location, Input, Oracle (expected result), Log
 (actual outcome verified by assertions), and separate execution status.
 
 | Area | Cases | Tables |
 |---|---:|---|
-| Accounts | 94 | [Account cases](./accounts/README.md) |
-| Booker | 54 | [Booker cases](./accounts/booker/README.md) |
+| Accounts | 96 | [Account cases](./accounts/README.md) |
+| Booker | 55 | [Booker cases](./accounts/booker/README.md) |
 | Participant | 77 | [Participant cases](./accounts/participant/README.md) |
 | Finance | 55 | [Finance cases](./finance/README.md) |
 | Money | 83 | [Money cases](./finance/money/README.md) |
-| Groups | 34 | [Group cases](./groups/README.md) |
+| Groups | 35 | [Group cases](./groups/README.md) |
 | Reliability | 33 | [Reliability cases](./reliability/README.md) |
 | Sessions | 89 | [Session value and pricing cases](./sessions/README.md) |
 | Session lifecycle | 84 | [Session lifecycle cases](./sessions/session/README.md) |

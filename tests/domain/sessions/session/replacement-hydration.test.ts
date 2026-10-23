@@ -1,10 +1,17 @@
-import { FundHold, Money, Participation, Session } from "@/domain";
+import {
+  FundHold,
+  type FundHoldDetails,
+  Money,
+  Participation,
+  type ParticipationDetails,
+  Session,
+} from "@/domain";
 import { describe, expect, test } from "vitest";
 import { hoursBeforeSessionStart, sessionDetails } from "./session-fixtures";
 
 describe("Session", () => {
   test("constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference", () => {
-    const replacement = replacementCommitment("ben", "p-missing");
+    const replacement = replacementParticipation("ben", "p-missing");
     const details = sessionDetails({ participations: [replacement] });
 
     expect(() => new Session(details)).toThrow(
@@ -35,7 +42,7 @@ describe("Session", () => {
 
   test("constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient", () => {
     const inviter = refundedInvitation();
-    const wrongRecipient = replacementCommitment("cara", "p-alice");
+    const wrongRecipient = replacementParticipation("cara", "p-alice");
     const details = sessionDetails({
       participations: [inviter, wrongRecipient],
     });
@@ -57,9 +64,9 @@ describe("Session", () => {
       withdrawnAt: aliceInvitedAt,
       replacementMode: "DIRECT_INVITE",
       replacementInviteeId: "ben",
-      hold: heldShare("alice").awaitReplacement(),
+      hold: fundHold("alice", { state: "AWAITING_REPLACEMENT" }),
     });
-    const replacement = replacementCommitment("ben", "p-alice");
+    const replacement = replacementParticipation("ben", "p-alice");
     const details = sessionDetails({ participations: [inviter, replacement] });
 
     expect(() => new Session(details)).toThrow(
@@ -76,9 +83,9 @@ describe("Session", () => {
       status: "CANCELLED",
       attendance: "UNVERIFIED",
       committedAt: aliceCommittedAt,
-      hold: heldShare("alice").refund(cancelledAt),
+      hold: fundHold("alice", { state: "REFUNDED", settledAt: cancelledAt }),
     });
-    const replacement = replacementCommitment("ben", "p-alice");
+    const replacement = replacementParticipation("ben", "p-alice");
     const details = sessionDetails({
       participations: [cancelledParticipant, replacement],
     });
@@ -108,7 +115,7 @@ describe("Session", () => {
 
   test("constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation", () => {
     const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
+    const replacement = replacementParticipation("ben", "p-alice");
     const details = sessionDetails({ participations: [inviter, replacement] });
 
     const restored = new Session(details);
@@ -125,12 +132,15 @@ describe("Session", () => {
     const benWithdrewAt = hoursBeforeSessionStart(10);
     const availabilityCheckedAt = hoursBeforeSessionStart(9);
     const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
-    const withdrawnReplacement = replacement.withdraw(
-      replacement.hold!.awaitReplacement(),
-      benWithdrewAt,
-      "OPEN_SLOT",
-    );
+    const withdrawnReplacement = replacementParticipation("ben", "p-alice", {
+      status: "WITHDRAWN",
+      withdrawnAt: benWithdrewAt,
+      replacementMode: "OPEN_SLOT",
+      hold: fundHold("ben", {
+        state: "AWAITING_REPLACEMENT",
+        createdAt: hoursBeforeSessionStart(39),
+      }),
+    });
     const details = sessionDetails({
       participations: [inviter, withdrawnReplacement],
     });
@@ -150,10 +160,14 @@ describe("Session", () => {
     const benRemovedAt = hoursBeforeSessionStart(38);
     const availabilityCheckedAt = hoursBeforeSessionStart(37);
     const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
-    const removedReplacement = replacement.remove(
-      replacement.hold!.refund(benRemovedAt),
-    );
+    const removedReplacement = replacementParticipation("ben", "p-alice", {
+      status: "REMOVED",
+      hold: fundHold("ben", {
+        state: "REFUNDED",
+        createdAt: hoursBeforeSessionStart(39),
+        settledAt: benRemovedAt,
+      }),
+    });
     const details = sessionDetails({
       participations: [inviter, removedReplacement],
     });
@@ -170,16 +184,22 @@ describe("Session", () => {
   });
 
   test("constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory", () => {
-    const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
+    const inviter = refundedInvitation({
+      status: "CANCELLED",
+      replacementMode: undefined,
+      replacementInviteeId: undefined,
+    });
+    const replacement = replacementParticipation("ben", "p-alice", {
+      status: "CANCELLED",
+      hold: fundHold("ben", {
+        state: "REFUNDED",
+        createdAt: hoursBeforeSessionStart(39),
+        settledAt: hoursBeforeSessionStart(38),
+      }),
+    });
     const details = sessionDetails({
       status: "CANCELLED",
-      participations: [
-        inviter.cancel(),
-        replacement.cancel(
-          replacement.hold!.refund(hoursBeforeSessionStart(38)),
-        ),
-      ],
+      participations: [inviter, replacement],
     });
 
     const restored = new Session(details);
@@ -197,21 +217,25 @@ describe("Session", () => {
   });
 });
 
-function heldShare(
+function fundHold(
   userId: string,
-  createdAt = hoursBeforeSessionStart(48),
+  overrides: Partial<FundHoldDetails> = {},
 ): FundHold {
-  return FundHold.create({
+  return new FundHold({
     holdId: `h-${userId}`,
     participationId: `p-${userId}`,
     walletId: `w-${userId}`,
     holdingAccountId: "platform",
     amount: Money.fromCents(500),
-    createdAt,
+    state: "HELD",
+    createdAt: hoursBeforeSessionStart(48),
+    ...overrides,
   });
 }
 
-function refundedInvitation(): Participation {
+function refundedInvitation(
+  overrides: Partial<ParticipationDetails> = {},
+): Participation {
   const aliceInvitedAt = hoursBeforeSessionStart(40);
   return new Participation({
     participationId: "p-alice",
@@ -222,20 +246,25 @@ function refundedInvitation(): Participation {
     withdrawnAt: aliceInvitedAt,
     replacementMode: "DIRECT_INVITE",
     replacementInviteeId: "ben",
-    hold: heldShare("alice").refund(aliceInvitedAt),
+    hold: fundHold("alice", { state: "REFUNDED", settledAt: aliceInvitedAt }),
+    ...overrides,
   });
 }
 
-function replacementCommitment(
+function replacementParticipation(
   userId: string,
   replacesParticipationId: string,
+  overrides: Partial<ParticipationDetails> = {},
 ): Participation {
   const replacementCommittedAt = hoursBeforeSessionStart(39);
-  return Participation.createCommitted({
+  return new Participation({
     participationId: `p-${userId}`,
     userId,
+    status: "COMMITTED",
+    attendance: "UNVERIFIED",
     committedAt: replacementCommittedAt,
-    hold: heldShare(userId, replacementCommittedAt),
+    hold: fundHold(userId, { createdAt: replacementCommittedAt }),
     replacesParticipationId,
+    ...overrides,
   });
 }

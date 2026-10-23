@@ -3,14 +3,17 @@ import {
   LedgerTransaction,
   Money,
   ReliabilityScore,
+  Session,
   Wallet,
 } from "@/domain";
 import { describe, expect, test, vi } from "vitest";
 import {
   hoursBeforeSessionStart,
-  creationDetails,
+  leftWaitlistedParticipation,
+  removedParticipation,
+  withdrawnParticipation,
+  sessionDetails,
   createTestUser,
-  readyBooker,
   createTestSession,
   sessionState,
   sessionStartsAt,
@@ -74,17 +77,9 @@ describe("Participant", () => {
       const participantUser = createTestUser({
         userId: "participant",
         availableFundsCents: 0,
+        accountStatus: "INACTIVE",
       });
       const session = createTestSession();
-
-      participantUser.deactivate({
-        availableBalance: Money.fromCents(0),
-        heldBalance: Money.fromCents(0),
-        activeCommitments: 0,
-        unsettledOwnedSessions: 0,
-        pendingPayouts: 0,
-        activeOwnedGroups: 0,
-      });
       const participant = participantUser.asParticipant();
 
       expect(() =>
@@ -139,26 +134,20 @@ describe("Participant", () => {
     });
 
     test("join_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged", () => {
-      const waitlistDepartureTime = hoursBeforeSessionStart(48);
       const withdrawalTime = hoursBeforeSessionStart(2);
       const replacementJoinTime = hoursBeforeSessionStart(1);
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
         waitlistedUserIds: ["former-waiter"],
+        participationOverrides: {
+          alice: withdrawnParticipation("alice", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "OPEN_SLOT",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+          "former-waiter": leftWaitlistedParticipation("former-waiter", 1),
+        },
       });
-
-      createTestUser({ userId: "former-waiter" })
-        .asParticipant()
-        .leaveWaitlist(bookingSession, {
-          participationId: "p-former-waiter",
-          now: waitlistDepartureTime,
-        });
-      createTestUser({ userId: "alice" })
-        .asParticipant()
-        .withdraw(bookingSession, {
-          participationId: "p-alice",
-          now: withdrawalTime,
-        });
       const previousState = sessionState(bookingSession);
       const awaiting =
         bookingSession.participantList.requireParticipation("p-alice");
@@ -314,12 +303,13 @@ describe("Participant", () => {
     });
 
     test("join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState", () => {
-      const privateSession = readyBooker().createSession({
-        ...creationDetails(),
-        visibility: "PRIVATE",
-        invitedGroupId: "group",
-        minimumReliability: ReliabilityScore.from(80),
-      });
+      const privateSession = new Session(
+        sessionDetails({
+          visibility: "PRIVATE",
+          invitedGroupId: "group",
+          minimumReliability: ReliabilityScore.from(80),
+        }),
+      );
       const command = {
         participationId: "p-alice",
         holdId: "h-alice",
@@ -336,12 +326,13 @@ describe("Participant", () => {
     });
 
     test("join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState", () => {
-      const privateSession = readyBooker().createSession({
-        ...creationDetails(),
-        visibility: "PRIVATE",
-        invitedGroupId: "group",
-        minimumReliability: ReliabilityScore.from(80),
-      });
+      const privateSession = new Session(
+        sessionDetails({
+          visibility: "PRIVATE",
+          invitedGroupId: "group",
+          minimumReliability: ReliabilityScore.from(80),
+        }),
+      );
       const command = {
         participationId: "p-alice",
         holdId: "h-alice",
@@ -362,12 +353,13 @@ describe("Participant", () => {
     });
 
     test("join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet", () => {
-      const privateSession = readyBooker().createSession({
-        ...creationDetails(),
-        visibility: "PRIVATE",
-        invitedGroupId: "group",
-        minimumReliability: ReliabilityScore.from(80),
-      });
+      const privateSession = new Session(
+        sessionDetails({
+          visibility: "PRIVATE",
+          invitedGroupId: "group",
+          minimumReliability: ReliabilityScore.from(80),
+        }),
+      );
       const eligibleUser = createTestUser({
         userId: "alice",
         memberGroupIds: ["group"],
@@ -425,13 +417,9 @@ describe("Participant", () => {
     });
 
     test("join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState", () => {
-      const visibilityChangeTime = hoursBeforeSessionStart(48);
       const joinTime = hoursBeforeSessionStart(48);
-      const bookingSession = createTestSession();
-      readyBooker().changeVisibility(
-        bookingSession,
-        "PRIVATE",
-        visibilityChangeTime,
+      const bookingSession = new Session(
+        sessionDetails({ visibility: "PRIVATE" }),
       );
       const previousState = sessionState(bookingSession);
 
@@ -454,13 +442,9 @@ describe("Participant", () => {
     });
 
     test("join_WhenPrivateRoomTokenMatches_CommitsApplicant", () => {
-      const visibilityChangeTime = hoursBeforeSessionStart(48);
       const joinTime = hoursBeforeSessionStart(48);
-      const bookingSession = createTestSession();
-      readyBooker().changeVisibility(
-        bookingSession,
-        "PRIVATE",
-        visibilityChangeTime,
+      const bookingSession = new Session(
+        sessionDetails({ visibility: "PRIVATE" }),
       );
 
       const admission = createTestUser({ userId: "alice" })
@@ -476,19 +460,14 @@ describe("Participant", () => {
     });
 
     test("join_WhenReturningWaiterUsesDifferentId_RejectsWithoutChangingState", () => {
-      const waitlistDepartureTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
         waitlistedUserIds: ["cara", "dana"],
+        participationOverrides: {
+          cara: leftWaitlistedParticipation("cara", 1),
+        },
       });
-
-      createTestUser({ userId: "cara" })
-        .asParticipant()
-        .leaveWaitlist(bookingSession, {
-          participationId: "p-cara",
-          now: waitlistDepartureTime,
-        });
       const previousState = sessionState(bookingSession);
 
       expect(() =>
@@ -505,19 +484,14 @@ describe("Participant", () => {
     });
 
     test("join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition", () => {
-      const waitlistDepartureTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
         waitlistedUserIds: ["cara", "dana"],
+        participationOverrides: {
+          cara: leftWaitlistedParticipation("cara", 1),
+        },
       });
-
-      createTestUser({ userId: "cara" })
-        .asParticipant()
-        .leaveWaitlist(bookingSession, {
-          participationId: "p-cara",
-          now: waitlistDepartureTime,
-        });
       const previousList = bookingSession.participantList;
       const departedCara = previousList.requireParticipation("p-cara");
 
@@ -576,14 +550,17 @@ describe("Participant", () => {
     test("join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState", () => {
       const withdrawalTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
-      const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-
-      createTestUser({ userId: "alice" })
-        .asParticipant()
-        .withdraw(bookingSession, {
-          participationId: "p-alice",
-          now: withdrawalTime,
-        });
+      const bookingSession = createTestSession({
+        committedUserIds: ["alice"],
+        participationOverrides: {
+          alice: withdrawnParticipation("alice", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "OPEN_SLOT",
+            holdState: "REFUNDED",
+            settledAt: withdrawalTime,
+          }),
+        },
+      });
       const previousState = sessionState(bookingSession);
 
       expect(() =>
@@ -617,42 +594,28 @@ describe("Participant", () => {
   });
   describe("Replacement admission", () => {
     test("acceptReplacement_WhenNamedInviteeAcceptsNewerPrivateInvitation_RefundsOnlyTheirInviter", () => {
-      const visibilityChangeTime = hoursBeforeSessionStart(48);
-      const benJoinTime = hoursBeforeSessionStart(48);
       const aliceWithdrawalTime = hoursBeforeSessionStart(20);
       const benWithdrawalTime = hoursBeforeSessionStart(19);
       const acceptanceTime = hoursBeforeSessionStart(18);
       const bookingSession = createTestSession({
-        committedUserIds: ["alice"],
-      });
-      readyBooker().changeVisibility(
-        bookingSession,
-        "PRIVATE",
-        visibilityChangeTime,
-      );
-      createTestUser({ userId: "ben" }).asParticipant().join(bookingSession, {
-        participationId: "p-ben",
-        holdId: "h-ben",
-        roomToken: "room",
-        now: benJoinTime,
+        committedUserIds: ["alice", "ben"],
+        visibility: "PRIVATE",
+        participationOverrides: {
+          alice: withdrawnParticipation("alice", {
+            withdrawnAt: aliceWithdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "donna",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: benWithdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
       });
 
-      createTestUser({ userId: "alice" })
-        .asParticipant()
-        .withdraw(bookingSession, {
-          participationId: "p-alice",
-          now: aliceWithdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "donna",
-        });
-      createTestUser({ userId: "ben" })
-        .asParticipant()
-        .withdraw(bookingSession, {
-          participationId: "p-ben",
-          now: benWithdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-        });
       const replacement = createTestUser({ userId: "cara" })
         .asParticipant()
         .acceptReplacement(bookingSession, {
@@ -680,16 +643,17 @@ describe("Participant", () => {
       const withdrawalTime = hoursBeforeSessionStart(10);
       const acceptanceTime = hoursBeforeSessionStart(9);
       const repeatAcceptanceTime = hoursBeforeSessionStart(8);
-      const bookingSession = createTestSession({ committedUserIds: ["ben"] });
-
-      createTestUser({ userId: "ben" })
-        .asParticipant()
-        .withdraw(bookingSession, {
-          participationId: "p-ben",
-          now: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-        });
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
       const replacement = createTestUser({ userId: "cara" })
         .asParticipant()
         .acceptReplacement(bookingSession, {
@@ -720,16 +684,18 @@ describe("Participant", () => {
       const acceptanceTime = hoursBeforeSessionStart(9);
       const ordinaryJoinTime = hoursBeforeSessionStart(8);
       const repeatAcceptanceTime = hoursBeforeSessionStart(7);
-      const bookingSession = createTestSession({ committedUserIds: ["ben"] });
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
 
-      createTestUser({ userId: "ben" })
-        .asParticipant()
-        .withdraw(bookingSession, {
-          participationId: "p-ben",
-          now: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-        });
       createTestUser({ userId: "cara" })
         .asParticipant()
         .acceptReplacement(bookingSession, {
@@ -761,9 +727,12 @@ describe("Participant", () => {
     test("join_WhenParticipantWasRemoved_RejectsWithoutChangingState", () => {
       const removalTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
-      const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-
-      readyBooker().removeParticipant(bookingSession, "p-alice", removalTime);
+      const bookingSession = createTestSession({
+        committedUserIds: ["alice"],
+        participationOverrides: {
+          alice: removedParticipation("alice", { settledAt: removalTime }),
+        },
+      });
       const previousState = sessionState(bookingSession);
 
       expect(() =>

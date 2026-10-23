@@ -65,12 +65,24 @@ describe("PayoutAccount", () => {
   });
 
   test("completeSetup_WhenSetupHasFailed_ThrowsInvalidState", () => {
-    const pendingAccount = new PayoutAccount(payoutAccountDetails());
-    const failedAccount = pendingAccount.failSetup();
+    const failedAccount = new PayoutAccount(
+      payoutAccountDetails({ setupStatus: "FAILED" }),
+    );
 
     expect(() => failedAccount.completeSetup("bank")).toThrow(
       expect.objectContaining({ code: "INVALID_STATE" }),
     );
+  });
+
+  test("failSetup_WhenSetupIsPending_ReturnsFailedCopy", () => {
+    const pendingAccount = new PayoutAccount(payoutAccountDetails());
+
+    const failedAccount = pendingAccount.failSetup();
+
+    expect(failedAccount).not.toBe(pendingAccount);
+    expect(pendingAccount.setupStatus).toBe("PENDING");
+    expect(failedAccount.setupStatus).toBe("FAILED");
+    expect(failedAccount.bankAccountReference).toBeUndefined();
   });
 });
 

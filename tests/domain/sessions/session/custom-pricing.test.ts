@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { Money } from "@/domain";
+import { Money, Session } from "@/domain";
 import {
-  creationDetails,
+  createTestSession,
+  pendingPayoutDetails,
   createTestUser,
   hoursBeforeSessionStart,
   readyBooker,
@@ -10,11 +11,7 @@ import {
 
 describe("Session", () => {
   test("join_WhenPriceExceedsEqualSplit_LocksChosenPrice", () => {
-    const booker = readyBooker();
-    const session = booker.createSession({
-      ...creationDetails(),
-      bookingShare: Money.fromCents(750),
-    });
+    const session = createTestSession({ bookingShare: Money.fromCents(750) });
     const alice = createTestUser({
       userId: "alice",
       availableFundsCents: 750,
@@ -40,20 +37,14 @@ describe("Session", () => {
   });
 
   test("withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice", () => {
-    const booker = readyBooker();
-    const session = booker.createSession({
-      ...creationDetails(),
+    const session = createTestSession({
       bookingShare: Money.fromCents(750),
+      committedUserIds: ["alice"],
     });
     const alice = createTestUser({
       userId: "alice",
       availableFundsCents: 750,
     }).asParticipant();
-    alice.join(session, {
-      participationId: "p-alice",
-      holdId: "h-alice",
-      now: hoursBeforeSessionStart(48),
-    });
 
     const withdrawal = alice.withdraw(session, {
       participationId: "p-alice",
@@ -73,18 +64,9 @@ describe("Session", () => {
 
   test("cancel_WhenCustomPriceWasCollected_RefundsTheFullHold", () => {
     const booker = readyBooker();
-    const session = booker.createSession({
-      ...creationDetails(),
+    const session = createTestSession({
       bookingShare: Money.fromCents(750),
-    });
-    const alice = createTestUser({
-      userId: "alice",
-      availableFundsCents: 750,
-    }).asParticipant();
-    alice.join(session, {
-      participationId: "p-alice",
-      holdId: "h-alice",
-      now: hoursBeforeSessionStart(48),
+      committedUserIds: ["alice"],
     });
 
     const cancellation = booker.cancel(session, hoursBeforeSessionStart(30));
@@ -100,22 +82,11 @@ describe("Session", () => {
 
   test("preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount", () => {
     const booker = readyBooker();
-    const session = booker.createSession({
-      ...creationDetails(),
+    const session = createTestSession({
       bookingShare: Money.fromCents(750),
-    });
-    const alice = createTestUser({
-      userId: "alice",
-      availableFundsCents: 750,
-    }).asParticipant();
-    alice.join(session, {
-      participationId: "p-alice",
-      holdId: "h-alice",
-      now: hoursBeforeSessionStart(48),
-    });
-    booker.verifyAttendance(session, {
-      now: sessionEndsAt,
-      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
+      committedUserIds: ["alice"],
+      attendanceByUserId: { alice: "ATTENDED" },
+      status: "AWAITING_PAYOUT",
     });
 
     const payout = booker.preparePayout(session, {
@@ -134,29 +105,9 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount", () => {
-    const booker = readyBooker();
-    const session = booker.createSession({
-      ...creationDetails(),
-      bookingShare: Money.fromCents(750),
-    });
-    const alice = createTestUser({
-      userId: "alice",
-      availableFundsCents: 750,
-    }).asParticipant();
-    alice.join(session, {
-      participationId: "p-alice",
-      holdId: "h-alice",
-      now: hoursBeforeSessionStart(48),
-    });
-    booker.verifyAttendance(session, {
-      now: sessionEndsAt,
-      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
-    });
-    booker.preparePayout(session, {
-      payoutId: "out",
-      idempotencyKey: "key",
-      now: sessionEndsAt,
-    });
+    const session = new Session(
+      pendingPayoutDetails(["alice"], { bookingShare: Money.fromCents(750) }),
+    );
 
     const completion = session.completeSettlement("out", sessionEndsAt);
 

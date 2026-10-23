@@ -169,35 +169,45 @@ describe("ReliabilityScore", () => {
 });
 
 function attended(id: string, endAt = recentEnd): Participation {
-  const hold = FundHold.create({
+  const hold = new FundHold({
     holdId: `h-${id}`,
     participationId: id,
     holdingAccountId: "platform",
     walletId: `w-${id}`,
     amount: Money.fromCents(100),
+    state: "HELD",
     createdAt: new Date(endAt.getTime() - day),
   });
-  return Participation.createCommitted({
+  return new Participation({
     participationId: id,
     userId: "alice",
+    status: "COMMITTED",
+    attendance: "ATTENDED",
+    verifiedAt: endAt,
+    verificationMethod: "BOOKER",
     committedAt: new Date(endAt.getTime() - day),
     hold,
-  }).verify("ATTENDED", "BOOKER", endAt);
+  });
 }
 
 function absent(id: string, endAt = recentEnd): Participation {
-  const hold = FundHold.create({
+  const hold = new FundHold({
     holdId: `h-${id}`,
     participationId: id,
     holdingAccountId: "platform",
     walletId: `w-${id}`,
     amount: Money.fromCents(100),
+    state: "HELD",
     createdAt: new Date(endAt.getTime() - day),
   });
-  return Participation.createCommitted({
+  return new Participation({
     participationId: id,
     userId: "alice",
+    status: "COMMITTED",
+    attendance: "ABSENT",
+    verifiedAt: endAt,
+    verificationMethod: "AUTOMATIC",
     committedAt: new Date(endAt.getTime() - day),
     hold,
-  }).verify("ABSENT", "AUTOMATIC", endAt);
+  });
 }

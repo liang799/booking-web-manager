@@ -2,6 +2,8 @@ import { DomainError } from "@/domain";
 import { describe, expect, test, vi } from "vitest";
 import {
   hoursBeforeSessionStart,
+  leftWaitlistedParticipation,
+  withdrawnParticipation,
   createTestUser,
   createTestSession,
   sessionState,
@@ -38,12 +40,14 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["cara", "dana"],
-    });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: withdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const queueSequence = bookingSession.participantList.nextQueueSequence;
     const previousState = sessionState(bookingSession);
@@ -81,12 +85,14 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["dana", "evan"],
-    });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: withdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const previousState = sessionState(bookingSession);
 
@@ -112,20 +118,20 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["dana", "evan"],
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: benWithdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: aliceWithdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: benWithdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: aliceWithdrawalTime,
-        replacementMode: "OPEN_SLOT",
-      });
 
     const promotion = createTestUser({ userId: "dana" })
       .asParticipant()
@@ -194,13 +200,14 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["first-waiter", "second-waiter"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
     const previousState = sessionState(bookingSession);
     const awaiting =
       bookingSession.participantList.requireParticipation("p-alice");
@@ -238,13 +245,15 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["cara"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "REFUNDED",
+          settledAt: withdrawalTime,
+        }),
+      },
     });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -337,18 +346,12 @@ describe("Participant", () => {
   });
 
   test("promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter", () => {
-    const firstPromotionTime = hoursBeforeSessionStart(48);
     const nextPromotionTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["ben"],
       waitlistedUserIds: ["cara", "dana", "evan"],
+      participationOverrides: { cara: leftWaitlistedParticipation("cara", 1) },
     });
-    createTestUser({ userId: "cara", availableFundsCents: 0 })
-      .asParticipant()
-      .promoteFromWaitlist(bookingSession, {
-        holdId: "h-cara",
-        now: firstPromotionTime,
-      });
     const dana = createTestUser({
       userId: "dana",
       availableFundsCents: 500,
@@ -383,12 +386,13 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["ben", "alex"],
       waitlistedUserIds: ["dana", "evan"],
-    });
-    const ben = createTestUser({ userId: "ben" }).asParticipant();
-    ben.withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: withdrawalTime,
-      replacementMode: "OPEN_SLOT",
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const dana = createTestUser({ userId: "dana" }).asParticipant();
     const queueSequence = bookingSession.participantList.nextQueueSequence;
@@ -440,19 +444,19 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["dana"],
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: benWithdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: aliceWithdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: benWithdrawalTime,
-      replacementMode: "OPEN_SLOT",
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: aliceWithdrawalTime,
-        replacementMode: "OPEN_SLOT",
-      });
 
     const promotion = createTestUser({ userId: "dana" })
       .asParticipant()

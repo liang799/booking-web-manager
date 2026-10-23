@@ -126,7 +126,7 @@ describe("Participation", () => {
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
         replacementMode: "DIRECT_INVITE",
       });
 
@@ -139,7 +139,7 @@ describe("Participation", () => {
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
         replacementMode: "DIRECT_INVITE",
         replacementInviteeId: " ",
       });
@@ -153,7 +153,7 @@ describe("Participation", () => {
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
         replacementMode: "DIRECT_INVITE",
         replacementInviteeId: "user",
       });
@@ -167,7 +167,7 @@ describe("Participation", () => {
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
         replacementMode: "OPEN_SLOT",
         replacementInviteeId: "ben",
       });
@@ -181,7 +181,7 @@ describe("Participation", () => {
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
         replacementInviteeId: "ben",
       });
 
@@ -213,9 +213,12 @@ describe("Participation", () => {
 
     test("withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund", () => {
       const committed = new Participation(participationDetails());
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
 
       const withdrawn = committed.withdraw(
-        committed.hold!.refund(settledAt),
+        refundedHold,
         settledAt,
         "DIRECT_INVITE",
         "ben",
@@ -231,9 +234,12 @@ describe("Participation", () => {
 
     test("withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement", () => {
       const committed = new Participation(participationDetails());
+      const awaitingHold = new FundHold(
+        holdDetails({ state: "AWAITING_REPLACEMENT" }),
+      );
 
       const withdrawn = committed.withdraw(
-        committed.hold!.awaitReplacement(),
+        awaitingHold,
         settledAt,
         "DIRECT_INVITE",
         "ben",
@@ -246,12 +252,14 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace", () => {
-      const committed = new Participation(participationDetails());
-      const withdrawn = committed.withdraw(
-        committed.hold!.refund(settledAt),
-        settledAt,
-        "DIRECT_INVITE",
-        "ben",
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: settledAt,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "ben",
+          hold: new FundHold(holdDetails({ state: "REFUNDED", settledAt })),
+        }),
       );
 
       expect(() =>
@@ -263,11 +271,13 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation", () => {
-      const committed = new Participation(participationDetails());
-      const withdrawn = committed.withdraw(
-        committed.hold!.awaitReplacement(),
-        settledAt,
-        "OPEN_SLOT",
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: settledAt,
+          replacementMode: "OPEN_SLOT",
+          hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        }),
       );
 
       expect(() =>
@@ -279,15 +289,20 @@ describe("Participation", () => {
     });
 
     test("cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata", () => {
-      const committed = new Participation(participationDetails());
-      const withdrawn = committed.withdraw(
-        committed.hold!.awaitReplacement(),
-        createdAt,
-        "DIRECT_INVITE",
-        "ben",
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: createdAt,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "ben",
+          hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        }),
+      );
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
       );
 
-      const cancelled = withdrawn.cancel(withdrawn.hold!.refund(settledAt));
+      const cancelled = withdrawn.cancel(refundedHold);
 
       expect(cancelled.status).toBe("CANCELLED");
       expect(cancelled.replacementMode).toBeUndefined();
@@ -352,14 +367,15 @@ describe("Participation", () => {
     });
 
     test("reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero", () => {
-      const withdrawn = new Participation(
+      const finalized = new Participation(
         participationDetails({
           status: "WITHDRAWN",
           withdrawnAt: createdAt,
-          hold: new FundHold(holdDetails({ state: "FORFEITURE_DUE" })),
+          hold: new FundHold(
+            holdDetails({ state: "FORFEITED", payoutId: "payout", settledAt }),
+          ),
         }),
       );
-      const finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt);
 
       const reliabilityValue = finalized.reliabilityOutcome(settledAt)?.value;
 
@@ -375,8 +391,13 @@ describe("Participation", () => {
     });
 
     test("settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy", () => {
-      const committed = new Participation(participationDetails());
-      const attended = committed.verify("ATTENDED", "BOOKER", settledAt);
+      const attended = new Participation(
+        participationDetails({
+          attendance: "ATTENDED",
+          verificationMethod: "BOOKER",
+          verifiedAt: settledAt,
+        }),
+      );
 
       const settled = attended.settleHold("RELEASE", "payout", settledAt);
 
@@ -385,8 +406,13 @@ describe("Participation", () => {
     });
 
     test("settleHold_WhenParticipantAttended_RejectsForfeiture", () => {
-      const committed = new Participation(participationDetails());
-      const attended = committed.verify("ATTENDED", "BOOKER", settledAt);
+      const attended = new Participation(
+        participationDetails({
+          attendance: "ATTENDED",
+          verificationMethod: "BOOKER",
+          verifiedAt: settledAt,
+        }),
+      );
 
       expect(() => attended.settleHold("FORFEIT", "payout", settledAt)).toThrow(
         DomainError,

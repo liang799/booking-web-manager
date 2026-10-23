@@ -5,7 +5,8 @@ import {
   sessionEndsAt,
   pendingPayoutDetails,
   createTestSession,
-  readyBooker,
+  removedParticipation,
+  cancelledParticipation,
   sessionDetails,
   sessionStartsAt,
 } from "./session-fixtures";
@@ -152,21 +153,24 @@ describe("Session", () => {
     });
 
     test("constructor_WhenCancelledRosterHasRemovedParticipant_PreservesRemovedStatus", () => {
-      const cancelledSession = createTestSession({
-        committedUserIds: ["alice", "ben"],
-        waitlistedUserIds: ["cara"],
+      const removedAlice = removedParticipation("alice", {
+        settledAt: hoursBeforeSessionStart(48),
       });
-      const booker = readyBooker();
-      booker.removeParticipant(
-        cancelledSession,
-        "p-alice",
-        hoursBeforeSessionStart(48),
-      );
-      booker.cancel(cancelledSession, hoursBeforeSessionStart(24));
+      const cancelledBen = cancelledParticipation("ben", {
+        settledAt: hoursBeforeSessionStart(24),
+      });
+      const cancelledCara = new Participation({
+        participationId: "p-cara",
+        userId: "cara",
+        status: "CANCELLED",
+        attendance: "UNVERIFIED",
+        waitlistedAt: hoursBeforeSessionStart(48),
+        queueSequence: 1,
+      });
       const details = sessionDetails({
         status: "CANCELLED",
-        participations: cancelledSession.participantList.participations,
-        nextQueueSequence: cancelledSession.participantList.nextQueueSequence,
+        participations: [removedAlice, cancelledBen, cancelledCara],
+        nextQueueSequence: 2,
       });
 
       const restoredSession = new Session(details);
@@ -291,12 +295,14 @@ describe("Session", () => {
 
     test("constructor_WhenWaiterReusesHistoricalQueueSequence_ThrowsDuplicateId", () => {
       const waitlistedAt = hoursBeforeSessionStart(48);
-      const departedAlice = Participation.createWaitlisted({
+      const departedAlice = new Participation({
         participationId: "p-alice",
         userId: "alice",
+        status: "LEFT_WAITLIST",
+        attendance: "UNVERIFIED",
         waitlistedAt,
         queueSequence: 1,
-      }).leaveWaitlist();
+      });
       const ben = Participation.createWaitlisted({
         participationId: "p-ben",
         userId: "ben",

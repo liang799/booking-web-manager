@@ -2,6 +2,7 @@ import { DomainError, Session } from "@/domain";
 import { describe, expect, test, vi } from "vitest";
 import {
   hoursBeforeSessionStart,
+  withdrawnParticipation,
   createTestUser,
   readyBooker,
   createTestSession,
@@ -293,13 +294,14 @@ describe("Booker", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["cara"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
 
     const cancellation = readyBooker().cancel(bookingSession, cancellationTime);
 

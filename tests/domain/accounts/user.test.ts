@@ -3,7 +3,9 @@ import {
   Email,
   Money,
   PayoutAccount,
+  type PayoutAccountDetails,
   User,
+  type UserDetails,
 } from "@/domain";
 import { describe, expect, test } from "vitest";
 import { createTestUserDetails, userLoadedAt } from "./user-fixtures";
@@ -53,13 +55,11 @@ describe("User", () => {
     });
 
     test("constructor_WhenLoadingDeactivatedUser_RestoresAnonymisedProfile", () => {
-      const original = createActiveUser();
-      original.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const original = createUser({
+        accountStatus: "INACTIVE",
+        email: null,
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      original.completePayoutSetup("bank");
-      original.deactivate(deactivationWithoutObligations());
       const details = createTestUserDetails({
         userId: "owner",
         accountStatus: "INACTIVE",
@@ -160,7 +160,7 @@ describe("User", () => {
     });
 
     test("updateProfile_WhenAccountIsActive_ReplacesEmail", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const email = new Email("new@example.com");
 
       user.updateProfile({ email });
@@ -171,8 +171,7 @@ describe("User", () => {
     });
 
     test("updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
-      const user = createActiveUser();
-      user.deactivate(deactivationWithoutObligations());
+      const user = createUser({ accountStatus: "INACTIVE", email: null });
       const before = accountStateOf(user);
 
       expect(() =>
@@ -182,7 +181,7 @@ describe("User", () => {
     });
 
     test("updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions", () => {
-      const user = createActiveUser();
+      const user = createUser();
 
       user.updatePreferences({
         preferredSports: new Set(["Tennis"]),
@@ -194,7 +193,7 @@ describe("User", () => {
     });
 
     test("updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const before = accountStateOf(user);
 
       expect(() =>
@@ -207,8 +206,7 @@ describe("User", () => {
     });
 
     test("updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
-      const user = createActiveUser();
-      user.deactivate(deactivationWithoutObligations());
+      const user = createUser({ accountStatus: "INACTIVE", email: null });
       const before = accountStateOf(user);
 
       expect(() =>
@@ -253,7 +251,7 @@ describe("User", () => {
 
   describe("Payout setup", () => {
     test("beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount", () => {
-      const user = createActiveUser();
+      const user = createUser();
 
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -267,11 +265,7 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
+      const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
       const before = accountStateOf(user);
 
       expect(() =>
@@ -284,12 +278,9 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
       expect(() =>
@@ -302,12 +293,7 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
-      user.failPayoutSetup();
+      const user = createUser({ payoutAccount: createPayoutAccount("FAILED") });
 
       user.beginPayoutSetup({
         payoutAccountId: "replacement",
@@ -322,11 +308,7 @@ describe("User", () => {
     });
 
     test("completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
+      const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
       const pendingAccount = user.payoutAccount;
 
       user.completePayoutSetup("bank");
@@ -339,7 +321,7 @@ describe("User", () => {
     });
 
     test("completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      const user = createActiveUser();
+      const user = createUser();
 
       expect(() => user.completePayoutSetup("bank")).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
@@ -347,11 +329,7 @@ describe("User", () => {
     });
 
     test("completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
+      const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
       const before = accountStateOf(user);
 
       expect(() => user.completePayoutSetup(" ")).toThrow(
@@ -361,12 +339,9 @@ describe("User", () => {
     });
 
     test("completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
       expect(() => user.completePayoutSetup("different-bank")).toThrow(
@@ -375,8 +350,21 @@ describe("User", () => {
       expect(accountStateOf(user)).toEqual(before);
     });
 
+    test("failPayoutSetup_WhenSetupIsPending_ReplacesAccountWithFailedCopy", () => {
+      const pendingAccount = createPayoutAccount("PENDING");
+      const user = createUser({ payoutAccount: pendingAccount });
+
+      user.failPayoutSetup();
+      const failedAccount = user.payoutAccount;
+
+      expect(pendingAccount.setupStatus).toBe("PENDING");
+      expect(failedAccount).not.toBe(pendingAccount);
+      expect(failedAccount?.setupStatus).toBe("FAILED");
+      expect(failedAccount?.bankAccountReference).toBeUndefined();
+    });
+
     test("failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      const user = createActiveUser();
+      const user = createUser();
 
       expect(() => user.failPayoutSetup()).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
@@ -384,12 +372,9 @@ describe("User", () => {
     });
 
     test("failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
       expect(() => user.failPayoutSetup()).toThrow(
@@ -399,7 +384,7 @@ describe("User", () => {
     });
 
     test("payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      const user = createActiveUser();
+      const user = createUser();
 
       expect(() => user.payoutDestination()).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
@@ -407,12 +392,9 @@ describe("User", () => {
     });
 
     test("payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
 
       const destination = user.payoutDestination();
 
@@ -426,13 +408,11 @@ describe("User", () => {
     });
 
     test("payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        accountStatus: "INACTIVE",
+        email: null,
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
-      user.deactivate(deactivationWithoutObligations());
 
       expect(() => user.payoutDestination()).toThrow(
         expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
@@ -442,7 +422,7 @@ describe("User", () => {
 
   describe("Deactivation", () => {
     test("deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         availableBalance: Money.fromCents(1),
@@ -456,7 +436,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         heldBalance: Money.fromCents(1),
@@ -470,7 +450,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeCommitments: 1,
@@ -484,7 +464,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeCommitments: -1,
@@ -498,7 +478,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeCommitments: 0.5,
@@ -512,7 +492,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         unsettledOwnedSessions: 1,
@@ -526,7 +506,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         unsettledOwnedSessions: -1,
@@ -540,7 +520,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         unsettledOwnedSessions: 0.5,
@@ -554,7 +534,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = { ...deactivationWithoutObligations(), pendingPayouts: 1 };
       const before = accountStateOf(user);
 
@@ -565,7 +545,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = { ...deactivationWithoutObligations(), pendingPayouts: -1 };
       const before = accountStateOf(user);
 
@@ -576,7 +556,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         pendingPayouts: 0.5,
@@ -590,7 +570,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeOwnedGroups: 1,
@@ -604,7 +584,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeOwnedGroups: -1,
@@ -618,7 +598,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput", () => {
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeOwnedGroups: 0.5,
@@ -632,8 +612,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenNoObligationsRemain_AnonymisesProfile", () => {
-      const user = createActiveUser();
-      user.updatePreferences({
+      const user = createUser({
         preferredSports: new Set(["Tennis"]),
         preferredRegions: new Set(["West"]),
       });
@@ -647,12 +626,9 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity", () => {
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const wallet = user.wallet;
       const payoutAccount = user.payoutAccount;
 
@@ -665,7 +641,7 @@ describe("User", () => {
     });
 
     test("deactivate_WhenAlreadyInactive_LeavesStateUnchanged", () => {
-      const user = createActiveUser();
+      const user = createUser();
       user.deactivate(deactivationWithoutObligations());
       const before = accountStateOf(user);
 
@@ -676,12 +652,27 @@ describe("User", () => {
   });
 });
 
-function createActiveUser(): User {
-  return User.create({
+function createUser(overrides: Partial<UserDetails> = {}): User {
+  return new User({
+    ...createTestUserDetails({
+      userId: "owner",
+      emailVerified: false,
+      availableFundsCents: 0,
+    }),
+    ...overrides,
+  });
+}
+
+function createPayoutAccount(
+  setupStatus: PayoutAccountDetails["setupStatus"],
+  bankAccountReference?: string,
+): PayoutAccount {
+  return new PayoutAccount({
+    payoutAccountId: "account",
     userId: "owner",
-    email: new Email("owner@example.com"),
-    walletId: "w-owner",
-    now: userLoadedAt,
+    providerAccountReference: "provider",
+    setupStatus,
+    bankAccountReference,
   });
 }
 

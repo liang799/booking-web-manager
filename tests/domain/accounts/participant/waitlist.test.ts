@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
+  withdrawnParticipation,
   createTestUser,
   createTestSession,
   sessionState,
@@ -31,12 +32,14 @@ describe("Participant", () => {
     const joinTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: withdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
 
     const admission = createTestUser({ userId: "dana" })

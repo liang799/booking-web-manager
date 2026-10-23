@@ -12,6 +12,7 @@ import {
   sessionEndsAt,
   pendingPayoutDetails,
   sessionState,
+  sessionDetails,
   verifiedParticipation,
 } from "./session-fixtures";
 
@@ -163,24 +164,33 @@ describe("Session", () => {
     const withdrawalTime = hoursBeforeSessionStart(2);
     const completionTime = sessionEndsAt;
     const reliabilityEvaluationTime = sessionEndsAt;
-    const details = pendingPayoutDetails(["alice", "ben"]);
-    const alice = withdrawnParticipationWithForfeitureDue(
-      "alice",
-      withdrawalTime,
-    );
-    const ben = verifiedParticipation("ben", "ATTENDED");
-    const bookingSession = new Session({
-      ...details,
-      participations: [alice, ben],
-      pendingSettlement: {
-        ...details.pendingSettlement!,
-        lines: [
-          payoutLineFor(alice.hold!, "FORFEIT"),
-          payoutLineFor(ben.hold!, "RELEASE"),
-        ],
-      },
+    const alice = new Participation({
+      participationId: "p-alice",
+      userId: "alice",
+      status: "WITHDRAWN",
+      attendance: "UNVERIFIED",
+      committedAt: hoursBeforeSessionStart(48),
+      withdrawnAt: withdrawalTime,
+      hold: settledHold("alice", "FORFEITED", completionTime),
     });
-    bookingSession.completeSettlement("out", completionTime);
+    const ben = new Participation({
+      participationId: "p-ben",
+      userId: "ben",
+      status: "COMMITTED",
+      attendance: "ATTENDED",
+      committedAt: hoursBeforeSessionStart(48),
+      verifiedAt: sessionEndsAt,
+      verificationMethod: "BOOKER",
+      hold: settledHold("ben", "RELEASED", completionTime),
+    });
+    const bookingSession = new Session(
+      sessionDetails({
+        status: "SETTLED",
+        participations: [alice, ben],
+        payoutAttemptIds: ["out"],
+        payoutIdempotencyKeys: ["key"],
+      }),
+    );
 
     const aliceReliability = bookingSession.participantList
       .requireParticipation("p-alice")
@@ -276,4 +286,22 @@ function payoutLineFor(hold: FundHold, kind: PayoutLine["kind"]): PayoutLine {
     amount: hold.amount,
     kind,
   };
+}
+
+function settledHold(
+  userId: string,
+  state: "RELEASED" | "FORFEITED",
+  settledAt: Date,
+): FundHold {
+  return new FundHold({
+    holdId: `h-${userId}`,
+    participationId: `p-${userId}`,
+    holdingAccountId: "platform",
+    walletId: `w-${userId}`,
+    amount: Money.fromCents(500),
+    state,
+    payoutId: "out",
+    createdAt: hoursBeforeSessionStart(48),
+    settledAt,
+  });
 }

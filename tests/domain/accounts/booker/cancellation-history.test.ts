@@ -3,6 +3,8 @@ import { Session } from "@/domain";
 import {
   createTestSession,
   hoursBeforeSessionStart,
+  cancelledParticipation,
+  removedParticipation,
   readyBooker,
   sessionDetails,
 } from "../../sessions/session/session-fixtures";
@@ -12,9 +14,13 @@ describe("Booker", () => {
     const session = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["cara"],
+      participationOverrides: {
+        alice: removedParticipation("alice", {
+          settledAt: hoursBeforeSessionStart(48),
+        }),
+      },
     });
     const booker = readyBooker();
-    booker.removeParticipant(session, "p-alice", hoursBeforeSessionStart(48));
     const removed = session.participantList.requireParticipation("p-alice");
 
     const cancellation = booker.cancel(session, hoursBeforeSessionStart(24));
@@ -35,9 +41,9 @@ describe("Booker", () => {
   });
 
   test("cancel_WhenRosterHasPreviouslyCancelledParticipant_PreservesTerminalHold", () => {
-    const original = createTestSession({ committedUserIds: ["alice"] });
-    readyBooker().cancel(original, hoursBeforeSessionStart(48));
-    const closed = original.participantList.requireParticipation("p-alice");
+    const closed = cancelledParticipation("alice", {
+      settledAt: hoursBeforeSessionStart(48),
+    });
     const session = new Session(sessionDetails({ participations: [closed] }));
 
     const cancellation = readyBooker().cancel(

@@ -1,4 +1,4 @@
-import { FundHold, Money, Participation, Session } from "@/domain";
+import { FundHold, Participation, Session } from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
@@ -10,31 +10,26 @@ import {
   sessionState,
   sessionStartsAt,
   verifiedParticipation,
+  withdrawnParticipation,
+  removedParticipation,
+  cancelledParticipation,
+  leftWaitlistedParticipation,
 } from "./session-fixtures";
 
 describe("Session", () => {
   test("recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges", () => {
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const danaTriedToJoinAt = hoursBeforeSessionStart(9);
-    const originalSession = createTestSession({
-      committedUserIds: ["alice", "ben"],
+    const aliceInvitation = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
     });
-    const alice =
-      originalSession.participantList.requireParticipation("p-alice");
-    const aliceInvitation = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "cara",
-    );
-    const bookingSession = new Session(
-      sessionDetails({
-        participations: [
-          aliceInvitation,
-          originalSession.participantList.requireParticipation("p-ben"),
-        ],
-      }),
-    );
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+      participationOverrides: { alice: aliceInvitation },
+    });
     const admission = committedParticipation(
       bookingSession,
       "dana",
@@ -51,15 +46,12 @@ describe("Session", () => {
   test("recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges", () => {
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const caraTriedToJoinAt = hoursBeforeSessionStart(9);
-    const originalSession = createTestSession({ committedUserIds: ["alice"] });
-    const alice =
-      originalSession.participantList.requireParticipation("p-alice");
-    const aliceInvitation = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "cara",
-    );
+    const aliceInvitation = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
+    });
     const bookingSession = new Session(
       sessionDetails({ participations: [aliceInvitation] }),
     );
@@ -82,15 +74,12 @@ describe("Session", () => {
   test("recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges", () => {
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const danaTriedToAcceptAt = hoursBeforeSessionStart(9);
-    const originalSession = createTestSession({ committedUserIds: ["alice"] });
-    const alice =
-      originalSession.participantList.requireParticipation("p-alice");
-    const aliceInvitation = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "cara",
-    );
+    const aliceInvitation = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
+    });
     const bookingSession = new Session(
       sessionDetails({ participations: [aliceInvitation] }),
     );
@@ -106,12 +95,19 @@ describe("Session", () => {
       hold: candidate.hold!,
       replacesParticipationId: aliceInvitation.participationId,
     });
+    const refundedInvitation = withdrawnParticipation("alice", {
+      holdState: "REFUNDED",
+      withdrawnAt: aliceInvitedAt,
+      settledAt: danaTriedToAcceptAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
+    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
       bookingSession.recordAdmission(
         admission,
-        aliceInvitation.refundReplacement(danaTriedToAcceptAt),
+        refundedInvitation,
         danaTriedToAcceptAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -121,13 +117,13 @@ describe("Session", () => {
   test("constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState", () => {
     const aliceInvitedAt = hoursBeforeSessionStart(48);
     const originalSession = createTestSession();
-    const alice = committedParticipation(originalSession, "alice");
-    const aliceInvitation = alice.withdraw(
-      alice.hold!.refund(aliceInvitedAt),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "dana",
-    );
+    const aliceInvitation = withdrawnParticipation("alice", {
+      holdState: "REFUNDED",
+      withdrawnAt: aliceInvitedAt,
+      settledAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "dana",
+    });
     const participations = [
       aliceInvitation,
       committedParticipation(originalSession, "ben"),
@@ -317,7 +313,11 @@ describe("Session", () => {
     const bookingSession = new Session(
       sessionDetails({
         participations: [
-          awaitingReplacementParticipation("alice", aliceWithdrewAt),
+          withdrawnParticipation("alice", {
+            holdState: "AWAITING_REPLACEMENT",
+            withdrawnAt: aliceWithdrewAt,
+            replacementMode: "OPEN_SLOT",
+          }),
         ],
       }),
     );
@@ -352,13 +352,19 @@ describe("Session", () => {
     const bookingSession = new Session(
       sessionDetails({
         participations: [
-          awaitingReplacementParticipation("alice", aliceWithdrewAt),
-          awaitingReplacementParticipation("ben", benWithdrewAt),
+          withdrawnParticipation("alice", {
+            holdState: "AWAITING_REPLACEMENT",
+            withdrawnAt: aliceWithdrewAt,
+            replacementMode: "OPEN_SLOT",
+          }),
+          withdrawnParticipation("ben", {
+            holdState: "AWAITING_REPLACEMENT",
+            withdrawnAt: benWithdrewAt,
+            replacementMode: "OPEN_SLOT",
+          }),
         ],
       }),
     );
-    const benWithdrawal =
-      bookingSession.participantList.requireParticipation("p-ben");
     const candidate = committedParticipation(
       bookingSession,
       "replacement",
@@ -371,7 +377,12 @@ describe("Session", () => {
       hold: candidate.hold!,
       replacesParticipationId: "p-alice",
     });
-    const benRefund = benWithdrawal.refundReplacement(replacementTriedToJoinAt);
+    const benRefund = withdrawnParticipation("ben", {
+      holdState: "REFUNDED",
+      withdrawnAt: benWithdrewAt,
+      settledAt: replacementTriedToJoinAt,
+      replacementMode: "OPEN_SLOT",
+    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -387,15 +398,13 @@ describe("Session", () => {
   test("recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges", () => {
     const aliceInvitedAt = hoursBeforeSessionStart(40);
     const choiceChangeAttemptedAt = hoursBeforeSessionStart(39);
-    const originalSession = createTestSession({ committedUserIds: ["alice"] });
-    const committed =
-      originalSession.participantList.requireParticipation("p-alice");
-    const withdrawn = committed.withdraw(
-      committed.hold!.refund(aliceInvitedAt),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "ben",
-    );
+    const withdrawn = withdrawnParticipation("alice", {
+      holdState: "REFUNDED",
+      withdrawnAt: aliceInvitedAt,
+      settledAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "ben",
+    });
     const bookingSession = new Session(
       sessionDetails({ participations: [withdrawn] }),
     );
@@ -426,14 +435,11 @@ describe("Session", () => {
   test("recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges", () => {
     const aliceOpenedSeatAt = hoursBeforeSessionStart(10);
     const choiceChangeAttemptedAt = hoursBeforeSessionStart(9);
-    const originalSession = createTestSession({ committedUserIds: ["alice"] });
-    const committed =
-      originalSession.participantList.requireParticipation("p-alice");
-    const withdrawn = committed.withdraw(
-      committed.hold!.awaitReplacement(),
-      aliceOpenedSeatAt,
-      "OPEN_SLOT",
-    );
+    const withdrawn = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: aliceOpenedSeatAt,
+      replacementMode: "OPEN_SLOT",
+    });
     const bookingSession = new Session(
       sessionDetails({ participations: [withdrawn] }),
     );
@@ -467,13 +473,14 @@ describe("Session", () => {
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const existing =
       bookingSession.participantList.requireParticipation("p-alice");
-    const removal = existing.remove(
-      existing.hold!.refund(transitionAttemptedAt),
-    );
-    const withdrawn = existing.withdraw(
-      existing.hold!.refund(transitionAttemptedAt),
-      transitionAttemptedAt,
-    );
+    const removal = removedParticipation("alice", {
+      settledAt: transitionAttemptedAt,
+    });
+    const withdrawn = withdrawnParticipation("alice", {
+      holdState: "REFUNDED",
+      withdrawnAt: transitionAttemptedAt,
+      settledAt: transitionAttemptedAt,
+    });
     bookingSession.recordParticipationTransition(
       existing,
       withdrawn,
@@ -496,10 +503,9 @@ describe("Session", () => {
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const existing =
       bookingSession.participantList.requireParticipation("p-alice");
-    const foreign = committedParticipation(bookingSession, "other");
-    const replacement = foreign.remove(
-      foreign.hold!.refund(removalAttemptedAt),
-    );
+    const replacement = removedParticipation("other", {
+      settledAt: removalAttemptedAt,
+    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -519,11 +525,20 @@ describe("Session", () => {
       waitlistedAt: hoursBeforeSessionStart(48),
       queueSequence: 1,
     });
-    const departed = existing.leaveWaitlist();
+    const departed = leftWaitlistedParticipation("waiting", 1);
     const bookingSession = new Session(
       sessionDetails({
         status: "CANCELLED",
-        participations: [existing.cancel()],
+        participations: [
+          new Participation({
+            participationId: "p-waiting",
+            userId: "waiting",
+            status: "CANCELLED",
+            attendance: "UNVERIFIED",
+            waitlistedAt: hoursBeforeSessionStart(48),
+            queueSequence: 1,
+          }),
+        ],
         nextQueueSequence: 2,
       }),
     );
@@ -540,11 +555,9 @@ describe("Session", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
     });
-    const alice =
-      bookingSession.participantList.requireParticipation("p-alice");
-    const cancelledAlice = alice.cancel(
-      alice.hold!.refund(cancellationAttemptedAt),
-    );
+    const cancelledAlice = cancelledParticipation("alice", {
+      settledAt: cancellationAttemptedAt,
+    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -559,11 +572,9 @@ describe("Session", () => {
   test("recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
     const cancellationAttemptedAt = sessionStartsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-    const existing =
-      bookingSession.participantList.requireParticipation("p-alice");
-    const cancelled = existing.cancel(
-      existing.hold!.refund(cancellationAttemptedAt),
-    );
+    const cancelled = cancelledParticipation("alice", {
+      settledAt: cancellationAttemptedAt,
+    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -575,9 +586,10 @@ describe("Session", () => {
   test("recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged", () => {
     const attendanceRecordedAt = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-    const verified = bookingSession.participantList
-      .requireParticipation("p-alice")
-      .verify("ATTENDED", "BOOKER", attendanceRecordedAt);
+    const verified = attendanceCandidate(
+      bookingSession.participantList.requireParticipation("p-alice"),
+      attendanceRecordedAt,
+    );
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -592,9 +604,10 @@ describe("Session", () => {
   test("recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged", () => {
     const attendanceAttemptedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-    const verified = bookingSession.participantList
-      .requireParticipation("p-alice")
-      .verify("ATTENDED", "BOOKER", attendanceAttemptedAt);
+    const verified = attendanceCandidate(
+      bookingSession.participantList.requireParticipation("p-alice"),
+      attendanceAttemptedAt,
+    );
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -615,9 +628,10 @@ describe("Session", () => {
         ],
       }),
     );
-    const newMark = bookingSession.participantList
-      .requireParticipation("p-ben")
-      .verify("ATTENDED", "BOOKER", attendanceRecordedAt);
+    const newMark = attendanceCandidate(
+      bookingSession.participantList.requireParticipation("p-ben"),
+      attendanceRecordedAt,
+    );
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -697,27 +711,18 @@ describe("Session", () => {
   });
 });
 
-function awaitingReplacementParticipation(
-  userId: string,
-  withdrawnAt: Date,
+function attendanceCandidate(
+  existing: Participation,
+  verifiedAt: Date,
 ): Participation {
-  const committedAt = hoursBeforeSessionStart(48);
   return new Participation({
-    participationId: `p-${userId}`,
-    userId,
-    status: "WITHDRAWN",
-    attendance: "UNVERIFIED",
-    committedAt,
-    withdrawnAt,
-    replacementMode: "OPEN_SLOT",
-    hold: new FundHold({
-      holdId: `h-${userId}`,
-      participationId: `p-${userId}`,
-      holdingAccountId: "platform",
-      walletId: `w-${userId}`,
-      amount: Money.fromCents(500),
-      state: "AWAITING_REPLACEMENT",
-      createdAt: committedAt,
-    }),
+    participationId: existing.participationId,
+    userId: existing.userId,
+    status: "COMMITTED",
+    attendance: "ATTENDED",
+    committedAt: existing.committedAt,
+    hold: existing.hold,
+    verifiedAt,
+    verificationMethod: "BOOKER",
   });
 }

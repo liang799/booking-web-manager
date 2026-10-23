@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
+  withdrawnParticipation,
   createTestUser,
   createTestSession,
   sessionState,
@@ -127,14 +128,16 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["dana"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const alice = createTestUser({ userId: "alice" }).asParticipant();
-    alice.withdraw(bookingSession, {
-      participationId: "p-alice",
-      now: withdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
-    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -163,13 +166,15 @@ describe("Participant", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["dana"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const alice = createTestUser({ userId: "alice" }).asParticipant();
-    alice.withdraw(bookingSession, {
-      participationId: "p-alice",
-      now: withdrawalTime,
-      replacementMode: "OPEN_SLOT",
-    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -246,14 +251,16 @@ describe("Participant", () => {
     const secondInvitationTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
       committedUserIds: ["ben", "alex"],
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const ben = createTestUser({ userId: "ben" }).asParticipant();
-    ben.withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: withdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
-    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -337,15 +344,15 @@ describe("Participant", () => {
     const secondWithdrawalTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: firstWithdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: firstWithdrawalTime,
-        replacementMode: "DIRECT_INVITE",
-        replacementInviteeId: "cara",
-      });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -492,12 +499,15 @@ describe("Participant", () => {
   test("previewWithdrawal_WhenAlreadyWithdrawn_RejectsWithInvalidState", () => {
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: hoursBeforeSessionStart(10),
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
     const alice = createTestUser({ userId: "alice" }).asParticipant();
-    alice.withdraw(bookingSession, {
-      participationId: "p-alice",
-      now: hoursBeforeSessionStart(10),
-    });
 
     expect(() =>
       alice.previewWithdrawal(bookingSession, hoursBeforeSessionStart(9)),

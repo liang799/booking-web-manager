@@ -1,4 +1,9 @@
-import { Money, PayoutAccount } from "@/domain";
+import {
+  Money,
+  PayoutAccount,
+  ReliabilityScore,
+  type BookerSessionCreation,
+} from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   createTestUser,
@@ -161,5 +166,23 @@ describe("Booker", () => {
     expect(() => readyBooker().createSession(details)).toThrow(
       expect.objectContaining({ code: "SESSION_STARTED" }),
     );
+  });
+
+  test("createSession_WhenCustomSettingsAreProvided_PreservesThem", () => {
+    const details: BookerSessionCreation = {
+      ...creationDetails(),
+      visibility: "PUBLIC",
+      invitedGroupId: "group",
+      minimumReliability: ReliabilityScore.from(80),
+      bookingShare: Money.fromCents(750),
+    };
+    const booker = readyBooker();
+
+    const session = booker.createSession(details);
+
+    expect(session.visibility).toBe("PUBLIC");
+    expect(session.invitedGroupId).toBe("group");
+    expect(session.minimumReliability?.toNumber()).toBe(80);
+    expect(session.bookingShare.toCents()).toBe(750);
   });
 });

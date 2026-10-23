@@ -52,12 +52,11 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
-    const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
-    const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice"],
+      attendanceByUserId: { alice: "ATTENDED" },
+      status: "AWAITING_PAYOUT",
     });
     const previousState = sessionState(bookingSession);
 

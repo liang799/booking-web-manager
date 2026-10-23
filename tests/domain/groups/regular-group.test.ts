@@ -90,8 +90,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation", () => {
-      const group = newGroup();
-      group.revokeInvitation("owner");
+      const group = newGroup({ invitationActive: false });
       const before = groupState(group);
 
       expect(() =>
@@ -105,12 +104,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenTokenWasRotated_ThrowsInvalidInvitation", () => {
-      const group = newGroup();
-      group.revokeInvitation("owner");
-      group.rotateInvitation({
-        actorId: "owner",
-        invitationToken: "next-token",
-      });
+      const group = newGroup({ invitationToken: "next-token" });
       const before = groupState(group);
 
       expect(() =>
@@ -124,8 +118,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenRevokedInvitationIsRotated_AcceptsNewToken", () => {
-      const group = newGroup();
-      group.revokeInvitation("owner");
+      const group = newGroup({ invitationActive: false });
       group.rotateInvitation({
         actorId: "owner",
         invitationToken: "next-token",
@@ -141,8 +134,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      const group = newGroup();
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      const group = newGroup({ status: "ARCHIVED", invitationActive: false });
       const before = groupState(group);
 
       expect(() =>
@@ -166,14 +158,22 @@ describe("RegularGroup", () => {
     });
 
     test("rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      const group = newGroup();
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      const group = newGroup({ status: "ARCHIVED", invitationActive: false });
       const before = groupState(group);
 
       expect(() =>
         group.rotateInvitation({ actorId: "owner", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
       expect(groupState(group)).toEqual(before);
+    });
+
+    test("revokeInvitation_WhenOwnerRevokesInvitation_DisablesInvitation", () => {
+      const group = newGroup({ invitationActive: true });
+
+      group.revokeInvitation("owner");
+
+      expect(group.invitationActive).toBe(false);
+      expect(group.invitationToken).toBe("first-token");
     });
 
     test("revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
@@ -217,8 +217,7 @@ describe("RegularGroup", () => {
     });
 
     test("rename_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      const group = newGroup();
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      const group = newGroup({ status: "ARCHIVED", invitationActive: false });
       const before = groupState(group);
 
       expect(() => group.rename({ actorId: "owner", name: "New" })).toThrow(
@@ -238,12 +237,7 @@ describe("RegularGroup", () => {
     });
 
     test("removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner", () => {
-      const group = newGroup();
-      group.join({
-        userId: "player",
-        invitationToken: "first-token",
-        now: now(),
-      });
+      const group = newGroup({ memberships: groupMemberships("owner", "player") });
 
       group.removeMember({ actorId: "owner", userId: "player" });
 
@@ -314,9 +308,9 @@ describe("RegularGroup", () => {
 
   describe("Leaving", () => {
     test("leave_WhenMemberLeaves_RemovesOnlyThatMember", () => {
-      const group = newGroup();
-      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
-      group.join({ userId: "ben", invitationToken: "first-token", now: now() });
+      const group = newGroup({
+        memberships: groupMemberships("owner", "aisha", "ben"),
+      });
 
       group.leave({ userId: "aisha" });
 
@@ -327,8 +321,7 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenUserIsOwner_RejectsWithoutChangingState", () => {
-      const group = newGroup();
-      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      const group = newGroup({ memberships: groupMemberships("owner", "aisha") });
       const before = groupState(group);
 
       expect(() => group.leave({ userId: "owner" })).toThrow(
@@ -367,8 +360,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain", () => {
-      const group = newGroup();
-      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      const group = newGroup({ memberships: groupMemberships("owner", "aisha") });
       group.leave({ userId: "aisha" });
 
       const readmission = group.join({
@@ -387,14 +379,17 @@ describe("RegularGroup", () => {
 });
 
 const now = () => new Date("2026-09-15T00:00:00Z");
-const newGroup = () =>
-  RegularGroup.create({
-    groupId: "group",
-    ownerId: "owner",
+function newGroup(overrides: Partial<RegularGroupDetails> = {}): RegularGroup {
+  return new RegularGroup(groupDetails({
     name: "Sunday badminton",
     invitationToken: "first-token",
-    now: now(),
-  });
+    ...overrides,
+  }));
+}
+
+function groupMemberships(...userIds: string[]): GroupMembership[] {
+  return userIds.map((userId) => new GroupMembership({ userId, joinedAt: now() }));
+}
 
 function groupDetails(
   overrides: Partial<RegularGroupDetails> = {},

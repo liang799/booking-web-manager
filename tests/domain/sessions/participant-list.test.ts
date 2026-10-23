@@ -2,7 +2,7 @@ import { Participation, Session } from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
-  committedParticipation,
+  withdrawnParticipation,
   createTestSession,
   sessionDetails,
 } from "./session/session-fixtures";
@@ -72,24 +72,21 @@ describe("ParticipantList", () => {
   test("oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder", () => {
     const caraWithdrewAt = hoursBeforeSessionStart(48);
     const tiedWithdrawalAt = hoursBeforeSessionStart(10);
-    const originalSession = createTestSession();
-    const alice = committedParticipation(originalSession, "alice");
-    const ben = committedParticipation(originalSession, "ben");
-    const cara = committedParticipation(originalSession, "cara");
-    const refundedCara = cara.withdraw(
-      cara.hold!.refund(caraWithdrewAt),
-      caraWithdrewAt,
-    );
-    const withdrawnAlice = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      tiedWithdrawalAt,
-      "OPEN_SLOT",
-    );
-    const withdrawnBen = ben.withdraw(
-      ben.hold!.awaitReplacement(),
-      tiedWithdrawalAt,
-      "OPEN_SLOT",
-    );
+    const refundedCara = withdrawnParticipation("cara", {
+      holdState: "REFUNDED",
+      withdrawnAt: caraWithdrewAt,
+      settledAt: caraWithdrewAt,
+    });
+    const withdrawnAlice = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: tiedWithdrawalAt,
+      replacementMode: "OPEN_SLOT",
+    });
+    const withdrawnBen = withdrawnParticipation("ben", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: tiedWithdrawalAt,
+      replacementMode: "OPEN_SLOT",
+    });
     const list = new Session(
       sessionDetails({
         participations: [refundedCara, withdrawnBen, withdrawnAlice],
@@ -112,20 +109,17 @@ describe("ParticipantList", () => {
   test("oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal", () => {
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const benOpenedSeatAt = hoursBeforeSessionStart(9);
-    const originalSession = createTestSession();
-    const alice = committedParticipation(originalSession, "alice");
-    const ben = committedParticipation(originalSession, "ben");
-    const aliceInvitation = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "cara",
-    );
-    const benOpenWithdrawal = ben.withdraw(
-      ben.hold!.awaitReplacement(),
-      benOpenedSeatAt,
-      "OPEN_SLOT",
-    );
+    const aliceInvitation = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
+    });
+    const benOpenWithdrawal = withdrawnParticipation("ben", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: benOpenedSeatAt,
+      replacementMode: "OPEN_SLOT",
+    });
     const list = new Session(
       sessionDetails({ participations: [aliceInvitation, benOpenWithdrawal] }),
     ).participantList;

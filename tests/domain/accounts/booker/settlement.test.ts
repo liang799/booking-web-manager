@@ -1,7 +1,8 @@
-import { Money, Participation, Session, type SessionDetails } from "@/domain";
+import { Money, Session, type SessionDetails } from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
+  withdrawnParticipation,
   createTestUser,
   destination,
   sessionEndsAt,
@@ -44,14 +45,10 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState", () => {
-    const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+      attendanceByUserId: { alice: "ATTENDED" },
     });
     const previousState = sessionState(bookingSession);
 
@@ -68,20 +65,18 @@ describe("Booker", () => {
 
   test("preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending", () => {
     const withdrawalTime = hoursBeforeSessionStart(2);
-    const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-ben", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
+      attendanceByUserId: { ben: "ATTENDED" },
+      status: "AWAITING_PAYOUT",
     });
 
     const payout = readyBooker().preparePayout(bookingSession, {
@@ -212,13 +207,16 @@ describe("Booker", () => {
   test("preparePayout_WhenReplacementSweepWasMissed_ExpiresOutstandingReplacement", () => {
     const withdrawalTime = hoursBeforeSessionStart(2);
     const payoutTime = sessionEndsAt;
-    const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
+    });
 
     const payout = readyBooker().preparePayout(bookingSession, {
       payoutId: "out",
@@ -238,13 +236,14 @@ describe("Booker", () => {
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
     const command = {
       payoutId: "out",
       idempotencyKey: "key",
@@ -265,20 +264,18 @@ describe("Booker", () => {
 
   test("preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied", () => {
     const withdrawalTime = hoursBeforeSessionStart(2);
-    const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-ben", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
+      attendanceByUserId: { ben: "ATTENDED" },
+      status: "AWAITING_PAYOUT",
     });
     const command = {
       payoutId: "out",
@@ -298,20 +295,18 @@ describe("Booker", () => {
 
   test("preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt", () => {
     const withdrawalTime = hoursBeforeSessionStart(2);
-    const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-ben", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+      participationOverrides: {
+        alice: withdrawnParticipation("alice", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "OPEN_SLOT",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
+      attendanceByUserId: { ben: "ATTENDED" },
+      status: "AWAITING_PAYOUT",
     });
     const command = {
       payoutId: "out",
@@ -411,21 +406,16 @@ describe("Booker", () => {
 /** Pending payout with Alice's late withdrawal and Ben's attended share. */
 function pendingReleaseAndForfeitureDetails(): SessionDetails {
   const details = pendingPayoutDetails(["alice", "ben"]);
-  const [alice, ben] = details.participations;
-  const withdrawnAlice = new Participation({
-    participationId: "p-alice",
-    userId: "alice",
-    status: "WITHDRAWN",
-    attendance: "UNVERIFIED",
-    committedAt: hoursBeforeSessionStart(48),
+  const ben = details.participations[1]!;
+  const withdrawnAlice = withdrawnParticipation("alice", {
     withdrawnAt: hoursBeforeSessionStart(2),
     replacementMode: "OPEN_SLOT",
-    hold: alice!.hold!.awaitReplacement().markForfeitureDue(sessionEndsAt),
+    holdState: "FORFEITURE_DUE",
   });
   const pendingSettlement = details.pendingSettlement!;
   return {
     ...details,
-    participations: [withdrawnAlice, ben!],
+    participations: [withdrawnAlice, ben],
     pendingSettlement: {
       ...pendingSettlement,
       lines: [

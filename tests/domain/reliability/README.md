@@ -6,7 +6,7 @@ Each row is one independently executable test. **Input** lists domain data and i
 
 ## reliability-score-history.test.ts
 
-`day` is 86,400,000 milliseconds; `asOf` is `2026-09-15T00:00:00Z`; `recentEnd` is one day earlier, `2026-09-14T00:00:00Z`. `attended(id, endAt)` and `absent(id, endAt)` create committed participations for `alice` with 100-cent holds, committed one day before `endAt`. They record attendance at `endAt`: `ATTENDED` verified by `BOOKER`, or `ABSENT` verified by `AUTOMATIC`. Both default `endAt` to `recentEnd`.
+`day` is 86,400,000 milliseconds; `asOf` is `2026-09-15T00:00:00Z`; `recentEnd` is one day earlier, `2026-09-14T00:00:00Z`. `attended(id, endAt)` and `absent(id, endAt)` directly construct `COMMITTED` participations for `alice`, with participation ID `id`, hold `h-${id}`, wallet `w-${id}`, holding account `platform`, and 100-cent `HELD` funds. Commitment and hold creation are one day before `endAt`. The constructors receive attendance verified at `endAt`: `ATTENDED` by `BOOKER`, or `ABSENT` by `AUTOMATIC`; no verification workflow runs inside either fixture. Both default `endAt` to `recentEnd`.
 
 | Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
 |---|---|---|---|---|

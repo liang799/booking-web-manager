@@ -1,7 +1,7 @@
 {
   "baselineRevision": "00f6c88462e16ffce8f91dd78b72aa649918e9f7",
   "baselineTests": 598,
-  "finalTests": 603,
+  "finalTests": 607,
   "baselineFiles": 45,
   "finalFiles": 43,
   "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The original 593-case baseline is retained along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values. Additions are listed separately from retained baseline coverage.",
@@ -15,7 +15,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions",
-          "line": 14
+          "line": 15
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -453,7 +453,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenCommittedBeforeRefundCutoff_RefundsParticipant",
-          "line": 11
+          "line": 12
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -467,7 +467,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserHasFunds_LocksShareFromLoadedWallet",
-          "line": 21
+          "line": 24
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -481,7 +481,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenRoleWasCreatedBeforeDeactivation_ThrowsInactiveAccount",
-          "line": 46
+          "line": 49
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -495,7 +495,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenRoleWasCreatedAfterDeactivation_ThrowsInactiveAccount",
-          "line": 73
+          "line": 76
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -802,7 +802,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "constructor_WhenVerifiedEmailIsMissing_ThrowsInvalidInput",
-          "line": 13
+          "line": 15
         }
       ],
       "reason": "Preserved"
@@ -816,7 +816,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "constructor_WhenEmailIsProvided_PreservesTheEmailValue",
-          "line": 19
+          "line": 21
         }
       ],
       "reason": "Preserved"
@@ -830,7 +830,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "constructor_WhenActiveAccountHasNoEmail_LoadsAnUnverifiedAccount",
-          "line": 29
+          "line": 31
         }
       ],
       "reason": "Preserved"
@@ -844,7 +844,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "constructor_WhenInactiveAccountHasEmail_ThrowsInvalidInput",
-          "line": 43
+          "line": 45
         }
       ],
       "reason": "Preserved"
@@ -858,7 +858,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "constructor_WhenLoadingDeactivatedUser_RestoresAnonymisedProfile",
-          "line": 55
+          "line": 57
         }
       ],
       "reason": "Preserved"
@@ -992,7 +992,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions",
-          "line": 184
+          "line": 183
         }
       ],
       "reason": "Preserved"
@@ -1006,7 +1006,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState",
-          "line": 196
+          "line": 195
         }
       ],
       "reason": "Preserved"
@@ -1020,7 +1020,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState",
-          "line": 209
+          "line": 208
         }
       ],
       "reason": "Preserved"
@@ -1034,7 +1034,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "preferredSports_WhenReturnedSetChanges_PreservesStoredPreferences",
-          "line": 223
+          "line": 221
         }
       ],
       "reason": "Preserved"
@@ -1048,7 +1048,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences",
-          "line": 238
+          "line": 236
         }
       ],
       "reason": "Preserved"
@@ -1062,7 +1062,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
-          "line": 255
+          "line": 253
         }
       ],
       "reason": "Preserved",
@@ -1086,7 +1086,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState",
-          "line": 269
+          "line": 267
         }
       ],
       "reason": "Preserved"
@@ -1100,7 +1100,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 286
+          "line": 280
         }
       ],
       "reason": "Preserved"
@@ -1114,7 +1114,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete",
-          "line": 304
+          "line": 295
         }
       ],
       "reason": "Preserved"
@@ -1128,7 +1128,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
-          "line": 324
+          "line": 310
         }
       ],
       "reason": "Preserved"
@@ -1142,7 +1142,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 341
+          "line": 323
         }
       ],
       "reason": "Preserved"
@@ -1156,7 +1156,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput",
-          "line": 349
+          "line": 331
         }
       ],
       "reason": "Preserved"
@@ -1170,7 +1170,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState",
-          "line": 363
+          "line": 341
         }
       ],
       "reason": "Preserved"
@@ -1184,7 +1184,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 378
+          "line": 366
         }
       ],
       "reason": "Preserved"
@@ -1198,7 +1198,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 386
+          "line": 374
         }
       ],
       "reason": "Preserved"
@@ -1212,7 +1212,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 401
+          "line": 386
         }
       ],
       "reason": "Preserved"
@@ -1226,7 +1226,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination",
-          "line": 409
+          "line": 394
         }
       ],
       "reason": "Preserved"
@@ -1240,7 +1240,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount",
-          "line": 428
+          "line": 410
         }
       ],
       "reason": "Preserved"
@@ -1254,7 +1254,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations",
-          "line": 444
+          "line": 424
         }
       ],
       "reason": "Preserved"
@@ -1268,7 +1268,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations",
-          "line": 458
+          "line": 438
         }
       ],
       "reason": "Preserved"
@@ -1282,7 +1282,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations",
-          "line": 472
+          "line": 452
         }
       ],
       "reason": "Preserved"
@@ -1296,7 +1296,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput",
-          "line": 486
+          "line": 466
         }
       ],
       "reason": "Preserved"
@@ -1310,7 +1310,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput",
-          "line": 500
+          "line": 480
         }
       ],
       "reason": "Preserved"
@@ -1324,7 +1324,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations",
-          "line": 514
+          "line": 494
         }
       ],
       "reason": "Preserved"
@@ -1338,7 +1338,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput",
-          "line": 528
+          "line": 508
         }
       ],
       "reason": "Preserved"
@@ -1352,7 +1352,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput",
-          "line": 542
+          "line": 522
         }
       ],
       "reason": "Preserved"
@@ -1366,7 +1366,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations",
-          "line": 556
+          "line": 536
         }
       ],
       "reason": "Preserved"
@@ -1380,7 +1380,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput",
-          "line": 567
+          "line": 547
         }
       ],
       "reason": "Preserved"
@@ -1394,7 +1394,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput",
-          "line": 578
+          "line": 558
         }
       ],
       "reason": "Preserved"
@@ -1408,7 +1408,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations",
-          "line": 592
+          "line": 572
         }
       ],
       "reason": "Preserved"
@@ -1422,7 +1422,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput",
-          "line": 606
+          "line": 586
         }
       ],
       "reason": "Preserved"
@@ -1436,7 +1436,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput",
-          "line": 620
+          "line": 600
         }
       ],
       "reason": "Preserved"
@@ -1450,7 +1450,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenNoObligationsRemain_AnonymisesProfile",
-          "line": 634
+          "line": 614
         }
       ],
       "reason": "Preserved"
@@ -1464,7 +1464,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity",
-          "line": 649
+          "line": 628
         }
       ],
       "reason": "Preserved"
@@ -1478,7 +1478,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAlreadyInactive_LeavesStateUnchanged",
-          "line": 667
+          "line": 643
         }
       ],
       "reason": "Preserved"
@@ -1980,7 +1980,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenRestoredCompletionMatches_ReturnsFalse",
-          "line": 180
+          "line": 183
         }
       ],
       "reason": "Preserved"
@@ -1994,7 +1994,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "complete_WhenFailureHasBeenRecorded_RejectsLateCallback",
-          "line": 201
+          "line": 204
         }
       ],
       "reason": "Preserved"
@@ -2008,7 +2008,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "fail_WhenRestoredFailureMatches_ReturnsFalse",
-          "line": 212
+          "line": 218
         }
       ],
       "reason": "Preserved",
@@ -2030,7 +2030,7 @@
         {
           "file": "tests/domain/finance/payout-attempt.test.ts",
           "name": "fail_WhenSameCallbackIsRepeated_FailsOnlyOnce",
-          "line": 227
+          "line": 233
         }
       ],
       "reason": "Preserved",
@@ -2594,7 +2594,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenTokenWasRotated_ThrowsInvalidInvitation",
-          "line": 107
+          "line": 106
         }
       ],
       "reason": "Preserved"
@@ -2608,7 +2608,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenRevokedInvitationIsRotated_AcceptsNewToken",
-          "line": 126
+          "line": 120
         }
       ],
       "reason": "Preserved"
@@ -2622,7 +2622,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 143
+          "line": 136
         }
       ],
       "reason": "Preserved"
@@ -2636,7 +2636,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 158
+          "line": 150
         }
       ],
       "reason": "Preserved"
@@ -2650,7 +2650,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 168
+          "line": 160
         }
       ],
       "reason": "Preserved"
@@ -2734,7 +2734,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 230
+          "line": 229
         }
       ],
       "reason": "Preserved"
@@ -2748,7 +2748,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner",
-          "line": 240
+          "line": 239
         }
       ],
       "reason": "Preserved",
@@ -2769,7 +2769,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenTargetIsOwner_RejectsWithoutChangingState",
-          "line": 253
+          "line": 247
         }
       ],
       "reason": "Preserved"
@@ -2783,7 +2783,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenMemberIsMissing_RejectsWithoutChangingState",
-          "line": 263
+          "line": 257
         }
       ],
       "reason": "Preserved"
@@ -2797,7 +2797,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 273
+          "line": 267
         }
       ],
       "reason": "Preserved"
@@ -2811,7 +2811,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState",
-          "line": 283
+          "line": 277
         }
       ],
       "reason": "Preserved"
@@ -2825,7 +2825,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState",
-          "line": 293
+          "line": 287
         }
       ],
       "reason": "Preserved"
@@ -2839,7 +2839,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent",
-          "line": 303
+          "line": 297
         }
       ],
       "reason": "Preserved",
@@ -2863,7 +2863,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenMemberLeaves_RemovesOnlyThatMember",
-          "line": 316
+          "line": 310
         }
       ],
       "reason": "Preserved"
@@ -2877,7 +2877,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenUserIsOwner_RejectsWithoutChangingState",
-          "line": 329
+          "line": 323
         }
       ],
       "reason": "Preserved"
@@ -2891,7 +2891,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenUserIsNotAMember_RejectsWithoutChangingState",
-          "line": 340
+          "line": 333
         }
       ],
       "reason": "Preserved"
@@ -2905,7 +2905,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 350
+          "line": 343
         }
       ],
       "reason": "Preserved"
@@ -2919,7 +2919,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain",
-          "line": 369
+          "line": 362
         }
       ],
       "reason": "Preserved",
@@ -3860,7 +3860,7 @@
         {
           "file": "tests/domain/sessions/participant-list.test.ts",
           "name": "oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal",
-          "line": 112
+          "line": 109
         }
       ],
       "reason": "Preserved",
@@ -4178,7 +4178,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement",
-          "line": 232
+          "line": 235
         }
       ],
       "reason": "Preserved"
@@ -4192,7 +4192,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace",
-          "line": 248
+          "line": 254
         }
       ],
       "reason": "Preserved"
@@ -4206,7 +4206,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation",
-          "line": 265
+          "line": 273
         }
       ],
       "reason": "Preserved"
@@ -4220,7 +4220,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata",
-          "line": 281
+          "line": 291
         }
       ],
       "reason": "Preserved"
@@ -4234,7 +4234,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "refundReplacement_WhenReplacementIsFound_ReturnsNewChild",
-          "line": 298
+          "line": 313
         }
       ],
       "reason": "Preserved"
@@ -4248,7 +4248,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy",
-          "line": 318
+          "line": 333
         }
       ],
       "reason": "Preserved"
@@ -4262,12 +4262,12 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy",
-          "line": 337
+          "line": 352
         },
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero",
-          "line": 354
+          "line": 369
         }
       ],
       "reason": "Separated hold settlement from the subsequent reliability query; retained four settlement assertions and the zero-reliability assertion",
@@ -4295,7 +4295,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsUnverified_RejectsRelease",
-          "line": 369
+          "line": 385
         }
       ],
       "reason": "Preserved"
@@ -4309,7 +4309,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
-          "line": 377
+          "line": 393
         }
       ],
       "reason": "Preserved"
@@ -4323,7 +4323,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenParticipantAttended_RejectsForfeiture",
-          "line": 387
+          "line": 408
         }
       ],
       "reason": "Preserved"
@@ -4701,7 +4701,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession",
-          "line": 26
+          "line": 27
         }
       ],
       "reason": "Preserved"
@@ -4715,7 +4715,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
-          "line": 40
+          "line": 41
         }
       ],
       "reason": "Preserved",
@@ -4737,7 +4737,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
-          "line": 51
+          "line": 52
         }
       ],
       "reason": "Preserved"
@@ -4751,7 +4751,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
-          "line": 68
+          "line": 69
         }
       ],
       "reason": "Preserved",
@@ -4773,7 +4773,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
-          "line": 85
+          "line": 86
         }
       ],
       "reason": "Preserved",
@@ -4797,7 +4797,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
-          "line": 116
+          "line": 117
         }
       ],
       "reason": "Preserved",
@@ -4823,7 +4823,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
-          "line": 156
+          "line": 157
         }
       ],
       "reason": "Preserved",
@@ -4845,7 +4845,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
-          "line": 185
+          "line": 186
         }
       ],
       "reason": "Preserved"
@@ -4859,7 +4859,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
-          "line": 198
+          "line": 199
         }
       ],
       "reason": "Preserved"
@@ -4873,7 +4873,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
-          "line": 216
+          "line": 217
         }
       ],
       "reason": "Preserved",
@@ -4897,7 +4897,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
-          "line": 237
+          "line": 238
         }
       ],
       "reason": "Preserved"
@@ -4911,7 +4911,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
-          "line": 253
+          "line": 254
         }
       ],
       "reason": "Preserved"
@@ -4925,7 +4925,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 279
+          "line": 280
         }
       ],
       "reason": "Preserved"
@@ -4939,7 +4939,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
-          "line": 290
+          "line": 291
         }
       ],
       "reason": "Preserved",
@@ -5079,12 +5079,12 @@
         {
           "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
           "name": "cancel_WhenRosterHasRemovedParticipant_PreservesRemovalWithoutSecondRefund",
-          "line": 11
+          "line": 13
         },
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenCancelledRosterHasRemovedParticipant_PreservesRemovedStatus",
-          "line": 154
+          "line": 155
         }
       ],
       "reason": "Separated cancellation outcomes from reconstruction of the cancelled roster; retained four cancellation assertions and the removed-status hydration assertion",
@@ -5112,7 +5112,7 @@
         {
           "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
           "name": "cancel_WhenRosterHasPreviouslyCancelledParticipant_PreservesTerminalHold",
-          "line": 37
+          "line": 43
         }
       ],
       "reason": "Preserved",
@@ -5134,7 +5134,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenEmailIsUnverified_AllowsCreation",
-          "line": 12
+          "line": 17
         }
       ],
       "reason": "Preserved",
@@ -5154,7 +5154,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenEmailIsMissing_RejectsWithEmailRequired",
-          "line": 24
+          "line": 29
         }
       ],
       "reason": "Preserved"
@@ -5168,7 +5168,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "assertCanCreateSession_WhenEmailIsUnverified_AllowsCreation",
-          "line": 37
+          "line": 42
         }
       ],
       "reason": "Preserved"
@@ -5182,7 +5182,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenRoleWasCreatedBeforeDeactivation_ThrowsInactiveAccount",
-          "line": 47
+          "line": 52
         }
       ],
       "reason": "Preserved"
@@ -5196,7 +5196,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenOptionalSettingsAreOmitted_UsesPrivateVisibilityAndEmptyLifecycle",
-          "line": 68
+          "line": 73
         }
       ],
       "reason": "Preserved"
@@ -5210,7 +5210,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenBookerIsInactive_ThrowsInactiveAccount",
-          "line": 87
+          "line": 92
         }
       ],
       "reason": "Preserved",
@@ -5230,7 +5230,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenPayoutAccountIsIncomplete_ThrowsPayoutAccountNotReady",
-          "line": 99
+          "line": 104
         }
       ],
       "reason": "Preserved",
@@ -5250,7 +5250,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenShareWouldBeZero_ThrowsInvalidInput",
-          "line": 115
+          "line": 120
         }
       ],
       "reason": "Preserved"
@@ -5264,7 +5264,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenCapacityIsOne_ThrowsInvalidInput",
-          "line": 123
+          "line": 128
         }
       ],
       "reason": "Preserved"
@@ -5278,7 +5278,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenMinimumHeadcountIsOne_ThrowsInvalidInput",
-          "line": 131
+          "line": 136
         }
       ],
       "reason": "Preserved"
@@ -5292,7 +5292,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenMinimumHeadcountExceedsCapacity_ThrowsInvalidInput",
-          "line": 139
+          "line": 144
         }
       ],
       "reason": "Preserved"
@@ -5306,7 +5306,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenMinimumHeadcountEqualsCapacity_PreservesMinimumHeadcount",
-          "line": 147
+          "line": 152
         }
       ],
       "reason": "Preserved"
@@ -5320,7 +5320,7 @@
         {
           "file": "tests/domain/accounts/booker/creation.test.ts",
           "name": "createSession_WhenBookingHasEnded_ThrowsSessionStarted",
-          "line": 158
+          "line": 163
         }
       ],
       "reason": "Preserved"
@@ -5334,7 +5334,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenRoleWasCreatedBeforeDeactivation_RejectsWithoutChangingState",
-          "line": 16
+          "line": 17
         }
       ],
       "reason": "Preserved"
@@ -5348,7 +5348,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState",
-          "line": 46
+          "line": 47
         }
       ],
       "reason": "Preserved"
@@ -5362,7 +5362,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending",
-          "line": 69
+          "line": 66
         }
       ],
       "reason": "Preserved",
@@ -5388,7 +5388,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAnotherPayoutIsPending_RejectsWithoutChangingState",
-          "line": 106
+          "line": 101
         }
       ],
       "reason": "Preserved"
@@ -5402,7 +5402,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutIdIsReused_RejectsWithoutChangingState",
-          "line": 122
+          "line": 117
         }
       ],
       "reason": "Preserved"
@@ -5416,7 +5416,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState",
-          "line": 139
+          "line": 134
         }
       ],
       "reason": "Preserved"
@@ -5430,7 +5430,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedAttemptIsRetriedWithNewIdentity_RecordsRetry",
-          "line": 162
+          "line": 157
         }
       ],
       "reason": "Preserved"
@@ -5444,7 +5444,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenSessionHasNoHolds_SettlesWithoutPayout",
-          "line": 198
+          "line": 193
         }
       ],
       "reason": "Preserved",
@@ -5466,7 +5466,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenReplacementSweepWasMissed_ExpiresOutstandingReplacement",
-          "line": 212
+          "line": 207
         }
       ],
       "reason": "Preserved",
@@ -5488,7 +5488,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAttendanceIsIncomplete_LeavesExpiryUnapplied",
-          "line": 236
+          "line": 234
         }
       ],
       "reason": "Preserved",
@@ -5512,7 +5512,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied",
-          "line": 266
+          "line": 265
         }
       ],
       "reason": "Preserved"
@@ -5526,7 +5526,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt",
-          "line": 299
+          "line": 296
         }
       ],
       "reason": "Preserved",
@@ -5554,7 +5554,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedPayoutId",
-          "line": 341
+          "line": 336
         }
       ],
       "reason": "Preserved"
@@ -5568,7 +5568,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey",
-          "line": 362
+          "line": 357
         }
       ],
       "reason": "Preserved"
@@ -5582,7 +5582,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_AllowsNewIdentityIndependentlyOfSource",
-          "line": 383
+          "line": 378
         }
       ],
       "reason": "Preserved",
@@ -7021,7 +7021,7 @@
         {
           "file": "tests/domain/sessions/session/custom-pricing.test.ts",
           "name": "join_WhenPriceExceedsEqualSplit_LocksChosenPrice",
-          "line": 12
+          "line": 13
         }
       ],
       "reason": "Preserved",
@@ -7045,7 +7045,7 @@
         {
           "file": "tests/domain/sessions/session/custom-pricing.test.ts",
           "name": "withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice",
-          "line": 42
+          "line": 39
         }
       ],
       "reason": "Preserved",
@@ -7067,7 +7067,7 @@
         {
           "file": "tests/domain/sessions/session/custom-pricing.test.ts",
           "name": "cancel_WhenCustomPriceWasCollected_RefundsTheFullHold",
-          "line": 74
+          "line": 65
         }
       ],
       "reason": "Preserved",
@@ -7089,12 +7089,12 @@
         {
           "file": "tests/domain/sessions/session/custom-pricing.test.ts",
           "name": "preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount",
-          "line": 101
+          "line": 83
         },
         {
           "file": "tests/domain/sessions/session/custom-pricing.test.ts",
           "name": "completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount",
-          "line": 136
+          "line": 107
         }
       ],
       "reason": "Separated payout preparation and completion; retained financial assertions",
@@ -7120,7 +7120,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenInputsAndGettersAreMutated_PreservesRosterAndHistory",
-          "line": 15
+          "line": 16
         }
       ],
       "reason": "Preserved",
@@ -7154,7 +7154,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenBothHistoriesAreOmittedWithoutPendingPayout_ThrowsInvalidInput",
-          "line": 55
+          "line": 56
         }
       ],
       "reason": "Preserved"
@@ -7168,7 +7168,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenAttemptHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput",
-          "line": 68
+          "line": 69
         }
       ],
       "reason": "Preserved"
@@ -7182,7 +7182,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenKeyHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput",
-          "line": 81
+          "line": 82
         }
       ],
       "reason": "Preserved"
@@ -7196,7 +7196,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenAttemptHistoryIsNotAnArray_ThrowsInvalidInput",
-          "line": 94
+          "line": 95
         }
       ],
       "reason": "Preserved"
@@ -7210,7 +7210,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenKeyHistoryIsNotAnArray_ThrowsInvalidInput",
-          "line": 103
+          "line": 104
         }
       ],
       "reason": "Preserved"
@@ -7224,7 +7224,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenBothHistoriesAreOmittedWithPendingPayout_ThrowsInvalidInput",
-          "line": 115
+          "line": 116
         }
       ],
       "reason": "Preserved"
@@ -7238,7 +7238,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenAttemptHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput",
-          "line": 128
+          "line": 129
         }
       ],
       "reason": "Preserved"
@@ -7252,7 +7252,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenKeyHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput",
-          "line": 141
+          "line": 142
         }
       ],
       "reason": "Preserved"
@@ -7266,7 +7266,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenSessionIsSettled_RestoresStatusAndEndTime",
-          "line": 179
+          "line": 183
         }
       ],
       "reason": "Preserved"
@@ -7280,7 +7280,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenFailedPayoutHistoryIsRestored_PreservesAttemptsAndKeys",
-          "line": 188
+          "line": 192
         }
       ],
       "reason": "Preserved",
@@ -7308,7 +7308,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenRosterIsDuplicated_ThrowsDomainError",
-          "line": 205
+          "line": 209
         }
       ],
       "reason": "Preserved"
@@ -7322,7 +7322,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenDifferentUsersShareParticipationId_ThrowsDuplicateId",
-          "line": 217
+          "line": 221
         }
       ],
       "reason": "Preserved"
@@ -7336,7 +7336,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenDifferentParticipationsShareUserId_ThrowsDuplicateId",
-          "line": 241
+          "line": 245
         }
       ],
       "reason": "Preserved"
@@ -7350,7 +7350,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenDifferentParticipationsShareHoldId_ThrowsDuplicateId",
-          "line": 265
+          "line": 269
         }
       ],
       "reason": "Preserved"
@@ -7364,7 +7364,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenWaiterReusesHistoricalQueueSequence_ThrowsDuplicateId",
-          "line": 292
+          "line": 296
         }
       ],
       "reason": "Preserved"
@@ -7378,7 +7378,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingPayoutHasNoBatch_ThrowsDomainError",
-          "line": 316
+          "line": 322
         }
       ],
       "reason": "Preserved"
@@ -7392,7 +7392,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenNextSequenceDoesNotFollowQueue_ThrowsDomainError",
-          "line": 322
+          "line": 328
         }
       ],
       "reason": "Preserved"
@@ -7406,7 +7406,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenSettledRosterStillHasHeldFunds_ThrowsDomainError",
-          "line": 337
+          "line": 343
         }
       ],
       "reason": "Preserved"
@@ -7420,7 +7420,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenHoldUsesForeignAccount_ThrowsDomainError",
-          "line": 350
+          "line": 356
         }
       ],
       "reason": "Preserved"
@@ -7434,7 +7434,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPayoutAttemptIdsAreDuplicated_ThrowsDomainError",
-          "line": 363
+          "line": 369
         }
       ],
       "reason": "Preserved"
@@ -7448,7 +7448,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPayoutKeysAreDuplicated_ThrowsDomainError",
-          "line": 369
+          "line": 375
         }
       ],
       "reason": "Preserved"
@@ -7462,7 +7462,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenNextSequenceFollowsQueue_RestoresNextWaiter",
-          "line": 377
+          "line": 383
         }
       ],
       "reason": "Preserved",
@@ -7482,7 +7482,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingBatchBelongsToAnotherSession_ThrowsDomainError",
-          "line": 396
+          "line": 402
         }
       ],
       "reason": "Preserved"
@@ -7496,7 +7496,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingLineUsesForeignWallet_ThrowsDomainError",
-          "line": 409
+          "line": 415
         }
       ],
       "reason": "Preserved"
@@ -7510,7 +7510,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingAttemptIsMissingFromHistory_ThrowsDomainError",
-          "line": 425
+          "line": 431
         }
       ],
       "reason": "Preserved"
@@ -7524,7 +7524,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingKeyIsMissingFromHistory_ThrowsDomainError",
-          "line": 433
+          "line": 439
         }
       ],
       "reason": "Preserved"
@@ -7538,7 +7538,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "pendingSettlement_WhenInputsAndOutputsAreMutated_PreservesBatchAndHistory",
-          "line": 441
+          "line": 447
         }
       ],
       "reason": "Preserved",
@@ -7568,7 +7568,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "completeSettlement_WhenPendingSessionIsRestored_SettlesIndependentlyOfSource",
-          "line": 469
+          "line": 475
         }
       ],
       "reason": "Preserved",
@@ -7594,7 +7594,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges",
-          "line": 16
+          "line": 20
         }
       ],
       "reason": "Preserved"
@@ -7608,7 +7608,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges",
-          "line": 51
+          "line": 46
         }
       ],
       "reason": "Preserved"
@@ -7622,7 +7622,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges",
-          "line": 82
+          "line": 74
         }
       ],
       "reason": "Preserved",
@@ -7631,7 +7631,7 @@
         "expect(sessionState(bookingSession)).toEqual(previousState)"
       ],
       "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission( admission, aliceInvitation.refundReplacement(danaTriedToAcceptAt), danaTriedToAcceptAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
+        "expect(() => bookingSession.recordAdmission( admission, refundedInvitation, danaTriedToAcceptAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
         "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
@@ -7644,7 +7644,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState",
-          "line": 121
+          "line": 117
         }
       ],
       "reason": "Preserved"
@@ -7658,7 +7658,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenHoldIdIsDuplicated_PreservesListAndQueries",
-          "line": 142
+          "line": 138
         }
       ],
       "reason": "Preserved"
@@ -7672,7 +7672,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList",
-          "line": 183
+          "line": 179
         }
       ],
       "reason": "Preserved",
@@ -7710,7 +7710,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 220
+          "line": 216
         }
       ],
       "reason": "Preserved"
@@ -7724,7 +7724,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState",
-          "line": 240
+          "line": 236
         }
       ],
       "reason": "Preserved"
@@ -7738,7 +7738,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState",
-          "line": 257
+          "line": 253
         }
       ],
       "reason": "Preserved"
@@ -7752,7 +7752,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState",
-          "line": 278
+          "line": 274
         }
       ],
       "reason": "Preserved"
@@ -7766,7 +7766,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged",
-          "line": 314
+          "line": 310
         }
       ],
       "reason": "Preserved"
@@ -7802,7 +7802,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges",
-          "line": 387
+          "line": 398
         }
       ],
       "reason": "Preserved"
@@ -7816,7 +7816,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges",
-          "line": 426
+          "line": 435
         }
       ],
       "reason": "Preserved"
@@ -7830,7 +7830,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState",
-          "line": 465
+          "line": 471
         }
       ],
       "reason": "Preserved"
@@ -7844,7 +7844,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState",
-          "line": 494
+          "line": 501
         }
       ],
       "reason": "Preserved"
@@ -7858,7 +7858,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState",
-          "line": 515
+          "line": 521
         }
       ],
       "reason": "Preserved"
@@ -7872,7 +7872,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged",
-          "line": 538
+          "line": 553
         }
       ],
       "reason": "Preserved",
@@ -7894,7 +7894,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 559
+          "line": 572
         }
       ],
       "reason": "Preserved"
@@ -7908,7 +7908,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged",
-          "line": 575
+          "line": 586
         }
       ],
       "reason": "Preserved"
@@ -7922,7 +7922,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged",
-          "line": 592
+          "line": 604
         }
       ],
       "reason": "Preserved"
@@ -7936,7 +7936,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied",
-          "line": 606
+          "line": 619
         }
       ],
       "reason": "Preserved"
@@ -7950,7 +7950,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState",
-          "line": 635
+          "line": 649
         }
       ],
       "reason": "Preserved"
@@ -7964,7 +7964,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged",
-          "line": 652
+          "line": 666
         }
       ],
       "reason": "Preserved"
@@ -7978,7 +7978,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged",
-          "line": 674
+          "line": 688
         }
       ],
       "reason": "Preserved"
@@ -7992,7 +7992,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference",
-          "line": 6
+          "line": 13
         }
       ],
       "reason": "Preserved"
@@ -8006,7 +8006,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenDepartedWaiterClaimsInvitation_RejectsPhantomAcceptance",
-          "line": 15
+          "line": 22
         }
       ],
       "reason": "Preserved"
@@ -8020,7 +8020,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient",
-          "line": 36
+          "line": 43
         }
       ],
       "reason": "Preserved"
@@ -8034,7 +8034,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenReplacedWithdrawalIsNotRefunded_RejectsUnsettledAcceptance",
-          "line": 48
+          "line": 55
         }
       ],
       "reason": "Preserved"
@@ -8048,7 +8048,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenTargetWasCancelledWithoutWithdrawal_RejectsUnrelatedRefund",
-          "line": 70
+          "line": 77
         }
       ],
       "reason": "Preserved"
@@ -8062,7 +8062,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenRemovedReplacementHasNoCommitmentHistory_RejectsPhantomAcceptance",
-          "line": 91
+          "line": 98
         }
       ],
       "reason": "Preserved"
@@ -8076,7 +8076,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation",
-          "line": 109
+          "line": 116
         }
       ],
       "reason": "Preserved"
@@ -8090,7 +8090,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed",
-          "line": 124
+          "line": 131
         }
       ],
       "reason": "Preserved",
@@ -8116,7 +8116,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed",
-          "line": 149
+          "line": 159
         }
       ],
       "reason": "Preserved",
@@ -8142,7 +8142,7 @@
         {
           "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
           "name": "constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory",
-          "line": 172
+          "line": 186
         }
       ],
       "reason": "Preserved",
@@ -8170,7 +8170,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenRestoredBatchOmitsPayableHold_LeavesAllFundsAndHistoryPending",
-          "line": 19
+          "line": 20
         }
       ],
       "reason": "Preserved"
@@ -8184,7 +8184,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCallbackIsStale_RejectsWithoutChangingState",
-          "line": 44
+          "line": 45
         }
       ],
       "reason": "Preserved"
@@ -8198,7 +8198,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCompletionDateIsInvalid_LeavesAllHoldsPending",
-          "line": 54
+          "line": 55
         }
       ],
       "reason": "Preserved"
@@ -8212,7 +8212,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenSecondHoldFails_PreservesAllHolds",
-          "line": 64
+          "line": 65
         }
       ],
       "reason": "Preserved"
@@ -8226,7 +8226,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenSecondHoldFailureIsRetried_ReleasesAllHolds",
-          "line": 93
+          "line": 94
         }
       ],
       "reason": "Preserved"
@@ -8240,12 +8240,12 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds",
-          "line": 125
+          "line": 126
         },
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "reliabilityOutcome_WhenSessionSettlementForfeitsWithdrawal_ReturnsZero",
-          "line": 162
+          "line": 163
         }
       ],
       "reason": "Separated mixed payout completion from the subsequent reliability query; retained four financial assertions and the zero-reliability assertion",
@@ -8273,7 +8273,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity",
-          "line": 192
+          "line": 202
         }
       ],
       "reason": "Preserved"
@@ -8287,7 +8287,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory",
-          "line": 225
+          "line": 235
         }
       ],
       "reason": "Preserved",
@@ -8317,7 +8317,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenEmailIsMissingAndSessionIsFull_RejectsWithoutChangingWaitlist",
-          "line": 101
+          "line": 96
         }
       ],
       "reason": "Preserved",
@@ -8339,7 +8339,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenEmailIsUnverified_AllowsAdmission",
-          "line": 122
+          "line": 117
         }
       ],
       "reason": "Preserved",
@@ -8365,7 +8365,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged",
-          "line": 141
+          "line": 136
         }
       ],
       "reason": "Preserved",
@@ -8389,7 +8389,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenFundsExactlyCoverShare_CommitsAndEmitsLock",
-          "line": 193
+          "line": 182
         }
       ],
       "reason": "Preserved"
@@ -8403,7 +8403,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenSessionIsFullAndUserHasNoFunds_JoinsWaitlistWithoutLockingFunds",
-          "line": 218
+          "line": 207
         }
       ],
       "reason": "Preserved"
@@ -8417,7 +8417,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenWaitersExistAndSlotIsAvailable_QueuesBehindExistingWaiters",
-          "line": 246
+          "line": 235
         }
       ],
       "reason": "Preserved"
@@ -8431,7 +8431,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReloadedWalletIncludesPriorLock_RejectsWithoutChangingState",
-          "line": 273
+          "line": 262
         }
       ],
       "reason": "Preserved"
@@ -8445,7 +8445,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState",
-          "line": 316
+          "line": 305
         }
       ],
       "reason": "Preserved",
@@ -8467,7 +8467,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState",
-          "line": 338
+          "line": 328
         }
       ],
       "reason": "Preserved",
@@ -8489,7 +8489,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet",
-          "line": 364
+          "line": 355
         }
       ],
       "reason": "Preserved"
@@ -8503,7 +8503,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsInactive_RejectsWithoutChangingState",
-          "line": 389
+          "line": 381
         }
       ],
       "reason": "Preserved",
@@ -8525,7 +8525,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenFundsAreOneCentBelowShare_RejectsWithoutChangingState",
-          "line": 408
+          "line": 400
         }
       ],
       "reason": "Preserved",
@@ -8547,7 +8547,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState",
-          "line": 427
+          "line": 419
         }
       ],
       "reason": "Preserved"
@@ -8561,7 +8561,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenPrivateRoomTokenMatches_CommitsApplicant",
-          "line": 456
+          "line": 444
         }
       ],
       "reason": "Preserved"
@@ -8575,7 +8575,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReturningWaiterUsesDifferentId_RejectsWithoutChangingState",
-          "line": 478
+          "line": 462
         }
       ],
       "reason": "Preserved"
@@ -8589,7 +8589,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition",
-          "line": 507
+          "line": 486
         }
       ],
       "reason": "Preserved",
@@ -8631,7 +8631,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsAlreadyCommitted_RejectsWithoutChangingState",
-          "line": 558
+          "line": 532
         }
       ],
       "reason": "Preserved"
@@ -8645,7 +8645,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState",
-          "line": 576
+          "line": 550
         }
       ],
       "reason": "Preserved"
@@ -8659,7 +8659,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 602
+          "line": 579
         }
       ],
       "reason": "Preserved"
@@ -8673,7 +8673,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenNamedInviteeAcceptsNewerPrivateInvitation_RefundsOnlyTheirInviter",
-          "line": 619
+          "line": 596
         }
       ],
       "reason": "Preserved"
@@ -8687,7 +8687,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenInvitationWasAcceptedAndOrdinarySlotIsAvailable_RejectsWithoutChangingState",
-          "line": 679
+          "line": 642
         }
       ],
       "reason": "Preserved"
@@ -8701,7 +8701,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenInvitationWasAcceptedAndSessionIsFull_RejectsWithoutWaitlisting",
-          "line": 718
+          "line": 682
         }
       ],
       "reason": "Preserved"
@@ -8715,7 +8715,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenParticipantWasRemoved_RejectsWithoutChangingState",
-          "line": 761
+          "line": 727
         }
       ],
       "reason": "Preserved"
@@ -8729,7 +8729,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenEmailIsUnverified_PromotesAndHoldsFunds",
-          "line": 12
+          "line": 14
         }
       ],
       "reason": "Preserved",
@@ -8757,7 +8757,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstWaiterHasPendingInvitation_RejectsWithoutAcceptingOrMovingQueue",
-          "line": 35
+          "line": 37
         }
       ],
       "reason": "Preserved"
@@ -8771,7 +8771,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenOnlyVacancyIsReserved_RejectsWithoutMovingTheQueue",
-          "line": 78
+          "line": 82
         }
       ],
       "reason": "Preserved"
@@ -8785,7 +8785,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenAnOlderWithdrawalIsReserved_RefundsOnlyTheOpenWithdrawal",
-          "line": 108
+          "line": 114
         }
       ],
       "reason": "Preserved"
@@ -8799,7 +8799,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenQueueIsEmpty_ReturnsNoneBeforeValidatingHoldId",
-          "line": 155
+          "line": 161
         }
       ],
       "reason": "Preserved",
@@ -8821,7 +8821,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenSessionHasStartedAndQueueIsEmpty_RejectsBeforeReturningNone",
-          "line": 170
+          "line": 176
         }
       ],
       "reason": "Preserved"
@@ -8835,7 +8835,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged",
-          "line": 191
+          "line": 197
         }
       ],
       "reason": "Preserved",
@@ -8861,7 +8861,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenLoadedUserDoesNotMatchNextWaiter_RejectsWithoutChangingState",
-          "line": 235
+          "line": 242
         }
       ],
       "reason": "Preserved"
@@ -8875,7 +8875,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenReloadedWaiterHasFunds_PromotesFromUpdatedWallet",
-          "line": 262
+          "line": 271
         }
       ],
       "reason": "Preserved"
@@ -8889,7 +8889,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstWaiterCannotPay_SkipsThemAndSelectsNextWaiter",
-          "line": 304
+          "line": 313
         }
       ],
       "reason": "Preserved"
@@ -8903,7 +8903,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter",
-          "line": 339
+          "line": 348
         }
       ],
       "reason": "Preserved"
@@ -8917,7 +8917,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenParticipantChoosesOpenWaitlist_AdmitsFirstWaiterAndRefundsTheirShare",
-          "line": 380
+          "line": 383
         }
       ],
       "reason": "Preserved",
@@ -8951,7 +8951,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenTwoParticipantsChooseOpenWaitlist_RefundsEarlierWithdrawal",
-          "line": 436
+          "line": 440
         }
       ],
       "reason": "Preserved",
@@ -8981,7 +8981,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenNamedInviteeIsUnverified_AllowsReplacement",
-          "line": 14
+          "line": 13
         }
       ],
       "reason": "Preserved",
@@ -9003,7 +9003,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "join_WhenNamedInviteeHasPendingInvitation_RejectsUntilExplicitAcceptance",
-          "line": 43
+          "line": 42
         }
       ],
       "reason": "Preserved"
@@ -9017,7 +9017,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat",
-          "line": 86
+          "line": 85
         }
       ],
       "reason": "Preserved"
@@ -9031,7 +9031,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat",
-          "line": 118
+          "line": 119
         }
       ],
       "reason": "Preserved"
@@ -9045,7 +9045,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition",
-          "line": 160
+          "line": 163
         }
       ],
       "reason": "Preserved",
@@ -9071,7 +9071,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation",
-          "line": 195
+          "line": 200
         }
       ],
       "reason": "Preserved",
@@ -9093,7 +9093,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation",
-          "line": 224
+          "line": 231
         }
       ],
       "reason": "Preserved",
@@ -9115,7 +9115,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation",
-          "line": 261
+          "line": 263
         }
       ],
       "reason": "Preserved"
@@ -9129,7 +9129,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal",
-          "line": 286
+          "line": 292
         }
       ],
       "reason": "Preserved"
@@ -9143,7 +9143,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat",
-          "line": 337
+          "line": 344
         }
       ],
       "reason": "Preserved",
@@ -9169,7 +9169,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenEmailIsMissing_StillLeavesAnExistingEntry",
-          "line": 10
+          "line": 11
         }
       ],
       "reason": "Preserved",
@@ -9191,7 +9191,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "join_WhenOnlyAvailableSeatIsReserved_JoinsOrdinaryWaitlistWithoutTakingReservation",
-          "line": 29
+          "line": 30
         }
       ],
       "reason": "Preserved"
@@ -9205,7 +9205,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenParticipantOwnsWaitingEntry_LeavesWithoutChangingCommitments",
-          "line": 65
+          "line": 68
         }
       ],
       "reason": "Preserved",
@@ -9229,7 +9229,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenEntryBelongsToAnotherParticipant_RejectsWithoutChangingState",
-          "line": 93
+          "line": 96
         }
       ],
       "reason": "Preserved"
@@ -9243,7 +9243,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState",
-          "line": 111
+          "line": 114
         }
       ],
       "reason": "Preserved",
@@ -9265,7 +9265,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantIsUnverified_StillRefundsAnExistingEarlyCommitment",
-          "line": 40
+          "line": 41
         }
       ],
       "reason": "Preserved",
@@ -9291,7 +9291,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantDirectlyInvitesSomeone_ReservesSeatWithoutCommittingInviteeOrRefunding",
-          "line": 60
+          "line": 61
         }
       ],
       "reason": "Preserved"
@@ -9305,7 +9305,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenInviteeAlreadyWaits_KeepsTheirQueueEntryUntilTheyAccept",
-          "line": 90
+          "line": 91
         }
       ],
       "reason": "Preserved"
@@ -9319,7 +9319,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantChoseInvitation_RejectsSwitchToWaitlistAndKeepsReservedSeat",
-          "line": 124
+          "line": 125
         }
       ],
       "reason": "Preserved",
@@ -9349,7 +9349,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantChoseWaitlist_RejectsSwitchToInvitationAndKeepsOpenSeat",
-          "line": 160
+          "line": 163
         }
       ],
       "reason": "Preserved",
@@ -9379,7 +9379,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenOneMillisecondBeforeRefundCutoff_RefundsHold",
-          "line": 196
+          "line": 201
         }
       ],
       "reason": "Preserved"
@@ -9393,7 +9393,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenEarlyParticipantInvitesOnePerson_RefundsAndReservesTheirSeat",
-          "line": 217
+          "line": 222
         }
       ],
       "reason": "Preserved"
@@ -9407,7 +9407,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantAlreadyInvitedSomeone_RejectsSecondInvitation",
-          "line": 244
+          "line": 249
         }
       ],
       "reason": "Preserved"
@@ -9421,7 +9421,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenNamedRecipientIsMissing_RejectsWithoutChangingState",
-          "line": 280
+          "line": 287
         }
       ],
       "reason": "Preserved"
@@ -9435,7 +9435,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantInvitesThemself_RejectsWithoutChangingState",
-          "line": 297
+          "line": 304
         }
       ],
       "reason": "Preserved"
@@ -9449,7 +9449,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenInviteeAlreadyHasACommittedSeat_RejectsWithoutChangingState",
-          "line": 315
+          "line": 322
         }
       ],
       "reason": "Preserved"
@@ -9463,7 +9463,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenInviteeAlreadyHasAnotherReservation_RejectsWithoutChangingState",
-          "line": 335
+          "line": 342
         }
       ],
       "reason": "Preserved"
@@ -9477,7 +9477,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenExactlyAtRefundCutoff_AwaitsReplacement",
-          "line": 365
+          "line": 372
         }
       ],
       "reason": "Preserved"
@@ -9491,7 +9491,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenOneHourBeforeStart_AwaitsReplacement",
-          "line": 383
+          "line": 390
         }
       ],
       "reason": "Preserved"
@@ -9505,7 +9505,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenActorDoesNotOwnParticipation_RejectsWithoutChangingState",
-          "line": 400
+          "line": 407
         }
       ],
       "reason": "Preserved"
@@ -9519,7 +9519,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 417
+          "line": 424
         }
       ],
       "reason": "Preserved"
@@ -9533,7 +9533,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenMoreThan30HoursBeforeStart_ShowsFullRefundWithoutChangingState",
-          "line": 434
+          "line": 441
         }
       ],
       "reason": "Preserved"
@@ -9547,7 +9547,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenExactlyAtRefundCutoff_ShowsShareStaysHeld",
-          "line": 449
+          "line": 456
         }
       ],
       "reason": "Preserved"
@@ -9561,7 +9561,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenFollowedByWithdrawalAtSameTime_MatchesItsOutcome",
-          "line": 463
+          "line": 470
         }
       ],
       "reason": "Preserved"
@@ -9575,7 +9575,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenUserIsNotParticipating_RejectsWithNotFound",
-          "line": 482
+          "line": 489
         }
       ],
       "reason": "Preserved"
@@ -9589,7 +9589,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenAlreadyWithdrawn_RejectsWithInvalidState",
-          "line": 492
+          "line": 499
         }
       ],
       "reason": "Preserved"
@@ -9603,7 +9603,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenSessionStartsNow_RejectsWithSessionStarted",
-          "line": 507
+          "line": 517
         }
       ],
       "reason": "Preserved"
@@ -9613,10 +9613,56 @@
     {
       "file": "tests/domain/accounts/booker/administration.test.ts",
       "name": "changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
-      "line": 170,
+      "line": 171,
       "reason": "Added an explicit PUBLIC-to-PRIVATE command scenario for an unverified owner; retained the separate permission-check scenario.",
       "assertions": [
         "expect(bookingSession.visibility).toBe(\"PRIVATE\")"
+      ]
+    },
+    {
+      "file": "tests/domain/accounts/booker/creation.test.ts",
+      "name": "createSession_WhenCustomSettingsAreProvided_PreservesThem",
+      "line": 171,
+      "reason": "Preserves creation configuration forwarding previously exercised only in admission and custom-pricing setup; checks visibility, group, reliability, and chosen share.",
+      "assertions": [
+        "expect(session.visibility).toBe(\"PUBLIC\")",
+        "expect(session.invitedGroupId).toBe(\"group\")",
+        "expect(session.minimumReliability?.toNumber()).toBe(80)",
+        "expect(session.bookingShare.toCents()).toBe(750)"
+      ]
+    },
+    {
+      "file": "tests/domain/accounts/payout-account.test.ts",
+      "name": "failSetup_WhenSetupIsPending_ReturnsFailedCopy",
+      "line": 77,
+      "reason": "Preserves the successful failure-state transition previously exercised only as setup; checks immutable copy and bank state.",
+      "assertions": [
+        "expect(failedAccount).not.toBe(pendingAccount)",
+        "expect(pendingAccount.setupStatus).toBe(\"PENDING\")",
+        "expect(failedAccount.setupStatus).toBe(\"FAILED\")",
+        "expect(failedAccount.bankAccountReference).toBeUndefined()"
+      ]
+    },
+    {
+      "file": "tests/domain/accounts/user.test.ts",
+      "name": "failPayoutSetup_WhenSetupIsPending_ReplacesAccountWithFailedCopy",
+      "line": 353,
+      "reason": "Preserves the successful account failure transition previously exercised only before replacement setup; checks child identity and failed status.",
+      "assertions": [
+        "expect(pendingAccount.setupStatus).toBe(\"PENDING\")",
+        "expect(failedAccount).not.toBe(pendingAccount)",
+        "expect(failedAccount?.setupStatus).toBe(\"FAILED\")",
+        "expect(failedAccount?.bankAccountReference).toBeUndefined()"
+      ]
+    },
+    {
+      "file": "tests/domain/groups/regular-group.test.ts",
+      "name": "revokeInvitation_WhenOwnerRevokesInvitation_DisablesInvitation",
+      "line": 170,
+      "reason": "Preserves invitation revocation previously exercised only as setup; checks disabled status and retained token.",
+      "assertions": [
+        "expect(group.invitationActive).toBe(false)",
+        "expect(group.invitationToken).toBe(\"first-token\")"
       ]
     }
   ],
@@ -9644,5 +9690,1230 @@
       "autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants"
     ],
     "review": "Existing attendance hydrated in the fixture; commands under test remain in each case. All assertions unchanged. Deep state equivalence checked for ATTENDED/ABSENT at two and three slots, including holds, roster order and verification metadata. Existing fixture defaults retained."
+  },
+  "prerequisiteFixturePass": {
+    "baselineRevision": "ea46eba64237a9cf266f5bf129895d4b3d854665",
+    "reviewedFiles": 43,
+    "retainedCases": 603,
+    "addedCases": 4,
+    "finalCases": 607,
+    "retainedAssertions": 1229,
+    "addedAssertions": 14,
+    "finalAssertions": 1243,
+    "prerequisiteAssertions": 8,
+    "assertionReview": "Every original matcher, negation, expected argument and assertion order is preserved. Observed expressions are unchanged except the reviewed recordAdmission callback input below. Constructor prerequisites preserve original state and observation timing; retries, idempotency, mutation and stale-source sequences remain explicit.",
+    "fixtureEquivalence": {
+      "sharedStateComparisons": 16,
+      "roleCaseComparisons": 48,
+      "result": "Passed",
+      "checked": "Statuses, attendance metadata, amounts, dates, roster/queue order, replacement history, identity captures and loaded-user state. Custom share and existing defaults checked independently."
+    },
+    "observedExpressionChange": {
+      "case": "tests/domain/sessions/session/recording.test.ts#recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges",
+      "before": "aliceInvitation.refundReplacement(danaTriedToAcceptAt)",
+      "after": "refundedInvitation",
+      "reason": "Precompute the same refunded withdrawal through a constructor fixture; recordAdmission still receives the wrong recipient and must reject atomically."
+    },
+    "reviewedUnchangedCases": 436,
+    "unchangedCaseReview": "Remaining cases already declare constructor/value prerequisites or retain calls needed for their named retry, identity, mutation, idempotency, and stale-source behavior. Every case was reviewed.",
+    "changedCaseReviews": [
+      {
+        "file": "tests/domain/accounts/booker/administration.test.ts",
+        "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/booker/authorization.test.ts",
+        "name": "preparePayout_WhenBookerIsForeign_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated existing Booker attendance at sessionEndsAt with the same session status."
+      },
+      {
+        "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
+        "name": "cancel_WhenRosterHasRemovedParticipant_PreservesRemovalWithoutSecondRefund",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated removed alice with refunded hold; preserve captured original reference."
+      },
+      {
+        "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
+        "name": "cancel_WhenRosterHasPreviouslyCancelledParticipant_PreservesTerminalHold",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated previously cancelled Alice and preserve the exact original instance under subsequent cancellation."
+      },
+      {
+        "file": "tests/domain/accounts/booker/creation.test.ts",
+        "name": "createSession_WhenCustomSettingsAreProvided_PreservesThem",
+        "assertionsBefore": 0,
+        "assertionsAfter": 4,
+        "review": "added focused creation-settings forwarding coverage. Preserves implicit Booker.createSession coverage removed from admission/custom-price prerequisites: PUBLIC visibility, invited group, reliability 80 and custom share 750 are forwarded to the created session. One creation behavior, four direct result assertions."
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated existing Booker attendance at sessionEndsAt with the same session status."
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Hydrated existing Booker attendance at sessionEndsAt with the same session status."
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenReplacementSweepWasMissed_ExpiresOutstandingReplacement",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenAttendanceIsIncomplete_LeavesExpiryUnapplied",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Hydrated existing Booker attendance at sessionEndsAt with the same session status."
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Hydrated existing Booker attendance at sessionEndsAt with the same session status. Retained rejected foreign attempt and owning-booker retry."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenRoleWasCreatedAfterDeactivation_ThrowsInactiveAccount",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated inactive account before creating the role; preserve the rejection and empty-roster assertion."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Hydrated departed former-waiter at original queue position 1; preserve nextQueueSequence and roster order. Failure injection, spy call assertion, before-state snapshot, rejection and finally cleanup are unchanged."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated private/group configuration instead of running createSession/changeVisibility."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated private/group configuration instead of running createSession/changeVisibility."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated private/group configuration instead of running createSession/changeVisibility."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated private/group configuration instead of running createSession/changeVisibility."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenPrivateRoomTokenMatches_CommitsApplicant",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated private/group configuration instead of running createSession/changeVisibility."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenReturningWaiterUsesDifferentId_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated departed cara at original queue position 1; preserve nextQueueSequence and roster order."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition",
+        "assertionsBefore": 12,
+        "assertionsAfter": 12,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated departed cara at original queue position 1; preserve nextQueueSequence and roster order."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with REFUNDED hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "acceptReplacement_WhenNamedInviteeAcceptsNewerPrivateInvitation_RefundsOnlyTheirInviter",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated private visibility and both prior commitments. Hydrated alice withdrawal at aliceWithdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice. Hydrated ben withdrawal at benWithdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "acceptReplacement_WhenInvitationWasAcceptedAndOrdinarySlotIsAvailable_RejectsWithoutChangingState",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice. Retained actual first acceptance and replay rejection, including existing precondition assertions and later full-capacity setup."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "acceptReplacement_WhenInvitationWasAcceptedAndSessionIsFull_RejectsWithoutWaitlisting",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice. Retained actual first acceptance and replay rejection, including existing precondition assertions and later full-capacity setup."
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "name": "join_WhenParticipantWasRemoved_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated removed alice with refunded hold; preserve captured original reference."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenFirstWaiterHasPendingInvitation_RejectsWithoutAcceptingOrMovingQueue",
+        "assertionsBefore": 8,
+        "assertionsAfter": 8,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenOnlyVacancyIsReserved_RejectsWithoutMovingTheQueue",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenAnOlderWithdrawalIsReserved_RefundsOnlyTheOpenWithdrawal",
+        "assertionsBefore": 7,
+        "assertionsAfter": 7,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at benWithdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice. Hydrated alice withdrawal at aliceWithdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Failure injection, spy call assertion, before-state snapshot, rejection and finally cleanup are unchanged."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenLoadedUserDoesNotMatchNextWaiter_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with REFUNDED hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated LEFT_WAITLIST Cara with queueSequence 1, waiting Dana/Evan at 2/3 and nextQueueSequence 4; dedicated preceding case still tests skipping an unfunded waiter."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenParticipantChoosesOpenWaitlist_AdmitsFirstWaiterAndRefundsTheirShare",
+        "assertionsBefore": 8,
+        "assertionsAfter": 8,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "name": "promoteFromWaitlist_WhenTwoParticipantsChooseOpenWaitlist_RefundsEarlierWithdrawal",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at benWithdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Hydrated alice withdrawal at aliceWithdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenNamedInviteeIsUnverified_AllowsReplacement",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at hoursBeforeSessionStart(10) with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "join_WhenNamedInviteeHasPendingInvitation_RejectsUntilExplicitAcceptance",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at aliceWithdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice. Hydrated ben withdrawal at benWithdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat",
+        "assertionsBefore": 10,
+        "assertionsAfter": 10,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated the reliability threshold and prior commitment. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal",
+        "assertionsBefore": 8,
+        "assertionsAfter": 8,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at benWithdrawalTime with REFUNDED hold and \"DIRECT_INVITE\" choice. Hydrated alice withdrawal at aliceWithdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "name": "acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with REFUNDED hold and \"DIRECT_INVITE\" choice. Retained actual first acceptance and replay rejection, including existing precondition assertions and later full-capacity setup."
+      },
+      {
+        "file": "tests/domain/accounts/participant/waitlist.test.ts",
+        "name": "join_WhenOnlyAvailableSeatIsReserved_JoinsOrdinaryWaitlistWithoutTakingReservation",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+        "name": "withdraw_WhenParticipantChoseInvitation_RejectsSwitchToWaitlistAndKeepsReservedSeat",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+        "name": "withdraw_WhenParticipantChoseWaitlist_RejectsSwitchToInvitationAndKeepsOpenSeat",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+        "name": "withdraw_WhenParticipantAlreadyInvitedSomeone_RejectsSecondInvitation",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated ben withdrawal at withdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+        "name": "withdraw_WhenInviteeAlreadyHasAnotherReservation_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at firstWithdrawalTime with AWAITING_REPLACEMENT hold and \"DIRECT_INVITE\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+        "name": "previewWithdrawal_WhenAlreadyWithdrawn_RejectsWithInvalidState",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "migrated prerequisite workflow to constructor state. Hydrated alice withdrawal at hoursBeforeSessionStart(10) with AWAITING_REPLACEMENT hold and \"OPEN_SLOT\" choice."
+      },
+      {
+        "file": "tests/domain/accounts/payout-account.test.ts",
+        "name": "completeSetup_WhenSetupHasFailed_ThrowsInvalidState",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct failed payout state instead of executing failSetup as a prerequisite."
+      },
+      {
+        "file": "tests/domain/accounts/payout-account.test.ts",
+        "name": "failSetup_WhenSetupIsPending_ReturnsFailedCopy",
+        "assertionsBefore": 0,
+        "assertionsAfter": 4,
+        "review": "Explicit success coverage for the immutable failed payout child, previously exercised indirectly by prerequisite workflows."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "constructor_WhenLoadingDeactivatedUser_RestoresAnonymisedProfile",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Construct an anonymised inactive source user with completed bank identity; restore and compare the same source state. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "updateProfile_WhenAccountIsActive_ReplacesEmail",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct inactive input directly; preserve rejection and before-state equality. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct inactive input directly; preserve rejection and before-state equality. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct a pending payout child directly; preserve account identity captures and atomicity checks. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct completed bank state directly; retain the named operation and original identity references. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Construct the failed prerequisite; retain replacement setup and completion because the asserted destination belongs to that replacement. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides. Failed state is constructed; replacement begin and completion remain because the resulting replacement destination is asserted."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Construct a pending payout child directly; preserve account identity captures and atomicity checks. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct a pending payout child directly; preserve account identity captures and atomicity checks. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct completed bank state directly; retain the named operation and original identity references. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "failPayoutSetup_WhenSetupIsPending_ReplacesAccountWithFailedCopy",
+        "assertionsBefore": 0,
+        "assertionsAfter": 4,
+        "review": "Explicit success coverage for replacing the user payout child with a failed copy, previously exercised indirectly before setup replacement. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct completed bank state directly; retain the named operation and original identity references. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct completed bank state directly; retain the named operation and original identity references. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct inactive profile with completed financial identity; execute only the rejected destination query. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenNoObligationsRemain_AnonymisesProfile",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Supply stored preferences in construction instead of running the preference command. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Construct completed bank state directly; retain the named operation and original identity references. Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides."
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "name": "deactivate_WhenAlreadyInactive_LeavesStateUnchanged",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Local user fixture directly constructs the original empty-wallet, unverified active defaults with explicit state overrides. Keep first deactivation and its before-state snapshot so the repeated command proves idempotency."
+      },
+      {
+        "file": "tests/domain/finance/payout-attempt.test.ts",
+        "name": "complete_WhenProviderReferenceConflicts_ThrowsPayoutConflict",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct the recorded provider result so the only callback executed is the conflicting one."
+      },
+      {
+        "file": "tests/domain/finance/payout-attempt.test.ts",
+        "name": "complete_WhenFailureHasBeenRecorded_RejectsLateCallback",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct the recorded timeout state before the rejected late callback; live fail transitions remain asserted in fail callback tests."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "memberships_WhenReturnedMembershipsAreMutated_PreservesMembersAndDates",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults. Keep explicit mutation stimuli and source/returned-copy handles; isolation is the behavior under test."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "join_WhenMemberJoinsAgain_PreservesSingleMembership",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults. Both JOINED and ALREADY_MEMBER return values plus single roster membership are asserted."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct a revoked invitation directly, retaining the existing owner and token. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "join_WhenTokenWasRotated_ThrowsInvalidInvitation",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct the current next-token directly; the rejected command still presents first-token. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "join_WhenRevokedInvitationIsRotated_AcceptsNewToken",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct revoked prerequisite; retain rotation and admission to verify that rotation reopens admission. Local group fixture directly constructs the original owner, token, name, membership date and active defaults. Revoked state is constructed; rotation followed by successful admission checks reactivation, which has no persisted historical flag."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "join_WhenGroupIsArchived_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct archived state directly; preserve full rejection atomicity snapshot. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct archived state directly; preserve full rejection atomicity snapshot. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "revokeInvitation_WhenOwnerRevokesInvitation_DisablesInvitation",
+        "assertionsBefore": 0,
+        "assertionsAfter": 2,
+        "review": "Explicit success coverage for disabling an invitation without changing its token, previously exercised indirectly before join rejection. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "rename_WhenActorIsNotOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "rename_WhenOwnerProvidesName_UpdatesName",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "rename_WhenNameIsBlank_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "rename_WhenGroupIsArchived_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct archived state directly; preserve full rejection atomicity snapshot. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct owner and target memberships directly before removal. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "removeMember_WhenTargetIsOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "removeMember_WhenMemberIsMissing_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "archive_WhenActorIsNotOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults. Repeated archive commands are the named idempotency behavior."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "leave_WhenMemberLeaves_RemovesOnlyThatMember",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Construct the ordered three-member roster directly; Aisha remains the explicit leaving member. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "leave_WhenUserIsOwner_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct initial owner/Aisha memberships instead of an unrelated admission; preserve the named leave/rejoin or owner-rejection scenario. Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "leave_WhenUserIsNotAMember_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Local group fixture directly constructs the original owner, token, name, membership date and active defaults."
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "name": "join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Construct initial owner/Aisha memberships instead of an unrelated admission; preserve the named leave/rejoin or owner-rejection scenario. Local group fixture directly constructs the original owner, token, name, membership date and active defaults. Initial membership is constructed; leave followed by JOINED checks actual readmission, which has no persisted former-member flag."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenAbsenceIsOneHalfLifeOlder_WeightsItByHalf",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenLateWithdrawalIsFinalized_CountsOneNegativeOutcome",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenClockAdvances_PreservesRelativeWeights",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible. Keep original and advanced-clock score calculations because their equality is the assertion."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenParticipationIsDuplicated_ThrowsRangeError",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenSessionEndsInFuture_ExcludesEntry",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenOutcomeIsFinalizedInFuture_ExcludesEntry",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenOutcomeIsFinalizedAtCutoff_IncludesOutcomeInImmutableScore",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "name": "fromHistory_WhenSessionEndDateIsInvalid_ThrowsRangeError",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "History entries use direct verified participation/HELD-fund constructors; identifiers, end dates and cutoff dates remain visible."
+      },
+      {
+        "file": "tests/domain/sessions/participant-list.test.ts",
+        "name": "oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participant-list.test.ts",
+        "name": "oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund",
+        "assertionsBefore": 6,
+        "assertionsAfter": 6,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "name": "settleHold_WhenParticipantAttended_RejectsForfeiture",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+        "name": "join_WhenPriceExceedsEqualSplit_LocksChosenPrice",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+        "name": "withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+        "name": "cancel_WhenCustomPriceWasCollected_RefundsTheFullHold",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+        "name": "preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+        "name": "completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/reconstruction.test.ts",
+        "name": "constructor_WhenCancelledRosterHasRemovedParticipant_PreservesRemovedStatus",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/reconstruction.test.ts",
+        "name": "constructor_WhenWaiterReusesHistoricalQueueSequence_ThrowsDuplicateId",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "First recording transition is essential to making the original source stale; candidate objects are hydrated, but actual mutation remains."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged",
+        "assertionsBefore": 2,
+        "assertionsAfter": 2,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "name": "recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied",
+        "assertionsBefore": 3,
+        "assertionsAfter": 3,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenReplacedWithdrawalIsNotRefunded_RejectsUnsettledAcceptance",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenTargetWasCancelledWithoutWithdrawal_RejectsUnrelatedRefund",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed",
+        "assertionsBefore": 4,
+        "assertionsAfter": 4,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "name": "constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory",
+        "assertionsBefore": 5,
+        "assertionsAfter": 5,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      },
+      {
+        "file": "tests/domain/sessions/session/settlement.test.ts",
+        "name": "reliabilityOutcome_WhenSessionSettlementForfeitsWithdrawal_ReturnsZero",
+        "assertionsBefore": 1,
+        "assertionsAfter": 1,
+        "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      }
+    ]
   }
 }
