@@ -9,6 +9,12 @@ import type { UnitOfWork } from "@/use-cases/shared/contracts";
 /** Identifies retries of one logical session-creation submission. */
 export interface SessionCreationSubmission {
   readonly idempotencyKey: string;
+  /** Parsed request metadata opts a capable persistence adapter into payload comparison. */
+  readonly request?: {
+    readonly bookerId: UUID;
+    readonly booking: Readonly<SessionBooking>;
+    readonly config: Readonly<SessionConfig>;
+  };
 }
 
 /**
@@ -17,11 +23,7 @@ export interface SessionCreationSubmission {
  * The key-only shape remains supported for existing non-HTTP adapters/callers.
  */
 export interface RequestBoundSessionCreationSubmission extends SessionCreationSubmission {
-  readonly request: {
-    readonly bookerId: UUID;
-    readonly booking: Readonly<SessionBooking>;
-    readonly config: Readonly<SessionConfig>;
-  };
+  readonly request: NonNullable<SessionCreationSubmission["request"]>;
 }
 
 /**

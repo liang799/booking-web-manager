@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { parseRequestBoundCreateSessionInput } from "@/app/sessions/request-bound-creation-input";
 import { PLATFORM_HOLDING_ACCOUNT_ID } from "@/lib/money/constants";
+import { fingerprintOf } from "@/lib/money/idempotency";
 import { PostgresSessionCreationTransaction } from "@/lib/sessions/postgres-session-creation-transaction";
 import { PostgresTransactor } from "@/lib/database/postgres-transactor";
 import { PostgresUserReader } from "@/lib/sessions/postgres-user-reader";
@@ -11,6 +13,7 @@ import type { SqlExecutor } from "@/lib/money/sql";
 import {
   CreateSessions,
   type SessionBooking,
+  type SessionConfig,
 } from "@/use-cases/sessions/CreateSessions";
 import type { SessionCreationTransaction } from "@/use-cases/sessions/session-creation-transaction";
 import {
@@ -41,6 +44,7 @@ describe("UC2-02 PostgreSQL persistence", () => {
     await context?.pool.end();
   });
 
+  // These key-only callers retain the existing non-HTTP compatibility contract.
   function transaction(key: string) {
     return new PostgresSessionCreationTransaction(
       context.pool,
@@ -56,6 +60,199 @@ describe("UC2-02 PostgreSQL persistence", () => {
       holdingAccountId: PLATFORM_HOLDING_ACCOUNT_ID,
     });
   }
+
+  function boundInput(
+    bookerId: string,
+    key: string,
+    changes: { booking?: Partial<SessionBooking>; config?: Partial<SessionConfig> } = {},
+  ) {
+    const details = { ...booking, ...changes.booking };
+    return parseRequestBoundCreateSessionInput(bookerId, {
+      idempotencyKey: key,
+      booking: {
+        ...details,
+        startAt: details.startAt.toISOString(),
+        endAt: details.endAt.toISOString(),
+      },
+      config: { ...config, ...changes.config },
+    });
+  }
+
+  function submitBound(parsed: ReturnType<typeof boundInput>) {
+    const { input, submission } = parsed;
+    return useCase(new PostgresSessionCreationTransaction(context.pool, submission, clock))
+      .forBooker(input.bookerId, input.booking, input.config);
+  }
+
+  describe("request-bound HTTP submissions", () => {
+    test("eight concurrent identical submissions persist one session and replay one result", async () => {
+      const booker = await context.identity();
+      const key = randomUUID();
+      const results = await Promise.all(
+        Array.from({ length: 8 }, () => submitBound(boundInput(booker.userId, key))),
+      );
+
+      results.forEach((result) => expect(result).toEqual(results[0]));
+      expect((await context.pool.query(
+        "select count(*)::int as count from sessions where booker_id = $1",
+        [booker.userId],
+      )).rows).toEqual([{ count: 1 }]);
+      expect((await context.pool.query(
+        "select status, request_fingerprint from idempotency_keys where idempotency_key = $1",
+        [operationKey(booker.userId, key)],
+      )).rows).toEqual([{
+        status: "SUCCEEDED",
+        request_fingerprint: fingerprintOf(boundInput(booker.userId, key).input),
+      }]);
+    });
+
+    test("concurrent different payloads sharing a key create one session and reject the losing payload", async () => {
+      const booker = await context.identity();
+      const key = randomUUID();
+      const attempts = await Promise.allSettled([
+        submitBound(boundInput(booker.userId, key)),
+        submitBound(boundInput(booker.userId, key, { booking: { venueName: "Another booked venue" } })),
+      ]);
+
+      const successful = attempts.filter((attempt) => attempt.status === "fulfilled");
+      expect(successful).toHaveLength(1);
+      expect(attempts.filter((attempt) => attempt.status === "rejected")).toMatchObject([
+        { reason: { code: "IDEMPOTENCY_CONFLICT" } },
+      ]);
+      expect((await context.pool.query(
+        "select session_id from sessions where booker_id = $1",
+        [booker.userId],
+      )).rows).toEqual([{ session_id: successful[0]?.value.sessionId }]);
+    });
+
+    test("changed valid input conflicts without replacing the original replay", async () => {
+      const booker = await context.identity();
+      const key = randomUUID();
+      const original = await submitBound(boundInput(booker.userId, key));
+
+      await expect(submitBound(boundInput(booker.userId, key, {
+        booking: { totalCostCents: 1200 },
+        config: { totalSlots: 4, pricePerSlotCents: 400 },
+      }))).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+      expect(await submitBound(boundInput(booker.userId, key))).toEqual(original);
+      // An old writer cannot recover a payload-bound result after the cutover.
+      await expect(useCase(transaction(key)).forBooker(booker.userId, booking, config))
+        .rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+      expect((await context.pool.query(
+        "select session_id, total_cost_cents, total_slots, booking_share_cents from sessions where booker_id = $1",
+        [booker.userId],
+      )).rows).toEqual([{
+        session_id: original.sessionId,
+        total_cost_cents: "1001",
+        total_slots: 3,
+        booking_share_cents: "333",
+      }]);
+    });
+
+    test("a successful legacy key replays changed bound input and retains its stored fingerprint", async () => {
+      const booker = await context.identity();
+      const key = randomUUID();
+      const original = await useCase(transaction(key)).forBooker(booker.userId, booking, config);
+      const storedBefore = (await context.pool.query(
+        "select status, request_fingerprint, response from idempotency_keys where idempotency_key = $1",
+        [operationKey(booker.userId, key)],
+      )).rows;
+      expect(storedBefore).toMatchObject([{
+        status: "SUCCEEDED",
+        request_fingerprint: fingerprintOf({ idempotencyKey: operationKey(booker.userId, key) }),
+      }]);
+
+      expect(await submitBound(boundInput(booker.userId, key, {
+        booking: { venueName: "Changed legacy retry", totalCostCents: 1200 },
+        config: { totalSlots: 4 },
+      }))).toEqual(original);
+      expect((await context.pool.query(
+        "select status, request_fingerprint, response from idempotency_keys where idempotency_key = $1",
+        [operationKey(booker.userId, key)],
+      )).rows).toEqual(storedBefore);
+      expect((await context.pool.query(
+        "select session_id from sessions where booker_id = $1",
+        [booker.userId],
+      )).rows).toEqual([{ session_id: original.sessionId }]);
+    });
+
+    test("a failed bound insert rolls back its session and claim before an identical retry succeeds", async () => {
+      const booker = await context.identity();
+      const key = randomUUID();
+      const parsed = boundInput(booker.userId, key);
+      const actual = new PostgresSessionCreationTransaction(context.pool, parsed.submission, clock);
+      const failure: SessionCreationTransaction = {
+        runForBooker: (userId, work) => actual.runForBooker(userId, ({ users, sessions }) =>
+          work({
+            users,
+            sessions: {
+              save: async (session) => {
+                await sessions.save(session);
+                throw new Error("Injected failure after bound insert");
+              },
+            },
+          })),
+      };
+
+      await expect(useCase(failure).forBooker(
+        parsed.input.bookerId, parsed.input.booking, parsed.input.config,
+      )).rejects.toThrow("Injected failure after bound insert");
+      expect((await context.pool.query(
+        `select
+        (select count(*)::int from sessions where booker_id = $1) as sessions,
+        (select count(*)::int from idempotency_keys where idempotency_key = $2) as replay`,
+        [booker.userId, operationKey(booker.userId, key)],
+      )).rows).toEqual([{ sessions: 0, replay: 0 }]);
+
+      const recovered = await submitBound(boundInput(booker.userId, key));
+      expect(await submitBound(boundInput(booker.userId, key))).toEqual(recovered);
+      expect((await context.pool.query(
+        "select session_id from sessions where booker_id = $1",
+        [booker.userId],
+      )).rows).toEqual([{ session_id: recovered.sessionId }]);
+    });
+
+    test("different authenticated bookers independently create and replay the same submission key", async () => {
+      const first = await context.identity();
+      const second = await context.identity();
+      const key = randomUUID();
+      const results = await Promise.all([first, second].map((booker) =>
+        submitBound(boundInput(booker.userId, key))));
+
+      expect(results[0]?.sessionId).not.toBe(results[1]?.sessionId);
+      expect(await submitBound(boundInput(first.userId, key))).toEqual(results[0]);
+      expect(await submitBound(boundInput(second.userId, key))).toEqual(results[1]);
+      expect((await context.pool.query(
+        "select count(*)::int as count from idempotency_keys where idempotency_key = any($1::text[])",
+        [[operationKey(first.userId, key), operationKey(second.userId, key)]],
+      )).rows).toEqual([{ count: 2 }]);
+    });
+
+    test.each(["bound", "legacy"] as const)(
+      "%s replays recheck current account status and email before revealing the saved result",
+      async (kind) => {
+        const booker = await context.identity();
+        const key = randomUUID();
+        const original = kind === "bound"
+          ? await submitBound(boundInput(booker.userId, key))
+          : await useCase(transaction(key)).forBooker(booker.userId, booking, config);
+        await context.pool.query("update profiles set account_status = 'INACTIVE' where user_id = $1", [booker.userId]);
+        await expect(submitBound(boundInput(booker.userId, key)))
+          .rejects.toMatchObject({ code: "INACTIVE_ACCOUNT" });
+        await context.pool.query("update profiles set account_status = 'ACTIVE' where user_id = $1", [booker.userId]);
+        await context.pool.query("update auth.users set email = null where id = $1", [booker.userId]);
+        await expect(submitBound(boundInput(booker.userId, key)))
+          .rejects.toMatchObject({ code: "EMAIL_REQUIRED" });
+        await context.pool.query("update auth.users set email = $2 where id = $1", [booker.userId, booker.email]);
+
+        expect(await submitBound(boundInput(booker.userId, key))).toEqual(original);
+        expect((await context.pool.query(
+          "select session_id from sessions where booker_id = $1",
+          [booker.userId],
+        )).rows).toEqual([{ session_id: original.sessionId }]);
+      },
+    );
+  });
 
   test("persists session and durable replay without moving funds", async () => {
     const booker = await context.identity();

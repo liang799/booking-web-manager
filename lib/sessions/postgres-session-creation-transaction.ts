@@ -9,7 +9,7 @@ import type {
   SessionCreationRepositories,
   SessionCreationTransaction,
 } from "@/use-cases/sessions/session-creation-transaction";
-import type { RequestBoundSessionCreationSubmission, SessionCreationSubmission } from "./request-session-creation-transaction";
+import type { SessionCreationSubmission } from "./request-session-creation-transaction";
 import { PostgresSessionWriter } from "./postgres-session-writer";
 import { PostgresUserReader } from "./postgres-user-reader";
 import { choice, SessionPersistenceError } from "./postgres-row-values";
@@ -19,17 +19,17 @@ export class PostgresSessionCreationTransaction
 {
   private readonly transactor: PostgresTransactor;
   private readonly idempotencyKey: string;
-  private readonly request: RequestBoundSessionCreationSubmission["request"] | undefined;
+  private readonly request: SessionCreationSubmission["request"];
 
   constructor(
     pool: Pool,
-    submission: SessionCreationSubmission | RequestBoundSessionCreationSubmission,
+    submission: SessionCreationSubmission,
     private readonly clock: Clock,
   ) {
     this.transactor = new PostgresTransactor(pool);
     this.idempotencyKey = submission.idempotencyKey;
     // Capture a snapshot: later caller mutation must not change the replay identity.
-    this.request = "request" in submission ? structuredClone(submission.request) : undefined;
+    this.request = structuredClone(submission.request);
   }
 
   async runForBooker<T>(
