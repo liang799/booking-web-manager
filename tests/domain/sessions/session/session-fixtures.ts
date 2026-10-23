@@ -57,25 +57,31 @@ interface TestSessionOptions {
   readonly totalSlots?: number;
   readonly committedUserIds?: readonly string[];
   readonly waitlistedUserIds?: readonly string[];
+  readonly attendanceByUserId?: Readonly<Record<string, "ATTENDED" | "ABSENT">>;
 }
 
-/** Constructs the declared starting roster; admission workflows stay in the test. */
+/** Constructs the starting roster, including any existing Booker attendance marks. */
 export function createTestSession({
   totalSlots = 2,
   committedUserIds = [],
   waitlistedUserIds = [],
+  attendanceByUserId = {},
 }: TestSessionOptions = {}): Session {
   const details = sessionDetails({ totalSlots });
   const terms = {
     holdingAccountId: details.holdingAccountId,
     bookingShare: details.booking.totalCost.divideFloor(totalSlots),
   };
+  const attendanceMarks = new Map(Object.entries(attendanceByUserId));
   return new Session({
     ...details,
     participations: [
-      ...committedUserIds.map((userId) =>
-        committedParticipation(terms, userId),
-      ),
+      ...committedUserIds.map((userId) => {
+        const attendance = attendanceMarks.get(userId);
+        return attendance === undefined
+          ? committedParticipation(terms, userId)
+          : verifiedParticipation(userId, attendance, sessionEndsAt, terms);
+      }),
       ...waitlistedUserIds.map((userId, index) =>
         Participation.createWaitlisted({
           participationId: `p-${userId}`,
@@ -113,6 +119,10 @@ export function verifiedParticipation(
   userId: string,
   attendance: "ATTENDED" | "ABSENT",
   verifiedAt = sessionEndsAt,
+  terms: Pick<Session, "holdingAccountId" | "bookingShare"> = {
+    holdingAccountId: "platform",
+    bookingShare: Money.fromCents(500),
+  },
 ): Participation {
   return new Participation({
     participationId: `p-${userId}`,
@@ -125,9 +135,9 @@ export function verifiedParticipation(
     hold: new FundHold({
       holdId: `h-${userId}`,
       participationId: `p-${userId}`,
-      holdingAccountId: "platform",
+      holdingAccountId: terms.holdingAccountId,
       walletId: `w-${userId}`,
-      amount: Money.fromCents(500),
+      amount: terms.bookingShare,
       state: "HELD",
       createdAt: hoursBeforeSessionStart(48),
     }),

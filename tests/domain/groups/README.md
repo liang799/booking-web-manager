@@ -1,6 +1,6 @@
 # groups test cases
 
-Snapshot: **2026-10-23** · **34 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24** · **34 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
 

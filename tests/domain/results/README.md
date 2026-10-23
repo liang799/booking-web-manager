@@ -1,19 +1,19 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 23:55:50 SGT**
-(`2026-10-23T15:55:50.016Z`). All **603 tests in 43 files passed**.
+Snapshot run: **24 October 2026, 00:11:49 SGT**
+(`2026-10-23T16:11:49.555Z`). All **603 tests in 43 files passed**.
 
 ```sh
-rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
+rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-24-vitest.json
 ```
 
-- [Vitest execution report](./2026-10-23-vitest.json): exact test identities,
+- [Vitest execution report](./2026-10-24-vitest.json): exact test identities,
   statuses, timings, and failure diagnostics from this run.
-- [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
+- [Tested-source manifest](./2026-10-24-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `e56ad0c4e4c69019b29a9b81634d0c628609c65c98741cb30e171c191f970cc5`.
-- [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
+  `26c6f7ce4c25f6238c5770354b93cfeca6de67a3e4a9e5a6e127f5bb3938c387`.
+- [Coverage mapping](./2026-10-24-coverage-map.json): all 598 release-baseline cases
   mapped to 602 retained scenarios, plus one new visibility-change case.
   Includes before/after assertion expressions for changed explicit scenarios.
 - [Table index](../README.md#result-snapshots): nine directories, 603 rows,
@@ -97,6 +97,14 @@ captures across mutations, which expression equivalence alone cannot prove.
 Direct unchanged-state comparisons stay beside their rejection assertions.
 Fault-injection expectations remain independent of stubbed errors.
 
+The attendance fixture follow-up declares existing marks through
+`attendanceByUserId`. Two Booker cases now exercise only their final/conflicting
+command, and two automatic-attendance cases declare their mixed starting roster
+directly. All four retain their assertions. A fixture-equivalence check compared
+hydrated ATTENDED/ABSENT state with the prior setup workflow for two- and
+three-slot sessions, including 500/333-cent holds. Existing fixture defaults and
+verification metadata remain unchanged.
+
 ## Other validation
 
 | Check | Result |
@@ -115,6 +123,12 @@ unsupported `SettingsRow` props, and unresolved app-shell navigation symbols
 and types. These production files are outside the cleanup and remain unchanged.
 The same three test failures, 25 typecheck errors, and one lint error were
 reproduced on the unchanged base revision above.
+
+The preceding snapshot remains available as the
+[23 October execution report](./2026-10-23-vitest.json),
+[source manifest](./2026-10-23-sources.json), and
+[coverage mapping](./2026-10-23-coverage-map.json). Its historical source digest
+identifies that revision; the tables above link to the current snapshot.
 
 ## Refreshing this snapshot
 

@@ -1,11 +1,8 @@
-import { Session } from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   hoursAfterSessionEnd,
   createTestSession,
-  sessionDetails,
   sessionState,
-  verifiedParticipation,
 } from "./session-fixtures";
 
 describe("Session", () => {
@@ -14,15 +11,10 @@ describe("Session", () => {
     const oneMillisecondBeforeAutomaticVerification = new Date(
       automaticVerificationDueAt.getTime() - 1,
     );
-    const unverifiedSession = createTestSession({ committedUserIds: ["ben"] });
-    const bookingSession = new Session(
-      sessionDetails({
-        participations: [
-          verifiedParticipation("alice", "ABSENT"),
-          ...unverifiedSession.participantList.participations,
-        ],
-      }),
-    );
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+      attendanceByUserId: { alice: "ABSENT" },
+    });
     const previousState = sessionState(bookingSession);
 
     expect(() =>
@@ -35,15 +27,10 @@ describe("Session", () => {
 
   test("autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants", () => {
     const automaticVerificationDueAt = hoursAfterSessionEnd(72);
-    const unverifiedSession = createTestSession({ committedUserIds: ["ben"] });
-    const bookingSession = new Session(
-      sessionDetails({
-        participations: [
-          verifiedParticipation("alice", "ABSENT"),
-          ...unverifiedSession.participantList.participations,
-        ],
-      }),
-    );
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+      attendanceByUserId: { alice: "ABSENT" },
+    });
 
     bookingSession.autoVerifyAttendance(automaticVerificationDueAt);
     const attendanceRecords = bookingSession.participantList.participations.map(

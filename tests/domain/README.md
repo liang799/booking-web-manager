@@ -172,6 +172,25 @@ const bookingSession = createTestSession({
 });
 ```
 
+For a partially marked roster, declare existing attendance in the fixture.
+These marks are hydrated as Booker-verified at `sessionEndsAt`; unlisted
+committed users remain unverified. The fixture keeps its default `OPEN` status
+and does not run attendance commands:
+
+```ts
+const bookingSession = createTestSession({
+  committedUserIds: ["alice", "ben"],
+  attendanceByUserId: { alice: "ATTENDED" },
+});
+
+readyBooker().verifyAttendance(bookingSession, {
+  marks: [{ participationId: "p-ben", attendance: "ABSENT" }],
+  now: sessionEndsAt,
+});
+
+expect(bookingSession.status).toBe("AWAITING_PAYOUT");
+```
+
 Keep explicit wallet and transaction-history setup when that history is being
 tested. Use `createTestSession` for routine state built through validated
 constructors. For payout callbacks, `pendingPayoutDetails` supplies an
@@ -253,7 +272,7 @@ The table vocabulary follows *Lecture 16: Testing Introduction*, slides 15–18.
 Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
-The **2026-10-23** snapshot covers **603 passing cases across 43 files**. Each
+The **2026-10-24** snapshot covers **603 passing cases across 43 files**. Each
 table has a linked Name and Location, Input, Oracle (expected result), Log
 (actual outcome verified by assertions), and separate execution status.
 

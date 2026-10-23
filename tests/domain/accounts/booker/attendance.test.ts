@@ -50,10 +50,7 @@ describe("Booker", () => {
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+      attendanceByUserId: { alice: "ATTENDED" },
     });
     const previousState = sessionState(bookingSession);
 
@@ -74,10 +71,7 @@ describe("Booker", () => {
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
+      attendanceByUserId: { alice: "ATTENDED" },
     });
 
     readyBooker().verifyAttendance(bookingSession, {
