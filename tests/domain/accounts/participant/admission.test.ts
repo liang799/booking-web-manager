@@ -19,22 +19,19 @@ import {
 describe("Participant", () => {
   describe("Admission and reentry", () => {
     test("join_WhenUserHasFunds_LocksShareFromLoadedWallet", () => {
-      // Input
       const participantUser = createTestUser({ userId: "participant" });
       const session = createTestSession();
 
-      // Log
       const admission = participantUser.asParticipant().join(session, {
         participationId: "participation",
         holdId: "hold",
         now: hoursBeforeSessionStart(48),
       });
-      const participation =
-        session.participantList.requireParticipation("participation");
 
-      // Oracle
       expect(admission.kind).toBe("COMMITTED");
-      expect(participation.userId).toBe(participantUser.userId);
+      expect(
+        session.participantList.requireParticipation("participation").userId,
+      ).toBe(participantUser.userId);
       expect(admission.instructions).toEqual([
         expect.objectContaining({
           kind: "LOCK",
@@ -47,7 +44,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenRoleWasCreatedBeforeDeactivation_ThrowsInactiveAccount", () => {
-      // Input
       const participantUser = createTestUser({
         userId: "participant",
         availableFundsCents: 0,
@@ -63,7 +59,6 @@ describe("Participant", () => {
         activeOwnedGroups: 0,
       });
 
-      // Log & Oracle
       expect(() =>
         participant.join(session, {
           participationId: "participation",
@@ -76,7 +71,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenRoleWasCreatedAfterDeactivation_ThrowsInactiveAccount", () => {
-      // Input
       const participantUser = createTestUser({
         userId: "participant",
         availableFundsCents: 0,
@@ -93,7 +87,6 @@ describe("Participant", () => {
       });
       const participant = participantUser.asParticipant();
 
-      // Log & Oracle
       expect(() =>
         participant.join(session, {
           participationId: "participation",
@@ -106,7 +99,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenEmailIsMissingAndSessionIsFull_RejectsWithoutChangingWaitlist", () => {
-      // Input
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
       });
@@ -117,7 +109,6 @@ describe("Participant", () => {
       });
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         cara.asParticipant().join(bookingSession, {
           participationId: "p-cara",
@@ -129,11 +120,9 @@ describe("Participant", () => {
     });
 
     test("join_WhenEmailIsUnverified_AllowsAdmission", () => {
-      // Input
       const bookingSession = createTestSession();
       const alice = createTestUser({ userId: "alice", emailVerified: false });
 
-      // Log
       const admission = alice.asParticipant().join(bookingSession, {
         participationId: "p-alice",
         holdId: "h-alice",
@@ -141,18 +130,15 @@ describe("Participant", () => {
       });
       const aliceParticipation =
         bookingSession.participantList.requireParticipation("p-alice");
-      const aliceAvailableFunds = alice.wallet.getAvailableBalance();
 
-      // Oracle
       expect(admission.kind).toBe("COMMITTED");
       expect(aliceParticipation.status).toBe("COMMITTED");
       expect(aliceParticipation.hold?.state).toBe("HELD");
       expect(aliceParticipation.hold?.amount.toCents()).toBe(500);
-      expect(aliceAvailableFunds.toCents()).toBe(10_000);
+      expect(alice.wallet.getAvailableBalance().toCents()).toBe(10_000);
     });
 
     test("join_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged", () => {
-      // Input
       const waitlistDepartureTime = hoursBeforeSessionStart(48);
       const withdrawalTime = hoursBeforeSessionStart(2);
       const replacementJoinTime = hoursBeforeSessionStart(1);
@@ -185,7 +171,6 @@ describe("Participant", () => {
         });
 
       try {
-        // Log & Oracle
         expect(() =>
           createTestUser({ userId: "replacement" })
             .asParticipant()
@@ -206,21 +191,18 @@ describe("Participant", () => {
     });
 
     test("join_WhenFundsExactlyCoverShare_CommitsAndEmitsLock", () => {
-      // Input
       const bookingSession = createTestSession();
       const fundedUser = createTestUser({
         userId: "alice",
         availableFundsCents: 500,
       });
 
-      // Log
       const admission = fundedUser.asParticipant().join(bookingSession, {
         participationId: "p-alice",
         holdId: "h-alice",
         now: hoursBeforeSessionStart(48),
       });
 
-      // Oracle
       expect(admission.kind).toBe("COMMITTED");
       expect(admission.instructions).toEqual([
         expect.objectContaining({
@@ -234,7 +216,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenSessionIsFullAndUserHasNoFunds_JoinsWaitlistWithoutLockingFunds", () => {
-      // Input
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
       });
@@ -243,16 +224,13 @@ describe("Participant", () => {
         availableFundsCents: 0,
       }).asParticipant();
 
-      // Log
       const admission = cara.join(bookingSession, {
         participationId: "p-cara",
         now: hoursBeforeSessionStart(48),
       });
       const waiting =
         bookingSession.participantList.requireParticipation("p-cara");
-      const nextWaiter = bookingSession.participantList.nextWaitlisted();
 
-      // Oracle
       expect(admission).toEqual({
         kind: "WAITLISTED",
         participationId: "p-cara",
@@ -260,11 +238,12 @@ describe("Participant", () => {
       });
       expect(waiting.status).toBe("WAITLISTED");
       expect(waiting.hold).toBeUndefined();
-      expect(nextWaiter?.userId).toBe("cara");
+      expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+        "cara",
+      );
     });
 
     test("join_WhenWaitersExistAndSlotIsAvailable_QueuesBehindExistingWaiters", () => {
-      // Input
       const joinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
         committedUserIds: ["ben"],
@@ -272,30 +251,26 @@ describe("Participant", () => {
       });
       const evan = createTestUser({ userId: "evan" }).asParticipant();
 
-      // Log
       const admission = evan.join(bookingSession, {
         participationId: "p-evan",
         holdId: "h-evan",
         now: joinTime,
       });
-      const evanParticipation =
-        bookingSession.participantList.requireParticipation("p-evan");
-      const nextWaiter = bookingSession.participantList.nextWaitlisted();
-      const nextQueueSequence =
-        bookingSession.participantList.nextQueueSequence;
-      const availableSlots = bookingSession.getAvailableSlots(joinTime);
 
-      // Oracle
       expect(admission.kind).toBe("WAITLISTED");
       expect(admission.instructions).toEqual([]);
-      expect(evanParticipation.queueSequence).toBe(3);
-      expect(nextWaiter?.userId).toBe("cara");
-      expect(nextQueueSequence).toBe(4);
-      expect(availableSlots).toBe(1);
+      expect(
+        bookingSession.participantList.requireParticipation("p-evan")
+          .queueSequence,
+      ).toBe(3);
+      expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+        "cara",
+      );
+      expect(bookingSession.participantList.nextQueueSequence).toBe(4);
+      expect(bookingSession.getAvailableSlots(joinTime)).toBe(1);
     });
 
     test("join_WhenReloadedWalletIncludesPriorLock_RejectsWithoutChangingState", () => {
-      // Input
       const commitmentTime = hoursBeforeSessionStart(48);
       const fundedUser = createTestUser({
         userId: "alice",
@@ -329,7 +304,6 @@ describe("Participant", () => {
       const nextSession = createTestSession();
       const previousState = sessionState(nextSession);
 
-      // Log & Oracle
       expect(() =>
         reloadedUser.asParticipant().join(nextSession, command),
       ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
@@ -340,7 +314,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState", () => {
-      // Input
       const privateSession = readyBooker().createSession({
         ...creationDetails(),
         visibility: "PRIVATE",
@@ -355,7 +328,6 @@ describe("Participant", () => {
       const alice = createTestUser({ userId: "alice" });
       const previousState = sessionState(privateSession);
 
-      // Log & Oracle
       expect(() => alice.asParticipant().join(privateSession, command)).toThrow(
         expect.objectContaining({ code: "INVALID_ACCESS" }),
       );
@@ -364,7 +336,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState", () => {
-      // Input
       const privateSession = readyBooker().createSession({
         ...creationDetails(),
         visibility: "PRIVATE",
@@ -383,7 +354,6 @@ describe("Participant", () => {
       });
       const previousState = sessionState(privateSession);
 
-      // Log & Oracle
       expect(() => alice.asParticipant().join(privateSession, command)).toThrow(
         expect.objectContaining({ code: "LOW_RELIABILITY" }),
       );
@@ -392,7 +362,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet", () => {
-      // Input
       const privateSession = readyBooker().createSession({
         ...creationDetails(),
         visibility: "PRIVATE",
@@ -405,14 +374,12 @@ describe("Participant", () => {
         reliabilityScore: ReliabilityScore.from(80),
       });
 
-      // Log
       const admission = eligibleUser.asParticipant().join(privateSession, {
         participationId: "p-alice",
         holdId: "h-alice",
         now: hoursBeforeSessionStart(48),
       });
 
-      // Oracle
       expect(admission.kind).toBe("COMMITTED");
       expect(admission.instructions[0]?.walletId).toBe(
         eligibleUser.wallet.walletId,
@@ -420,7 +387,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenUserIsInactive_RejectsWithoutChangingState", () => {
-      // Input
       const bookingSession = createTestSession();
       const alice = createTestUser({
         userId: "alice",
@@ -428,7 +394,6 @@ describe("Participant", () => {
       });
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         alice.asParticipant().join(bookingSession, {
           participationId: "p-alice",
@@ -441,7 +406,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenFundsAreOneCentBelowShare_RejectsWithoutChangingState", () => {
-      // Input
       const bookingSession = createTestSession();
       const alice = createTestUser({
         userId: "alice",
@@ -449,7 +413,6 @@ describe("Participant", () => {
       });
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         alice.asParticipant().join(bookingSession, {
           participationId: "p-alice",
@@ -462,7 +425,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState", () => {
-      // Input
       const visibilityChangeTime = hoursBeforeSessionStart(48);
       const joinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession();
@@ -473,7 +435,6 @@ describe("Participant", () => {
       );
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "alice" })
           .asParticipant()
@@ -493,7 +454,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenPrivateRoomTokenMatches_CommitsApplicant", () => {
-      // Input
       const visibilityChangeTime = hoursBeforeSessionStart(48);
       const joinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession();
@@ -503,7 +463,6 @@ describe("Participant", () => {
         visibilityChangeTime,
       );
 
-      // Log
       const admission = createTestUser({ userId: "alice" })
         .asParticipant()
         .join(bookingSession, {
@@ -513,12 +472,10 @@ describe("Participant", () => {
           roomToken: "room",
         });
 
-      // Oracle
       expect(admission.kind).toBe("COMMITTED");
     });
 
     test("join_WhenReturningWaiterUsesDifferentId_RejectsWithoutChangingState", () => {
-      // Input
       const waitlistDepartureTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
@@ -534,7 +491,6 @@ describe("Participant", () => {
         });
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "cara" })
           .asParticipant()
@@ -549,7 +505,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition", () => {
-      // Input
       const waitlistDepartureTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
@@ -566,7 +521,6 @@ describe("Participant", () => {
       const previousList = bookingSession.participantList;
       const departedCara = previousList.requireParticipation("p-cara");
 
-      // Log
       const reentry = createTestUser({ userId: "cara" })
         .asParticipant()
         .join(bookingSession, {
@@ -574,22 +528,12 @@ describe("Participant", () => {
           holdId: "h-cara",
           now: rejoinTime,
         });
-      const nextWaiter = bookingSession.participantList.nextWaitlisted();
       const participations = bookingSession.participantList.participations;
-      const nextQueueSequence =
-        bookingSession.participantList.nextQueueSequence;
-      const caraParticipation =
-        bookingSession.participantList.requireParticipation("p-cara");
-      const participantList = bookingSession.participantList;
-      const originalCara = previousList.findByUserId("cara");
-      const departedCaraStatus = departedCara.status;
-      const departedCaraQueueSequence = departedCara.queueSequence;
-      const originalNextQueueSequence = previousList.nextQueueSequence;
-      const originalCommittedCount = previousList.committedCount;
 
-      // Oracle
       expect(reentry.kind).toBe("WAITLISTED");
-      expect(nextWaiter?.userId).toBe("dana");
+      expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+        "dana",
+      );
       expect(
         participations.filter(
           (participation) => participation.userId === "cara",
@@ -598,23 +542,24 @@ describe("Participant", () => {
       expect(
         participations.map((participation) => participation.userId),
       ).toEqual(["alice", "ben", "cara", "dana"]);
-      expect(nextQueueSequence).toBe(4);
-      expect(caraParticipation.queueSequence).toBe(3);
-      expect(participantList).not.toBe(previousList);
-      expect(originalCara).toBe(departedCara);
-      expect(departedCaraStatus).toBe("LEFT_WAITLIST");
-      expect(departedCaraQueueSequence).toBe(1);
-      expect(originalNextQueueSequence).toBe(3);
-      expect(originalCommittedCount).toBe(2);
+      expect(bookingSession.participantList.nextQueueSequence).toBe(4);
+      expect(
+        bookingSession.participantList.requireParticipation("p-cara")
+          .queueSequence,
+      ).toBe(3);
+      expect(bookingSession.participantList).not.toBe(previousList);
+      expect(previousList.findByUserId("cara")).toBe(departedCara);
+      expect(departedCara.status).toBe("LEFT_WAITLIST");
+      expect(departedCara.queueSequence).toBe(1);
+      expect(previousList.nextQueueSequence).toBe(3);
+      expect(previousList.committedCount).toBe(2);
     });
 
     test("join_WhenUserIsAlreadyCommitted_RejectsWithoutChangingState", () => {
-      // Input
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
 
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "alice" })
           .asParticipant()
@@ -629,7 +574,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState", () => {
-      // Input
       const withdrawalTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
@@ -642,7 +586,6 @@ describe("Participant", () => {
         });
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "alice" })
           .asParticipant()
@@ -657,12 +600,10 @@ describe("Participant", () => {
     });
 
     test("join_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
-      // Input
       const bookingSession = createTestSession();
 
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "ben" }).asParticipant().join(bookingSession, {
           participationId: "p-ben",
@@ -676,7 +617,6 @@ describe("Participant", () => {
   });
   describe("Replacement admission", () => {
     test("acceptReplacement_WhenNamedInviteeAcceptsNewerPrivateInvitation_RefundsOnlyTheirInviter", () => {
-      // Input
       const visibilityChangeTime = hoursBeforeSessionStart(48);
       const benJoinTime = hoursBeforeSessionStart(48);
       const aliceWithdrawalTime = hoursBeforeSessionStart(20);
@@ -713,7 +653,6 @@ describe("Participant", () => {
           replacementMode: "DIRECT_INVITE",
           replacementInviteeId: "cara",
         });
-      // Log
       const replacement = createTestUser({ userId: "cara" })
         .asParticipant()
         .acceptReplacement(bookingSession, {
@@ -721,25 +660,23 @@ describe("Participant", () => {
           holdId: "h-cara",
           now: acceptanceTime,
         });
-      const aliceParticipation =
-        bookingSession.participantList.findByUserId("alice");
-      const caraParticipation =
-        bookingSession.participantList.findByUserId("cara");
-      const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
 
-      // Oracle
       expect(replacement.refundedParticipationId).toBe("p-ben");
       expect(replacement.instructions.map((i) => i.kind)).toEqual([
         "LOCK",
         "REFUND",
       ]);
-      expect(aliceParticipation?.hold?.state).toBe("AWAITING_REPLACEMENT");
-      expect(caraParticipation?.replacesParticipationId).toBe("p-ben");
-      expect(availableSlots).toBe(0);
+      expect(
+        bookingSession.participantList.findByUserId("alice")?.hold?.state,
+      ).toBe("AWAITING_REPLACEMENT");
+      expect(
+        bookingSession.participantList.findByUserId("cara")
+          ?.replacesParticipationId,
+      ).toBe("p-ben");
+      expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
     });
 
     test("acceptReplacement_WhenInvitationWasAcceptedAndOrdinarySlotIsAvailable_RejectsWithoutChangingState", () => {
-      // Input
       const withdrawalTime = hoursBeforeSessionStart(10);
       const acceptanceTime = hoursBeforeSessionStart(9);
       const repeatAcceptanceTime = hoursBeforeSessionStart(8);
@@ -765,7 +702,6 @@ describe("Participant", () => {
       expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1);
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "cara" })
           .asParticipant()
@@ -780,7 +716,6 @@ describe("Participant", () => {
     });
 
     test("acceptReplacement_WhenInvitationWasAcceptedAndSessionIsFull_RejectsWithoutWaitlisting", () => {
-      // Input
       const withdrawalTime = hoursBeforeSessionStart(10);
       const acceptanceTime = hoursBeforeSessionStart(9);
       const ordinaryJoinTime = hoursBeforeSessionStart(8);
@@ -810,7 +745,6 @@ describe("Participant", () => {
       expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(0);
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "cara" })
           .asParticipant()
@@ -825,7 +759,6 @@ describe("Participant", () => {
     });
 
     test("join_WhenParticipantWasRemoved_RejectsWithoutChangingState", () => {
-      // Input
       const removalTime = hoursBeforeSessionStart(48);
       const rejoinTime = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
@@ -833,7 +766,6 @@ describe("Participant", () => {
       readyBooker().removeParticipant(bookingSession, "p-alice", removalTime);
       const previousState = sessionState(bookingSession);
 
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "alice" })
           .asParticipant()

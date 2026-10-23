@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 23:30:02 SGT**
-(`2026-10-23T15:30:02.897Z`). All **603 tests in 43 files passed**.
+Snapshot run: **23 October 2026, 23:55:50 SGT**
+(`2026-10-23T15:55:50.016Z`). All **603 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
@@ -12,7 +12,7 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `76da83f3ef01ac312396eb3628f38e5e45a34ecd8d8b42056d3d7b74f370b23a`.
+  `e56ad0c4e4c69019b29a9b81634d0c628609c65c98741cb30e171c191f970cc5`.
 - [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
   mapped to 602 retained scenarios, plus one new visibility-change case.
   Includes before/after assertion expressions for changed explicit scenarios.
@@ -34,14 +34,10 @@ approximate value; a reference check establishes the same or a different
 instance. Rejection snapshots establish that the observed state is unchanged.
 
 Input lists domain data and commands, excluding spy configuration and cleanup.
-Log's observation bindings identify the source expressions that captured actual
-results or state; its verified outcomes describe what the assertions establish.
-Throughout the suite, Log groups the tested action with its captured return
-value or public state. A void command sits immediately before its state
-observation under `Log` or `Log change result`; Oracle compares that observation
-with the expected outcome. Prerequisite transitions remain in Input.
-Supporting unchanged-state comparisons remain directly beside rejection
-assertions under the same `Log & Oracle` comment, without repeated sections.
+Oracle states the expected outcomes; Log records what the executed assertions
+establish. Named results, where useful, identify how observations were obtained.
+Simple public-state assertions need no intermediate binding. These table
+columns are reporting concepts, independent of comments in the test source.
 
 Vitest's standard report records status and failures, not successful return
 values. These tables interpret the executed source assertions alongside their
@@ -71,8 +67,8 @@ in 45 files**. This cleanup preserves both sets of cases and assertions:
   cases. Each split keeps the four related action assertions together and
   moves one independent assertion into its own freshly prepared scenario.
 - A separate visibility-change case starts with a PUBLIC session, calls
-  `changeVisibility` as an unverified owner, captures the resulting visibility,
-  and expects PRIVATE. The existing permission-check case remains independent.
+  `changeVisibility` as an unverified owner, and checks that the resulting
+  visibility is PRIVATE. The existing permission-check case remains independent.
 - Role suites retain mixed release/forfeiture payout setup, failure injection,
   spy restoration, FIFO and timing boundaries, role liveness, identity history,
   and unchanged-state assertions. Concrete states replace vague change checks.
@@ -91,11 +87,15 @@ prerequisite assertions. The three behavior splits preserve every assertion
 from the preceding 600-case revision (`acac1b5`), including matcher, negation,
 expected argument, and observed expression. Their original case names remain;
 the three new names identify the moved reconstruction and reliability checks.
-Named captures group successful actions with their outcomes. Direct
-unchanged-state comparisons stay after the exception assertion that executes
-the rejected command, under its existing `Log & Oracle` comment.
-Fault-injection oracles construct independent expected errors inline, retaining
-their original error-equality checks.
+The readability pass preserves all 603 identities and 1,229 assertions from
+`a7f21a1`. Routine phase comments and redundant aliases are removed. Named
+command results, identity captures, before-state snapshots, and observations
+whose timing matters remain. Matcher, negation, and expected arguments are
+compared against that revision; observed expressions are compared after
+expanding removed aliases. A separate source review checks execution order and
+captures across mutations, which expression equivalence alone cannot prove.
+Direct unchanged-state comparisons stay beside their rejection assertions.
+Fault-injection expectations remain independent of stubbed errors.
 
 ## Other validation
 
@@ -120,8 +120,9 @@ reproduced on the unchanged base revision above.
 
 1. Run the domain command above against the intended sources. For a new date,
    use that date in the artifact names and table headers.
-2. Read each final case's Input, command, and Oracle. Record only the concrete
-   observations established by its executed assertions, respecting reference,
+2. Review each final case's setup, commands, and assertions to populate Input,
+   Oracle, and Log; do not parse phase comments or require reporting metadata in
+   test bodies. Record only the concrete observations established by its executed assertions, respecting reference,
    partial-match, and tolerance semantics. Include actual failure diagnostics
    when available; never infer an observed result from an unexecuted test.
 3. Reconcile every table's linked test name and file with the JSON report.

@@ -1,4 +1,4 @@
-# ADR-0018: Domain test inputs, oracles, and logs
+# ADR-0018: Readable domain tests and execution evidence
 
 - Status: Accepted
 - Date: 2026-10-23
@@ -6,35 +6,26 @@
   [ADR-0005](./0005-domain-unit-test-structure.md). Its suite organization,
   public-behavior testing, and coverage-preservation decisions remain accepted.
 
-Domain tests retain the readable scenarios of SC2002's HitPointsTest,
-CombatantTest, and SpecialSkillTest while using the terminology taught in
-Lecture 16: Testing Introduction, slides 15–18. Each test has a distinct name
-and source location. Its Input declares the starting state and command data;
-Log captures the actual result; Oracle supplies the expected value directly in
-an assertion. Direct exception assertions combine Log and Oracle because the
-matcher executes the command and checks its thrown error. Independent cases
-use fresh state and remain executable without earlier tests.
+Domain tests follow the readable scenarios of SC2002's HitPointsTest,
+CombatantTest, and SpecialSkillTest: visible inputs, a clear action, and concrete
+expectations. Blank lines separate setup, execution, and assertions. Comments
+explain business rules, unusual prerequisites, or injected failures. Mandatory
+phase labels and property-only result variables obscured simple scenarios, so
+this convention preserves useful observations without requiring that ceremony.
 
-Input, Log, and Oracle identify test ingredients, not renamed execution phases.
-Across every domain suite, group the tested action and its captured result in
-the same Log block. For a void command, execute it immediately before reading
-the resulting public state into a named variable under `// Log` or
-`// Log change result`. Capture a value-returning command directly in Log.
-Oracle compares the captured result with the expected value. Input contains
-starting state, command data, and prerequisite transitions.
-Unchanged-state checks after a rejection stay beside the exception assertion
-under its existing `// Log & Oracle` comment. They compare state directly,
-without starting another Log/Oracle pair or adding state-only temporaries.
-Fault-injection stubs and spy cleanup are test instrumentation, explained
-separately from domain input. Simulated errors are constructed inside stubs;
-their expected codes or messages appear directly in the Oracle.
+Each test checks one coherent behavior, with multiple related assertions when
+needed. Keep meaningful returned results, before-state and identity captures,
+and observations whose timing matters. Void commands can be followed by direct
+public-state assertions. Keep rejection and unchanged-state assertions together.
+Fresh fixtures and explicit prerequisites make every case independent; retries
+and idempotency may legitimately require multiple calls.
 
-The maintained convention and examples live in the
-[domain testing guide](../../tests/domain/README.md). Adjacent README tables
-document one row per case with input, expected outcome, assertion-verified
-actual outcome, and a separate status. These are dated snapshots of an executed
-suite, tied to a JSON execution report and tested-source digest. They describe
-only observations established by the assertions; Vitest's standard JSON report
-does not capture successful return values. Refresh the tables after relevant
-source changes. This intentionally keeps reporting metadata out of test bodies
-and adds no custom matcher, scenario runner, or production API.
+The [domain testing guide](../../tests/domain/README.md) holds the maintained
+convention and examples. Adjacent README tables retain Lecture 16's Input,
+Oracle, and Log terminology, with one row per executed case and a separate
+status. These dated snapshots describe only assertion-verified observations,
+linked to the Vitest JSON execution report and tested-source digest. They do
+not claim raw return-value capture: standard Vitest JSON records statuses and
+failure diagnostics. Refresh the tables from reviewed source assertions and
+execution identities after relevant changes, independently of code comments.
+Reporting adds no test-body metadata, custom matchers, or production APIs.

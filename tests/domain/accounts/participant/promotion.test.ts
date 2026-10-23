@@ -10,7 +10,6 @@ import {
 
 describe("Participant", () => {
   test("promoteFromWaitlist_WhenEmailIsUnverified_PromotesAndHoldsFunds", () => {
-    // Input
     const bookingSession = createTestSession({
       waitlistedUserIds: ["alice", "ben"],
     });
@@ -19,26 +18,21 @@ describe("Participant", () => {
       emailVerified: false,
     }).asParticipant();
 
-    // Log
     const promotion = alice.promoteFromWaitlist(bookingSession, {
       holdId: "h-alice",
       now: hoursBeforeSessionStart(48),
     });
-    const aliceParticipation =
-      bookingSession.participantList.requireParticipation("p-alice");
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-    const committedCount = bookingSession.participantList.committedCount;
 
-    // Oracle
     expect(promotion.kind).toBe("PROMOTED");
     expect(promotion.instructions).toHaveLength(1);
-    expect(aliceParticipation.status).toBe("COMMITTED");
-    expect(nextWaiter?.userId).toBe("ben");
-    expect(committedCount).toBe(1);
+    expect(
+      bookingSession.participantList.requireParticipation("p-alice").status,
+    ).toBe("COMMITTED");
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe("ben");
+    expect(bookingSession.participantList.committedCount).toBe(1);
   });
 
   test("promoteFromWaitlist_WhenFirstWaiterHasPendingInvitation_RejectsWithoutAcceptingOrMovingQueue", () => {
-    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const promotionTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -54,7 +48,6 @@ describe("Participant", () => {
     const queueSequence = bookingSession.participantList.nextQueueSequence;
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "cara" })
         .asParticipant()
@@ -83,7 +76,6 @@ describe("Participant", () => {
   });
 
   test("promoteFromWaitlist_WhenOnlyVacancyIsReserved_RejectsWithoutMovingTheQueue", () => {
-    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const promotionTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -98,7 +90,6 @@ describe("Participant", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "dana" })
         .asParticipant()
@@ -115,7 +106,6 @@ describe("Participant", () => {
   });
 
   test("promoteFromWaitlist_WhenAnOlderWithdrawalIsReserved_RefundsOnlyTheOpenWithdrawal", () => {
-    // Input
     const benWithdrawalTime = hoursBeforeSessionStart(10);
     const aliceWithdrawalTime = hoursBeforeSessionStart(9);
     const promotionTime = hoursBeforeSessionStart(8);
@@ -137,57 +127,50 @@ describe("Participant", () => {
         replacementMode: "OPEN_SLOT",
       });
 
-    // Log
     const promotion = createTestUser({ userId: "dana" })
       .asParticipant()
       .promoteFromWaitlist(bookingSession, {
         holdId: "h-dana",
         now: promotionTime,
       });
-    const danaParticipation =
-      bookingSession.participantList.requireParticipation("p-dana");
-    const benParticipation =
-      bookingSession.participantList.requireParticipation("p-ben");
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-    const availableSlots = bookingSession.getAvailableSlots(promotionTime);
 
-    // Oracle
     expect(promotion.kind).toBe("PROMOTED");
     expect(promotion.refundedParticipationId).toBe("p-alice");
     expect(
       promotion.instructions.map((instruction) => instruction.kind),
     ).toEqual(["LOCK", "REFUND"]);
-    expect(danaParticipation.replacesParticipationId).toBe("p-alice");
-    expect(benParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
-    expect(nextWaiter?.userId).toBe("evan");
-    expect(availableSlots).toBe(0);
+    expect(
+      bookingSession.participantList.requireParticipation("p-dana")
+        .replacesParticipationId,
+    ).toBe("p-alice");
+    expect(
+      bookingSession.participantList.requireParticipation("p-ben").hold?.state,
+    ).toBe("AWAITING_REPLACEMENT");
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "evan",
+    );
+    expect(bookingSession.getAvailableSlots(promotionTime)).toBe(0);
   });
 
   test("promoteFromWaitlist_WhenQueueIsEmpty_ReturnsNoneBeforeValidatingHoldId", () => {
-    // Input
     const bookingSession = createTestSession();
     const previousState = sessionState(bookingSession);
 
-    // Log
     const promotion = createTestUser({ userId: "alice" })
       .asParticipant()
       .promoteFromWaitlist(bookingSession, {
         holdId: "",
         now: hoursBeforeSessionStart(48),
       });
-    const currentState = sessionState(bookingSession);
 
-    // Oracle
     expect(promotion).toEqual({ kind: "NONE", instructions: [] });
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("promoteFromWaitlist_WhenSessionHasStartedAndQueueIsEmpty_RejectsBeforeReturningNone", () => {
-    // Input
     const bookingSession = createTestSession();
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "alice" })
         .asParticipant()
@@ -206,7 +189,6 @@ describe("Participant", () => {
   });
 
   test("promoteFromWaitlist_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged", () => {
-    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const promotionTime = hoursBeforeSessionStart(1);
     const bookingSession = createTestSession({
@@ -231,7 +213,6 @@ describe("Participant", () => {
       });
 
     try {
-      // Log & Oracle
       expect(() =>
         createTestUser({ userId: "first-waiter" })
           .asParticipant()
@@ -252,7 +233,6 @@ describe("Participant", () => {
   });
 
   test("promoteFromWaitlist_WhenLoadedUserDoesNotMatchNextWaiter_RejectsWithoutChangingState", () => {
-    // Input
     const withdrawalTime = hoursBeforeSessionStart(48);
     const promotionTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
@@ -267,7 +247,6 @@ describe("Participant", () => {
       });
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "other" })
         .asParticipant()
@@ -281,7 +260,6 @@ describe("Participant", () => {
   });
 
   test("promoteFromWaitlist_WhenReloadedWaiterHasFunds_PromotesFromUpdatedWallet", () => {
-    // Input
     const waitlistJoinTime = hoursBeforeSessionStart(48);
     const withdrawalTime = hoursBeforeSessionStart(48);
     const promotionTime = hoursBeforeSessionStart(48);
@@ -309,28 +287,21 @@ describe("Participant", () => {
       availableFundsCents: 500,
     });
 
-    // Log
     const promotion = reloadedUser
       .asParticipant()
       .promoteFromWaitlist(bookingSession, {
         holdId: "h-cara",
         now: promotionTime,
       });
-    const unfundedUserAvailableFunds =
-      unfundedUser.wallet.getAvailableBalance();
-    const reloadedUserAvailableFunds =
-      reloadedUser.wallet.getAvailableBalance();
 
-    // Oracle
     expect(waitlistAdmission.kind).toBe("WAITLISTED");
     expect(promotion.kind).toBe("PROMOTED");
     expect(promotion.instructions[0]?.walletId).toBe("w-cara");
-    expect(unfundedUserAvailableFunds.toCents()).toBe(0);
-    expect(reloadedUserAvailableFunds.toCents()).toBe(500);
+    expect(unfundedUser.wallet.getAvailableBalance().toCents()).toBe(0);
+    expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(500);
   });
 
   test("promoteFromWaitlist_WhenFirstWaiterCannotPay_SkipsThemAndSelectsNextWaiter", () => {
-    // Input
     const promotionTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["ben"],
@@ -342,32 +313,30 @@ describe("Participant", () => {
     }).asParticipant();
     const queueSequence = bookingSession.participantList.nextQueueSequence;
 
-    // Log
     const promotion = cara.promoteFromWaitlist(bookingSession, {
       holdId: "h-cara",
       now: promotionTime,
     });
-    const caraParticipation =
-      bookingSession.participantList.requireParticipation("p-cara");
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
-    const availableSlots = bookingSession.getAvailableSlots(promotionTime);
 
-    // Oracle
     expect(promotion).toEqual({
       kind: "SKIPPED",
       participationId: "p-cara",
       reason: "INSUFFICIENT_FUNDS",
       instructions: [],
     });
-    expect(caraParticipation.status).toBe("LEFT_WAITLIST");
-    expect(nextWaiter?.userId).toBe("dana");
-    expect(nextQueueSequence).toBe(queueSequence);
-    expect(availableSlots).toBe(1);
+    expect(
+      bookingSession.participantList.requireParticipation("p-cara").status,
+    ).toBe("LEFT_WAITLIST");
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "dana",
+    );
+    expect(bookingSession.participantList.nextQueueSequence).toBe(
+      queueSequence,
+    );
+    expect(bookingSession.getAvailableSlots(promotionTime)).toBe(1);
   });
 
   test("promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter", () => {
-    // Input
     const firstPromotionTime = hoursBeforeSessionStart(48);
     const nextPromotionTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
@@ -385,16 +354,11 @@ describe("Participant", () => {
       availableFundsCents: 500,
     }).asParticipant();
 
-    // Log
     const promotion = dana.promoteFromWaitlist(bookingSession, {
       holdId: "h-dana",
       now: nextPromotionTime,
     });
-    const danaParticipation =
-      bookingSession.participantList.requireParticipation("p-dana");
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
 
-    // Oracle
     expect(promotion.kind).toBe("PROMOTED");
     expect(promotion.participationId).toBe("p-dana");
     expect(promotion.instructions).toEqual([
@@ -405,12 +369,15 @@ describe("Participant", () => {
       }),
     ]);
     expect(promotion.instructions[0]?.amount.toCents()).toBe(500);
-    expect(danaParticipation.status).toBe("COMMITTED");
-    expect(nextWaiter?.userId).toBe("evan");
+    expect(
+      bookingSession.participantList.requireParticipation("p-dana").status,
+    ).toBe("COMMITTED");
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "evan",
+    );
   });
 
   test("promoteFromWaitlist_WhenParticipantChoosesOpenWaitlist_AdmitsFirstWaiterAndRefundsTheirShare", () => {
-    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const promotionTime = hoursBeforeSessionStart(8);
     const bookingSession = createTestSession({
@@ -426,19 +393,13 @@ describe("Participant", () => {
     const dana = createTestUser({ userId: "dana" }).asParticipant();
     const queueSequence = bookingSession.participantList.nextQueueSequence;
 
-    // Log
     const promotion = dana.promoteFromWaitlist(bookingSession, {
       holdId: "h-dana",
       now: promotionTime,
     });
-    const benParticipation =
-      bookingSession.participantList.requireParticipation("p-ben");
     const danaParticipation =
       bookingSession.participantList.requireParticipation("p-dana");
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
 
-    // Oracle
     expect(promotion).toMatchObject({
       kind: "PROMOTED",
       participationId: "p-dana",
@@ -459,15 +420,20 @@ describe("Participant", () => {
     expect(
       promotion.instructions.map((instruction) => instruction.amount.toCents()),
     ).toEqual([500, 500]);
-    expect(benParticipation.hold?.state).toBe("REFUNDED");
+    expect(
+      bookingSession.participantList.requireParticipation("p-ben").hold?.state,
+    ).toBe("REFUNDED");
     expect(danaParticipation.hold?.state).toBe("HELD");
     expect(danaParticipation.replacesParticipationId).toBe("p-ben");
-    expect(nextWaiter?.userId).toBe("evan");
-    expect(nextQueueSequence).toBe(queueSequence);
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "evan",
+    );
+    expect(bookingSession.participantList.nextQueueSequence).toBe(
+      queueSequence,
+    );
   });
 
   test("promoteFromWaitlist_WhenTwoParticipantsChooseOpenWaitlist_RefundsEarlierWithdrawal", () => {
-    // Input
     const benWithdrawalTime = hoursBeforeSessionStart(10);
     const aliceWithdrawalTime = hoursBeforeSessionStart(9);
     const promotionTime = hoursBeforeSessionStart(7);
@@ -488,7 +454,6 @@ describe("Participant", () => {
         replacementMode: "OPEN_SLOT",
       });
 
-    // Log
     const promotion = createTestUser({ userId: "dana" })
       .asParticipant()
       .promoteFromWaitlist(bookingSession, {
@@ -498,9 +463,7 @@ describe("Participant", () => {
 
     const ben = bookingSession.participantList.findByUserId("ben");
     const alice = bookingSession.participantList.findByUserId("alice");
-    const dana = bookingSession.participantList.findByUserId("dana");
 
-    // Oracle
     expect(promotion).toMatchObject({
       kind: "PROMOTED",
       refundedParticipationId: "p-ben",
@@ -513,6 +476,9 @@ describe("Participant", () => {
     expect(ben?.hold?.state).toBe("REFUNDED");
     expect(alice?.withdrawnAt).toEqual(aliceWithdrawalTime);
     expect(alice?.hold?.state).toBe("AWAITING_REPLACEMENT");
-    expect(dana?.replacesParticipationId).toBe("p-ben");
+    expect(
+      bookingSession.participantList.findByUserId("dana")
+        ?.replacesParticipationId,
+    ).toBe("p-ben");
   });
 });

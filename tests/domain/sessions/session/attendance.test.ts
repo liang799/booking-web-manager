@@ -10,7 +10,6 @@ import {
 
 describe("Session", () => {
   test("autoVerifyAttendance_WhenOneMillisecondBeforeDue_RejectsWithoutChangingState", () => {
-    // Input
     const automaticVerificationDueAt = hoursAfterSessionEnd(72);
     const oneMillisecondBeforeAutomaticVerification = new Date(
       automaticVerificationDueAt.getTime() - 1,
@@ -26,7 +25,6 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       bookingSession.autoVerifyAttendance(
         oneMillisecondBeforeAutomaticVerification,
@@ -36,7 +34,6 @@ describe("Session", () => {
   });
 
   test("autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants", () => {
-    // Input
     const automaticVerificationDueAt = hoursAfterSessionEnd(72);
     const unverifiedSession = createTestSession({ committedUserIds: ["ben"] });
     const bookingSession = new Session(
@@ -48,7 +45,6 @@ describe("Session", () => {
       }),
     );
 
-    // Log
     bookingSession.autoVerifyAttendance(automaticVerificationDueAt);
     const attendanceRecords = bookingSession.participantList.participations.map(
       (participation) => [
@@ -57,7 +53,6 @@ describe("Session", () => {
       ],
     );
 
-    // Oracle
     expect(attendanceRecords).toEqual([
       ["ABSENT", "BOOKER"],
       ["ATTENDED", "AUTOMATIC"],

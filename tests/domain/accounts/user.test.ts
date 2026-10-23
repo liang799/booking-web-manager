@@ -11,59 +11,48 @@ import { createTestUserDetails, userLoadedAt } from "./user-fixtures";
 describe("User", () => {
   describe("Construction and registration", () => {
     test("constructor_WhenVerifiedEmailIsMissing_ThrowsInvalidInput", () => {
-      // Input
       const details = createTestUserDetails({ userId: "owner", email: null, emailVerified: true });
 
-      // Log & Oracle
       expect(() => new User(details)).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     });
 
     test("constructor_WhenEmailIsProvided_PreservesTheEmailValue", () => {
-      // Input
       const email = new Email("Owner+bookings@Example.COM");
       const details = createTestUserDetails({ userId: "owner", email });
 
-      // Log
       const user = new User(details);
 
-      // Oracle
       expect(user.email).toBe(email);
       expect(user.email?.toString()).toBe("Owner+bookings@Example.COM");
     });
 
     test("constructor_WhenActiveAccountHasNoEmail_LoadsAnUnverifiedAccount", () => {
-      // Input
       const details = createTestUserDetails({
         userId: "owner",
         email: null,
         emailVerified: false,
       });
 
-      // Log
       const user = new User(details);
 
-      // Oracle
       expect(user.accountStatus).toBe("ACTIVE");
       expect(user.email).toBeNull();
       expect(user.emailVerified).toBe(false);
     });
 
     test("constructor_WhenInactiveAccountHasEmail_ThrowsInvalidInput", () => {
-      // Input
       const details = createTestUserDetails({
         userId: "owner",
         accountStatus: "INACTIVE",
         email: new Email("owner@example.com"),
       });
 
-      // Log & Oracle
       expect(() => new User(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenLoadingDeactivatedUser_RestoresAnonymisedProfile", () => {
-      // Input
       const original = createActiveUser();
       original.beginPayoutSetup({
         payoutAccountId: "account",
@@ -78,18 +67,14 @@ describe("User", () => {
         payoutAccount: original.payoutAccount,
       });
 
-      // Log
       const restored = new User(details);
-      const restoredState = accountStateOf(restored);
 
-      // Oracle
       expect(restored.accountStatus).toBe("INACTIVE");
       expect(restored.email).toBeNull();
-      expect(restoredState).toEqual(accountStateOf(original));
+      expect(accountStateOf(restored)).toEqual(accountStateOf(original));
     });
 
     test("constructor_WhenPayoutAccountBelongsToAnotherUser_ThrowsInvalidInput", () => {
-      // Input
       const payoutAccount = PayoutAccount.create({
         payoutAccountId: "account",
         userId: "other-user",
@@ -97,14 +82,12 @@ describe("User", () => {
       });
       const details = createTestUserDetails({ userId: "owner", payoutAccount });
 
-      // Log & Oracle
       expect(() => new User(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenSourcePreferencesChange_PreservesStoredPreferences", () => {
-      // Input
       const sports = new Set(["Tennis"]);
       const regions = new Set(["West"]);
       const user = new User(
@@ -115,23 +98,17 @@ describe("User", () => {
         }),
       );
 
-      // Log
       // Attempt to alter the supplied preference sets.
       sports.clear();
       regions.clear();
-      const storedSports = [...user.preferredSports];
-      const storedRegions = [...user.preferredRegions];
 
-      // Oracle
-      expect(storedSports).toEqual(["Tennis"]);
-      expect(storedRegions).toEqual(["West"]);
+      expect([...user.preferredSports]).toEqual(["Tennis"]);
+      expect([...user.preferredRegions]).toEqual(["West"]);
     });
 
     test("create_WhenRegistrationIsValid_ReturnsAnActiveUser", () => {
-      // Input
       const email = new Email("owner@example.com");
 
-      // Log
       const user = User.create({
         userId: "owner",
         email,
@@ -139,14 +116,12 @@ describe("User", () => {
         now: userLoadedAt,
       });
 
-      // Oracle
       expect(user.accountStatus).toBe("ACTIVE");
       expect(user.email).toBe(email);
       expect(user.emailVerified).toBe(false);
     });
 
     test("create_WhenSourcePreferencesChange_PreservesStoredPreferences", () => {
-      // Input
       const sports = new Set(["Tennis"]);
       const regions = new Set(["West"]);
       const user = User.create({
@@ -158,65 +133,48 @@ describe("User", () => {
         preferredRegions: regions,
       });
 
-      // Log
       // Attempt to alter the supplied preference sets.
       sports.clear();
       regions.clear();
-      const storedSports = [...user.preferredSports];
-      const storedRegions = [...user.preferredRegions];
 
-      // Oracle
-      expect(storedSports).toEqual(["Tennis"]);
-      expect(storedRegions).toEqual(["West"]);
+      expect([...user.preferredSports]).toEqual(["Tennis"]);
+      expect([...user.preferredRegions]).toEqual(["West"]);
     });
   });
 
   describe("Profile and preferences", () => {
     test("updateProfile_WhenVerifiedEmailChanges_RequiresFreshVerification", () => {
-      // Input
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
-      // Log
       user.updateProfile({ email: new Email("new@example.com") });
-      const emailVerified = user.emailVerified;
 
-      // Oracle
-      expect(emailVerified).toBe(false);
+      expect(user.emailVerified).toBe(false);
     });
 
     test("updateProfile_WhenVerifiedEmailIsUnchanged_PreservesVerification", () => {
-      // Input
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
-      // Log
       user.updateProfile({ email: new Email("owner@example.com") });
-      const emailVerified = user.emailVerified;
 
-      // Oracle
-      expect(emailVerified).toBe(true);
+      expect(user.emailVerified).toBe(true);
     });
 
     test("updateProfile_WhenAccountIsActive_ReplacesEmail", () => {
-      // Input
       const user = createActiveUser();
       const email = new Email("new@example.com");
 
-      // Log
       user.updateProfile({ email });
       const updatedEmail = user.email;
 
-      // Oracle
       expect(updatedEmail).toBe(email);
       expect(updatedEmail?.toString()).toBe("new@example.com");
     });
 
     test("updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
-      // Input
       const user = createActiveUser();
       user.deactivate(deactivationWithoutObligations());
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() =>
         user.updateProfile({ email: new Email("new@example.com") }),
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
@@ -224,28 +182,21 @@ describe("User", () => {
     });
 
     test("updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions", () => {
-      // Input
       const user = createActiveUser();
 
-      // Log
       user.updatePreferences({
         preferredSports: new Set(["Tennis"]),
         preferredRegions: new Set(["West"]),
       });
-      const updatedSports = [...user.preferredSports];
-      const updatedRegions = [...user.preferredRegions];
 
-      // Oracle
-      expect(updatedSports).toEqual(["Tennis"]);
-      expect(updatedRegions).toEqual(["West"]);
+      expect([...user.preferredSports]).toEqual(["Tennis"]);
+      expect([...user.preferredRegions]).toEqual(["West"]);
     });
 
     test("updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState", () => {
-      // Input
       const user = createActiveUser();
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() =>
         user.updatePreferences({
           preferredSports: new Set(["Tennis"]),
@@ -256,12 +207,10 @@ describe("User", () => {
     });
 
     test("updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
-      // Input
       const user = createActiveUser();
       user.deactivate(deactivationWithoutObligations());
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() =>
         user.updatePreferences({
           preferredSports: new Set(["Tennis"]),
@@ -272,7 +221,6 @@ describe("User", () => {
     });
 
     test("preferredSports_WhenReturnedSetChanges_PreservesStoredPreferences", () => {
-      // Input
       const user = new User(
         createTestUserDetails({
           userId: "owner",
@@ -281,17 +229,13 @@ describe("User", () => {
       );
       const exposedSports = user.preferredSports as Set<string>;
 
-      // Log
       // Attempt to alter the returned preference set.
       exposedSports.clear();
-      const storedSports = [...user.preferredSports];
 
-      // Oracle
-      expect(storedSports).toEqual(["Tennis"]);
+      expect([...user.preferredSports]).toEqual(["Tennis"]);
     });
 
     test("preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences", () => {
-      // Input
       const user = new User(
         createTestUserDetails({
           userId: "owner",
@@ -300,36 +244,29 @@ describe("User", () => {
       );
       const exposedRegions = user.preferredRegions as Set<string>;
 
-      // Log
       // Attempt to alter the returned preference set.
       exposedRegions.clear();
-      const storedRegions = [...user.preferredRegions];
 
-      // Oracle
-      expect(storedRegions).toEqual(["West"]);
+      expect([...user.preferredRegions]).toEqual(["West"]);
     });
   });
 
   describe("Payout setup", () => {
     test("beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount", () => {
-      // Input
       const user = createActiveUser();
 
-      // Log
       user.beginPayoutSetup({
         payoutAccountId: "account",
         providerAccountReference: "provider",
       });
       const pendingAccount = user.payoutAccount;
 
-      // Oracle
       expect(pendingAccount?.setupStatus).toBe("PENDING");
       expect(pendingAccount?.payoutAccountId).toBe("account");
       expect(pendingAccount?.userId).toBe("owner");
     });
 
     test("beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -337,7 +274,6 @@ describe("User", () => {
       });
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() =>
         user.beginPayoutSetup({
           payoutAccountId: "replacement",
@@ -348,7 +284,6 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -357,7 +292,6 @@ describe("User", () => {
       user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() =>
         user.beginPayoutSetup({
           payoutAccountId: "replacement",
@@ -368,7 +302,6 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -376,23 +309,19 @@ describe("User", () => {
       });
       user.failPayoutSetup();
 
-      // Log
       user.beginPayoutSetup({
         payoutAccountId: "replacement",
         providerAccountReference: "other-provider",
       });
       user.completePayoutSetup("replacement-bank");
-      const completedAccount = user.payoutAccount;
       const destination = user.payoutDestination();
 
-      // Oracle
-      expect(completedAccount?.setupStatus).toBe("COMPLETE");
+      expect(user.payoutAccount?.setupStatus).toBe("COMPLETE");
       expect(destination.payoutAccountId).toBe("replacement");
       expect(destination.bankAccountReference).toBe("replacement-bank");
     });
 
     test("completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -400,30 +329,24 @@ describe("User", () => {
       });
       const pendingAccount = user.payoutAccount;
 
-      // Log
       user.completePayoutSetup("bank");
       const completedAccount = user.payoutAccount;
-      const originalStatus = pendingAccount?.setupStatus;
 
-      // Oracle
-      expect(originalStatus).toBe("PENDING");
+      expect(pendingAccount?.setupStatus).toBe("PENDING");
       expect(completedAccount).not.toBe(pendingAccount);
       expect(completedAccount?.setupStatus).toBe("COMPLETE");
       expect(completedAccount?.bankAccountReference).toBe("bank");
     });
 
     test("completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      // Input
       const user = createActiveUser();
 
-      // Log & Oracle
       expect(() => user.completePayoutSetup("bank")).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
       );
     });
 
     test("completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -431,7 +354,6 @@ describe("User", () => {
       });
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.completePayoutSetup(" ")).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -439,7 +361,6 @@ describe("User", () => {
     });
 
     test("completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -448,7 +369,6 @@ describe("User", () => {
       user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.completePayoutSetup("different-bank")).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
@@ -456,17 +376,14 @@ describe("User", () => {
     });
 
     test("failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      // Input
       const user = createActiveUser();
 
-      // Log & Oracle
       expect(() => user.failPayoutSetup()).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
       );
     });
 
     test("failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -475,7 +392,6 @@ describe("User", () => {
       user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.failPayoutSetup()).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
@@ -483,17 +399,14 @@ describe("User", () => {
     });
 
     test("payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      // Input
       const user = createActiveUser();
 
-      // Log & Oracle
       expect(() => user.payoutDestination()).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
       );
     });
 
     test("payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -501,10 +414,8 @@ describe("User", () => {
       });
       user.completePayoutSetup("bank");
 
-      // Log
       const destination = user.payoutDestination();
 
-      // Oracle
       expect(destination).toEqual({
         payoutAccountId: "account",
         userId: "owner",
@@ -515,7 +426,6 @@ describe("User", () => {
     });
 
     test("payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -524,7 +434,6 @@ describe("User", () => {
       user.completePayoutSetup("bank");
       user.deactivate(deactivationWithoutObligations());
 
-      // Log & Oracle
       expect(() => user.payoutDestination()).toThrow(
         expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
       );
@@ -533,7 +442,6 @@ describe("User", () => {
 
   describe("Deactivation", () => {
     test("deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -541,7 +449,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -549,7 +456,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -557,7 +463,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -565,7 +470,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -573,7 +477,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -581,7 +484,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -589,7 +491,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -597,7 +498,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -605,7 +505,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -613,7 +512,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -621,7 +519,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -629,7 +526,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -637,7 +533,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -645,7 +540,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -653,7 +547,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -661,12 +554,10 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations", () => {
-      // Input
       const user = createActiveUser();
       const input = { ...deactivationWithoutObligations(), pendingPayouts: 1 };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -674,12 +565,10 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = { ...deactivationWithoutObligations(), pendingPayouts: -1 };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -687,7 +576,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -695,7 +583,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -703,7 +590,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -711,7 +597,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -719,7 +604,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -727,7 +611,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -735,7 +618,6 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput", () => {
-      // Input
       const user = createActiveUser();
       const input = {
         ...deactivationWithoutObligations(),
@@ -743,7 +625,6 @@ describe("User", () => {
       };
       const before = accountStateOf(user);
 
-      // Log & Oracle
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -751,31 +632,21 @@ describe("User", () => {
     });
 
     test("deactivate_WhenNoObligationsRemain_AnonymisesProfile", () => {
-      // Input
       const user = createActiveUser();
       user.updatePreferences({
         preferredSports: new Set(["Tennis"]),
         preferredRegions: new Set(["West"]),
       });
 
-      // Log
       user.deactivate(deactivationWithoutObligations());
-      const deactivatedProfile = {
-        status: user.accountStatus,
-        email: user.email,
-        sports: [...user.preferredSports],
-        regions: [...user.preferredRegions],
-      };
 
-      // Oracle
-      expect(deactivatedProfile.status).toBe("INACTIVE");
-      expect(deactivatedProfile.email).toBeNull();
-      expect(deactivatedProfile.sports).toEqual([]);
-      expect(deactivatedProfile.regions).toEqual([]);
+      expect(user.accountStatus).toBe("INACTIVE");
+      expect(user.email).toBeNull();
+      expect([...user.preferredSports]).toEqual([]);
+      expect([...user.preferredRegions]).toEqual([]);
     });
 
     test("deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity", () => {
-      // Input
       const user = createActiveUser();
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -785,33 +656,22 @@ describe("User", () => {
       const wallet = user.wallet;
       const payoutAccount = user.payoutAccount;
 
-      // Log
       user.deactivate(deactivationWithoutObligations());
-      const retainedIdentity = {
-        userId: user.userId,
-        wallet: user.wallet,
-        payoutAccount: user.payoutAccount,
-      };
 
-      // Oracle
-      expect(retainedIdentity.userId).toBe("owner");
-      expect(retainedIdentity.wallet).toBe(wallet);
-      expect(retainedIdentity.payoutAccount).toBe(payoutAccount);
-      expect(retainedIdentity.payoutAccount?.bankAccountReference).toBe("bank");
+      expect(user.userId).toBe("owner");
+      expect(user.wallet).toBe(wallet);
+      expect(user.payoutAccount).toBe(payoutAccount);
+      expect(user.payoutAccount?.bankAccountReference).toBe("bank");
     });
 
     test("deactivate_WhenAlreadyInactive_LeavesStateUnchanged", () => {
-      // Input
       const user = createActiveUser();
       user.deactivate(deactivationWithoutObligations());
       const before = accountStateOf(user);
 
-      // Log
       user.deactivate(deactivationWithoutObligations());
-      const repeatedDeactivationState = accountStateOf(user);
 
-      // Oracle
-      expect(repeatedDeactivationState).toEqual(before);
+      expect(accountStateOf(user)).toEqual(before);
     });
   });
 });

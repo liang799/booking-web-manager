@@ -29,7 +29,7 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
 - Keep multiple assertions when they describe the same outcome, such as a
   cancellation's status, refunds, and roster changes. Give reconstruction and
   independent reliability rules their own cases. Each case establishes its own
-  prerequisites in Input and exercises its named behavior under Log.
+  prerequisites before exercising the behavior named by the test.
 - A domain unit test may use real collaborating entities and value objects.
   Test the subject's public behavior without replacing those collaborators with
   mocks merely to reduce the number of objects in the test.
@@ -38,50 +38,30 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
 
 ## Writing a scenario
 
-Use the five ingredients from *Lecture 16: Testing Introduction*, slides 15–18:
-the test title is its **Name**, its file path is its **Location**, **Input** is
-the data or commands, **Log** is the actual output, and **Oracle** is the expected
-output. The lecture's code example captures a result before comparing it with
-the expected value in an assertion.
+Use blank lines to separate setup, the behavior being exercised, and its
+assertions. Keep comments that explain a business rule, an unusual prerequisite,
+or an injected failure. Routine phase labels add no information to these tests.
+This follows the emphasis on focused behaviors and readable, self-contained
+examples in [Google's unit-testing guidance](https://abseil.io/resources/swe-book/html/ch12.html).
 
-Use `// Input`, `// Log`, and `// Oracle` to identify these ingredients:
-
-- **Input:** declare the subject's starting state and command data. Keep any
-  prerequisite transitions here.
-- **Log:** execute the behavior being tested and capture its actual return value
-  or resulting public state together in one block. For a void method, put the
-  command immediately before the named state observation. Capture any additional
-  outcome queries here too, before comparing them in Oracle.
-- **Oracle:** compare that observation with concrete expected values directly
-  in assertions. Derive expectations from the business rule, independently of
-  the implementation being tested.
-
-These labels describe what the code represents, rather than renaming
-Arrange/Act/Assert phases. For a method that returns a value, execution and
-observation can share the assignment:
+Capture a meaningful returned result and compare it with explicit expectations:
 
 ```ts
 test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
-  // Input
   const first = Money.fromCents(500);
   const second = Money.fromCents(700);
 
-  // Log
-  const result = first.add(second);
+  const sum = first.add(second);
 
-  // Oracle
-  expect(result.toCents()).toBe(1200);
+  expect(sum.toCents()).toBe(1200);
 });
 ```
 
-Apply this grouping throughout the domain suite. For a void method, group the
-command and its immediately captured result under `// Log` or
-`// Log change result`. This keeps the change beside the observation, as
-SC2002's Combatant examples capture hit points and attack values after commands:
+For a void command, execute it once and inspect the resulting public state.
+A temporary variable that merely renames a simple property is unnecessary:
 
 ```ts
 test("changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate", () => {
-  // Input
   const visibilityChangeTime = hoursBeforeSessionStart(48);
   const bookingSession = new Session(sessionDetails({ visibility: "PUBLIC" }));
   const booker = createTestUser({
@@ -89,86 +69,102 @@ test("changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate", () 
     emailVerified: false,
   }).asBooker();
 
-  // Log change result
   booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
-  const visibility = bookingSession.visibility;
 
-  // Oracle
-  expect(visibility).toBe("PRIVATE");
+  expect(bookingSession.visibility).toBe("PRIVATE");
 });
 ```
 
-Test instrumentation, such as spies and injected failures, is separate from
-domain input. Introduce it with a brief comment explaining the failure being
-simulated. Construct a simulated thrown error inside the stub and state the
-expected code or message directly in the exception assertion. Avoid a shared
-`failure` object serving as both the stub's output and its own expected result.
-Restore spies in `finally`. Keep before/after `sessionState` comparisons for
-rejection atomicity; the captured before-state is the baseline the Oracle must
-preserve, and the after-state is the Log.
-
-Keep each test independent: use fresh objects, with all prerequisite state
-established inside that test or a small construction fixture. A test must work
-on its own or in a different execution order. A focused idempotency test may
-repeat the same operation in Log. For a retry test, the previous attempt
-establishes Input and Log performs the retry. If a scenario separately verifies rejection atomicity and
-successful recovery, preserve those checks in separate tests.
-When that starting state requires an earlier rejection, a direct `toThrow`
-assertion in Input may establish the precondition; assertions about the
-rejection's effects belong in its dedicated failure test.
-
-Name observed results after what they represent, then assert concrete values.
+Permission guards check whether a command is allowed; they do not perform it.
+Test those contracts separately. An unexpected exception already fails the test:
 
 ```ts
-test("completeSetup_WhenSetupIsPending_ReturnsCompletedCopy", () => {
-  // Input
-  const pendingAccount = PayoutAccount.create({
-    payoutAccountId: "account",
-    userId: "owner",
-    providerAccountReference: "provider",
-  });
+test("assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession", () => {
+  const cancellationTime = hoursBeforeSessionStart(48);
+  const bookingSession = createTestSession({ committedUserIds: ["alice"] });
+  const booker = createTestUser({
+    userId: "booker",
+    emailVerified: false,
+  }).asBooker();
+  const previousState = sessionState(bookingSession);
 
-  // Log
-  const completedAccount = pendingAccount.completeSetup("bank");
-  const originalSetupStatus = pendingAccount.setupStatus;
+  booker.assertCanCancel(bookingSession, cancellationTime);
 
-  // Oracle
-  expect(originalSetupStatus).toBe("PENDING");
-  expect(completedAccount).not.toBe(pendingAccount);
-  expect(completedAccount.setupStatus).toBe("COMPLETE");
-  expect(completedAccount.bankAccountReference).toBe("bank");
+  expect(sessionState(bookingSession)).toEqual(previousState);
 });
 ```
 
-Use fresh objects for independent scenarios. Assert rejections directly with
-`expect(() => action()).toThrow(expect.objectContaining({ code: "..." }))`.
-Label this combined section `// Log & Oracle`: the matcher executes the command,
-observes the thrown error, and compares it with the expected error. Keep this
-direct assertion instead of adding an error-capture helper.
-Run the assertion while the subject is in the state named by the test; do not
-save an action callback and invoke it after subsequent state changes. When
-atomicity matters, keep the unchanged-state comparison beside the rejection
-assertion under the same `// Log & Oracle` comment. Use a direct comparison such
-as `expect(sessionState(bookingSession)).toEqual(previousState)` after the
-rejected command. These supporting checks do not need another Log/Oracle pair
-or a temporary variable solely for the state comparison.
+Keep named captures when they clarify a domain result, avoid repeating a lookup,
+record an earlier state or identity, or observe a value before another mutation.
+Never move an observation across a mutation or execute a command again merely
+to inline its result. Prefer concrete states, cents, instructions, and collection
+contents to vague change checks or collection-wide booleans. Derive expected
+values independently of the implementation being tested.
 
-Reuse fixtures for routine defaults, but keep scenario-specific inputs and
-transitions in the test. Put small local helper functions below the tests.
-Use descriptive names for people and pass relevant funds directly to the user
-fixture, keeping routine wallet construction inside the fixture:
+## Rejections, retries, and injected failures
+
+Assert rejections directly and keep related unchanged-state checks together:
+
+```ts
+test("changeVisibility_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
+  const visibilityChangeTime = hoursBeforeSessionStart(48);
+  const bookingSession = createTestSession();
+  const previousState = sessionState(bookingSession);
+
+  expect(() =>
+    readyBooker("other").changeVisibility(
+      bookingSession,
+      "PRIVATE",
+      visibilityChangeTime,
+    ),
+  ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
+  expect(sessionState(bookingSession)).toEqual(previousState);
+});
+```
+
+Preserve both concrete outcomes and `sessionState` comparisons where rejection
+atomicity matters. Run the exception assertion in the state named by the test;
+do not save a callback and invoke it after subsequent state changes.
+
+Fault injection is test instrumentation. Explain the failure being simulated,
+construct the thrown error inside the stub, and state the expected error
+independently in the assertion. Restore spies in `finally`:
+
+```ts
+// Simulate Ben's cancellation failing after Alice has been processed.
+const cancelBen = vi
+  .spyOn(bookingSession.participantList.requireParticipation("p-ben"), "cancel")
+  .mockImplementationOnce(() => {
+    throw new DomainError("INVALID_STATE", "Second cancellation failed");
+  });
+
+try {
+  expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
+    new DomainError("INVALID_STATE", "Second cancellation failed"),
+  );
+  expect(cancelBen).toHaveBeenCalledOnce();
+  expect(sessionState(bookingSession)).toEqual(previousState);
+} finally {
+  cancelBen.mockRestore();
+}
+```
+
+Each test creates fresh state and runs independently, including in shuffled
+order. A focused idempotency test may repeat an operation. A retry test may use
+a previous failed attempt as a prerequisite; its direct `toThrow` assertion
+establishes that precondition. Keep independent assertions about the first
+failure's effects in the dedicated failure case. Do not split a retry or
+idempotency behavior merely because it needs multiple calls.
+
+## Fixtures and visible inputs
+
+Reuse small fixtures for routine construction. Keep scenario-defining amounts,
+dates, identities, invalid fields, and transitions visible. Preserve exported
+fixture defaults because use-case and other suites consume them. Keep local
+helpers below the tests; avoid setup hooks or builders that hide the scenario.
 
 ```ts
 const alice = createTestUser({ userId: "alice", availableFundsCents: 500 });
-```
-
-Keep explicit wallet and transaction-history setup when the history itself is
-part of the behavior under test, such as balance derivation or hydration.
-
-Use `createTestSession` for routine starting state; it builds that state through
-validated constructors:
-
-```ts
 const bookingSession = createTestSession({
   totalSlots: 2,
   committedUserIds: ["alice", "ben"],
@@ -176,61 +172,24 @@ const bookingSession = createTestSession({
 });
 ```
 
-For payout callback and reconstruction tests, use `pendingPayoutDetails` to
-declare an attendance-verified session with held shares and a pending payout.
-Use `verifiedParticipation` for individual attended or absent participation
-records. These fixtures construct valid state directly; they do not run Booker
-workflows or calculate which shares production code should release or forfeit.
-Keep unusual attendance, withdrawal times, invalid fields, and retry identities
-explicit in the scenario instead of adding a general-purpose state builder.
-
-```ts
-test("completeSettlement_WhenPayoutIsPending_ReleasesHeldShares", () => {
-  // Input
-  const session = new Session(pendingPayoutDetails(["alice", "ben"]));
-
-  // Log
-  const completion = session.completeSettlement("out", sessionEndsAt);
-  const status = session.status;
-  const pendingSettlement = session.pendingSettlement;
-  const holdStates = session.participantList.participations.map((p) => p.hold?.state);
-
-  // Oracle
-  expect(status).toBe("SETTLED");
-  expect(pendingSettlement).toBeUndefined();
-  expect(holdStates).toEqual(["RELEASED", "RELEASED"]);
-  expect(
-    completion.instructions.map(({ kind, amount }) => [kind, amount.toCents()]),
-  ).toEqual([["RELEASE", 500], ["RELEASE", 500]]);
-});
-```
+Keep explicit wallet and transaction-history setup when that history is being
+tested. Use `createTestSession` for routine state built through validated
+constructors. For payout callbacks, `pendingPayoutDetails` supplies an
+attendance-verified session with held shares and a pending payout;
+`verifiedParticipation` supplies an attended or absent participation. These
+fixtures construct state without running Booker workflows or calculating
+production release/forfeiture decisions. Keep unusual withdrawal times,
+verification, failures, and retry identities explicit when they explain the
+scenario.
 
 Keep actual `Participant.join` calls visible when testing admission, capacity,
-queue changes, or financial instructions, and keep timing-dependent transitions
-explicit. Use `sessionDetails` for special hydration scenarios.
-
-Read roster facts through `bookingSession.participantList`: use its readonly
-`participations`, `nextQueueSequence`, and `committedCount` values or its lookup
-queries. For example, `bookingSession.participantList.nextWaitlisted()?.userId`
-identifies the next waiter. Session hydration still takes arrays through
-`sessionDetails`.
-
-```ts
-// Log
-const aliceParticipation = bookingSession.participantList.requireParticipation("p-alice");
-
-// Oracle
-expect(aliceParticipation.status).toBe("COMMITTED");
-```
-
-Test collection query/immutability behavior separately from role workflows;
-failed Session recording must preserve both roster and queue state.
-
-Avoid generic error-capture helpers and setup hooks that hide the scenario.
-Domain tests exercise business constraints through declared input types.
-Constructor-hydration cases also preserve deliberate malformed-state checks,
-including missing required related data; keep their necessary type escapes
-local to the invalid input. External request parsing belongs in boundary tests.
+queue changes, or financial instructions. Read roster facts through
+`bookingSession.participantList`, using its readonly values and public queries.
+Use `sessionDetails` for hydration, preserving deliberate malformed-state tests
+and keeping necessary type escapes local to the invalid input. Test standalone
+collection query and immutability contracts in collection suites; keep workflow
+atomicity and identity checks with the role behavior. External request parsing
+belongs in boundary tests.
 
 ## Time expressions
 
@@ -271,8 +230,8 @@ session end and rejected one millisecond earlier.
 
 The suite structure follows
 [ADR-0005: Domain unit-test structure](../../docs/adr/0005-domain-unit-test-structure.md).
-The lecture terminology and result snapshots are recorded in
-[ADR-0018: Domain test inputs, oracles, and logs](../../docs/adr/0018-domain-test-input-oracle-log.md).
+The readability convention and result snapshots are recorded in
+[ADR-0018: Readable domain tests and execution evidence](../../docs/adr/0018-domain-test-input-oracle-log.md).
 
 Examples following this standard are
 [user.test.ts](./accounts/user.test.ts) and
@@ -282,12 +241,17 @@ When restructuring tests, preserve distinct behaviors, error codes, immutability
 checks, and unchanged-state assertions. Map the old assertions to their new
 cases before removing or consolidating a test; test count alone does not prove
 that coverage was retained. Fix scenarios whose setup does not match their
-names. Run the affected files, then `npm test`, `npm run typecheck`, and
-`npm run lint`. Splitting scenarios may increase the test count without changing
+names. Run the affected files, the complete domain suite, a shuffled domain
+run with recorded seed `2006`, then `rtk npm test`, `rtk npm run typecheck`, and
+`rtk npm run lint`. Splitting scenarios may increase the test count without changing
 production behavior. Report newly exposed production defects separately during
 a tests-only cleanup.
 
 ## Result snapshots
+
+The table vocabulary follows *Lecture 16: Testing Introduction*, slides 15–18.
+Input means data or commands, Oracle means the expected result, and Log means
+the observed result. These are reporting concepts, not mandatory code comments.
 
 The **2026-10-23** snapshot covers **603 passing cases across 43 files**. Each
 table has a linked Name and Location, Input, Oracle (expected result), Log

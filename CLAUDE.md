@@ -275,7 +275,8 @@ BREAKING CHANGE: use JavaScript features not available in Node 6.
 
 For domain unit tests, follow the
 [domain testing guide](./tests/domain/README.md). It defines scenario naming,
-Input/Log/Oracle comments, grouping, fixtures, and error assertions. The
+behavior grouping, blank-line structure, useful result captures, fixtures, and
+error assertions. Input/Oracle/Log terminology belongs in the result tables. The
 rationale is recorded in
 [ADR-0018](./docs/adr/0018-domain-test-input-oracle-log.md).
 

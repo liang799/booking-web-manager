@@ -8,7 +8,6 @@ import {
 
 describe("Participant", () => {
   test("leaveWaitlist_WhenEmailIsMissing_StillLeavesAnExistingEntry", () => {
-    // Input
     const bookingSession = createTestSession({ waitlistedUserIds: ["alice"] });
     const alice = createTestUser({
       userId: "alice",
@@ -16,22 +15,18 @@ describe("Participant", () => {
       emailVerified: false,
     }).asParticipant();
 
-    // Log
     alice.leaveWaitlist(bookingSession, {
       participationId: "p-alice",
       now: hoursBeforeSessionStart(48),
     });
-    const aliceStatus =
-      bookingSession.participantList.requireParticipation("p-alice").status;
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
 
-    // Oracle
-    expect(aliceStatus).toBe("LEFT_WAITLIST");
-    expect(nextWaiter).toBeUndefined();
+    expect(
+      bookingSession.participantList.requireParticipation("p-alice").status,
+    ).toBe("LEFT_WAITLIST");
+    expect(bookingSession.participantList.nextWaitlisted()).toBeUndefined();
   });
 
   test("join_WhenOnlyAvailableSeatIsReserved_JoinsOrdinaryWaitlistWithoutTakingReservation", () => {
-    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const joinTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -44,7 +39,6 @@ describe("Participant", () => {
       replacementInviteeId: "cara",
     });
 
-    // Log
     const admission = createTestUser({ userId: "dana" })
       .asParticipant()
       .join(bookingSession, {
@@ -52,26 +46,23 @@ describe("Participant", () => {
         holdId: "h-dana",
         now: joinTime,
       });
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-    const benParticipation =
-      bookingSession.participantList.requireParticipation("p-ben");
-    const committedCount = bookingSession.participantList.committedCount;
-    const availableSlots = bookingSession.getAvailableSlots(joinTime);
 
-    // Oracle
     expect(admission).toEqual({
       kind: "WAITLISTED",
       participationId: "p-dana",
       instructions: [],
     });
-    expect(nextWaiter?.userId).toBe("dana");
-    expect(benParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
-    expect(committedCount).toBe(1);
-    expect(availableSlots).toBe(0);
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "dana",
+    );
+    expect(
+      bookingSession.participantList.requireParticipation("p-ben").hold?.state,
+    ).toBe("AWAITING_REPLACEMENT");
+    expect(bookingSession.participantList.committedCount).toBe(1);
+    expect(bookingSession.getAvailableSlots(joinTime)).toBe(0);
   });
 
   test("leaveWaitlist_WhenParticipantOwnsWaitingEntry_LeavesWithoutChangingCommitments", () => {
-    // Input
     const waitlistDepartureTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -79,25 +70,27 @@ describe("Participant", () => {
     });
     const participant = createTestUser({ userId: "waiting" }).asParticipant();
 
-    // Log
     participant.leaveWaitlist(bookingSession, {
       participationId: "p-waiting",
       now: waitlistDepartureTime,
     });
-    const participationStatuses = bookingSession.participantList.participations.map(
-      (entry) => entry.status,
-    );
-    const nextWaiterId = bookingSession.participantList.nextWaitlisted()?.userId;
-    const availableSlots = bookingSession.getAvailableSlots(waitlistDepartureTime);
+    const participationStatuses =
+      bookingSession.participantList.participations.map(
+        (entry) => entry.status,
+      );
 
-    // Oracle
-    expect(participationStatuses).toEqual(["COMMITTED", "COMMITTED", "LEFT_WAITLIST"]);
-    expect(nextWaiterId).toBeUndefined();
-    expect(availableSlots).toBe(0);
+    expect(participationStatuses).toEqual([
+      "COMMITTED",
+      "COMMITTED",
+      "LEFT_WAITLIST",
+    ]);
+    expect(
+      bookingSession.participantList.nextWaitlisted()?.userId,
+    ).toBeUndefined();
+    expect(bookingSession.getAvailableSlots(waitlistDepartureTime)).toBe(0);
   });
 
   test("leaveWaitlist_WhenEntryBelongsToAnotherParticipant_RejectsWithoutChangingState", () => {
-    // Input
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["waiting"],
@@ -105,7 +98,6 @@ describe("Participant", () => {
     const participant = createTestUser({ userId: "other" }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       participant.leaveWaitlist(bookingSession, {
         participationId: "p-waiting",
@@ -117,13 +109,11 @@ describe("Participant", () => {
   });
 
   test("leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState", () => {
-    // Input
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
 
     const alice = createTestUser({ userId: "alice" }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Log & Oracle
     expect(() =>
       alice.leaveWaitlist(bookingSession, {
         participationId: "p-alice",
