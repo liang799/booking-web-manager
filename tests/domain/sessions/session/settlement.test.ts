@@ -31,24 +31,16 @@ describe("Session", () => {
     expect(() =>
       bookingSession.completeSettlement("out", sessionEndsAt),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-
-    // Log
-    const currentState = sessionState(bookingSession);
-    const currentList = bookingSession.participantList;
-    const sessionStatus = bookingSession.status;
-    const payoutAttemptIds = bookingSession.payoutAttemptIds;
-    const payoutIdempotencyKeys = bookingSession.payoutIdempotencyKeys;
-    const holdStates = bookingSession.participantList.participations.map(
-      (participation) => participation.hold?.state,
-    );
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(currentList).toBe(previousList);
-    expect(sessionStatus).toBe("PAYOUT_PENDING");
-    expect(payoutAttemptIds).toEqual(["out"]);
-    expect(payoutIdempotencyKeys).toEqual(["key"]);
-    expect(holdStates).toEqual(["HELD", "HELD"]);
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.participantList).toBe(previousList);
+    expect(bookingSession.status).toBe("PAYOUT_PENDING");
+    expect(bookingSession.payoutAttemptIds).toEqual(["out"]);
+    expect(bookingSession.payoutIdempotencyKeys).toEqual(["key"]);
+    expect(
+      bookingSession.participantList.participations.map(
+        (participation) => participation.hold?.state,
+      ),
+    ).toEqual(["HELD", "HELD"]);
   });
 
   test("completeSettlement_WhenCallbackIsStale_RejectsWithoutChangingState", () => {
@@ -60,12 +52,7 @@ describe("Session", () => {
     expect(() =>
       bookingSession.completeSettlement("stale", sessionEndsAt),
     ).toThrow(expect.objectContaining({ code: "STALE_PAYOUT" }));
-
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("completeSettlement_WhenCompletionDateIsInvalid_LeavesAllHoldsPending", () => {
@@ -77,12 +64,7 @@ describe("Session", () => {
     expect(() =>
       bookingSession.completeSettlement("out", new Date(Number.NaN)),
     ).toThrow(DomainError);
-
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("completeSettlement_WhenSecondHoldFails_PreservesAllHolds", () => {
@@ -110,12 +92,7 @@ describe("Session", () => {
           message: "Second line rejected",
         }),
       );
-
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     } finally {
       settleBen.mockRestore();
     }

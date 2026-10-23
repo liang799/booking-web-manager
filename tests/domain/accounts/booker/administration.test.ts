@@ -56,11 +56,7 @@ describe("Booker", () => {
       readyBooker().assertCanCancel(bookingSession, sessionStartsAt),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility", () => {
@@ -100,11 +96,7 @@ describe("Booker", () => {
       ),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus", () => {
@@ -133,12 +125,8 @@ describe("Booker", () => {
         new DomainError("INVALID_STATE", "Second cancellation failed"),
       );
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
       expect(cancelBen).toHaveBeenCalledOnce();
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     } finally {
       cancelBen.mockRestore();
     }
@@ -256,11 +244,7 @@ describe("Booker", () => {
       ),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds", () => {
@@ -302,11 +286,7 @@ describe("Booker", () => {
       ),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("removeParticipant_WhenBookerRemovesParticipant_RefundsHold", () => {
@@ -348,11 +328,7 @@ describe("Booker", () => {
       expect.objectContaining({ code: "SESSION_STARTED" }),
     );
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue", () => {

@@ -113,11 +113,7 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState", () => {
@@ -135,10 +131,6 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 });

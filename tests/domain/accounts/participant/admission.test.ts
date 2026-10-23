@@ -72,11 +72,7 @@ describe("Participant", () => {
         }),
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
 
-      // Log
-      const participations = session.participantList.participations;
-
-      // Oracle
-      expect(participations).toEqual([]);
+      expect(session.participantList.participations).toEqual([]);
     });
 
     test("join_WhenRoleWasCreatedAfterDeactivation_ThrowsInactiveAccount", () => {
@@ -106,11 +102,7 @@ describe("Participant", () => {
         }),
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
 
-      // Log
-      const participations = session.participantList.participations;
-
-      // Oracle
-      expect(participations).toEqual([]);
+      expect(session.participantList.participations).toEqual([]);
     });
 
     test("join_WhenEmailIsMissingAndSessionIsFull_RejectsWithoutChangingWaitlist", () => {
@@ -133,11 +125,7 @@ describe("Participant", () => {
         }),
       ).toThrow(expect.objectContaining({ code: "EMAIL_REQUIRED" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenEmailIsUnverified_AllowsAdmission", () => {
@@ -210,12 +198,8 @@ describe("Participant", () => {
           new DomainError("INVALID_STATE", "Replacement refund failed"),
         );
 
-        // Log
-        const currentState = sessionState(bookingSession);
-
-        // Oracle
         expect(refund).toHaveBeenCalledOnce();
-        expect(currentState).toEqual(previousState);
+        expect(sessionState(bookingSession)).toEqual(previousState);
       } finally {
         refund.mockRestore();
       }
@@ -350,16 +334,9 @@ describe("Participant", () => {
         reloadedUser.asParticipant().join(nextSession, command),
       ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
 
-      // Log
-      const currentState = sessionState(nextSession);
-      const fundedUserAvailableFunds = fundedUser.wallet.getAvailableBalance();
-      const reloadedUserAvailableFunds =
-        reloadedUser.wallet.getAvailableBalance();
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
-      expect(fundedUserAvailableFunds.toCents()).toBe(500);
-      expect(reloadedUserAvailableFunds.toCents()).toBe(0);
+      expect(sessionState(nextSession)).toEqual(previousState);
+      expect(fundedUser.wallet.getAvailableBalance().toCents()).toBe(500);
+      expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(0);
     });
 
     test("join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState", () => {
@@ -383,11 +360,7 @@ describe("Participant", () => {
         expect.objectContaining({ code: "INVALID_ACCESS" }),
       );
 
-      // Log
-      const currentState = sessionState(privateSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(privateSession)).toEqual(previousState);
     });
 
     test("join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState", () => {
@@ -415,11 +388,7 @@ describe("Participant", () => {
         expect.objectContaining({ code: "LOW_RELIABILITY" }),
       );
 
-      // Log
-      const currentState = sessionState(privateSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(privateSession)).toEqual(previousState);
     });
 
     test("join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet", () => {
@@ -468,11 +437,7 @@ describe("Participant", () => {
         }),
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenFundsAreOneCentBelowShare_RejectsWithoutChangingState", () => {
@@ -493,11 +458,7 @@ describe("Participant", () => {
         }),
       ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState", () => {
@@ -528,11 +489,7 @@ describe("Participant", () => {
         }),
       );
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenPrivateRoomTokenMatches_CommitsApplicant", () => {
@@ -588,11 +545,7 @@ describe("Participant", () => {
           }),
       ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition", () => {
@@ -672,11 +625,7 @@ describe("Participant", () => {
           }),
       ).toThrow(expect.objectContaining({ code: "ALREADY_PARTICIPATING" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState", () => {
@@ -704,11 +653,7 @@ describe("Participant", () => {
           }),
       ).toThrow(expect.objectContaining({ code: "REJOIN_NOT_ALLOWED" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
@@ -726,11 +671,7 @@ describe("Participant", () => {
         }),
       ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
   });
   describe("Replacement admission", () => {
@@ -835,11 +776,7 @@ describe("Participant", () => {
           }),
       ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("acceptReplacement_WhenInvitationWasAcceptedAndSessionIsFull_RejectsWithoutWaitlisting", () => {
@@ -884,11 +821,7 @@ describe("Participant", () => {
           }),
       ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("join_WhenParticipantWasRemoved_RejectsWithoutChangingState", () => {
@@ -911,11 +844,7 @@ describe("Participant", () => {
           }),
       ).toThrow(expect.objectContaining({ code: "REJOIN_NOT_ALLOWED" }));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-
-      // Oracle
-      expect(currentState).toEqual(previousState);
+      expect(sessionState(bookingSession)).toEqual(previousState);
     });
   });
 });

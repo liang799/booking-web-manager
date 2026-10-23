@@ -320,16 +320,9 @@ describe("Participation", () => {
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "OPEN_SLOT"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-
-      // Log
-      const withdrawnReplacementMode = withdrawn.replacementMode;
-      const withdrawnInviteeId = withdrawn.replacementInviteeId;
-      const withdrawnHoldState = withdrawn.hold?.state;
-
-      // Oracle
-      expect(withdrawnReplacementMode).toBe("DIRECT_INVITE");
-      expect(withdrawnInviteeId).toBe("ben");
-      expect(withdrawnHoldState).toBe("REFUNDED");
+      expect(withdrawn.replacementMode).toBe("DIRECT_INVITE");
+      expect(withdrawn.replacementInviteeId).toBe("ben");
+      expect(withdrawn.hold?.state).toBe("REFUNDED");
     });
 
     test("withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation", () => {
@@ -345,16 +338,9 @@ describe("Participation", () => {
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "DIRECT_INVITE", "ben"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-
-      // Log
-      const withdrawnReplacementMode = withdrawn.replacementMode;
-      const withdrawnInviteeId = withdrawn.replacementInviteeId;
-      const withdrawnHoldState = withdrawn.hold?.state;
-
-      // Oracle
-      expect(withdrawnReplacementMode).toBe("OPEN_SLOT");
-      expect(withdrawnInviteeId).toBeUndefined();
-      expect(withdrawnHoldState).toBe("AWAITING_REPLACEMENT");
+      expect(withdrawn.replacementMode).toBe("OPEN_SLOT");
+      expect(withdrawn.replacementInviteeId).toBeUndefined();
+      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
     });
 
     test("cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata", () => {

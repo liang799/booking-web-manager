@@ -64,25 +64,22 @@ describe("Participant", () => {
         }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const caraParticipation =
-      bookingSession.participantList.requireParticipation("p-cara");
-    const caraInvitation =
-      bookingSession.participantList.personalReplacementForInvitee("cara");
-    const committedCount = bookingSession.participantList.committedCount;
-    const availableSlots = bookingSession.getAvailableSlots(promotionTime);
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-    const nextQueueSequence = bookingSession.participantList.nextQueueSequence;
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(caraParticipation.status).toBe("WAITLISTED");
-    expect(caraInvitation?.participationId).toBe("p-ben");
-    expect(committedCount).toBe(1);
-    expect(availableSlots).toBe(0);
-    expect(nextWaiter?.userId).toBe("cara");
-    expect(nextQueueSequence).toBe(queueSequence);
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(
+      bookingSession.participantList.requireParticipation("p-cara").status,
+    ).toBe("WAITLISTED");
+    expect(
+      bookingSession.participantList.personalReplacementForInvitee("cara")
+        ?.participationId,
+    ).toBe("p-ben");
+    expect(bookingSession.participantList.committedCount).toBe(1);
+    expect(bookingSession.getAvailableSlots(promotionTime)).toBe(0);
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "cara",
+    );
+    expect(bookingSession.participantList.nextQueueSequence).toBe(
+      queueSequence,
+    );
   });
 
   test("promoteFromWaitlist_WhenOnlyVacancyIsReserved_RejectsWithoutMovingTheQueue", () => {
@@ -111,13 +108,10 @@ describe("Participant", () => {
         }),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const nextWaiter = bookingSession.participantList.nextWaitlisted();
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(nextWaiter?.userId).toBe("dana");
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+      "dana",
+    );
   });
 
   test("promoteFromWaitlist_WhenAnOlderWithdrawalIsReserved_RefundsOnlyTheOpenWithdrawal", () => {
@@ -208,11 +202,7 @@ describe("Participant", () => {
       }),
     );
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("promoteFromWaitlist_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged", () => {
@@ -249,18 +239,13 @@ describe("Participant", () => {
             holdId: "h-promoted",
             now: promotionTime,
           }),
-      ).toThrow(
-        new DomainError("INVALID_STATE", "Replacement refund failed"),
-      );
+      ).toThrow(new DomainError("INVALID_STATE", "Replacement refund failed"));
 
-      // Log
-      const currentState = sessionState(bookingSession);
-      const nextWaiterId = bookingSession.participantList.nextWaitlisted()?.userId;
-
-      // Oracle
       expect(refund).toHaveBeenCalledOnce();
-      expect(currentState).toEqual(previousState);
-      expect(nextWaiterId).toBe("first-waiter");
+      expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+        "first-waiter",
+      );
     } finally {
       refund.mockRestore();
     }
@@ -292,11 +277,7 @@ describe("Participant", () => {
         }),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("promoteFromWaitlist_WhenReloadedWaiterHasFunds_PromotesFromUpdatedWallet", () => {

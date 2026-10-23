@@ -19,11 +19,7 @@ describe("Booker", () => {
       readyBooker("other").cancel(bookingSession, cancellationTime),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("changeVisibility_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
@@ -41,11 +37,7 @@ describe("Booker", () => {
       ),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("verifyAttendance_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
@@ -62,11 +54,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
@@ -89,10 +77,6 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 });

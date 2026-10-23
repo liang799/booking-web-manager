@@ -32,12 +32,7 @@ describe("Session", () => {
         oneMillisecondBeforeAutomaticVerification,
       ),
     ).toThrow(expect.objectContaining({ code: "AUTO_VERIFICATION_NOT_DUE" }));
-
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants", () => {

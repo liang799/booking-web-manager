@@ -49,11 +49,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "SESSION_NOT_ENDED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("verifyAttendance_WhenLaterMarkConflicts_RejectsWithoutChangingState", () => {
@@ -79,11 +75,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "ATTENDANCE_CONFLICT" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout", () => {

@@ -75,22 +75,17 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const caraParticipation =
-      bookingSession.participantList.findByUserId("cara");
-    const caraInvitation =
-      bookingSession.participantList.personalReplacementForInvitee("cara");
-    const aliceParticipation =
-      bookingSession.participantList.requireParticipation("p-alice");
-    const availableSlots = bookingSession.getAvailableSlots(joinTime);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(caraParticipation).toBeUndefined();
-    expect(caraInvitation?.participationId).toBe("p-ben");
-    expect(aliceParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
-    expect(availableSlots).toBe(1);
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.participantList.findByUserId("cara")).toBeUndefined();
+    expect(
+      bookingSession.participantList.personalReplacementForInvitee("cara")
+        ?.participationId,
+    ).toBe("p-ben");
+    expect(
+      bookingSession.participantList.requireParticipation("p-alice").hold
+        ?.state,
+    ).toBe("AWAITING_REPLACEMENT");
+    expect(bookingSession.getAvailableSlots(joinTime)).toBe(1);
   });
 
   test("acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat", () => {
@@ -119,16 +114,12 @@ describe("Participant", () => {
         }),
     ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
-    const benParticipation =
-      bookingSession.participantList.requireParticipation("p-ben");
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(availableSlots).toBe(0);
-    expect(benParticipation.replacementInviteeId).toBe("cara");
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
+    expect(
+      bookingSession.participantList.requireParticipation("p-ben")
+        .replacementInviteeId,
+    ).toBe("cara");
   });
 
   test("acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat", () => {
@@ -205,16 +196,12 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const availableSlots = bookingSession.getAvailableSlots(acceptanceTime);
-    const caraParticipation =
-      bookingSession.participantList.requireParticipation("p-cara");
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(availableSlots).toBe(0);
-    expect(caraParticipation.queueSequence).toBe(2);
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
+    expect(
+      bookingSession.participantList.requireParticipation("p-cara")
+        .queueSequence,
+    ).toBe(2);
   });
 
   test("acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation", () => {
@@ -245,11 +232,7 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation", () => {
@@ -288,11 +271,7 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "LOW_RELIABILITY" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation", () => {
@@ -319,11 +298,7 @@ describe("Participant", () => {
         }),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal", () => {
@@ -409,15 +384,8 @@ describe("Participant", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const committedCount = bookingSession.participantList.committedCount;
-    const availableSlots =
-      bookingSession.getAvailableSlots(repeatAcceptanceTime);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(committedCount).toBe(1);
-    expect(availableSlots).toBe(1);
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.participantList.committedCount).toBe(1);
+    expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1);
   });
 });

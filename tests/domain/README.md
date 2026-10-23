@@ -143,9 +143,11 @@ observes the thrown error, and compares it with the expected error. Keep this
 direct assertion instead of adding an error-capture helper.
 Run the assertion while the subject is in the state named by the test; do not
 save an action callback and invoke it after subsequent state changes. When
-atomicity matters, capture the resulting state in a following Log block and
-compare it with the before-state under Oracle. The capture must happen after
-the exception assertion has executed the rejected command.
+atomicity matters, keep the unchanged-state comparison beside the rejection
+assertion under the same `// Log & Oracle` comment. Use a direct comparison such
+as `expect(sessionState(bookingSession)).toEqual(previousState)` after the
+rejected command. These supporting checks do not need another Log/Oracle pair
+or a temporary variable solely for the state comparison.
 
 Reuse fixtures for routine defaults, but keep scenario-specific inputs and
 transitions in the test. Put small local helper functions below the tests.

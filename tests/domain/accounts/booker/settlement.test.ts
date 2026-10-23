@@ -42,11 +42,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState", () => {
@@ -71,11 +67,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending", () => {
@@ -133,11 +125,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "PAYOUT_IN_PROGRESS" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutIdIsReused_RejectsWithoutChangingState", () => {
@@ -156,11 +144,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState", () => {
@@ -185,11 +169,7 @@ describe("Booker", () => {
       }),
     );
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedAttemptIsRetriedWithNewIdentity_RecordsRetry", () => {
@@ -303,14 +283,11 @@ describe("Booker", () => {
       expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }),
     );
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const aliceParticipation =
-      bookingSession.participantList.requireParticipation("p-alice");
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(aliceParticipation.hold?.state).toBe("AWAITING_REPLACEMENT");
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(
+      bookingSession.participantList.requireParticipation("p-alice").hold
+        ?.state,
+    ).toBe("AWAITING_REPLACEMENT");
   });
 
   test("preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied", () => {
@@ -343,15 +320,9 @@ describe("Booker", () => {
       readyBooker("foreign").preparePayout(bookingSession, command),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-    const payoutAttemptIds = bookingSession.payoutAttemptIds;
-    const payoutIdempotencyKeys = bookingSession.payoutIdempotencyKeys;
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
-    expect(payoutAttemptIds).toEqual([]);
-    expect(payoutIdempotencyKeys).toEqual([]);
+    expect(sessionState(bookingSession)).toEqual(previousState);
+    expect(bookingSession.payoutAttemptIds).toEqual([]);
+    expect(bookingSession.payoutIdempotencyKeys).toEqual([]);
   });
 
   test("preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt", () => {
@@ -420,11 +391,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey", () => {
@@ -447,11 +414,7 @@ describe("Booker", () => {
       }),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
 
-    // Log
-    const currentState = sessionState(bookingSession);
-
-    // Oracle
-    expect(currentState).toEqual(previousState);
+    expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_AllowsNewIdentityIndependentlyOfSource", () => {

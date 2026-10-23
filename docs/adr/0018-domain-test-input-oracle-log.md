@@ -22,6 +22,9 @@ the resulting public state into a named variable under `// Log` or
 `// Log change result`. Capture a value-returning command directly in Log.
 Oracle compares the captured result with the expected value. Input contains
 starting state, command data, and prerequisite transitions.
+Unchanged-state checks after a rejection stay beside the exception assertion
+under its existing `// Log & Oracle` comment. They compare state directly,
+without starting another Log/Oracle pair or adding state-only temporaries.
 Fault-injection stubs and spy cleanup are test instrumentation, explained
 separately from domain input. Simulated errors are constructed inside stubs;
 their expected codes or messages appear directly in the Oracle.

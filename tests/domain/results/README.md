@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 23:07:50 SGT**
-(`2026-10-23T15:07:50.235Z`). All **600 tests in 43 files passed**.
+Snapshot run: **23 October 2026, 23:19:29 SGT**
+(`2026-10-23T15:19:29.043Z`). All **600 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
@@ -12,7 +12,7 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `fcbe38849d8fd7ee17b886e24f01513cae36a3901de3242b7d9bb841236e1aa8`.
+  `f66756b0a56c7cdfa0a080e79cda9751fce29d71b9e5f5a568bce6be250bec67`.
 - [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
   mapped to 599 retained scenarios, plus one new visibility-change case.
   Includes before/after assertion expressions for changed explicit scenarios.
@@ -40,6 +40,8 @@ Throughout the suite, Log groups the tested action with its captured return
 value or public state. A void command sits immediately before its state
 observation under `Log` or `Log change result`; Oracle compares that observation
 with the expected outcome. Prerequisite transitions remain in Input.
+Supporting unchanged-state comparisons remain directly beside rejection
+assertions under the same `Log & Oracle` comment, without repeated sections.
 
 Vitest's standard report records status and failures, not successful return
 values. These tables interpret the executed source assertions alongside their
@@ -83,9 +85,10 @@ alone were not used as coverage evidence.
 The final suite contains **600 cases and 1,229 assertions**, including eight
 prerequisite assertions. The suite-wide Log grouping retains every case name,
 matcher, negation, expected argument, and underlying observed expression from
-the preceding cleanup revision (`10bacbc`). Named captures replace inline
-outcome queries without changing what is checked. Rejection-state captures
-remain after the exception assertion that executes the rejected command.
+the preceding cleanup revision (`a673037`). Named captures group successful
+actions with their outcomes. Direct unchanged-state comparisons stay after the
+exception assertion that executes the rejected command, under its existing
+`Log & Oracle` comment.
 Fault-injection oracles construct independent expected errors inline, retaining
 their original error-equality checks.
 

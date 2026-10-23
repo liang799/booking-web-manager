@@ -518,15 +518,7 @@
           "line": 49
         }
       ],
-      "reason": "Moved into its existing behavior suite",
-      "assertionsBefore": [
-        "expect(() => participant.join(session, { participationId: \"participation\", holdId: \"hold\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(session.participantList.participations).toEqual([])"
-      ],
-      "assertionsAfter": [
-        "expect(() => participant.join(session, { participationId: \"participation\", holdId: \"hold\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(participations).toEqual([])"
-      ]
+      "reason": "Moved into its existing behavior suite"
     },
     {
       "before": {
@@ -537,18 +529,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenRoleWasCreatedAfterDeactivation_ThrowsInactiveAccount",
-          "line": 82
+          "line": 78
         }
       ],
-      "reason": "Moved into its existing behavior suite",
-      "assertionsBefore": [
-        "expect(() => participant.join(session, { participationId: \"participation\", holdId: \"hold\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(session.participantList.participations).toEqual([])"
-      ],
-      "assertionsAfter": [
-        "expect(() => participant.join(session, { participationId: \"participation\", holdId: \"hold\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(participations).toEqual([])"
-      ]
+      "reason": "Moved into its existing behavior suite"
     },
     {
       "before": {
@@ -1089,15 +1073,7 @@
           "line": 213
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.updateProfile({ email: new Email(\"new@example.com\") }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.updateProfile({ email: new Email(\"new@example.com\") }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1108,7 +1084,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions",
-          "line": 231
+          "line": 226
         }
       ],
       "reason": "Preserved",
@@ -1130,18 +1106,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState",
-          "line": 248
+          "line": 243
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.updatePreferences({ preferredSports: new Set([\"Tennis\"]), preferredRegions: new Set([\" \"]), }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.updatePreferences({ preferredSports: new Set([\"Tennis\"]), preferredRegions: new Set([\" \"]), }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1152,18 +1120,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState",
-          "line": 268
+          "line": 258
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.updatePreferences({ preferredSports: new Set([\"Tennis\"]), preferredRegions: new Set([\"West\"]), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.updatePreferences({ preferredSports: new Set([\"Tennis\"]), preferredRegions: new Set([\"West\"]), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1174,7 +1134,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "preferredSports_WhenReturnedSetChanges_PreservesStoredPreferences",
-          "line": 289
+          "line": 274
         }
       ],
       "reason": "Preserved",
@@ -1194,7 +1154,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences",
-          "line": 308
+          "line": 293
         }
       ],
       "reason": "Preserved",
@@ -1214,7 +1174,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
-          "line": 329
+          "line": 314
         }
       ],
       "reason": "Preserved",
@@ -1238,18 +1198,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState",
-          "line": 346
+          "line": 331
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.beginPayoutSetup({ payoutAccountId: \"replacement\", providerAccountReference: \"other-provider\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.beginPayoutSetup({ payoutAccountId: \"replacement\", providerAccountReference: \"other-provider\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1260,18 +1212,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 370
+          "line": 350
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.beginPayoutSetup({ payoutAccountId: \"replacement\", providerAccountReference: \"other-provider\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.beginPayoutSetup({ payoutAccountId: \"replacement\", providerAccountReference: \"other-provider\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1282,7 +1226,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete",
-          "line": 395
+          "line": 370
         }
       ],
       "reason": "Preserved",
@@ -1306,7 +1250,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
-          "line": 419
+          "line": 394
         }
       ],
       "reason": "Preserved",
@@ -1332,7 +1276,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 440
+          "line": 415
         }
       ],
       "reason": "Preserved"
@@ -1346,18 +1290,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput",
-          "line": 450
+          "line": 425
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.completePayoutSetup(\" \")).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.completePayoutSetup(\" \")).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1368,18 +1304,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState",
-          "line": 471
+          "line": 441
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.completePayoutSetup(\"different-bank\")).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.completePayoutSetup(\"different-bank\")).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1390,7 +1318,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 493
+          "line": 458
         }
       ],
       "reason": "Preserved"
@@ -1404,18 +1332,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 503
+          "line": 468
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.failPayoutSetup()).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.failPayoutSetup()).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1426,7 +1346,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 525
+          "line": 485
         }
       ],
       "reason": "Preserved"
@@ -1440,7 +1360,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination",
-          "line": 535
+          "line": 495
         }
       ],
       "reason": "Preserved"
@@ -1454,7 +1374,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount",
-          "line": 557
+          "line": 517
         }
       ],
       "reason": "Preserved"
@@ -1468,18 +1388,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations",
-          "line": 575
+          "line": 535
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1490,18 +1402,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations",
-          "line": 596
+          "line": 551
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1512,18 +1416,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations",
-          "line": 617
+          "line": 567
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1534,18 +1430,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput",
-          "line": 638
+          "line": 583
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1556,18 +1444,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput",
-          "line": 659
+          "line": 599
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1578,18 +1458,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations",
-          "line": 680
+          "line": 615
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1600,18 +1472,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput",
-          "line": 701
+          "line": 631
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1622,18 +1486,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput",
-          "line": 722
+          "line": 647
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1644,18 +1500,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations",
-          "line": 743
+          "line": 663
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1666,18 +1514,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput",
-          "line": 761
+          "line": 676
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1688,18 +1528,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput",
-          "line": 779
+          "line": 689
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1710,18 +1542,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations",
-          "line": 800
+          "line": 705
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1732,18 +1556,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput",
-          "line": 821
+          "line": 721
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1754,18 +1570,10 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput",
-          "line": 842
+          "line": 737
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(accountStateOf(user)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => user.deactivate(input)).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedAccountState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -1776,7 +1584,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenNoObligationsRemain_AnonymisesProfile",
-          "line": 863
+          "line": 753
         }
       ],
       "reason": "Preserved",
@@ -1802,7 +1610,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity",
-          "line": 887
+          "line": 777
         }
       ],
       "reason": "Preserved",
@@ -1828,7 +1636,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAlreadyInactive_LeavesStateUnchanged",
-          "line": 913
+          "line": 803
         }
       ],
       "reason": "Preserved",
@@ -2985,15 +2793,7 @@
           "line": 111
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.join({ userId: \"owner\", invitationToken: \"first-token\", now: now(), }), ).toThrow(expect.objectContaining({ code: \"INVALID_INVITATION\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.join({ userId: \"owner\", invitationToken: \"first-token\", now: now(), }), ).toThrow(expect.objectContaining({ code: \"INVALID_INVITATION\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3004,18 +2804,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenTokenWasRotated_ThrowsInvalidInvitation",
-          "line": 133
+          "line": 128
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.join({ userId: \"player\", invitationToken: \"first-token\", now: now(), }), ).toThrow(expect.objectContaining({ code: \"INVALID_INVITATION\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.join({ userId: \"player\", invitationToken: \"first-token\", now: now(), }), ).toThrow(expect.objectContaining({ code: \"INVALID_INVITATION\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3026,7 +2818,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenRevokedInvitationIsRotated_AcceptsNewToken",
-          "line": 159
+          "line": 149
         }
       ],
       "reason": "Preserved"
@@ -3040,18 +2832,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 179
+          "line": 169
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.join({ userId: \"player\", invitationToken: \"first-token\", now: now(), }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.join({ userId: \"player\", invitationToken: \"first-token\", now: now(), }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3062,18 +2846,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 201
+          "line": 186
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.rotateInvitation({ actorId: \"other\", invitationToken: \"new\" }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.rotateInvitation({ actorId: \"other\", invitationToken: \"new\" }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3084,18 +2860,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 218
+          "line": 198
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.rotateInvitation({ actorId: \"owner\", invitationToken: \"new\" }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.rotateInvitation({ actorId: \"owner\", invitationToken: \"new\" }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3106,18 +2874,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 236
+          "line": 211
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.revokeInvitation(\"other\")).toThrow( expect.objectContaining({ code: \"UNAUTHORIZED\" }), )",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.revokeInvitation(\"other\")).toThrow( expect.objectContaining({ code: \"UNAUTHORIZED\" }), )",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3128,18 +2888,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 255
+          "line": 225
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.rename({ actorId: \"other\", name: \"New name\" }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.rename({ actorId: \"other\", name: \"New name\" }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3150,7 +2902,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenOwnerProvidesName_UpdatesName",
-          "line": 272
+          "line": 237
         }
       ],
       "reason": "Preserved",
@@ -3170,18 +2922,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenNameIsBlank_RejectsWithoutChangingState",
-          "line": 284
+          "line": 249
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.rename({ actorId: \"owner\", name: \" \" })).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.rename({ actorId: \"owner\", name: \" \" })).toThrow( expect.objectContaining({ code: \"INVALID_INPUT\" }), )",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3192,18 +2936,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "rename_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 301
+          "line": 261
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.rename({ actorId: \"owner\", name: \"New\" })).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.rename({ actorId: \"owner\", name: \"New\" })).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3214,18 +2950,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 319
+          "line": 274
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.removeMember({ actorId: \"other\", userId: \"owner\" }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.removeMember({ actorId: \"other\", userId: \"owner\" }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3236,7 +2964,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner",
-          "line": 336
+          "line": 286
         }
       ],
       "reason": "Preserved",
@@ -3257,18 +2985,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenTargetIsOwner_RejectsWithoutChangingState",
-          "line": 353
+          "line": 303
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.removeMember({ actorId: \"owner\", userId: \"owner\" }), ).toThrow(expect.objectContaining({ code: \"OWNER_REMOVAL\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.removeMember({ actorId: \"owner\", userId: \"owner\" }), ).toThrow(expect.objectContaining({ code: \"OWNER_REMOVAL\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3279,18 +2999,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "removeMember_WhenMemberIsMissing_RejectsWithoutChangingState",
-          "line": 370
+          "line": 315
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.removeMember({ actorId: \"owner\", userId: \"missing\" }), ).toThrow(expect.objectContaining({ code: \"NOT_FOUND\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.removeMember({ actorId: \"owner\", userId: \"missing\" }), ).toThrow(expect.objectContaining({ code: \"NOT_FOUND\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3301,18 +3013,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenActorIsNotOwner_RejectsWithoutChangingState",
-          "line": 387
+          "line": 327
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.archive({ actorId: \"other\", unsettledLinkedSessions: 0 }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.archive({ actorId: \"other\", unsettledLinkedSessions: 0 }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3323,18 +3027,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState",
-          "line": 404
+          "line": 339
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.archive({ actorId: \"owner\", unsettledLinkedSessions: 1 }), ).toThrow(expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.archive({ actorId: \"owner\", unsettledLinkedSessions: 1 }), ).toThrow(expect.objectContaining({ code: \"ACTIVE_OBLIGATIONS\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3345,18 +3041,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState",
-          "line": 421
+          "line": 351
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.archive({ actorId: \"owner\", unsettledLinkedSessions: -1 }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.archive({ actorId: \"owner\", unsettledLinkedSessions: -1 }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3367,7 +3055,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent",
-          "line": 438
+          "line": 363
         }
       ],
       "reason": "Preserved",
@@ -3391,7 +3079,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenMemberLeaves_RemovesOnlyThatMember",
-          "line": 459
+          "line": 384
         }
       ],
       "reason": "Preserved",
@@ -3411,18 +3099,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenUserIsOwner_RejectsWithoutChangingState",
-          "line": 476
+          "line": 401
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.leave({ userId: \"owner\" })).toThrow( expect.objectContaining({ code: \"OWNER_REMOVAL\" }), )",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.leave({ userId: \"owner\" })).toThrow( expect.objectContaining({ code: \"OWNER_REMOVAL\" }), )",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3433,18 +3113,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenUserIsNotAMember_RejectsWithoutChangingState",
-          "line": 494
+          "line": 414
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.leave({ userId: \"stranger\" })).toThrow( expect.objectContaining({ code: \"NOT_FOUND\" }), )",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.leave({ userId: \"stranger\" })).toThrow( expect.objectContaining({ code: \"NOT_FOUND\" }), )",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3455,18 +3127,10 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "leave_WhenGroupIsArchived_RejectsWithoutChangingState",
-          "line": 511
+          "line": 426
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => group.leave({ userId: \"aisha\" })).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(groupState(group)).toEqual(before)"
-      ],
-      "assertionsAfter": [
-        "expect(() => group.leave({ userId: \"aisha\" })).toThrow( expect.objectContaining({ code: \"INVALID_STATE\" }), )",
-        "expect(rejectedGroupState).toEqual(before)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -3477,7 +3141,7 @@
         {
           "file": "tests/domain/groups/regular-group.test.ts",
           "name": "join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain",
-          "line": 537
+          "line": 447
         }
       ],
       "reason": "Preserved",
@@ -4845,19 +4509,7 @@
           "line": 309
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => withdrawn.withdraw(withdrawn.hold!, settledAt, \"OPEN_SLOT\"), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(withdrawn.replacementMode).toBe(\"DIRECT_INVITE\")",
-        "expect(withdrawn.replacementInviteeId).toBe(\"ben\")",
-        "expect(withdrawn.hold?.state).toBe(\"REFUNDED\")"
-      ],
-      "assertionsAfter": [
-        "expect(() => withdrawn.withdraw(withdrawn.hold!, settledAt, \"OPEN_SLOT\"), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(withdrawnReplacementMode).toBe(\"DIRECT_INVITE\")",
-        "expect(withdrawnInviteeId).toBe(\"ben\")",
-        "expect(withdrawnHoldState).toBe(\"REFUNDED\")"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -4868,22 +4520,10 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation",
-          "line": 335
+          "line": 328
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => withdrawn.withdraw(withdrawn.hold!, settledAt, \"DIRECT_INVITE\", \"ben\"), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(withdrawn.replacementMode).toBe(\"OPEN_SLOT\")",
-        "expect(withdrawn.replacementInviteeId).toBeUndefined()",
-        "expect(withdrawn.hold?.state).toBe(\"AWAITING_REPLACEMENT\")"
-      ],
-      "assertionsAfter": [
-        "expect(() => withdrawn.withdraw(withdrawn.hold!, settledAt, \"DIRECT_INVITE\", \"ben\"), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(withdrawnReplacementMode).toBe(\"OPEN_SLOT\")",
-        "expect(withdrawnInviteeId).toBeUndefined()",
-        "expect(withdrawnHoldState).toBe(\"AWAITING_REPLACEMENT\")"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -4894,7 +4534,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata",
-          "line": 360
+          "line": 346
         }
       ],
       "reason": "Preserved",
@@ -4920,7 +4560,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "refundReplacement_WhenReplacementIsFound_ReturnsNewChild",
-          "line": 382
+          "line": 368
         }
       ],
       "reason": "Preserved",
@@ -4948,7 +4588,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy",
-          "line": 409
+          "line": 395
         }
       ],
       "reason": "Preserved",
@@ -4974,7 +4614,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy",
-          "line": 433
+          "line": 419
         }
       ],
       "reason": "Preserved",
@@ -5002,7 +4642,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsUnverified_RejectsRelease",
-          "line": 457
+          "line": 443
         }
       ],
       "reason": "Preserved"
@@ -5016,7 +4656,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
-          "line": 467
+          "line": 453
         }
       ],
       "reason": "Preserved",
@@ -5038,7 +4678,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenParticipantAttended_RejectsForfeiture",
-          "line": 482
+          "line": 468
         }
       ],
       "reason": "Preserved"
@@ -5446,7 +5086,7 @@
       ],
       "assertionsAfter": [
         "expect(() => readyBooker().assertCanCancel(bookingSession, sessionStartsAt), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -5458,7 +5098,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
-          "line": 66
+          "line": 62
         }
       ],
       "reason": "Preserved",
@@ -5478,7 +5118,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
-          "line": 87
+          "line": 83
         }
       ],
       "reason": "Preserved",
@@ -5488,7 +5128,7 @@
       ],
       "assertionsAfter": [
         "expect(() => readyBooker().assertCanChangeVisibility( bookingSession, \"PRIVATE\", hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -5500,7 +5140,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
-          "line": 110
+          "line": 102
         }
       ],
       "reason": "Preserved",
@@ -5512,7 +5152,7 @@
       "assertionsAfter": [
         "expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow( new DomainError(\"INVALID_STATE\", \"Second cancellation failed\"), )",
         "expect(cancelBen).toHaveBeenCalledOnce()",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -5524,7 +5164,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
-          "line": 147
+          "line": 135
         }
       ],
       "reason": "Preserved",
@@ -5550,7 +5190,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
-          "line": 190
+          "line": 178
         }
       ],
       "reason": "Preserved",
@@ -5572,7 +5212,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
-          "line": 225
+          "line": 213
         }
       ],
       "reason": "Preserved",
@@ -5592,18 +5232,10 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
-          "line": 242
+          "line": 230
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().changeVisibility( bookingSession, \"PRIVATE\", visibilityChangeTime, ), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().changeVisibility( bookingSession, \"PRIVATE\", visibilityChangeTime, ), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5614,7 +5246,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
-          "line": 266
+          "line": 250
         }
       ],
       "reason": "Preserved",
@@ -5638,18 +5270,10 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
-          "line": 290
+          "line": 274
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker(\"other\").removeParticipant( bookingSession, \"p-alice\", removalTime, ), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker(\"other\").removeParticipant( bookingSession, \"p-alice\", removalTime, ), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5660,7 +5284,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
-          "line": 312
+          "line": 292
         }
       ],
       "reason": "Preserved"
@@ -5674,18 +5298,10 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 341
+          "line": 321
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().cancel(bookingSession, sessionStartsAt)).toThrow( expect.objectContaining({ code: \"SESSION_STARTED\" }), )",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().cancel(bookingSession, sessionStartsAt)).toThrow( expect.objectContaining({ code: \"SESSION_STARTED\" }), )",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5696,7 +5312,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
-          "line": 358
+          "line": 334
         }
       ],
       "reason": "Preserved",
@@ -5749,15 +5365,7 @@
           "line": 35
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().verifyAttendance(bookingSession, { marks: [{ participationId: \"p-alice\", attendance: \"ATTENDED\" }], now: attendanceVerificationTime, }), ).toThrow(expect.objectContaining({ code: \"SESSION_NOT_ENDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().verifyAttendance(bookingSession, { marks: [{ participationId: \"p-alice\", attendance: \"ATTENDED\" }], now: attendanceVerificationTime, }), ).toThrow(expect.objectContaining({ code: \"SESSION_NOT_ENDED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5768,18 +5376,10 @@
         {
           "file": "tests/domain/accounts/booker/attendance.test.ts",
           "name": "verifyAttendance_WhenLaterMarkConflicts_RejectsWithoutChangingState",
-          "line": 59
+          "line": 55
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().verifyAttendance(bookingSession, { marks: [ { participationId: \"p-ben\", attendance: \"ATTENDED\" }, { participationId: \"p-alice\", attendance: \"ABSENT\" }, ], now: attendanceVerificationTime, }), ).toThrow(expect.objectContaining({ code: \"ATTENDANCE_CONFLICT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().verifyAttendance(bookingSession, { marks: [ { participationId: \"p-ben\", attendance: \"ATTENDED\" }, { participationId: \"p-alice\", attendance: \"ABSENT\" }, ], now: attendanceVerificationTime, }), ).toThrow(expect.objectContaining({ code: \"ATTENDANCE_CONFLICT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5790,7 +5390,7 @@
         {
           "file": "tests/domain/accounts/booker/attendance.test.ts",
           "name": "verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout",
-          "line": 89
+          "line": 81
         }
       ],
       "reason": "Preserved",
@@ -5813,15 +5413,7 @@
           "line": 11
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker(\"other\").cancel(bookingSession, cancellationTime), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker(\"other\").cancel(bookingSession, cancellationTime), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5832,18 +5424,10 @@
         {
           "file": "tests/domain/accounts/booker/authorization.test.ts",
           "name": "changeVisibility_WhenBookerIsForeign_RejectsWithoutChangingState",
-          "line": 29
+          "line": 25
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker(\"other\").changeVisibility( bookingSession, \"PRIVATE\", visibilityChangeTime, ), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker(\"other\").changeVisibility( bookingSession, \"PRIVATE\", visibilityChangeTime, ), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5854,18 +5438,10 @@
         {
           "file": "tests/domain/accounts/booker/authorization.test.ts",
           "name": "verifyAttendance_WhenBookerIsForeign_RejectsWithoutChangingState",
-          "line": 51
+          "line": 43
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker(\"other\").verifyAttendance(bookingSession, { marks: [{ participationId: \"p-alice\", attendance: \"ATTENDED\" }], now: attendanceVerificationTime, }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker(\"other\").verifyAttendance(bookingSession, { marks: [{ participationId: \"p-alice\", attendance: \"ATTENDED\" }], now: attendanceVerificationTime, }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -5876,18 +5452,10 @@
         {
           "file": "tests/domain/accounts/booker/authorization.test.ts",
           "name": "preparePayout_WhenBookerIsForeign_RejectsWithoutChangingState",
-          "line": 72
+          "line": 60
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker(\"other\").preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker(\"other\").preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6151,15 +5719,7 @@
           "line": 16
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => booker.preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => booker.preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6170,18 +5730,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState",
-          "line": 52
+          "line": 48
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"ATTENDANCE_INCOMPLETE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"ATTENDANCE_INCOMPLETE\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6192,7 +5744,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending",
-          "line": 81
+          "line": 73
         }
       ],
       "reason": "Preserved",
@@ -6218,18 +5770,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAnotherPayoutIsPending_RejectsWithoutChangingState",
-          "line": 121
+          "line": 113
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"another\", idempotencyKey: \"key2\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"PAYOUT_IN_PROGRESS\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"another\", idempotencyKey: \"key2\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"PAYOUT_IN_PROGRESS\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6240,18 +5784,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutIdIsReused_RejectsWithoutChangingState",
-          "line": 143
+          "line": 131
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"new\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"new\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6262,18 +5798,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState",
-          "line": 166
+          "line": 150
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"retry\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow( expect.objectContaining({ code: \"DUPLICATE_ID\", message: \"A payout idempotency key can only be used once for this session\", }), )",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker().preparePayout(bookingSession, { payoutId: \"retry\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow( expect.objectContaining({ code: \"DUPLICATE_ID\", message: \"A payout idempotency key can only be used once for this session\", }), )",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6284,7 +5812,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedAttemptIsRetriedWithNewIdentity_RecordsRetry",
-          "line": 195
+          "line": 175
         }
       ],
       "reason": "Preserved",
@@ -6320,7 +5848,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenSessionHasNoHolds_SettlesWithoutPayout",
-          "line": 237
+          "line": 217
         }
       ],
       "reason": "Preserved",
@@ -6342,7 +5870,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenReplacementSweepWasMissed_ExpiresOutstandingReplacement",
-          "line": 255
+          "line": 235
         }
       ],
       "reason": "Preserved",
@@ -6364,7 +5892,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAttendanceIsIncomplete_LeavesExpiryUnapplied",
-          "line": 281
+          "line": 261
         }
       ],
       "reason": "Preserved",
@@ -6375,8 +5903,8 @@
       ],
       "assertionsAfter": [
         "expect(() => readyBooker().preparePayout(bookingSession, command)).toThrow( expect.objectContaining({ code: \"ATTENDANCE_INCOMPLETE\" }), )",
-        "expect(currentState).toEqual(previousState)",
-        "expect(aliceParticipation.hold?.state).toBe(\"AWAITING_REPLACEMENT\")"
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
+        "expect( bookingSession.participantList.requireParticipation(\"p-alice\").hold ?.state, ).toBe(\"AWAITING_REPLACEMENT\")"
       ]
     },
     {
@@ -6388,22 +5916,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied",
-          "line": 316
+          "line": 293
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => readyBooker(\"foreign\").preparePayout(bookingSession, command), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.payoutAttemptIds).toEqual([])",
-        "expect(bookingSession.payoutIdempotencyKeys).toEqual([])"
-      ],
-      "assertionsAfter": [
-        "expect(() => readyBooker(\"foreign\").preparePayout(bookingSession, command), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(payoutAttemptIds).toEqual([])",
-        "expect(payoutIdempotencyKeys).toEqual([])"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6414,7 +5930,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt",
-          "line": 357
+          "line": 328
         }
       ],
       "reason": "Preserved",
@@ -6442,18 +5958,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedPayoutId",
-          "line": 403
+          "line": 374
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => booker.preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"retry-key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => booker.preparePayout(bookingSession, { payoutId: \"out\", idempotencyKey: \"retry-key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6464,18 +5972,10 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey",
-          "line": 430
+          "line": 397
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => booker.preparePayout(bookingSession, { payoutId: \"retry\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => booker.preparePayout(bookingSession, { payoutId: \"retry\", idempotencyKey: \"key\", now: payoutTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -6486,7 +5986,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_AllowsNewIdentityIndependentlyOfSource",
-          "line": 457
+          "line": 420
         }
       ],
       "reason": "Preserved",
@@ -8014,15 +7514,7 @@
           "line": 12
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.autoVerifyAttendance( oneMillisecondBeforeAutomaticVerification, ), ).toThrow(expect.objectContaining({ code: \"AUTO_VERIFICATION_NOT_DUE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.autoVerifyAttendance( oneMillisecondBeforeAutomaticVerification, ), ).toThrow(expect.objectContaining({ code: \"AUTO_VERIFICATION_NOT_DUE\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8033,7 +7525,7 @@
         {
           "file": "tests/domain/sessions/session/attendance.test.ts",
           "name": "autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants",
-          "line": 43
+          "line": 38
         }
       ],
       "reason": "Preserved",
@@ -8629,15 +8121,7 @@
           "line": 16
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission(admission, undefined, danaTriedToJoinAt), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission(admission, undefined, danaTriedToJoinAt), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8648,22 +8132,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges",
-          "line": 58
+          "line": 53
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission(admission, undefined, caraTriedToJoinAt), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(bookingSession.participantList).toBe(previousList)",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.getAvailableSlots(caraTriedToJoinAt)).toBe(1)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission(admission, undefined, caraTriedToJoinAt), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentList).toBe(previousList)",
-        "expect(currentState).toEqual(previousState)",
-        "expect(availableSlots).toBe(1)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8674,7 +8146,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges",
-          "line": 98
+          "line": 86
         }
       ],
       "reason": "Preserved",
@@ -8684,7 +8156,7 @@
       ],
       "assertionsAfter": [
         "expect(() => bookingSession.recordAdmission( admission, aliceInvitation.refundReplacement(danaTriedToAcceptAt), danaTriedToAcceptAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -8696,7 +8168,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState",
-          "line": 144
+          "line": 127
         }
       ],
       "reason": "Preserved"
@@ -8710,36 +8182,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenHoldIdIsDuplicated_PreservesListAndQueries",
-          "line": 167
+          "line": 150
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission( invalidAdmission, undefined, benTriedToJoinAt, ), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(bookingSession.participantList).toBe(previousList)",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(previousList.requireParticipation(\"p-alice\")).toBe(alice)",
-        "expect(previousList.findByUserId(\"alice\")).toBe(alice)",
-        "expect(previousList.findByUserId(\"ben\")).toBeUndefined()",
-        "expect(() => previousList.requireParticipation(\"p-ben\")).toThrow( expect.objectContaining({ code: \"NOT_FOUND\" }), )",
-        "expect(previousList.committedCount).toBe(1)",
-        "expect(previousList.nextQueueSequence).toBe(1)",
-        "expect(previousList.nextWaitlisted()).toBeUndefined()",
-        "expect(previousList.oldestAwaitingReplacement()).toBeUndefined()"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission( invalidAdmission, undefined, benTriedToJoinAt, ), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentList).toBe(previousList)",
-        "expect(currentState).toEqual(previousState)",
-        "expect(aliceByParticipationId).toBe(alice)",
-        "expect(aliceByUserId).toBe(alice)",
-        "expect(benByUserId).toBeUndefined()",
-        "expect(() => previousList.requireParticipation(\"p-ben\")).toThrow( expect.objectContaining({ code: \"NOT_FOUND\" }), )",
-        "expect(committedCount).toBe(1)",
-        "expect(nextQueueSequence).toBe(1)",
-        "expect(nextWaiter).toBeUndefined()",
-        "expect(oldestReplacement).toBeUndefined()"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8750,7 +8196,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList",
-          "line": 228
+          "line": 193
         }
       ],
       "reason": "Preserved",
@@ -8788,18 +8234,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 276
+          "line": 241
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, admissionAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, admissionAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8810,18 +8248,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState",
-          "line": 303
+          "line": 263
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8832,20 +8262,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState",
-          "line": 327
+          "line": 282
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"WAITLIST_NOT_HEAD\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"waiting\", )"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"WAITLIST_NOT_HEAD\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(nextWaiterUserId).toBe(\"waiting\")"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8856,18 +8276,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState",
-          "line": 355
+          "line": 305
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission(admission, undefined, waitlistedAt), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission(admission, undefined, waitlistedAt), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8878,18 +8290,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged",
-          "line": 398
+          "line": 343
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, replacementTriedToJoinAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAdmission( admission, undefined, replacementTriedToJoinAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8900,7 +8304,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged",
-          "line": 439
+          "line": 379
         }
       ],
       "reason": "Preserved",
@@ -8910,7 +8314,7 @@
       ],
       "assertionsAfter": [
         "expect(() => bookingSession.recordAdmission( admission, benRefund, replacementTriedToJoinAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -8922,20 +8326,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges",
-          "line": 485
+          "line": 420
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordParticipationTransition( withdrawn, changedChoice, choiceChangeAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(bookingSession.participantList).toBe(previousList)",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordParticipationTransition( withdrawn, changedChoice, choiceChangeAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentList).toBe(previousList)",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8946,20 +8340,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges",
-          "line": 532
+          "line": 461
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordParticipationTransition( withdrawn, changedChoice, choiceChangeAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(bookingSession.participantList).toBe(previousList)",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordParticipationTransition( withdrawn, changedChoice, choiceChangeAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentList).toBe(previousList)",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8970,18 +8354,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState",
-          "line": 579
+          "line": 502
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordParticipationTransition( existing, removal, transitionAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordParticipationTransition( existing, removal, transitionAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -8992,18 +8368,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState",
-          "line": 615
+          "line": 533
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordParticipationTransition( existing, replacement, removalAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordParticipationTransition( existing, replacement, removalAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9014,18 +8382,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState",
-          "line": 643
+          "line": 556
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordParticipationTransition(existing, departed), ).toThrow(expect.objectContaining({ code: \"SESSION_CLOSED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordParticipationTransition(existing, departed), ).toThrow(expect.objectContaining({ code: \"SESSION_CLOSED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9036,7 +8396,7 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged",
-          "line": 673
+          "line": 581
         }
       ],
       "reason": "Preserved",
@@ -9046,7 +8406,7 @@
       ],
       "assertionsAfter": [
         "expect(() => bookingSession.recordCancellation( [cancelledAlice], cancellationAttemptedAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9058,18 +8418,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 701
+          "line": 604
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordCancellation([cancelled], cancellationAttemptedAt), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordCancellation([cancelled], cancellationAttemptedAt), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9080,18 +8432,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged",
-          "line": 724
+          "line": 622
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAttendance( [verified, verified], attendanceRecordedAt, ), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAttendance( [verified, verified], attendanceRecordedAt, ), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9102,18 +8446,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged",
-          "line": 748
+          "line": 641
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAttendance([verified], attendanceAttemptedAt), ).toThrow(expect.objectContaining({ code: \"SESSION_NOT_ENDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAttendance([verified], attendanceAttemptedAt), ).toThrow(expect.objectContaining({ code: \"SESSION_NOT_ENDED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9124,20 +8460,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied",
-          "line": 769
+          "line": 657
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordAttendance( [newMark, alreadyVerified], attendanceRecordedAt, ), ).toThrow(expect.objectContaining({ code: \"ATTENDANCE_CONFLICT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect( bookingSession.participantList.requireParticipation(\"p-ben\").attendance, ).toBe(\"UNVERIFIED\")"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordAttendance( [newMark, alreadyVerified], attendanceRecordedAt, ), ).toThrow(expect.objectContaining({ code: \"ATTENDANCE_CONFLICT\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(benAttendance).toBe(\"UNVERIFIED\")"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9148,18 +8474,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState",
-          "line": 805
+          "line": 688
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordSettlementPreparation( { payoutId: \"out\", idempotencyKey: \"key\", participations: [], }, hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"SESSION_NOT_ENDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordSettlementPreparation( { payoutId: \"out\", idempotencyKey: \"key\", participations: [], }, hoursBeforeSessionStart(48), ), ).toThrow(expect.objectContaining({ code: \"SESSION_NOT_ENDED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9170,18 +8488,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged",
-          "line": 829
+          "line": 707
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordSettlementPreparation( { payoutId: \"out\", idempotencyKey: \"key\", participations: bookingSession.participantList.participations, }, sessionEndsAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordSettlementPreparation( { payoutId: \"out\", idempotencyKey: \"key\", participations: bookingSession.participantList.participations, }, sessionEndsAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9192,18 +8502,10 @@
         {
           "file": "tests/domain/sessions/session/recording.test.ts",
           "name": "recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged",
-          "line": 858
+          "line": 731
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.recordSettlementPreparation( { payoutId: \"out\", idempotencyKey: \"key\", participations: bookingSession.participantList.participations, batch: { ...batch, lines: batch.lines.slice(0, 1) }, }, sessionEndsAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.recordSettlementPreparation( { payoutId: \"out\", idempotencyKey: \"key\", participations: bookingSession.participantList.participations, batch: { ...batch, lines: batch.lines.slice(0, 1) }, }, sessionEndsAt, ), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9407,25 +8709,7 @@
           "line": 19
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.completeSettlement(\"out\", sessionEndsAt), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.participantList).toBe(previousList)",
-        "expect(bookingSession.status).toBe(\"PAYOUT_PENDING\")",
-        "expect(bookingSession.payoutAttemptIds).toEqual([\"out\"])",
-        "expect(bookingSession.payoutIdempotencyKeys).toEqual([\"key\"])",
-        "expect( bookingSession.participantList.participations.map( (participation) => participation.hold?.state, ), ).toEqual([\"HELD\", \"HELD\"])"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.completeSettlement(\"out\", sessionEndsAt), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(currentList).toBe(previousList)",
-        "expect(sessionStatus).toBe(\"PAYOUT_PENDING\")",
-        "expect(payoutAttemptIds).toEqual([\"out\"])",
-        "expect(payoutIdempotencyKeys).toEqual([\"key\"])",
-        "expect(holdStates).toEqual([\"HELD\", \"HELD\"])"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9436,18 +8720,10 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCallbackIsStale_RejectsWithoutChangingState",
-          "line": 54
+          "line": 46
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.completeSettlement(\"stale\", sessionEndsAt), ).toThrow(expect.objectContaining({ code: \"STALE_PAYOUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.completeSettlement(\"stale\", sessionEndsAt), ).toThrow(expect.objectContaining({ code: \"STALE_PAYOUT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9458,18 +8734,10 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCompletionDateIsInvalid_LeavesAllHoldsPending",
-          "line": 71
+          "line": 58
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.completeSettlement(\"out\", new Date(Number.NaN)), ).toThrow(DomainError)",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.completeSettlement(\"out\", new Date(Number.NaN)), ).toThrow(DomainError)",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9480,18 +8748,10 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenSecondHoldFails_PreservesAllHolds",
-          "line": 88
+          "line": 70
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => bookingSession.completeSettlement(\"out\", sessionEndsAt), ).toThrow( expect.objectContaining({ code: \"INVALID_STATE\", message: \"Second line rejected\", }), )",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => bookingSession.completeSettlement(\"out\", sessionEndsAt), ).toThrow( expect.objectContaining({ code: \"INVALID_STATE\", message: \"Second line rejected\", }), )",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9502,7 +8762,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenSecondHoldFailureIsRetried_ReleasesAllHolds",
-          "line": 124
+          "line": 101
         }
       ],
       "reason": "Preserved",
@@ -9528,7 +8788,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds",
-          "line": 161
+          "line": 138
         }
       ],
       "reason": "Preserved",
@@ -9556,7 +8816,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity",
-          "line": 208
+          "line": 185
         }
       ],
       "reason": "Preserved",
@@ -9584,7 +8844,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory",
-          "line": 245
+          "line": 222
         }
       ],
       "reason": "Preserved",
@@ -9614,7 +8874,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenEmailIsMissingAndSessionIsFull_RejectsWithoutChangingWaitlist",
-          "line": 116
+          "line": 108
         }
       ],
       "reason": "Preserved",
@@ -9624,7 +8884,7 @@
       ],
       "assertionsAfter": [
         "expect(() => cara.asParticipant().join(bookingSession, { participationId: \"p-cara\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"EMAIL_REQUIRED\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9636,7 +8896,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenEmailIsUnverified_AllowsAdmission",
-          "line": 143
+          "line": 131
         }
       ],
       "reason": "Preserved",
@@ -9662,7 +8922,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged",
-          "line": 166
+          "line": 154
         }
       ],
       "reason": "Preserved",
@@ -9674,7 +8934,7 @@
       "assertionsAfter": [
         "expect(() => createTestUser({ userId: \"replacement\" }) .asParticipant() .join(bookingSession, { participationId: \"p-replacement\", holdId: \"h-replacement\", now: replacementJoinTime, }), ).toThrow( new DomainError(\"INVALID_STATE\", \"Replacement refund failed\"), )",
         "expect(refund).toHaveBeenCalledOnce()",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9686,7 +8946,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenFundsExactlyCoverShare_CommitsAndEmitsLock",
-          "line": 224
+          "line": 208
         }
       ],
       "reason": "Preserved"
@@ -9700,7 +8960,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenSessionIsFullAndUserHasNoFunds_JoinsWaitlistWithoutLockingFunds",
-          "line": 252
+          "line": 236
         }
       ],
       "reason": "Preserved",
@@ -9726,7 +8986,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenWaitersExistAndSlotIsAvailable_QueuesBehindExistingWaiters",
-          "line": 282
+          "line": 266
         }
       ],
       "reason": "Preserved",
@@ -9756,22 +9016,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReloadedWalletIncludesPriorLock_RejectsWithoutChangingState",
-          "line": 313
+          "line": 297
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => reloadedUser.asParticipant().join(nextSession, command), ).toThrow(expect.objectContaining({ code: \"INSUFFICIENT_FUNDS\" }))",
-        "expect(sessionState(nextSession)).toEqual(previousState)",
-        "expect(fundedUser.wallet.getAvailableBalance().toCents()).toBe(500)",
-        "expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(0)"
-      ],
-      "assertionsAfter": [
-        "expect(() => reloadedUser.asParticipant().join(nextSession, command), ).toThrow(expect.objectContaining({ code: \"INSUFFICIENT_FUNDS\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(fundedUserAvailableFunds.toCents()).toBe(500)",
-        "expect(reloadedUserAvailableFunds.toCents()).toBe(0)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9782,7 +9030,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsNotInInvitedGroup_RejectsWithoutChangingState",
-          "line": 365
+          "line": 342
         }
       ],
       "reason": "Preserved",
@@ -9792,7 +9040,7 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.asParticipant().join(privateSession, command)).toThrow( expect.objectContaining({ code: \"INVALID_ACCESS\" }), )",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(privateSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9804,7 +9052,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenMemberIsBelowReliabilityThreshold_RejectsWithoutChangingState",
-          "line": 393
+          "line": 366
         }
       ],
       "reason": "Preserved",
@@ -9814,7 +9062,7 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.asParticipant().join(privateSession, command)).toThrow( expect.objectContaining({ code: \"LOW_RELIABILITY\" }), )",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(privateSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9826,7 +9074,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenInvitedMemberMeetsReliabilityThreshold_CommitsFromLoadedWallet",
-          "line": 425
+          "line": 394
         }
       ],
       "reason": "Preserved"
@@ -9840,7 +9088,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsInactive_RejectsWithoutChangingState",
-          "line": 453
+          "line": 422
         }
       ],
       "reason": "Preserved",
@@ -9850,7 +9098,7 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.asParticipant().join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9862,7 +9110,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenFundsAreOneCentBelowShare_RejectsWithoutChangingState",
-          "line": 478
+          "line": 443
         }
       ],
       "reason": "Preserved",
@@ -9872,7 +9120,7 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.asParticipant().join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INSUFFICIENT_FUNDS\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -9884,18 +9132,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenPrivateRoomTokenIsMissing_RejectsWithoutChangingState",
-          "line": 503
+          "line": 464
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: joinTime, }), ).toThrow( expect.objectContaining({ code: \"INVALID_ACCESS\", message: \"The user does not have access to this private session\", }), )",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: joinTime, }), ).toThrow( expect.objectContaining({ code: \"INVALID_ACCESS\", message: \"The user does not have access to this private session\", }), )",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9906,7 +9146,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenPrivateRoomTokenMatches_CommitsApplicant",
-          "line": 538
+          "line": 495
         }
       ],
       "reason": "Preserved"
@@ -9920,18 +9160,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReturningWaiterUsesDifferentId_RejectsWithoutChangingState",
-          "line": 563
+          "line": 520
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .join(bookingSession, { participationId: \"different\", holdId: \"h-cara\", now: rejoinTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .join(bookingSession, { participationId: \"different\", holdId: \"h-cara\", now: rejoinTime, }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -9942,7 +9174,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenReturningWaiterReusesId_AssignsFreshQueuePosition",
-          "line": 598
+          "line": 551
         }
       ],
       "reason": "Preserved",
@@ -9984,18 +9216,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserIsAlreadyCommitted_RejectsWithoutChangingState",
-          "line": 658
+          "line": 611
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"ALREADY_PARTICIPATING\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"ALREADY_PARTICIPATING\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10006,18 +9230,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenUserPreviouslyWithdrew_RejectsWithoutChangingState",
-          "line": 682
+          "line": 631
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: rejoinTime, }), ).toThrow(expect.objectContaining({ code: \"REJOIN_NOT_ALLOWED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: rejoinTime, }), ).toThrow(expect.objectContaining({ code: \"REJOIN_NOT_ALLOWED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10028,18 +9244,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 714
+          "line": 659
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"ben\" }).asParticipant().join(bookingSession, { participationId: \"p-ben\", holdId: \"h-ben\", now: sessionStartsAt, }), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"ben\" }).asParticipant().join(bookingSession, { participationId: \"p-ben\", holdId: \"h-ben\", now: sessionStartsAt, }), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10050,7 +9258,7 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenNamedInviteeAcceptsNewerPrivateInvitation_RefundsOnlyTheirInviter",
-          "line": 737
+          "line": 678
         }
       ],
       "reason": "Preserved",
@@ -10078,24 +9286,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenInvitationWasAcceptedAndOrdinarySlotIsAvailable_RejectsWithoutChangingState",
-          "line": 800
+          "line": 741
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(replacement.kind).toBe(\"COMMITTED\")",
-        "expect(replacement.refundedParticipationId).toBe(\"p-ben\")",
-        "expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1)",
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-another\", now: repeatAcceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(replacement.kind).toBe(\"COMMITTED\")",
-        "expect(replacement.refundedParticipationId).toBe(\"p-ben\")",
-        "expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1)",
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-another\", now: repeatAcceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10106,20 +9300,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "acceptReplacement_WhenInvitationWasAcceptedAndSessionIsFull_RejectsWithoutWaitlisting",
-          "line": 845
+          "line": 782
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(0)",
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-another\", now: repeatAcceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(0)",
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-another\", now: repeatAcceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10130,18 +9314,10 @@
         {
           "file": "tests/domain/accounts/participant/admission.test.ts",
           "name": "join_WhenParticipantWasRemoved_RejectsWithoutChangingState",
-          "line": 894
+          "line": 827
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: rejoinTime, }), ).toThrow(expect.objectContaining({ code: \"REJOIN_NOT_ALLOWED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .join(bookingSession, { participationId: \"p-alice\", holdId: \"h-alice\", now: rejoinTime, }), ).toThrow(expect.objectContaining({ code: \"REJOIN_NOT_ALLOWED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10183,27 +9359,7 @@
           "line": 40
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-cara\", now: promotionTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect( bookingSession.participantList.requireParticipation(\"p-cara\").status, ).toBe(\"WAITLISTED\")",
-        "expect( bookingSession.participantList.personalReplacementForInvitee(\"cara\") ?.participationId, ).toBe(\"p-ben\")",
-        "expect(bookingSession.participantList.committedCount).toBe(1)",
-        "expect(bookingSession.getAvailableSlots(promotionTime)).toBe(0)",
-        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"cara\", )",
-        "expect(bookingSession.participantList.nextQueueSequence).toBe( queueSequence, )"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-cara\", now: promotionTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(caraParticipation.status).toBe(\"WAITLISTED\")",
-        "expect(caraInvitation?.participationId).toBe(\"p-ben\")",
-        "expect(committedCount).toBe(1)",
-        "expect(availableSlots).toBe(0)",
-        "expect(nextWaiter?.userId).toBe(\"cara\")",
-        "expect(nextQueueSequence).toBe(queueSequence)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10214,20 +9370,10 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenOnlyVacancyIsReserved_RejectsWithoutMovingTheQueue",
-          "line": 88
+          "line": 85
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"dana\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-dana\", now: promotionTime, }), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"dana\", )"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"dana\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-dana\", now: promotionTime, }), ).toThrow(expect.objectContaining({ code: \"CAPACITY_EXCEEDED\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(nextWaiter?.userId).toBe(\"dana\")"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10238,7 +9384,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenAnOlderWithdrawalIsReserved_RefundsOnlyTheOpenWithdrawal",
-          "line": 123
+          "line": 117
         }
       ],
       "reason": "Preserved",
@@ -10270,7 +9416,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenQueueIsEmpty_ReturnsNoneBeforeValidatingHoldId",
-          "line": 172
+          "line": 166
         }
       ],
       "reason": "Preserved",
@@ -10292,18 +9438,10 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenSessionHasStartedAndQueueIsEmpty_RejectsBeforeReturningNone",
-          "line": 191
+          "line": 185
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"\", now: sessionStartsAt, }), ).toThrow( expect.objectContaining({ code: \"SESSION_STARTED\", message: \"The session has started\", }), )",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"\", now: sessionStartsAt, }), ).toThrow( expect.objectContaining({ code: \"SESSION_STARTED\", message: \"The session has started\", }), )",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10314,7 +9452,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenReplacementRefundFails_LeavesRosterQueueAndHoldsUnchanged",
-          "line": 218
+          "line": 208
         }
       ],
       "reason": "Preserved",
@@ -10325,10 +9463,10 @@
         "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"first-waiter\", )"
       ],
       "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"first-waiter\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-promoted\", now: promotionTime, }), ).toThrow( new DomainError(\"INVALID_STATE\", \"Replacement refund failed\"), )",
+        "expect(() => createTestUser({ userId: \"first-waiter\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-promoted\", now: promotionTime, }), ).toThrow(new DomainError(\"INVALID_STATE\", \"Replacement refund failed\"))",
         "expect(refund).toHaveBeenCalledOnce()",
-        "expect(currentState).toEqual(previousState)",
-        "expect(nextWaiterId).toBe(\"first-waiter\")"
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
+        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"first-waiter\", )"
       ]
     },
     {
@@ -10340,18 +9478,10 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenLoadedUserDoesNotMatchNextWaiter_RejectsWithoutChangingState",
-          "line": 269
+          "line": 254
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"other\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-cara\", now: promotionTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"other\" }) .asParticipant() .promoteFromWaitlist(bookingSession, { holdId: \"h-cara\", now: promotionTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10362,7 +9492,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenReloadedWaiterHasFunds_PromotesFromUpdatedWallet",
-          "line": 302
+          "line": 283
         }
       ],
       "reason": "Preserved",
@@ -10390,7 +9520,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstWaiterCannotPay_SkipsThemAndSelectsNextWaiter",
-          "line": 351
+          "line": 332
         }
       ],
       "reason": "Preserved",
@@ -10418,7 +9548,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenFirstTiedWaiterWasSkipped_PromotesNextWaiter",
-          "line": 388
+          "line": 369
         }
       ],
       "reason": "Preserved",
@@ -10448,7 +9578,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenParticipantChoosesOpenWaitlist_AdmitsFirstWaiterAndRefundsTheirShare",
-          "line": 431
+          "line": 412
         }
       ],
       "reason": "Preserved",
@@ -10482,7 +9612,7 @@
         {
           "file": "tests/domain/accounts/participant/promotion.test.ts",
           "name": "promoteFromWaitlist_WhenTwoParticipantsChooseOpenWaitlist_RefundsEarlierWithdrawal",
-          "line": 488
+          "line": 469
         }
       ],
       "reason": "Preserved"
@@ -10521,23 +9651,7 @@
           "line": 46
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"cara\" }).asParticipant().join(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: joinTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.participantList.findByUserId(\"cara\")).toBeUndefined()",
-        "expect( bookingSession.participantList.personalReplacementForInvitee(\"cara\") ?.participationId, ).toBe(\"p-ben\")",
-        "expect( bookingSession.participantList.requireParticipation(\"p-alice\").hold ?.state, ).toBe(\"AWAITING_REPLACEMENT\")",
-        "expect(bookingSession.getAvailableSlots(joinTime)).toBe(1)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"cara\" }).asParticipant().join(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: joinTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(caraParticipation).toBeUndefined()",
-        "expect(caraInvitation?.participationId).toBe(\"p-ben\")",
-        "expect(aliceParticipation.hold?.state).toBe(\"AWAITING_REPLACEMENT\")",
-        "expect(availableSlots).toBe(1)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10548,22 +9662,10 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat",
-          "line": 96
+          "line": 91
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"dana\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-dana\", holdId: \"h-dana\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0)",
-        "expect( bookingSession.participantList.requireParticipation(\"p-ben\") .replacementInviteeId, ).toBe(\"cara\")"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"dana\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-dana\", holdId: \"h-dana\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(availableSlots).toBe(0)",
-        "expect(benParticipation.replacementInviteeId).toBe(\"cara\")"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10574,7 +9676,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat",
-          "line": 134
+          "line": 125
         }
       ],
       "reason": "Preserved",
@@ -10612,7 +9714,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition",
-          "line": 179
+          "line": 170
         }
       ],
       "reason": "Preserved",
@@ -10624,9 +9726,9 @@
       ],
       "assertionsAfter": [
         "expect(() => cara.acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INSUFFICIENT_FUNDS\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(availableSlots).toBe(0)",
-        "expect(caraParticipation.queueSequence).toBe(2)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
+        "expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0)",
+        "expect( bookingSession.participantList.requireParticipation(\"p-cara\") .queueSequence, ).toBe(2)"
       ]
     },
     {
@@ -10638,7 +9740,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation",
-          "line": 220
+          "line": 207
         }
       ],
       "reason": "Preserved",
@@ -10648,7 +9750,7 @@
       ],
       "assertionsAfter": [
         "expect(() => cara.acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INACTIVE_ACCOUNT\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -10660,7 +9762,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation",
-          "line": 255
+          "line": 238
         }
       ],
       "reason": "Preserved",
@@ -10670,7 +9772,7 @@
       ],
       "assertionsAfter": [
         "expect(() => cara.acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"LOW_RELIABILITY\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -10682,18 +9784,10 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation",
-          "line": 298
+          "line": 277
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"cara\" }) .asParticipant() .acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-cara\", now: acceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10704,7 +9798,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal",
-          "line": 329
+          "line": 304
         }
       ],
       "reason": "Preserved",
@@ -10738,7 +9832,7 @@
         {
           "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
           "name": "acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat",
-          "line": 383
+          "line": 358
         }
       ],
       "reason": "Preserved",
@@ -10750,9 +9844,9 @@
       ],
       "assertionsAfter": [
         "expect(() => cara.acceptReplacement(bookingSession, { participationId: \"p-cara\", holdId: \"h-another\", now: repeatAcceptanceTime, }), ).toThrow(expect.objectContaining({ code: \"INVALID_ACCESS\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(committedCount).toBe(1)",
-        "expect(availableSlots).toBe(1)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
+        "expect(bookingSession.participantList.committedCount).toBe(1)",
+        "expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1)"
       ]
     },
     {
@@ -10841,15 +9935,7 @@
           "line": 99
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => participant.leaveWaitlist(bookingSession, { participationId: \"p-waiting\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => participant.leaveWaitlist(bookingSession, { participationId: \"p-waiting\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -10860,7 +9946,7 @@
         {
           "file": "tests/domain/accounts/participant/waitlist.test.ts",
           "name": "leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState",
-          "line": 123
+          "line": 119
         }
       ],
       "reason": "Preserved",
@@ -10870,7 +9956,7 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.leaveWaitlist(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
+        "expect(sessionState(bookingSession)).toEqual(previousState)"
       ]
     },
     {
@@ -10990,11 +10076,11 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.withdraw(bookingSession, { participationId: \"p-alice\", now: choiceChangeTime, replacementMode: \"OPEN_SLOT\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)",
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
         "expect(withdrawn.replacementMode).toBe(\"DIRECT_INVITE\")",
         "expect(withdrawn.replacementInviteeId).toBe(\"cara\")",
-        "expect(availableSlots).toBe(0)",
-        "expect(nextWaiter?.userId).toBe(\"dana\")"
+        "expect(bookingSession.getAvailableSlots(choiceChangeTime)).toBe(0)",
+        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"dana\", )"
       ]
     },
     {
@@ -11006,7 +10092,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantChoseWaitlist_RejectsSwitchToInvitationAndKeepsOpenSeat",
-          "line": 183
+          "line": 180
         }
       ],
       "reason": "Preserved",
@@ -11020,11 +10106,11 @@
       ],
       "assertionsAfter": [
         "expect(() => alice.withdraw(bookingSession, { participationId: \"p-alice\", now: choiceChangeTime, replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"cara\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)",
+        "expect(sessionState(bookingSession)).toEqual(previousState)",
         "expect(withdrawn.replacementMode).toBe(\"OPEN_SLOT\")",
         "expect(withdrawn.replacementInviteeId).toBeUndefined()",
-        "expect(availableSlots).toBe(1)",
-        "expect(nextWaiter?.userId).toBe(\"dana\")"
+        "expect(bookingSession.getAvailableSlots(choiceChangeTime)).toBe(1)",
+        "expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe( \"dana\", )"
       ]
     },
     {
@@ -11036,7 +10122,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenOneMillisecondBeforeRefundCutoff_RefundsHold",
-          "line": 224
+          "line": 218
         }
       ],
       "reason": "Preserved",
@@ -11058,7 +10144,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenEarlyParticipantInvitesOnePerson_RefundsAndReservesTheirSeat",
-          "line": 247
+          "line": 241
         }
       ],
       "reason": "Preserved",
@@ -11088,26 +10174,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantAlreadyInvitedSomeone_RejectsSecondInvitation",
-          "line": 278
+          "line": 272
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => ben.withdraw(bookingSession, { participationId: \"p-ben\", now: secondInvitationTime, replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"dana\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)",
-        "expect( bookingSession.participantList.personalReplacementForInvitee(\"cara\") ?.replacementInviteeId, ).toBe(\"cara\")",
-        "expect( bookingSession.participantList.personalReplacementForInvitee(\"dana\"), ).toBeUndefined()",
-        "expect(bookingSession.participantList.reservedCount).toBe(1)",
-        "expect(bookingSession.getAvailableSlots(secondInvitationTime)).toBe(0)"
-      ],
-      "assertionsAfter": [
-        "expect(() => ben.withdraw(bookingSession, { participationId: \"p-ben\", now: secondInvitationTime, replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"dana\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)",
-        "expect(caraInvitation?.replacementInviteeId).toBe(\"cara\")",
-        "expect(danaInvitation).toBeUndefined()",
-        "expect(reservedCount).toBe(1)",
-        "expect(availableSlots).toBe(0)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11118,18 +10188,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenNamedRecipientIsMissing_RejectsWithoutChangingState",
-          "line": 322
+          "line": 310
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(40), replacementMode: \"DIRECT_INVITE\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(40), replacementMode: \"DIRECT_INVITE\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11140,18 +10202,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenParticipantInvitesThemself_RejectsWithoutChangingState",
-          "line": 345
+          "line": 329
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(10), replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"alice\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(10), replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"alice\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_INPUT\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11162,18 +10216,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenInviteeAlreadyHasACommittedSeat_RejectsWithoutChangingState",
-          "line": 369
+          "line": 349
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(10), replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"ben\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(10), replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"ben\", }), ).toThrow(expect.objectContaining({ code: \"INVALID_STATE\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11184,18 +10230,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenInviteeAlreadyHasAnotherReservation_RejectsWithoutChangingState",
-          "line": 395
+          "line": 371
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"ben\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-ben\", now: secondWithdrawalTime, replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"cara\", }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"ben\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-ben\", now: secondWithdrawalTime, replacementMode: \"DIRECT_INVITE\", replacementInviteeId: \"cara\", }), ).toThrow(expect.objectContaining({ code: \"DUPLICATE_ID\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11206,7 +10244,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenExactlyAtRefundCutoff_AwaitsReplacement",
-          "line": 431
+          "line": 403
         }
       ],
       "reason": "Preserved",
@@ -11228,7 +10266,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenOneHourBeforeStart_AwaitsReplacement",
-          "line": 451
+          "line": 423
         }
       ],
       "reason": "Preserved",
@@ -11250,18 +10288,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenActorDoesNotOwnParticipation_RejectsWithoutChangingState",
-          "line": 470
+          "line": 442
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"other\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"other\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: hoursBeforeSessionStart(48), }), ).toThrow(expect.objectContaining({ code: \"UNAUTHORIZED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11272,18 +10302,10 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "withdraw_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 493
+          "line": 461
         }
       ],
-      "reason": "Preserved",
-      "assertionsBefore": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: sessionStartsAt, }), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(sessionState(bookingSession)).toEqual(previousState)"
-      ],
-      "assertionsAfter": [
-        "expect(() => createTestUser({ userId: \"alice\" }) .asParticipant() .withdraw(bookingSession, { participationId: \"p-alice\", now: sessionStartsAt, }), ).toThrow(expect.objectContaining({ code: \"SESSION_STARTED\" }))",
-        "expect(currentState).toEqual(previousState)"
-      ]
+      "reason": "Preserved"
     },
     {
       "before": {
@@ -11294,7 +10316,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenMoreThan30HoursBeforeStart_ShowsFullRefundWithoutChangingState",
-          "line": 516
+          "line": 480
         }
       ],
       "reason": "Preserved",
@@ -11322,7 +10344,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenExactlyAtRefundCutoff_ShowsShareStaysHeld",
-          "line": 535
+          "line": 499
         }
       ],
       "reason": "Preserved",
@@ -11348,7 +10370,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenFollowedByWithdrawalAtSameTime_MatchesItsOutcome",
-          "line": 553
+          "line": 517
         }
       ],
       "reason": "Preserved"
@@ -11362,7 +10384,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenUserIsNotParticipating_RejectsWithNotFound",
-          "line": 575
+          "line": 539
         }
       ],
       "reason": "Preserved"
@@ -11376,7 +10398,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenAlreadyWithdrawn_RejectsWithInvalidState",
-          "line": 587
+          "line": 551
         }
       ],
       "reason": "Preserved"
@@ -11390,7 +10412,7 @@
         {
           "file": "tests/domain/accounts/participant/withdrawals.test.ts",
           "name": "previewWithdrawal_WhenSessionStartsNow_RejectsWithSessionStarted",
-          "line": 604
+          "line": 568
         }
       ],
       "reason": "Preserved"
@@ -11400,7 +10422,7 @@
     {
       "file": "tests/domain/accounts/booker/administration.test.ts",
       "name": "changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
-      "line": 208,
+      "line": 196,
       "reason": "Added an explicit PUBLIC-to-PRIVATE command scenario for an unverified owner; retained the separate permission-check scenario.",
       "assertions": [
         "expect(visibility).toBe(\"PRIVATE\")"
