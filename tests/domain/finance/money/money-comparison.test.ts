@@ -1,7 +1,7 @@
 import { Money } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("Money", () => {
+describe("Money equality and ordering", () => {
   test("equals_WhenSeparateInstancesHaveEqualValues_ReturnsTrue", () => {
     const first = Money.fromCents(500);
     const equal = Money.fromCents(500);

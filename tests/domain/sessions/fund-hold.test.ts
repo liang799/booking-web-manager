@@ -4,8 +4,8 @@ import { describe, expect, test } from "vitest";
 const createdAt = new Date("2026-10-01");
 const settledAt = new Date("2026-10-03");
 
-describe("FundHold", () => {
-  describe("Construction and lifecycle metadata", () => {
+describe("Fund hold state and settlement metadata", () => {
+  describe("Active hold restoration", () => {
     test("constructor_WhenStateIsHeld_PreservesAmountAndIsolatesDate", () => {
       const input = holdDetails({ state: "HELD" });
 
@@ -42,6 +42,40 @@ describe("FundHold", () => {
       expect(hold.createdAt).toEqual(createdAt);
     });
 
+    test("constructor_WhenActiveHoldHasSettlementDate_ThrowsDomainError", () => {
+      const details = holdDetails({ settledAt });
+
+      expect(() => new FundHold(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenActiveHoldHasPayout_ThrowsDomainError", () => {
+      const details = holdDetails({ payoutId: "payout" });
+
+      expect(() => new FundHold(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenAmountIsZero_ThrowsDomainError", () => {
+      const details = holdDetails({ amount: Money.fromCents(0) });
+
+      expect(() => new FundHold(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenStateIsUnknown_ThrowsDomainError", () => {
+      const details = holdDetails({
+        state: "UNKNOWN" as FundHoldDetails["state"],
+      });
+
+      expect(() => new FundHold(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenCreationDateIsInvalid_ThrowsRangeError", () => {
+      const details = holdDetails({ createdAt: new Date(NaN) });
+
+      expect(() => new FundHold(details)).toThrow(RangeError);
+    });
+  });
+
+  describe("Completed settlement restoration", () => {
     test("constructor_WhenStateIsRefunded_PreservesTerminalMetadata", () => {
       const inputSettledAt = new Date(settledAt);
       const input = holdDetails({
@@ -124,41 +158,9 @@ describe("FundHold", () => {
 
       expect(() => new FundHold(details)).toThrow(DomainError);
     });
-
-    test("constructor_WhenActiveHoldHasSettlementDate_ThrowsDomainError", () => {
-      const details = holdDetails({ settledAt });
-
-      expect(() => new FundHold(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenActiveHoldHasPayout_ThrowsDomainError", () => {
-      const details = holdDetails({ payoutId: "payout" });
-
-      expect(() => new FundHold(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenAmountIsZero_ThrowsDomainError", () => {
-      const details = holdDetails({ amount: Money.fromCents(0) });
-
-      expect(() => new FundHold(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenStateIsUnknown_ThrowsDomainError", () => {
-      const details = holdDetails({
-        state: "UNKNOWN" as FundHoldDetails["state"],
-      });
-
-      expect(() => new FundHold(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenCreationDateIsInvalid_ThrowsRangeError", () => {
-      const details = holdDetails({ createdAt: new Date(NaN) });
-
-      expect(() => new FundHold(details)).toThrow(RangeError);
-    });
   });
 
-  describe("Refunds", () => {
+  describe("Refund eligibility after settlement", () => {
     test("refund_WhenStateIsRefunded_ThrowsDomainError", () => {
       const hold = new FundHold(
         holdDetails({ state: "REFUNDED", settledAt, payoutId: undefined }),

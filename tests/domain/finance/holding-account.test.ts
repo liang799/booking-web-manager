@@ -1,7 +1,7 @@
 import { DomainError, HoldingAccount } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("HoldingAccount", () => {
+describe("Holding account identity", () => {
   test("constructor_WhenIdentityIsValid_PreservesAccountId", () => {
     const details = { accountId: "platform" };
 

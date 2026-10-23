@@ -1,85 +1,89 @@
 import { Money } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("Money", () => {
-  test("fromCents_WhenCreated_ReturnsFrozenInstance", () => {
-    const cents = 500;
+describe("Money addition and subtraction", () => {
+  describe("Exact sums and differences", () => {
+    test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
+      const first = Money.fromCents(500);
+      const second = Money.fromCents(700);
 
-    const money = Money.fromCents(cents);
+      const sum = first.add(second);
 
-    expect(Object.isFrozen(money)).toBe(true);
+      expect(sum.toCents()).toBe(1200);
+    });
+
+    test("add_WhenChainedAfterSubtraction_ReturnsExactAmount", () => {
+      const first = Money.fromCents(500);
+      const second = Money.fromCents(700);
+
+      const combined = first.subtract(second).add(first);
+
+      expect(combined.toCents()).toBe(300);
+    });
+
+    test("subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference", () => {
+      const first = Money.fromCents(500);
+      const second = Money.fromCents(700);
+
+      const difference = first.subtract(second);
+
+      expect(difference.toCents()).toBe(-200);
+    });
+
+    test("subtract_WhenAmountIsNegative_IncreasesValue", () => {
+      const money = Money.fromCents(500);
+
+      const difference = money.subtract(Money.fromCents(-100));
+
+      expect(difference.toCents()).toBe(600);
+    });
   });
 
-  test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
-    const first = Money.fromCents(500);
-    const second = Money.fromCents(700);
+  describe("Immutable operands and results", () => {
+    test("fromCents_WhenCreated_ReturnsFrozenInstance", () => {
+      const cents = 500;
 
-    const sum = first.add(second);
+      const money = Money.fromCents(cents);
 
-    expect(sum.toCents()).toBe(1200);
-  });
+      expect(Object.isFrozen(money)).toBe(true);
+    });
 
-  test("add_WhenChainedAfterSubtraction_ReturnsExactAmount", () => {
-    const first = Money.fromCents(500);
-    const second = Money.fromCents(700);
+    test("add_WhenAddingZero_ReturnsNewInstance", () => {
+      const money = Money.fromCents(500);
 
-    const combined = first.subtract(second).add(first);
+      const sum = money.add(Money.fromCents(0));
 
-    expect(combined.toCents()).toBe(300);
-  });
+      expect(sum).not.toBe(money);
+      expect(sum.toCents()).toBe(500);
+    });
 
-  test("add_WhenAddingZero_ReturnsNewInstance", () => {
-    const money = Money.fromCents(500);
+    test("add_WhenAppliedToOperands_PreservesBothValues", () => {
+      const first = Money.fromCents(500);
+      const second = Money.fromCents(700);
 
-    const sum = money.add(Money.fromCents(0));
+      first.add(second);
 
-    expect(sum).not.toBe(money);
-    expect(sum.toCents()).toBe(500);
-  });
+      expect(first.toCents()).toBe(500);
+      expect(second.toCents()).toBe(700);
+    });
 
-  test("add_WhenAppliedToOperands_PreservesBothValues", () => {
-    const first = Money.fromCents(500);
-    const second = Money.fromCents(700);
+    test("subtract_WhenSubtractingZero_ReturnsNewInstance", () => {
+      const money = Money.fromCents(500);
 
-    first.add(second);
+      const difference = money.subtract(Money.fromCents(0));
 
-    expect(first.toCents()).toBe(500);
-    expect(second.toCents()).toBe(700);
-  });
+      expect(difference).not.toBe(money);
+      expect(difference.toCents()).toBe(500);
+    });
 
-  test("subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference", () => {
-    const first = Money.fromCents(500);
-    const second = Money.fromCents(700);
+    test("subtract_WhenAppliedToOperands_PreservesBothValues", () => {
+      const first = Money.fromCents(500);
+      const second = Money.fromCents(700);
 
-    const difference = first.subtract(second);
+      first.subtract(second);
 
-    expect(difference.toCents()).toBe(-200);
-  });
-
-  test("subtract_WhenAmountIsNegative_IncreasesValue", () => {
-    const money = Money.fromCents(500);
-
-    const difference = money.subtract(Money.fromCents(-100));
-
-    expect(difference.toCents()).toBe(600);
-  });
-
-  test("subtract_WhenSubtractingZero_ReturnsNewInstance", () => {
-    const money = Money.fromCents(500);
-
-    const difference = money.subtract(Money.fromCents(0));
-
-    expect(difference).not.toBe(money);
-    expect(difference.toCents()).toBe(500);
-  });
-
-  test("subtract_WhenAppliedToOperands_PreservesBothValues", () => {
-    const first = Money.fromCents(500);
-    const second = Money.fromCents(700);
-
-    first.subtract(second);
-
-    expect(first.toCents()).toBe(500);
-    expect(second.toCents()).toBe(700);
+      expect(first.toCents()).toBe(500);
+      expect(second.toCents()).toBe(700);
+    });
   });
 });

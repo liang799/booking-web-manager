@@ -5,7 +5,7 @@ import {
   sessionState,
 } from "./session-fixtures";
 
-describe("Session", () => {
+describe("Session automatic attendance verification", () => {
   test("autoVerifyAttendance_WhenOneMillisecondBeforeDue_RejectsWithoutChangingState", () => {
     const automaticVerificationDueAt = hoursAfterSessionEnd(72);
     const oneMillisecondBeforeAutomaticVerification = new Date(

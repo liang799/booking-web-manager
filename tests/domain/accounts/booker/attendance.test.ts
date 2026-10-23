@@ -8,7 +8,7 @@ import {
   sessionState,
 } from "../../sessions/session/session-fixtures";
 
-describe("Booker", () => {
+describe("Booker attendance verification", () => {
   test("verifyAttendance_WhenOwnerIsInactive_StillFinalizesAttendance", () => {
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });

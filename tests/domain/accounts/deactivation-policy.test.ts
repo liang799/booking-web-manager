@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { assertDeactivationAllowed, Money, type DeactivationInput } from "@/domain";
 
-describe("Deactivation policy", () => {
+describe("Account deactivation eligibility", () => {
   test("assertDeactivationAllowed_WhenNoObligationsRemain_AllowsDeactivation", () => {
     const standing = clearStanding();
 

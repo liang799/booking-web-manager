@@ -7,7 +7,7 @@ import {
   sessionDetails,
 } from "./session/session-fixtures";
 
-describe("ParticipantList", () => {
+describe("Participant roster isolation and queue ordering", () => {
   test("participations_WhenInputAndReturnedArraysAreMutated_PreservesEntriesAndLookups", () => {
     const originalSession = createTestSession({
       committedUserIds: ["alice", "ben"],

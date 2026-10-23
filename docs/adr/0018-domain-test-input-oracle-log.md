@@ -24,6 +24,12 @@ of replaying unrelated workflows. Keep the transition under test visible, and
 give a former setup-only success path its own focused case when needed to
 preserve coverage.
 
+Suite labels name domain responsibilities, such as Money arithmetic or
+Participant admission. Focused suites remain flat; mixed suites use at most one
+level of behavior groups. Guards stay beside their commands and failure/retry
+cases stay together. Grouping changes labels and navigation, without shared
+setup hooks, hidden prerequisites, or dependencies on execution order.
+
 The [domain testing guide](../../tests/domain/README.md) holds the maintained
 convention and examples. Adjacent README tables retain Lecture 16's Input,
 Oracle, and Log terminology, with one row per executed case and a separate

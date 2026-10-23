@@ -1,7 +1,7 @@
 import { DomainError, GroupMembership } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("GroupMembership", () => {
+describe("Group membership identity and join timestamp", () => {
   test("constructor_WhenDateIsInvalid_ThrowsDomainError", () => {
     const details = { userId: "owner", joinedAt: new Date("invalid") };
 

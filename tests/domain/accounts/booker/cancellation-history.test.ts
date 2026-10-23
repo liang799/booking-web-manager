@@ -9,7 +9,7 @@ import {
   sessionDetails,
 } from "../../sessions/session/session-fixtures";
 
-describe("Booker", () => {
+describe("Booker cancellation preserves prior refunds", () => {
   test("cancel_WhenRosterHasRemovedParticipant_PreservesRemovalWithoutSecondRefund", () => {
     const session = createTestSession({
       committedUserIds: ["alice", "ben"],

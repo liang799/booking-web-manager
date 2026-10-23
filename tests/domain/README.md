@@ -10,20 +10,23 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
 ## Structure and naming
 
 - Use a file named after the entity or value object, with one top-level
-  `describe`. Keep smaller suites flat, with tests ordered by method.
+  `describe` that names its responsibility: `Money arithmetic`, `Participant
+  admission`, or `Booker administration`. Keep focused suites flat when one
+  behavior label already explains their scope.
 - Focused behavior files for the same entity may remain separate, such as
   Money arithmetic, Session admission, reliability history, and User related
-  data. Each file still tests one entity and names its top-level `describe`
-  after that entity, optionally adding its responsibility, such as
-  `Booker administration`. Separate suites that mix different entities.
-- Larger entities may use one additional level of `describe` groups for related
-  behaviors, such as construction, profile changes, payout setup, and
-  deactivation. Order tests by method within each group, include related getters,
-  and avoid deeper nesting or shared setup hooks.
-- Group a mixed administration suite by domain behavior: session cancellation,
-  session visibility, and participant removal. Keep permission guards with their
-  commands and failure/retry cases together. These labels organize independent
-  tests; they do not imply a workflow or execution order.
+  data. Each file still tests one entity; its suite label adds the behavior so
+  the test runner shows more than a class name. Separate suites that mix
+  different entities.
+- Mixed suites may use one additional level of `describe` groups for related
+  behaviors, such as profile changes, payout setup, account deactivation, or
+  session cancellation. Use domain concerns rather than generic success/error
+  buckets. Keep related getters and permission guards beside their commands,
+  and failure/retry cases together.
+- Avoid deeper nesting, redundant single-group wrappers, and shared setup hooks.
+  Groups organize independent tests; they do not imply a workflow or execution
+  order. Preserve each case's visible setup and descriptive method/condition/result
+  name when moving it into a group.
 - Split files when responsibilities, fixtures, dependencies, or ownership warrant
   it. Line count alone is not a reason to split a cohesive entity's tests.
 - Name each test `method_WhenCondition_ExpectedResult`. Use `constructor` for
@@ -316,7 +319,8 @@ Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
 The **2026-10-24** snapshot covers **607 passing cases across 43 files**. Each
-table has a linked Name and Location, Input, Oracle (expected result), Log
+table follows its suite’s behavior headings and has a linked Name and Location,
+Input, Oracle (expected result), Log
 (actual outcome verified by assertions), and separate execution status.
 
 | Area | Cases | Tables |

@@ -9,372 +9,383 @@ import {
   sessionStartsAt,
 } from "../../sessions/session/session-fixtures";
 
-describe("Participant", () => {
-  test("acceptReplacement_WhenNamedInviteeIsUnverified_AllowsReplacement", () => {
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben", "alex"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: hoursBeforeSessionStart(10),
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
-    });
-    const cara = createTestUser({
-      userId: "cara",
-      emailVerified: false,
-    }).asParticipant();
-
-    const admission = cara.acceptReplacement(bookingSession, {
-      participationId: "p-cara",
-      holdId: "h-cara",
-      now: hoursBeforeSessionStart(9),
-    });
-
-    expect(admission.kind).toBe("COMMITTED");
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara").status,
-    ).toBe("COMMITTED");
-  });
-
-  test("join_WhenNamedInviteeHasPendingInvitation_RejectsUntilExplicitAcceptance", () => {
-    const aliceWithdrawalTime = hoursBeforeSessionStart(20);
-    const benWithdrawalTime = hoursBeforeSessionStart(10);
-    const joinTime = hoursBeforeSessionStart(9);
-    const bookingSession = createTestSession({
-      committedUserIds: ["alice", "ben"],
-      participationOverrides: {
-        alice: withdrawnParticipation("alice", {
-          withdrawnAt: aliceWithdrawalTime,
-          replacementMode: "OPEN_SLOT",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: benWithdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
-    });
-    const previousState = sessionState(bookingSession);
-
-    expect(() =>
-      createTestUser({ userId: "cara" }).asParticipant().join(bookingSession, {
-        participationId: "p-cara",
-        holdId: "h-cara",
-        now: joinTime,
-      }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
-
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList.findByUserId("cara")).toBeUndefined();
-    expect(
-      bookingSession.participantList.personalReplacementForInvitee("cara")
-        ?.participationId,
-    ).toBe("p-ben");
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("AWAITING_REPLACEMENT");
-    expect(bookingSession.getAvailableSlots(joinTime)).toBe(1);
-  });
-
-  test("acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat", () => {
-    const withdrawalTime = hoursBeforeSessionStart(10);
-    const acceptanceTime = hoursBeforeSessionStart(9);
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben", "alex"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
-    });
-    const previousState = sessionState(bookingSession);
-
-    expect(() =>
-      createTestUser({ userId: "dana" })
-        .asParticipant()
-        .acceptReplacement(bookingSession, {
-          participationId: "p-dana",
-          holdId: "h-dana",
-          now: acceptanceTime,
-        }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
-
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben")
-        .replacementInviteeId,
-    ).toBe("cara");
-  });
-
-  test("acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat", () => {
-    const withdrawalTime = hoursBeforeSessionStart(10);
-    const acceptanceTime = hoursBeforeSessionStart(9);
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben", "alex"],
-      waitlistedUserIds: ["dana", "cara", "evan"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
-    });
-    const queueSequence = bookingSession.participantList.nextQueueSequence;
-
-    const admission = createTestUser({ userId: "cara" })
-      .asParticipant()
-      .acceptReplacement(bookingSession, {
-        participationId: "p-cara",
-        holdId: "h-cara",
-        now: acceptanceTime,
+describe("Participant replacement acceptance", () => {
+  describe("Explicit invitation acceptance", () => {
+    test("acceptReplacement_WhenNamedInviteeIsUnverified_AllowsReplacement", () => {
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben", "alex"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: hoursBeforeSessionStart(10),
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
       });
-    const cara = bookingSession.participantList.requireParticipation("p-cara");
+      const cara = createTestUser({
+        userId: "cara",
+        emailVerified: false,
+      }).asParticipant();
 
-    expect(admission.kind).toBe("COMMITTED");
-    expect(admission.refundedParticipationId).toBe("p-ben");
-    expect(
-      admission.instructions.map((instruction) => instruction.kind),
-    ).toEqual(["LOCK", "REFUND"]);
-    expect(cara.status).toBe("COMMITTED");
-    expect(cara.queueSequence).toBe(2);
-    expect(cara.replacesParticipationId).toBe("p-ben");
-    expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
-      "dana",
-    );
-    expect(bookingSession.participantList.nextQueueSequence).toBe(
-      queueSequence,
-    );
-    expect(bookingSession.participantList.committedCount).toBe(2);
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
-  });
-
-  test("acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition", () => {
-    const withdrawalTime = hoursBeforeSessionStart(10);
-    const acceptanceTime = hoursBeforeSessionStart(9);
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben", "alex"],
-      waitlistedUserIds: ["dana", "cara"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
-    });
-    const cara = createTestUser({
-      userId: "cara",
-      availableFundsCents: 499,
-    }).asParticipant();
-    const previousState = sessionState(bookingSession);
-
-    expect(() =>
-      cara.acceptReplacement(bookingSession, {
+      const admission = cara.acceptReplacement(bookingSession, {
         participationId: "p-cara",
         holdId: "h-cara",
-        now: acceptanceTime,
-      }),
-    ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
+        now: hoursBeforeSessionStart(9),
+      });
 
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara")
-        .queueSequence,
-    ).toBe(2);
-  });
-
-  test("acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation", () => {
-    const withdrawalTime = hoursBeforeSessionStart(10);
-    const acceptanceTime = hoursBeforeSessionStart(9);
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben", "alex"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
+      expect(admission.kind).toBe("COMMITTED");
+      expect(
+        bookingSession.participantList.requireParticipation("p-cara").status,
+      ).toBe("COMMITTED");
     });
-    const cara = createTestUser({
-      userId: "cara",
-      accountStatus: "INACTIVE",
-    }).asParticipant();
-    const previousState = sessionState(bookingSession);
 
-    expect(() =>
-      cara.acceptReplacement(bookingSession, {
-        participationId: "p-cara",
-        holdId: "h-cara",
-        now: acceptanceTime,
-      }),
-    ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
+    test("join_WhenNamedInviteeHasPendingInvitation_RejectsUntilExplicitAcceptance", () => {
+      const aliceWithdrawalTime = hoursBeforeSessionStart(20);
+      const benWithdrawalTime = hoursBeforeSessionStart(10);
+      const joinTime = hoursBeforeSessionStart(9);
+      const bookingSession = createTestSession({
+        committedUserIds: ["alice", "ben"],
+        participationOverrides: {
+          alice: withdrawnParticipation("alice", {
+            withdrawnAt: aliceWithdrawalTime,
+            replacementMode: "OPEN_SLOT",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: benWithdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const previousState = sessionState(bookingSession);
 
-    expect(sessionState(bookingSession)).toEqual(previousState);
-  });
+      expect(() =>
+        createTestUser({ userId: "cara" })
+          .asParticipant()
+          .join(bookingSession, {
+            participationId: "p-cara",
+            holdId: "h-cara",
+            now: joinTime,
+          }),
+      ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
 
-  test("acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation", () => {
-    const withdrawalTime = hoursBeforeSessionStart(10);
-    const acceptanceTime = hoursBeforeSessionStart(9);
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben"],
-      minimumReliability: ReliabilityScore.from(80),
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
+      expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(
+        bookingSession.participantList.findByUserId("cara"),
+      ).toBeUndefined();
+      expect(
+        bookingSession.participantList.personalReplacementForInvitee("cara")
+          ?.participationId,
+      ).toBe("p-ben");
+      expect(
+        bookingSession.participantList.requireParticipation("p-alice").hold
+          ?.state,
+      ).toBe("AWAITING_REPLACEMENT");
+      expect(bookingSession.getAvailableSlots(joinTime)).toBe(1);
     });
-    const cara = createTestUser({
-      userId: "cara",
-      reliabilityScore: ReliabilityScore.from(79),
-    }).asParticipant();
-    const previousState = sessionState(bookingSession);
 
-    expect(() =>
-      cara.acceptReplacement(bookingSession, {
-        participationId: "p-cara",
-        holdId: "h-cara",
-        now: acceptanceTime,
-      }),
-    ).toThrow(expect.objectContaining({ code: "LOW_RELIABILITY" }));
+    test("acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat", () => {
+      const withdrawalTime = hoursBeforeSessionStart(10);
+      const acceptanceTime = hoursBeforeSessionStart(9);
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben", "alex"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const previousState = sessionState(bookingSession);
 
-    expect(sessionState(bookingSession)).toEqual(previousState);
-  });
+      expect(() =>
+        createTestUser({ userId: "dana" })
+          .asParticipant()
+          .acceptReplacement(bookingSession, {
+            participationId: "p-dana",
+            holdId: "h-dana",
+            now: acceptanceTime,
+          }),
+      ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
 
-  test("acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation", () => {
-    const withdrawalTime = hoursBeforeSessionStart(10);
-    const acceptanceTime = sessionStartsAt;
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
+      expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
+      expect(
+        bookingSession.participantList.requireParticipation("p-ben")
+          .replacementInviteeId,
+      ).toBe("cara");
     });
-    const previousState = sessionState(bookingSession);
 
-    expect(() =>
-      createTestUser({ userId: "cara" })
+    test("acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat", () => {
+      const withdrawalTime = hoursBeforeSessionStart(10);
+      const acceptanceTime = hoursBeforeSessionStart(9);
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben", "alex"],
+        waitlistedUserIds: ["dana", "cara", "evan"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const queueSequence = bookingSession.participantList.nextQueueSequence;
+
+      const admission = createTestUser({ userId: "cara" })
         .asParticipant()
         .acceptReplacement(bookingSession, {
           participationId: "p-cara",
           holdId: "h-cara",
           now: acceptanceTime,
-        }),
-    ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
+        });
+      const cara =
+        bookingSession.participantList.requireParticipation("p-cara");
 
-    expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(admission.kind).toBe("COMMITTED");
+      expect(admission.refundedParticipationId).toBe("p-ben");
+      expect(
+        admission.instructions.map((instruction) => instruction.kind),
+      ).toEqual(["LOCK", "REFUND"]);
+      expect(cara.status).toBe("COMMITTED");
+      expect(cara.queueSequence).toBe(2);
+      expect(cara.replacesParticipationId).toBe("p-ben");
+      expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
+        "dana",
+      );
+      expect(bookingSession.participantList.nextQueueSequence).toBe(
+        queueSequence,
+      );
+      expect(bookingSession.participantList.committedCount).toBe(2);
+      expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
+    });
   });
 
-  test("acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal", () => {
-    const benWithdrawalTime = hoursBeforeSessionStart(40);
-    const aliceWithdrawalTime = hoursBeforeSessionStart(20);
-    const acceptanceTime = hoursBeforeSessionStart(19);
-    const bookingSession = createTestSession({
-      committedUserIds: ["alice", "ben"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: benWithdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "REFUNDED",
-          settledAt: benWithdrawalTime,
-        }),
-        alice: withdrawnParticipation("alice", {
-          withdrawnAt: aliceWithdrawalTime,
-          replacementMode: "OPEN_SLOT",
-          holdState: "AWAITING_REPLACEMENT",
-        }),
-      },
-    });
-    const refundedHold =
-      bookingSession.participantList.requireParticipation("p-ben").hold;
+  describe("Invitee eligibility and reservation preservation", () => {
+    test("acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition", () => {
+      const withdrawalTime = hoursBeforeSessionStart(10);
+      const acceptanceTime = hoursBeforeSessionStart(9);
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben", "alex"],
+        waitlistedUserIds: ["dana", "cara"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const cara = createTestUser({
+        userId: "cara",
+        availableFundsCents: 499,
+      }).asParticipant();
+      const previousState = sessionState(bookingSession);
 
-    const admission = createTestUser({ userId: "cara" })
-      .asParticipant()
-      .acceptReplacement(bookingSession, {
+      expect(() =>
+        cara.acceptReplacement(bookingSession, {
+          participationId: "p-cara",
+          holdId: "h-cara",
+          now: acceptanceTime,
+        }),
+      ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
+
+      expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(0);
+      expect(
+        bookingSession.participantList.requireParticipation("p-cara")
+          .queueSequence,
+      ).toBe(2);
+    });
+
+    test("acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation", () => {
+      const withdrawalTime = hoursBeforeSessionStart(10);
+      const acceptanceTime = hoursBeforeSessionStart(9);
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben", "alex"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const cara = createTestUser({
+        userId: "cara",
+        accountStatus: "INACTIVE",
+      }).asParticipant();
+      const previousState = sessionState(bookingSession);
+
+      expect(() =>
+        cara.acceptReplacement(bookingSession, {
+          participationId: "p-cara",
+          holdId: "h-cara",
+          now: acceptanceTime,
+        }),
+      ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
+
+      expect(sessionState(bookingSession)).toEqual(previousState);
+    });
+
+    test("acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation", () => {
+      const withdrawalTime = hoursBeforeSessionStart(10);
+      const acceptanceTime = hoursBeforeSessionStart(9);
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben"],
+        minimumReliability: ReliabilityScore.from(80),
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const cara = createTestUser({
+        userId: "cara",
+        reliabilityScore: ReliabilityScore.from(79),
+      }).asParticipant();
+      const previousState = sessionState(bookingSession);
+
+      expect(() =>
+        cara.acceptReplacement(bookingSession, {
+          participationId: "p-cara",
+          holdId: "h-cara",
+          now: acceptanceTime,
+        }),
+      ).toThrow(expect.objectContaining({ code: "LOW_RELIABILITY" }));
+
+      expect(sessionState(bookingSession)).toEqual(previousState);
+    });
+
+    test("acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation", () => {
+      const withdrawalTime = hoursBeforeSessionStart(10);
+      const acceptanceTime = sessionStartsAt;
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const previousState = sessionState(bookingSession);
+
+      expect(() =>
+        createTestUser({ userId: "cara" })
+          .asParticipant()
+          .acceptReplacement(bookingSession, {
+            participationId: "p-cara",
+            holdId: "h-cara",
+            now: acceptanceTime,
+          }),
+      ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
+
+      expect(sessionState(bookingSession)).toEqual(previousState);
+    });
+  });
+
+  describe("Refund history and replay prevention", () => {
+    test("acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal", () => {
+      const benWithdrawalTime = hoursBeforeSessionStart(40);
+      const aliceWithdrawalTime = hoursBeforeSessionStart(20);
+      const acceptanceTime = hoursBeforeSessionStart(19);
+      const bookingSession = createTestSession({
+        committedUserIds: ["alice", "ben"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: benWithdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "REFUNDED",
+            settledAt: benWithdrawalTime,
+          }),
+          alice: withdrawnParticipation("alice", {
+            withdrawnAt: aliceWithdrawalTime,
+            replacementMode: "OPEN_SLOT",
+            holdState: "AWAITING_REPLACEMENT",
+          }),
+        },
+      });
+      const refundedHold =
+        bookingSession.participantList.requireParticipation("p-ben").hold;
+
+      const admission = createTestUser({ userId: "cara" })
+        .asParticipant()
+        .acceptReplacement(bookingSession, {
+          participationId: "p-cara",
+          holdId: "h-cara",
+          now: acceptanceTime,
+        });
+
+      expect(admission.kind).toBe("COMMITTED");
+      expect(admission.refundedParticipationId).toBeUndefined();
+      expect(
+        admission.instructions.map((instruction) => instruction.kind),
+      ).toEqual(["LOCK"]);
+      expect(
+        bookingSession.participantList.requireParticipation("p-cara")
+          .replacesParticipationId,
+      ).toBe("p-ben");
+      expect(
+        bookingSession.participantList.requireParticipation("p-ben").hold,
+      ).toBe(refundedHold);
+      expect(refundedHold?.state).toBe("REFUNDED");
+      expect(
+        bookingSession.participantList.requireParticipation("p-alice").hold
+          ?.state,
+      ).toBe("AWAITING_REPLACEMENT");
+      expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(1);
+    });
+
+    test("acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat", () => {
+      const withdrawalTime = hoursBeforeSessionStart(40);
+      const acceptanceTime = hoursBeforeSessionStart(39);
+      const repeatAcceptanceTime = hoursBeforeSessionStart(38);
+      const bookingSession = createTestSession({
+        committedUserIds: ["ben"],
+        participationOverrides: {
+          ben: withdrawnParticipation("ben", {
+            withdrawnAt: withdrawalTime,
+            replacementMode: "DIRECT_INVITE",
+            replacementInviteeId: "cara",
+            holdState: "REFUNDED",
+            settledAt: withdrawalTime,
+          }),
+        },
+      });
+      const cara = createTestUser({ userId: "cara" }).asParticipant();
+      cara.acceptReplacement(bookingSession, {
         participationId: "p-cara",
         holdId: "h-cara",
         now: acceptanceTime,
       });
+      const previousState = sessionState(bookingSession);
 
-    expect(admission.kind).toBe("COMMITTED");
-    expect(admission.refundedParticipationId).toBeUndefined();
-    expect(
-      admission.instructions.map((instruction) => instruction.kind),
-    ).toEqual(["LOCK"]);
-    expect(
-      bookingSession.participantList.requireParticipation("p-cara")
-        .replacesParticipationId,
-    ).toBe("p-ben");
-    expect(
-      bookingSession.participantList.requireParticipation("p-ben").hold,
-    ).toBe(refundedHold);
-    expect(refundedHold?.state).toBe("REFUNDED");
-    expect(
-      bookingSession.participantList.requireParticipation("p-alice").hold
-        ?.state,
-    ).toBe("AWAITING_REPLACEMENT");
-    expect(bookingSession.getAvailableSlots(acceptanceTime)).toBe(1);
-  });
-
-  test("acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat", () => {
-    const withdrawalTime = hoursBeforeSessionStart(40);
-    const acceptanceTime = hoursBeforeSessionStart(39);
-    const repeatAcceptanceTime = hoursBeforeSessionStart(38);
-    const bookingSession = createTestSession({
-      committedUserIds: ["ben"],
-      participationOverrides: {
-        ben: withdrawnParticipation("ben", {
-          withdrawnAt: withdrawalTime,
-          replacementMode: "DIRECT_INVITE",
-          replacementInviteeId: "cara",
-          holdState: "REFUNDED",
-          settledAt: withdrawalTime,
+      expect(() =>
+        cara.acceptReplacement(bookingSession, {
+          participationId: "p-cara",
+          holdId: "h-another",
+          now: repeatAcceptanceTime,
         }),
-      },
-    });
-    const cara = createTestUser({ userId: "cara" }).asParticipant();
-    cara.acceptReplacement(bookingSession, {
-      participationId: "p-cara",
-      holdId: "h-cara",
-      now: acceptanceTime,
-    });
-    const previousState = sessionState(bookingSession);
+      ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
 
-    expect(() =>
-      cara.acceptReplacement(bookingSession, {
-        participationId: "p-cara",
-        holdId: "h-another",
-        now: repeatAcceptanceTime,
-      }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_ACCESS" }));
-
-    expect(sessionState(bookingSession)).toEqual(previousState);
-    expect(bookingSession.participantList.committedCount).toBe(1);
-    expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1);
+      expect(sessionState(bookingSession)).toEqual(previousState);
+      expect(bookingSession.participantList.committedCount).toBe(1);
+      expect(bookingSession.getAvailableSlots(repeatAcceptanceTime)).toBe(1);
+    });
   });
 });

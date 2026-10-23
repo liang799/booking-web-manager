@@ -6,8 +6,8 @@ import {
 } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("RegularGroup", () => {
-  describe("Construction and membership", () => {
+describe("Regular group membership and administration", () => {
+  describe("Restored membership and invitation state", () => {
     test("constructor_WhenMembershipsAreEmpty_ThrowsDomainError", () => {
       const details = groupDetails({ memberships: [] });
 
@@ -63,7 +63,7 @@ describe("RegularGroup", () => {
     });
   });
 
-  describe("Joining and invitations", () => {
+  describe("Invitation access and rotation", () => {
     test("join_WhenMemberJoinsAgain_PreservesSingleMembership", () => {
       const group = newGroup();
 
@@ -187,7 +187,7 @@ describe("RegularGroup", () => {
     });
   });
 
-  describe("Owner management", () => {
+  describe("Group naming", () => {
     test("rename_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
       const group = newGroup();
       const before = groupState(group);
@@ -225,7 +225,9 @@ describe("RegularGroup", () => {
       );
       expect(groupState(group)).toEqual(before);
     });
+  });
 
+  describe("Member removal", () => {
     test("removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
       const group = newGroup();
       const before = groupState(group);
@@ -263,7 +265,9 @@ describe("RegularGroup", () => {
       ).toThrow(expect.objectContaining({ code: "NOT_FOUND" }));
       expect(groupState(group)).toEqual(before);
     });
+  });
 
+  describe("Group archiving", () => {
     test("archive_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
       const group = newGroup();
       const before = groupState(group);
@@ -306,7 +310,7 @@ describe("RegularGroup", () => {
     });
   });
 
-  describe("Leaving", () => {
+  describe("Leaving and rejoining", () => {
     test("leave_WhenMemberLeaves_RemovesOnlyThatMember", () => {
       const group = newGroup({
         memberships: groupMemberships("owner", "aisha", "ben"),

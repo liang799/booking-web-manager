@@ -9,7 +9,7 @@ import {
   sessionEndsAt,
 } from "./session-fixtures";
 
-describe("Session", () => {
+describe("Session custom price across financial operations", () => {
   test("join_WhenPriceExceedsEqualSplit_LocksChosenPrice", () => {
     const session = createTestSession({ bookingShare: Money.fromCents(750) });
     const alice = createTestUser({

@@ -9,8 +9,8 @@ import { describe, expect, test } from "vitest";
 
 const requestedAt = new Date("2026-10-10T12:00:00Z");
 
-describe("PayoutAttempt", () => {
-  describe("Construction and isolation", () => {
+describe("Payout request and provider outcome handling", () => {
+  describe("Restoring provider outcomes", () => {
     test("constructor_WhenCompletionMetadataIsMissing_ThrowsDomainError", () => {
       const details = payoutDetails({ status: "COMPLETED" });
 
@@ -55,7 +55,9 @@ describe("PayoutAttempt", () => {
 
       expect(() => new PayoutAttempt(details)).toThrow(DomainError);
     });
+  });
 
+  describe("Settlement batch integrity", () => {
     test("constructor_WhenAmountDoesNotMatchLines_ThrowsDomainError", () => {
       const details = payoutDetails({ amount: Money.fromCents(99) });
 
@@ -80,7 +82,9 @@ describe("PayoutAttempt", () => {
 
       expect(() => new PayoutAttempt(details)).toThrow(DomainError);
     });
+  });
 
+  describe("Durable request and settlement data", () => {
     test("constructor_WhenNestedInputsAndOutputsAreMutated_PreservesSettlementData", () => {
       const source = batch();
       const completedAt = new Date(requestedAt);
@@ -123,9 +127,7 @@ describe("PayoutAttempt", () => {
       expect(payout.amount.toCents()).toBe(100);
       expect(payout.requestedAt).toEqual(requestedAt);
     });
-  });
 
-  describe("Request intent", () => {
     test("requestedIntent_WhenPayoutIsRequested_ContainsDurableRequestDetails", () => {
       const payout = PayoutAttempt.create(batch());
 
@@ -139,7 +141,7 @@ describe("PayoutAttempt", () => {
     });
   });
 
-  describe("Completion", () => {
+  describe("Completion callbacks", () => {
     test("complete_WhenRestoredPayoutHasFailed_ThrowsStalePayout", () => {
       const details = payoutDetails({
         status: "FAILED",
@@ -214,7 +216,7 @@ describe("PayoutAttempt", () => {
     });
   });
 
-  describe("Failure", () => {
+  describe("Failure callbacks", () => {
     test("fail_WhenRestoredFailureMatches_ReturnsFalse", () => {
       const details = payoutDetails({
         status: "FAILED",

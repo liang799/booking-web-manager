@@ -7,7 +7,7 @@ import {
   sessionState,
 } from "../../sessions/session/session-fixtures";
 
-describe("Participant", () => {
+describe("Participant waitlist entry and departure", () => {
   test("leaveWaitlist_WhenEmailIsMissing_StillLeavesAnExistingEntry", () => {
     const bookingSession = createTestSession({ waitlistedUserIds: ["alice"] });
     const alice = createTestUser({

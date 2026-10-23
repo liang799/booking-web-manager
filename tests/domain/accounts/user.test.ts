@@ -10,8 +10,8 @@ import {
 import { describe, expect, test } from "vitest";
 import { createTestUserDetails, userLoadedAt } from "./user-fixtures";
 
-describe("User", () => {
-  describe("Construction and registration", () => {
+describe("User account lifecycle", () => {
+  describe("Registration and restored account data", () => {
     test("constructor_WhenVerifiedEmailIsMissing_ThrowsInvalidInput", () => {
       const details = createTestUserDetails({ userId: "owner", email: null, emailVerified: true });
 
@@ -142,7 +142,7 @@ describe("User", () => {
     });
   });
 
-  describe("Profile and preferences", () => {
+  describe("Profile updates and email verification", () => {
     test("updateProfile_WhenVerifiedEmailChanges_RequiresFreshVerification", () => {
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
@@ -179,7 +179,9 @@ describe("User", () => {
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
       expect(accountStateOf(user)).toEqual(before);
     });
+  });
 
+  describe("Preferences and collection isolation", () => {
     test("updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions", () => {
       const user = createUser();
 
@@ -249,7 +251,7 @@ describe("User", () => {
     });
   });
 
-  describe("Payout setup", () => {
+  describe("Starting payout setup", () => {
     test("beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount", () => {
       const user = createUser();
 
@@ -306,7 +308,9 @@ describe("User", () => {
       expect(destination.payoutAccountId).toBe("replacement");
       expect(destination.bankAccountReference).toBe("replacement-bank");
     });
+  });
 
+  describe("Payout setup confirmation and failure", () => {
     test("completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy", () => {
       const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
       const pendingAccount = user.payoutAccount;
@@ -382,7 +386,9 @@ describe("User", () => {
       );
       expect(accountStateOf(user)).toEqual(before);
     });
+  });
 
+  describe("Payout destinations", () => {
     test("payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
       const user = createUser();
 
@@ -420,7 +426,7 @@ describe("User", () => {
     });
   });
 
-  describe("Deactivation", () => {
+  describe("Account deactivation", () => {
     test("deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations", () => {
       const user = createUser();
       const input = {

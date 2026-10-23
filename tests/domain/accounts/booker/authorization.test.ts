@@ -7,7 +7,7 @@ import {
   sessionState,
 } from "../../sessions/session/session-fixtures";
 
-describe("Booker", () => {
+describe("Booker session ownership", () => {
   test("cancel_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
     const cancellationTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });

@@ -1,7 +1,7 @@
 import { Money } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("Money", () => {
+describe("Money formatting in dollars", () => {
   test("toDollars_WhenZero_ReturnsTwoDecimalPlaces", () => {
     const money = Money.fromCents(0);
 

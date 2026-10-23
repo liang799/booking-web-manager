@@ -8,8 +8,8 @@ import {
 } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("Wallet", () => {
-  describe("Construction and identity", () => {
+describe("Wallet funds and history integrity", () => {
+  describe("Wallet identity and history isolation", () => {
     test("constructor_WhenInputIdentityIsMutated_PreservesWalletIdentity", () => {
       const input = { walletId: "wallet", userId: "owner", transactions: [] };
       const wallet = new Wallet(input);
@@ -36,26 +36,30 @@ describe("Wallet", () => {
       expect(() => new Wallet(details)).toThrow(DomainError);
     });
 
-    test("constructor_WhenBalanceWouldBeNegative_ThrowsInvalidInput", () => {
-      const history = [
-        entry("credit", "TOP_UP", 500),
-        entry("debit", "LOCK", 501),
-      ];
+    test("transactions_WhenInputsAndOutputsAreMutated_PreservesHistoryAndFunds", () => {
+      const credit = entry("credit", "TOP_UP", 700);
+      const history = [credit];
+      const fundedWallet = wallet(history);
 
-      expect(() => wallet(history)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
+      // Attempt to alter supplied and returned transaction data.
+      history.length = 0;
+      (fundedWallet.transactions as LedgerTransaction[]).push(
+        entry("extra", "TOP_UP", 100),
       );
+      credit.occurredAt.setTime(0);
+      const amountChanged = Reflect.set(credit, "amount", Money.fromCents(0));
+      const storedTransactions = fundedWallet.transactions;
+
+      expect(amountChanged).toBe(false);
+      expect(storedTransactions).toEqual([credit]);
+      expect(storedTransactions[0]?.occurredAt.toISOString()).toBe(
+        "2026-10-01T10:00:00.000Z",
+      );
+      expect(fundedWallet.getAvailableBalance().toCents()).toBe(700);
     });
+  });
 
-    test("constructor_WhenFundsExceedSafeIntegerRange_ThrowsRangeError", () => {
-      const history = [
-        entry("credit", "TOP_UP", Number.MAX_SAFE_INTEGER),
-        entry("overflow", "TOP_UP", 1),
-      ];
-
-      expect(() => wallet(history)).toThrow(RangeError);
-    });
-
+  describe("Transaction history integrity", () => {
     test("constructor_WhenHistoryIsMissing_ThrowsInvalidInput", () => {
       const details = {
         walletId: "wallet",
@@ -135,6 +139,26 @@ describe("Wallet", () => {
   });
 
   describe("Available funds", () => {
+    test("constructor_WhenBalanceWouldBeNegative_ThrowsInvalidInput", () => {
+      const history = [
+        entry("credit", "TOP_UP", 500),
+        entry("debit", "LOCK", 501),
+      ];
+
+      expect(() => wallet(history)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenFundsExceedSafeIntegerRange_ThrowsRangeError", () => {
+      const history = [
+        entry("credit", "TOP_UP", Number.MAX_SAFE_INTEGER),
+        entry("overflow", "TOP_UP", 1),
+      ];
+
+      expect(() => wallet(history)).toThrow(RangeError);
+    });
+
     test("getAvailableBalance_WhenHistoryIsEmpty_ReturnsZero", () => {
       const emptyWallet = wallet([]);
 
@@ -249,30 +273,6 @@ describe("Wallet", () => {
 
       expect(forwardFunds.toCents()).toBe(1);
       expect(reversedFunds.toCents()).toBe(1);
-    });
-  });
-
-  describe("Transaction isolation", () => {
-    test("transactions_WhenInputsAndOutputsAreMutated_PreservesHistoryAndFunds", () => {
-      const credit = entry("credit", "TOP_UP", 700);
-      const history = [credit];
-      const fundedWallet = wallet(history);
-
-      // Attempt to alter supplied and returned transaction data.
-      history.length = 0;
-      (fundedWallet.transactions as LedgerTransaction[]).push(
-        entry("extra", "TOP_UP", 100),
-      );
-      credit.occurredAt.setTime(0);
-      const amountChanged = Reflect.set(credit, "amount", Money.fromCents(0));
-      const storedTransactions = fundedWallet.transactions;
-
-      expect(amountChanged).toBe(false);
-      expect(storedTransactions).toEqual([credit]);
-      expect(storedTransactions[0]?.occurredAt.toISOString()).toBe(
-        "2026-10-01T10:00:00.000Z",
-      );
-      expect(fundedWallet.getAvailableBalance().toCents()).toBe(700);
     });
   });
 });
