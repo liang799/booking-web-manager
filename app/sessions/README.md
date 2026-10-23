@@ -271,7 +271,11 @@ states without provider dependencies.
 ## Personal sessions feed
 
 `/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
-creation with `?created=1` selects Hosting and announces success. Desktop Joined
+creation with `?created=1` selects Hosting and announces success. Joined always
+links **Manage my places** to `/sessions/joined` (UC2-05: withdraw, leave a
+waitlist, accept a replacement place), even with no joined sessions, because a
+replacement invitation can exist first. Desktop shows it in the sticky header
+beside New session; mobile shows it as a line under the tabs. Desktop Joined
 uses an editorial agenda on the grey page canvas, without an outer bordered card.
 The selected session puts the photograph above its title, venue and horizontal
 time/player metadata. **View details** sits at the right of that metadata row
