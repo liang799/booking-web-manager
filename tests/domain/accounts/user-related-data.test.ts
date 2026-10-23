@@ -14,33 +14,33 @@ import {
 
 describe("User", () => {
   test("constructor_WhenMembershipsAreMissing_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = {
       ...createTestUserDetails({ userId: "alice" }),
       memberGroupIds: undefined,
     } as unknown as UserDetails;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new User(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenMembershipsAreNull_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = {
       ...createTestUserDetails({ userId: "alice" }),
       memberGroupIds: null,
     } as unknown as UserDetails;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new User(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenWalletBelongsToAnotherUser_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = {
       ...createTestUserDetails({ userId: "alice" }),
       wallet: new Wallet({
@@ -48,42 +48,42 @@ describe("User", () => {
         userId: "other",
         transactions: [],
       }),
-    } as unknown as UserDetails;
+    };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new User(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenMembershipIdIsBlank_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = {
       ...createTestUserDetails({ userId: "alice" }),
       memberGroupIds: [" "],
-    } as unknown as UserDetails;
+    };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new User(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenMembershipsAreNotAnArray_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = {
       ...createTestUserDetails({ userId: "alice" }),
       memberGroupIds: new Set(["group"]),
     } as unknown as UserDetails;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new User(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenSourceDataChanges_PreservesLoadedValues", () => {
-    // Arrange
+    // Input
     const wallet = fundedWallet("alice", 700);
     const reliabilityScore = ReliabilityScore.from(80);
     const memberGroupIds = ["group"];
@@ -95,12 +95,12 @@ describe("User", () => {
     };
     const user = new User(details);
 
-    // Act
+    // Log
     details.wallet = fundedWallet("alice", 0);
     details.reliabilityScore = ReliabilityScore.from(0);
     memberGroupIds.push("other");
 
-    // Assert
+    // Oracle
     expect(user.wallet).toBe(wallet);
     expect(user.wallet.walletId).toBe("w-alice");
     expect(user.wallet.getAvailableBalance().toCents()).toBe(700);
@@ -110,7 +110,7 @@ describe("User", () => {
   });
 
   test("memberGroupIds_WhenReturnedArrayChanges_PreservesMemberships", () => {
-    // Arrange
+    // Input
     const user = new User(
       createTestUserDetails({
         userId: "alice",
@@ -119,47 +119,47 @@ describe("User", () => {
     );
     const memberships = user.memberGroupIds as string[];
 
-    // Act
+    // Log
     memberships.push("injected");
 
-    // Assert
+    // Oracle
     expect(user.memberGroupIds).toEqual(["group"]);
   });
 
   test("wallet_WhenReassignmentIsAttempted_PreservesLoadedWallet", () => {
-    // Arrange
+    // Input
     const wallet = fundedWallet("alice", 700);
     const user = new User(createTestUserDetails({ userId: "alice", wallet }));
     const replacement = fundedWallet("alice", 0);
 
-    // Act
-    const assigned = Reflect.set(user, "wallet", replacement);
+    // Log
+    const walletReassigned = Reflect.set(user, "wallet", replacement);
 
-    // Assert
-    expect(assigned).toBe(false);
+    // Oracle
+    expect(walletReassigned).toBe(false);
     expect(user.wallet).toBe(wallet);
     expect(user.wallet.getAvailableBalance().toCents()).toBe(700);
   });
 
   test("reliabilityScore_WhenReassignmentIsAttempted_PreservesLoadedScore", () => {
-    // Arrange
+    // Input
     const reliabilityScore = ReliabilityScore.from(80);
     const user = new User(
       createTestUserDetails({ userId: "alice", reliabilityScore }),
     );
     const replacement = ReliabilityScore.from(0);
 
-    // Act
-    const assigned = Reflect.set(user, "reliabilityScore", replacement);
+    // Log
+    const scoreReassigned = Reflect.set(user, "reliabilityScore", replacement);
 
-    // Assert
-    expect(assigned).toBe(false);
+    // Oracle
+    expect(scoreReassigned).toBe(false);
     expect(user.reliabilityScore).toBe(reliabilityScore);
     expect(user.reliabilityScore.toNumber()).toBe(80);
   });
 
   test("create_WhenRegistering_EstablishesWalletAndEmptyHistory", () => {
-    // Arrange
+    // Input
     const details = {
       userId: "new-user",
       email: new Email("new@example.com"),
@@ -167,18 +167,17 @@ describe("User", () => {
       now: userLoadedAt,
     };
 
-    // Act
+    // Log
     const user = User.create(details);
 
-    // Assert
-    expect(user.wallet.userId).toBe(user.userId);
+    // Oracle
+    expect(user.userId).toBe("new-user");
+    expect(user.wallet.userId).toBe("new-user");
     expect(user.email?.toString()).toBe("new@example.com");
     expect(user.wallet.walletId).toBe("new-wallet");
     expect(user.wallet.transactions).toEqual([]);
     expect(user.wallet.getAvailableBalance().toCents()).toBe(0);
-    expect(user.reliabilityScore.toNumber()).toBe(
-      ReliabilityScore.fromHistory(user.userId, [], userLoadedAt).toNumber(),
-    );
+    expect(user.reliabilityScore.toNumber()).toBe(100);
     expect(user.memberGroupIds).toEqual([]);
   });
 });

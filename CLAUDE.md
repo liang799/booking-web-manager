@@ -275,9 +275,9 @@ BREAKING CHANGE: use JavaScript features not available in Node 6.
 
 For domain unit tests, follow the
 [domain testing guide](./tests/domain/README.md). It defines scenario naming,
-Arrange/Act/Assert comments, grouping, fixtures, and error assertions. The
+Input/Log/Oracle comments, grouping, fixtures, and error assertions. The
 rationale is recorded in
-[ADR-0005](./docs/adr/0005-domain-unit-test-structure.md).
+[ADR-0018](./docs/adr/0018-domain-test-input-oracle-log.md).
 
 Priority test, and the one most likely to catch a real bug: fire twenty
 concurrent commits at an eight-slot session and assert exactly 8 succeed, 12

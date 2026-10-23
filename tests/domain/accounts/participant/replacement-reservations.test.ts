@@ -12,23 +12,39 @@ import {
 
 describe("Participant", () => {
   test("acceptReplacement_WhenNamedInviteeIsUnverified_AllowsReplacement", () => {
-    // Arrange
-    const bookingSession = createTestSession({ committedUserIds: ["ben", "alex"] });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben", now: hoursBeforeSessionStart(10),
-      replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara",
+    // Input
+    const bookingSession = createTestSession({
+      committedUserIds: ["ben", "alex"],
     });
-    const invitee = createTestUser({ userId: "cara", emailVerified: false }).asParticipant();
-    // Act & Assert
-    const result = invitee.acceptReplacement(bookingSession, {
-      participationId: "p-cara", holdId: "h-cara", now: hoursBeforeSessionStart(9),
+    createTestUser({ userId: "ben" })
+      .asParticipant()
+      .withdraw(bookingSession, {
+        participationId: "p-ben",
+        now: hoursBeforeSessionStart(10),
+        replacementMode: "DIRECT_INVITE",
+        replacementInviteeId: "cara",
+      });
+    const cara = createTestUser({
+      userId: "cara",
+      emailVerified: false,
+    }).asParticipant();
+
+    // Log
+    const admission = cara.acceptReplacement(bookingSession, {
+      participationId: "p-cara",
+      holdId: "h-cara",
+      now: hoursBeforeSessionStart(9),
     });
-    expect(result.kind).toBe("COMMITTED");
-    expect(bookingSession.participantList.requireParticipation("p-cara").status).toBe("COMMITTED");
+
+    // Oracle
+    expect(admission.kind).toBe("COMMITTED");
+    expect(
+      bookingSession.participantList.requireParticipation("p-cara").status,
+    ).toBe("COMMITTED");
   });
 
   test("join_WhenNamedInviteeHasPendingInvitation_RejectsUntilExplicitAcceptance", () => {
-    // Arrange
+    // Input
     const aliceWithdrawalTime = hoursBeforeSessionStart(20);
     const benWithdrawalTime = hoursBeforeSessionStart(10);
     const joinTime = hoursBeforeSessionStart(9);
@@ -50,7 +66,7 @@ describe("Participant", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "cara" }).asParticipant().join(bookingSession, {
         participationId: "p-cara",
@@ -72,7 +88,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenUserHasNoPendingInvitation_RejectsWithoutChangingReservedSeat", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const acceptanceTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -86,7 +102,7 @@ describe("Participant", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "dana" })
         .asParticipant()
@@ -105,7 +121,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenNamedInviteeIsBehindOtherWaiters_AcceptsOnlyTheirReservedSeat", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const acceptanceTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -120,7 +136,7 @@ describe("Participant", () => {
     });
     const queueSequence = bookingSession.participantList.nextQueueSequence;
 
-    // Act
+    // Log
     const admission = createTestUser({ userId: "cara" })
       .asParticipant()
       .acceptReplacement(bookingSession, {
@@ -129,13 +145,14 @@ describe("Participant", () => {
         now: acceptanceTime,
       });
 
-    // Assert
+    const cara = bookingSession.participantList.requireParticipation("p-cara");
+
+    // Oracle
     expect(admission.kind).toBe("COMMITTED");
     expect(admission.refundedParticipationId).toBe("p-ben");
     expect(
       admission.instructions.map((instruction) => instruction.kind),
     ).toEqual(["LOCK", "REFUND"]);
-    const cara = bookingSession.participantList.requireParticipation("p-cara");
     expect(cara.status).toBe("COMMITTED");
     expect(cara.queueSequence).toBe(2);
     expect(cara.replacesParticipationId).toBe("p-ben");
@@ -150,7 +167,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenQueuedInviteeCannotPay_KeepsReservationAndQueuePosition", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const acceptanceTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -163,15 +180,15 @@ describe("Participant", () => {
       replacementMode: "DIRECT_INVITE",
       replacementInviteeId: "cara",
     });
-    const participant = createTestUser({
+    const cara = createTestUser({
       userId: "cara",
       availableFundsCents: 499,
     }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
-      participant.acceptReplacement(bookingSession, {
+      cara.acceptReplacement(bookingSession, {
         participationId: "p-cara",
         holdId: "h-cara",
         now: acceptanceTime,
@@ -186,7 +203,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenInviteeIsInactive_RejectsWithoutChangingReservation", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const acceptanceTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
@@ -198,15 +215,15 @@ describe("Participant", () => {
       replacementInviteeId: "cara",
       now: withdrawalTime,
     });
-    const participant = createTestUser({
+    const cara = createTestUser({
       userId: "cara",
       accountStatus: "INACTIVE",
     }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
-      participant.acceptReplacement(bookingSession, {
+      cara.acceptReplacement(bookingSession, {
         participationId: "p-cara",
         holdId: "h-cara",
         now: acceptanceTime,
@@ -216,7 +233,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenInviteeIsBelowReliabilityThreshold_RejectsWithoutChangingReservation", () => {
-    // Arrange
+    // Input
     const inviterJoinTime = hoursBeforeSessionStart(48);
     const withdrawalTime = hoursBeforeSessionStart(10);
     const acceptanceTime = hoursBeforeSessionStart(9);
@@ -236,15 +253,15 @@ describe("Participant", () => {
       replacementInviteeId: "cara",
       now: withdrawalTime,
     });
-    const participant = createTestUser({
+    const cara = createTestUser({
       userId: "cara",
       reliabilityScore: ReliabilityScore.from(79),
     }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
-      participant.acceptReplacement(bookingSession, {
+      cara.acceptReplacement(bookingSession, {
         participationId: "p-cara",
         holdId: "h-cara",
         now: acceptanceTime,
@@ -254,7 +271,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenSessionStartsNow_RejectsUnacceptedInvitation", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(10);
     const acceptanceTime = sessionStartsAt;
     const bookingSession = createTestSession({ committedUserIds: ["ben"] });
@@ -266,7 +283,7 @@ describe("Participant", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       createTestUser({ userId: "cara" })
         .asParticipant()
@@ -280,7 +297,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenInviterWasAlreadyRefunded_AcceptsSeatWithoutRefundingAnotherWithdrawal", () => {
-    // Arrange
+    // Input
     const benWithdrawalTime = hoursBeforeSessionStart(40);
     const aliceWithdrawalTime = hoursBeforeSessionStart(20);
     const acceptanceTime = hoursBeforeSessionStart(19);
@@ -303,7 +320,7 @@ describe("Participant", () => {
     const refundedHold =
       bookingSession.participantList.requireParticipation("p-ben").hold;
 
-    // Act
+    // Log
     const admission = createTestUser({ userId: "cara" })
       .asParticipant()
       .acceptReplacement(bookingSession, {
@@ -312,7 +329,7 @@ describe("Participant", () => {
         now: acceptanceTime,
       });
 
-    // Assert
+    // Oracle
     expect(admission.kind).toBe("COMMITTED");
     expect(admission.refundedParticipationId).toBeUndefined();
     expect(
@@ -334,7 +351,7 @@ describe("Participant", () => {
   });
 
   test("acceptReplacement_WhenEarlyInvitationHasBeenAccepted_RejectsReplayEvenWithAnOpenSeat", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(40);
     const acceptanceTime = hoursBeforeSessionStart(39);
     const repeatAcceptanceTime = hoursBeforeSessionStart(38);
@@ -345,17 +362,17 @@ describe("Participant", () => {
       replacementMode: "DIRECT_INVITE",
       replacementInviteeId: "cara",
     });
-    const participant = createTestUser({ userId: "cara" }).asParticipant();
-    participant.acceptReplacement(bookingSession, {
+    const cara = createTestUser({ userId: "cara" }).asParticipant();
+    cara.acceptReplacement(bookingSession, {
       participationId: "p-cara",
       holdId: "h-cara",
       now: acceptanceTime,
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
-      participant.acceptReplacement(bookingSession, {
+      cara.acceptReplacement(bookingSession, {
         participationId: "p-cara",
         holdId: "h-another",
         now: repeatAcceptanceTime,

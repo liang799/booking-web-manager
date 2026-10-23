@@ -3,90 +3,90 @@ import { describe, expect, test } from "vitest";
 
 describe("Money", () => {
   test("toDollars_WhenZero_ReturnsTwoDecimalPlaces", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(0);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("0.00");
   });
 
   test("toDollars_WhenOneCent_PadsTheFraction", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(1);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("0.01");
   });
 
   test("toDollars_WhenWholeDollars_PreservesTwoDecimalPlaces", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(1000);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("10.00");
   });
 
   test("toDollars_WhenFractionalDollars_ReturnsExactAmount", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(333);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("3.33");
   });
 
   test("toDollars_WhenNegativeCent_PreservesSign", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(-1);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("-0.01");
   });
 
   test("toDollars_WhenNegativeDollars_ReturnsExactAmount", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(-333);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("-3.33");
   });
 
   test("toDollars_WhenMaximumSafeInteger_PreservesEveryCent", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("90071992547409.91");
   });
 
   test("toDollars_WhenMinimumSafeInteger_PreservesEveryCent", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(Number.MIN_SAFE_INTEGER);
 
-    // Act
+    // Log
     const dollars = money.toDollars();
 
-    // Assert
+    // Oracle
     expect(dollars).toBe("-90071992547409.91");
   });
 });

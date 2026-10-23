@@ -8,15 +8,15 @@ import { describe, expect, test } from "vitest";
 
 describe("LedgerTransaction", () => {
   test("constructor_WhenDatesAreMutated_PreservesFinancialFact", () => {
-    // Arrange
+    // Input
     const input = transactionDetails();
     const transaction = new LedgerTransaction(input);
 
-    // Act
+    // Log
     input.occurredAt.setTime(0);
     transaction.occurredAt.setTime(0);
 
-    // Assert
+    // Oracle
     expect(transaction.transactionId).toBe("transaction");
     expect(transaction.walletId).toBe("wallet");
     expect(transaction.kind).toBe("TOP_UP");
@@ -26,84 +26,84 @@ describe("LedgerTransaction", () => {
   });
 
   test("constructor_WhenAmountIsZero_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ amount: Money.fromCents(0) });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenAmountIsNegative_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ amount: Money.fromCents(-1) });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenTransactionIdIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ transactionId: " " });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenIdempotencyKeyIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ idempotencyKey: " " });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenWalletIdIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ walletId: " " });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenHoldIdIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ holdId: " " });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenPayoutIdIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ payoutId: " " });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenExternalReferenceIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ externalReference: " " });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenKindIsUnknown_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({
       kind: "UNKNOWN" as LedgerTransactionDetails["kind"],
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenDateIsInvalid_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const details = transactionDetails({ occurredAt: new Date(NaN) });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new LedgerTransaction(details)).toThrow(RangeError);
   });
 });

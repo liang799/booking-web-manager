@@ -10,7 +10,7 @@ import {
 
 describe("Booker", () => {
   test("verifyAttendance_WhenOwnerIsInactive_StillFinalizesAttendance", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const booker = createTestUser({
@@ -18,13 +18,13 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
-    // Act
+    // Log
     booker.verifyAttendance(bookingSession, {
       marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
       now: attendanceVerificationTime,
     });
 
-    // Assert
+    // Oracle
     expect(
       bookingSession.participantList.requireParticipation("p-alice").attendance,
     ).toBe("ATTENDED");
@@ -32,7 +32,7 @@ describe("Booker", () => {
   });
 
   test("verifyAttendance_WhenSessionHasNotEnded_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = hoursBeforeSessionEnd(1);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -40,7 +40,7 @@ describe("Booker", () => {
 
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().verifyAttendance(bookingSession, {
         marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
@@ -51,7 +51,7 @@ describe("Booker", () => {
   });
 
   test("verifyAttendance_WhenLaterMarkConflicts_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -62,7 +62,7 @@ describe("Booker", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().verifyAttendance(bookingSession, {
         marks: [
@@ -76,7 +76,7 @@ describe("Booker", () => {
   });
 
   test("verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -86,13 +86,13 @@ describe("Booker", () => {
       now: attendanceVerificationTime,
     });
 
-    // Act
+    // Log
     readyBooker().verifyAttendance(bookingSession, {
       marks: [{ participationId: "p-ben", attendance: "ABSENT" }],
       now: attendanceVerificationTime,
     });
 
-    // Assert
+    // Oracle
     expect(bookingSession.status).toBe("AWAITING_PAYOUT");
   });
 });

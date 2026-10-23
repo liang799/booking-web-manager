@@ -3,21 +3,21 @@ import { describe, expect, test } from "vitest";
 
 describe("HoldingAccount", () => {
   test("constructor_WhenIdentityIsValid_PreservesAccountId", () => {
-    // Arrange
+    // Input
     const details = { accountId: "platform" };
 
-    // Act
+    // Log
     const account = new HoldingAccount(details);
 
-    // Assert
+    // Oracle
     expect(account.accountId).toBe("platform");
   });
 
   test("constructor_WhenAccountIdIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = { accountId: " " };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new HoldingAccount(details)).toThrow(DomainError);
   });
 });

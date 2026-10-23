@@ -10,7 +10,7 @@ import {
 describe("Session", () => {
   describe("Capacity", () => {
     test("recordAdmission_WhenBookerTakesEighthSlot_FillsSession", () => {
-      // Arrange
+      // Input
       const bookerJoinedAt = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
         totalSlots: 8,
@@ -26,14 +26,14 @@ describe("Session", () => {
       });
       const bookerAdmission = committedParticipation(bookingSession, "booker");
 
-      // Act
+      // Log
       bookingSession.recordAdmission(
         bookerAdmission,
         undefined,
         bookerJoinedAt,
       );
 
-      // Assert
+      // Oracle
       expect(bookingSession.participantList.findByUserId("booker")).toBe(
         bookerAdmission,
       );
@@ -55,7 +55,7 @@ describe("Session", () => {
     });
 
     test("recordAdmission_WhenSessionIsFull_RecordsWaitlistedParticipation", () => {
-      // Arrange
+      // Input
       const waitlistedAt = hoursBeforeSessionStart(48);
       const bookingSession = createTestSession({
         totalSlots: 8,
@@ -77,10 +77,10 @@ describe("Session", () => {
         queueSequence: 1,
       });
 
-      // Act
+      // Log
       bookingSession.recordAdmission(waiting, undefined, waitlistedAt);
 
-      // Assert
+      // Oracle
       expect(
         bookingSession.participantList.requireParticipation("p-waiting"),
       ).toBe(waiting);
@@ -93,13 +93,13 @@ describe("Session", () => {
 
   describe("Availability", () => {
     test("getAvailableSlots_WhenSessionStartsNow_ReturnsZero", () => {
-      // Arrange
+      // Input
       const bookingSession = createTestSession();
 
-      // Act
+      // Log
       const availableSlots = bookingSession.getAvailableSlots(sessionStartsAt);
 
-      // Assert
+      // Oracle
       expect(availableSlots).toBe(0);
     });
   });

@@ -14,145 +14,145 @@ const settledAt = new Date("2026-10-03");
 describe("Participation", () => {
   describe("Construction and isolation", () => {
     test("constructor_WhenDatesAreMutated_PreservesTimestampAndImmutableHold", () => {
-      // Arrange
+      // Input
       const input = participationDetails();
-      const participation = new Participation(input);
 
-      // Act
+      // Log
+      const participation = new Participation(input);
       input.committedAt?.setTime(0);
       participation.committedAt?.setTime(0);
 
-      // Assert
+      // Oracle
       expect(participation.committedAt).toEqual(createdAt);
       expect(participation.hold).toBe(input.hold);
     });
 
     test("constructor_WhenHoldBelongsToAnotherParticipation_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         hold: new FundHold(holdDetails({ participationId: "foreign" })),
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenCommittedHoldIsMissing_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({ hold: undefined });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenCommitmentDateIsMissing_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({ committedAt: undefined });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenAttendanceHasNoVerification_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({ attendance: "ATTENDED" });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         verifiedAt: settledAt,
         verificationMethod: "BOOKER",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenWaitlistMetadataIsMissing_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WAITLISTED",
         hold: undefined,
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenWaitlistedParticipationHasHold_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WAITLISTED",
         waitlistedAt: createdAt,
         queueSequence: 1,
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({ status: "CANCELLED" });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenRemovedParticipationHasHold_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({ status: "REMOVED" });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenQueueSequenceIsZero_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({ queueSequence: 0 });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenParticipationReplacesItself_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         replacesParticipationId: "participation",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         replacementMode: "DIRECT_INVITE",
         replacementInviteeId: "ben",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
@@ -160,14 +160,14 @@ describe("Participation", () => {
         replacementMode: "DIRECT_INVITE",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
@@ -176,14 +176,14 @@ describe("Participation", () => {
         replacementInviteeId: " ",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
@@ -192,14 +192,14 @@ describe("Participation", () => {
         replacementInviteeId: "user",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
@@ -208,14 +208,14 @@ describe("Participation", () => {
         replacementInviteeId: "ben",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata", () => {
-      // Arrange
+      // Input
       const details = participationDetails({
         status: "WITHDRAWN",
         withdrawnAt: settledAt,
@@ -223,7 +223,7 @@ describe("Participation", () => {
         replacementInviteeId: "ben",
       });
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => new Participation(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -232,7 +232,7 @@ describe("Participation", () => {
 
   describe("Commitment and replacement", () => {
     test("commit_WhenPromotedAsReplacement_PreservesQueueEntryAndReplacementIdentity", () => {
-      // Arrange
+      // Input
       const queued = Participation.createWaitlisted({
         participationId: "participation",
         userId: "user",
@@ -240,24 +240,24 @@ describe("Participation", () => {
         queueSequence: 1,
       });
 
-      // Act
+      // Log
       const committed = queued.commit(
         new FundHold(holdDetails()),
         createdAt,
         "previous",
       );
 
-      // Assert
+      // Oracle
       expect(committed.replacesParticipationId).toBe("previous");
       expect(queued.status).toBe("WAITLISTED");
       expect(queued.hold).toBeUndefined();
     });
 
     test("withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
 
-      // Act
+      // Log
       const withdrawn = committed.withdraw(
         committed.hold!.refund(settledAt),
         settledAt,
@@ -265,7 +265,7 @@ describe("Participation", () => {
         "ben",
       );
 
-      // Assert
+      // Oracle
       expect(withdrawn.status).toBe("WITHDRAWN");
       expect(withdrawn.hold?.state).toBe("REFUNDED");
       expect(withdrawn.replacementMode).toBe("DIRECT_INVITE");
@@ -275,10 +275,10 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
 
-      // Act
+      // Log
       const withdrawn = committed.withdraw(
         committed.hold!.awaitReplacement(),
         settledAt,
@@ -286,7 +286,7 @@ describe("Participation", () => {
         "ben",
       );
 
-      // Assert
+      // Oracle
       expect(withdrawn.status).toBe("WITHDRAWN");
       expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
       expect(withdrawn.replacementInviteeId).toBe("ben");
@@ -294,7 +294,7 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
       const withdrawn = committed.withdraw(
         committed.hold!.refund(settledAt),
@@ -303,7 +303,7 @@ describe("Participation", () => {
         "ben",
       );
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "OPEN_SLOT"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -313,7 +313,7 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
       const withdrawn = committed.withdraw(
         committed.hold!.awaitReplacement(),
@@ -321,7 +321,7 @@ describe("Participation", () => {
         "OPEN_SLOT",
       );
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "DIRECT_INVITE", "ben"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -331,7 +331,7 @@ describe("Participation", () => {
     });
 
     test("cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
       const withdrawn = committed.withdraw(
         committed.hold!.awaitReplacement(),
@@ -340,10 +340,10 @@ describe("Participation", () => {
         "ben",
       );
 
-      // Act
+      // Log
       const cancelled = withdrawn.cancel(withdrawn.hold!.refund(settledAt));
 
-      // Assert
+      // Oracle
       expect(cancelled.status).toBe("CANCELLED");
       expect(cancelled.replacementMode).toBeUndefined();
       expect(cancelled.replacementInviteeId).toBeUndefined();
@@ -351,7 +351,7 @@ describe("Participation", () => {
     });
 
     test("refundReplacement_WhenReplacementIsFound_ReturnsNewChild", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
       const withdrawn = committed.withdraw(
         committed.hold!.awaitReplacement(),
@@ -360,10 +360,10 @@ describe("Participation", () => {
         "ben",
       );
 
-      // Act
+      // Log
       const finalized = withdrawn.refundReplacement(settledAt);
 
-      // Assert
+      // Oracle
       expect(committed.status).toBe("COMMITTED");
       expect(committed.hold?.state).toBe("HELD");
       expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
@@ -374,7 +374,7 @@ describe("Participation", () => {
 
   describe("Settlement", () => {
     test("expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy", () => {
-      // Arrange
+      // Input
       const withdrawn = new Participation(
         participationDetails({
           status: "WITHDRAWN",
@@ -385,10 +385,10 @@ describe("Participation", () => {
         }),
       );
 
-      // Act
+      // Log
       const expired = withdrawn.expireReplacement(settledAt);
 
-      // Assert
+      // Oracle
       expect(expired).not.toBe(withdrawn);
       expect(expired.hold?.state).toBe("FORFEITURE_DUE");
       expect(expired.replacementInviteeId).toBe("ben");
@@ -396,7 +396,7 @@ describe("Participation", () => {
     });
 
     test("settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy", () => {
-      // Arrange
+      // Input
       const withdrawn = new Participation(
         participationDetails({
           status: "WITHDRAWN",
@@ -405,10 +405,10 @@ describe("Participation", () => {
         }),
       );
 
-      // Act
+      // Log
       const finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt);
 
-      // Assert
+      // Oracle
       expect(finalized).not.toBe(withdrawn);
       expect(withdrawn.hold?.state).toBe("FORFEITURE_DUE");
       expect(finalized.hold?.state).toBe("FORFEITED");
@@ -417,34 +417,34 @@ describe("Participation", () => {
     });
 
     test("settleHold_WhenAttendanceIsUnverified_RejectsRelease", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         committed.settleHold("RELEASE", "payout", settledAt),
       ).toThrow(DomainError);
     });
 
     test("settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
       const attended = committed.verify("ATTENDED", "BOOKER", settledAt);
 
-      // Act
+      // Log
       const settled = attended.settleHold("RELEASE", "payout", settledAt);
 
-      // Assert
+      // Oracle
       expect(settled.hold?.state).toBe("RELEASED");
       expect(attended.hold?.state).toBe("HELD");
     });
 
     test("settleHold_WhenParticipantAttended_RejectsForfeiture", () => {
-      // Arrange
+      // Input
       const committed = new Participation(participationDetails());
       const attended = committed.verify("ATTENDED", "BOOKER", settledAt);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => attended.settleHold("FORFEIT", "payout", settledAt)).toThrow(
         DomainError,
       );

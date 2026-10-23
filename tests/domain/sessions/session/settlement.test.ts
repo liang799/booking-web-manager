@@ -17,7 +17,7 @@ import {
 
 describe("Session", () => {
   test("completeSettlement_WhenRestoredBatchOmitsPayableHold_LeavesAllFundsAndHistoryPending", () => {
-    // Arrange
+    // Input
     const details = pendingPayoutDetails(["alice", "ben"]);
     const batch = details.pendingSettlement!;
     const bookingSession = new Session({
@@ -27,7 +27,7 @@ describe("Session", () => {
     const previousList = bookingSession.participantList;
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.completeSettlement("out", sessionEndsAt),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
@@ -44,11 +44,11 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenCallbackIsStale_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.completeSettlement("stale", sessionEndsAt),
     ).toThrow(expect.objectContaining({ code: "STALE_PAYOUT" }));
@@ -56,11 +56,11 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenCompletionDateIsInvalid_LeavesAllHoldsPending", () => {
-    // Arrange
+    // Input
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.completeSettlement("out", new Date(Number.NaN)),
     ).toThrow(DomainError);
@@ -68,7 +68,7 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenSecondHoldFails_PreservesAllHolds", () => {
-    // Arrange
+    // Input
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousState = sessionState(bookingSession);
     const failure = vi
@@ -80,7 +80,7 @@ describe("Session", () => {
         throw new DomainError("INVALID_STATE", "Second line rejected");
       });
 
-    // Act & Assert
+    // Log & Oracle
     try {
       expect(() =>
         bookingSession.completeSettlement("out", sessionEndsAt),
@@ -97,7 +97,7 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenSecondHoldFailureIsRetried_ReleasesAllHolds", () => {
-    // Arrange
+    // Input
     const completionTime = sessionEndsAt;
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const failure = vi
@@ -116,10 +116,10 @@ describe("Session", () => {
       failure.mockRestore();
     }
 
-    // Act
+    // Log
     const completion = bookingSession.completeSettlement("out", completionTime);
 
-    // Assert
+    // Oracle
     expect(completion.instructions).toHaveLength(2);
     expect(
       bookingSession.participantList.participations.map(
@@ -130,7 +130,7 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const completionTime = sessionEndsAt;
     const reliabilityEvaluationTime = sessionEndsAt;
@@ -152,10 +152,10 @@ describe("Session", () => {
       },
     });
 
-    // Act
+    // Log
     const completion = bookingSession.completeSettlement("out", completionTime);
 
-    // Assert
+    // Oracle
     expect(
       completion.instructions.map((instruction) => instruction.kind),
     ).toEqual(["FORFEIT", "RELEASE"]);
@@ -176,7 +176,7 @@ describe("Session", () => {
   });
 
   test("completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity", () => {
-    // Arrange
+    // Input
     const details = pendingPayoutDetails(["alice"]);
     const bookingSession = new Session({
       ...details,
@@ -189,13 +189,13 @@ describe("Session", () => {
       payoutIdempotencyKeys: ["key", "retry-key"],
     });
 
-    // Act
+    // Log
     const completion = bookingSession.completeSettlement(
       "retry",
       sessionEndsAt,
     );
 
-    // Assert
+    // Oracle
     expect(completion.instructions).toEqual([
       expect.objectContaining({
         kind: "RELEASE",
@@ -212,14 +212,14 @@ describe("Session", () => {
   });
 
   test("failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory", () => {
-    // Arrange
+    // Input
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
     const previousList = bookingSession.participantList;
 
-    // Act
+    // Log
     bookingSession.failSettlement("out", sessionEndsAt);
 
-    // Assert
+    // Oracle
     expect(bookingSession.status).toBe("AWAITING_PAYOUT");
     expect(bookingSession.pendingSettlement).toBeUndefined();
     expect(bookingSession.participantList).toBe(previousList);

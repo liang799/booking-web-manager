@@ -9,21 +9,24 @@ import {
 
 describe("ParticipantList", () => {
   test("participations_WhenInputAndReturnedArraysAreMutated_PreservesEntriesAndLookups", () => {
-    // Arrange
-    const source = createTestSession({ committedUserIds: ["alice", "ben"] });
-    const alice = source.participantList.requireParticipation("p-alice");
-    const ben = source.participantList.requireParticipation("p-ben");
+    // Input
+    const originalSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+    });
+    const alice =
+      originalSession.participantList.requireParticipation("p-alice");
+    const ben = originalSession.participantList.requireParticipation("p-ben");
     const participations = [alice, ben];
     const list = new Session(sessionDetails({ participations }))
       .participantList;
 
-    // Act
+    // Log
     participations.reverse();
     participations.pop();
     (list.participations as Participation[]).pop();
     (list.participations as Participation[]).reverse();
 
-    // Assert
+    // Oracle
     expect(list.participations).toEqual([alice, ben]);
     expect(list.requireParticipation("p-alice")).toBe(alice);
     expect(list.findByUserId("alice")).toBe(alice);
@@ -34,7 +37,7 @@ describe("ParticipantList", () => {
   });
 
   test("nextWaitlisted_WhenHydrationOrderDiffersFromQueue_SelectsLowestSequence", () => {
-    // Arrange
+    // Input
     const waitlistedAt = hoursBeforeSessionStart(48);
     const alice = Participation.createWaitlisted({
       participationId: "p-alice",
@@ -61,10 +64,10 @@ describe("ParticipantList", () => {
       }),
     ).participantList;
 
-    // Act
+    // Log
     const nextWaiter = list.nextWaitlisted();
 
-    // Assert
+    // Oracle
     expect(nextWaiter).toBe(ben);
     expect(list.participations).toEqual([alice, ben, cara]);
     expect(list.findByUserId("ben")).toBe(nextWaiter);
@@ -73,13 +76,13 @@ describe("ParticipantList", () => {
   });
 
   test("oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder", () => {
-    // Arrange
+    // Input
     const caraWithdrewAt = hoursBeforeSessionStart(48);
     const tiedWithdrawalAt = hoursBeforeSessionStart(10);
-    const source = createTestSession();
-    const alice = committedParticipation(source, "alice");
-    const ben = committedParticipation(source, "ben");
-    const cara = committedParticipation(source, "cara");
+    const originalSession = createTestSession();
+    const alice = committedParticipation(originalSession, "alice");
+    const ben = committedParticipation(originalSession, "ben");
+    const cara = committedParticipation(originalSession, "cara");
     const refundedCara = cara.withdraw(
       cara.hold!.refund(caraWithdrewAt),
       caraWithdrewAt,
@@ -100,10 +103,10 @@ describe("ParticipantList", () => {
       }),
     ).participantList;
 
-    // Act
+    // Log
     const oldestReplacement = list.oldestAwaitingReplacement();
 
-    // Assert
+    // Oracle
     expect(oldestReplacement).toBe(withdrawnBen);
     expect(list.participations).toEqual([
       refundedCara,
@@ -116,33 +119,33 @@ describe("ParticipantList", () => {
   });
 
   test("oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal", () => {
-    // Arrange
+    // Input
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const benOpenedSeatAt = hoursBeforeSessionStart(9);
-    const source = createTestSession();
-    const alice = committedParticipation(source, "alice");
-    const ben = committedParticipation(source, "ben");
-    const personal = alice.withdraw(
+    const originalSession = createTestSession();
+    const alice = committedParticipation(originalSession, "alice");
+    const ben = committedParticipation(originalSession, "ben");
+    const aliceInvitation = alice.withdraw(
       alice.hold!.awaitReplacement(),
       aliceInvitedAt,
       "DIRECT_INVITE",
       "cara",
     );
-    const open = ben.withdraw(
+    const benOpenWithdrawal = ben.withdraw(
       ben.hold!.awaitReplacement(),
       benOpenedSeatAt,
       "OPEN_SLOT",
     );
     const list = new Session(
-      sessionDetails({ participations: [personal, open] }),
+      sessionDetails({ participations: [aliceInvitation, benOpenWithdrawal] }),
     ).participantList;
 
-    // Act
-    const replacement = list.oldestAwaitingReplacement();
+    // Log
+    const oldestReplacement = list.oldestAwaitingReplacement();
 
-    // Assert
-    expect(replacement).toBe(open);
+    // Oracle
+    expect(oldestReplacement).toBe(benOpenWithdrawal);
     expect(list.reservedCount).toBe(1);
-    expect(list.personalReplacementForInvitee("cara")).toBe(personal);
+    expect(list.personalReplacementForInvitee("cara")).toBe(aliceInvitation);
   });
 });

@@ -3,48 +3,48 @@ import { assertDeactivationAllowed, Money, type DeactivationInput } from "@/doma
 
 describe("Deactivation policy", () => {
   test("assertDeactivationAllowed_WhenNoObligationsRemain_AllowsDeactivation", () => {
-    // Arrange
+    // Input
     const standing = clearStanding();
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => assertDeactivationAllowed(standing)).not.toThrow();
   });
 
   test("assertDeactivationAllowed_WhenFundsAreHeld_ThrowsActiveObligations", () => {
-    // Arrange
+    // Input
     const standing = { ...clearStanding(), heldBalance: Money.fromCents(500) };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => assertDeactivationAllowed(standing)).toThrow(
       expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
     );
   });
 
   test("assertDeactivationAllowed_WhenAnOwnedGroupIsActive_ThrowsActiveObligations", () => {
-    // Arrange
+    // Input
     const standing = { ...clearStanding(), activeOwnedGroups: 1 };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => assertDeactivationAllowed(standing)).toThrow(
       expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
     );
   });
 
   test("assertDeactivationAllowed_WhenBalanceIsNegative_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const standing = { ...clearStanding(), availableBalance: Money.fromCents(-1) };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => assertDeactivationAllowed(standing)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("assertDeactivationAllowed_WhenObligationCountIsFractional_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const standing = { ...clearStanding(), activeCommitments: 0.5 };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => assertDeactivationAllowed(standing)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );

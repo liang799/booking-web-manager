@@ -34,37 +34,60 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
 
 ## Writing a scenario
 
-Use `// Arrange`, `// Act`, and `// Assert` comments in new and refactored tests,
-with blank lines between the phases:
+Use the five ingredients from *Lecture 16: Testing Introduction*, slides 15–18:
+the test title is its **Name**, its file path is its **Location**, **Input** is
+the data or commands, **Log** is the actual output, and **Oracle** is the expected
+output. The lecture's code example captures a result before comparing it with
+the expected value in an assertion.
 
-- **Arrange:** create the subject, inputs, and starting state for the scenario.
-- **Act:** perform the behavior named by the test and capture its result.
-- **Assert:** check the result and relevant observable state.
+Write `// Input`, `// Log`, and `// Oracle` comments with blank lines between
+the sections:
 
-Use one sequence of these phases, rather than alternating action and assertion
-sections. A focused idempotency test may repeat the same operation in Act.
-For a retry test, the previous attempt establishes the starting state and Act
-performs the retry. If a scenario separately verifies rejection atomicity and
+- **Input:** create the subject, starting state, and command data.
+- **Log:** execute the behavior and capture its result or observe public state.
+- **Oracle:** compare that observation with concrete expected values directly
+  in assertions. Derive expectations from the business rule, independently of
+  the implementation being tested.
+
+```ts
+test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
+  // Input
+  const first = Money.fromCents(500);
+  const second = Money.fromCents(700);
+
+  // Log
+  const result = first.add(second);
+
+  // Oracle
+  expect(result.toCents()).toBe(1200);
+});
+```
+
+Keep each test independent: use fresh objects, with all prerequisite state
+established inside that test or a small construction fixture. A test must work
+on its own or in a different execution order. A focused idempotency test may
+repeat the same operation in Log. For a retry test, the previous attempt
+establishes Input and Log performs the retry. If a scenario separately verifies rejection atomicity and
 successful recovery, preserve those checks in separate tests.
 When that starting state requires an earlier rejection, a direct `toThrow`
-assertion in Arrange may establish the precondition; assertions about the
+assertion in Input may establish the precondition; assertions about the
 rejection's effects belong in its dedicated failure test.
 
 Name observed results after what they represent, then assert concrete values.
 
 ```ts
 test("completeSetup_WhenSetupIsPending_ReturnsCompletedCopy", () => {
-  // Arrange
+  // Input
   const pendingAccount = PayoutAccount.create({
     payoutAccountId: "account",
     userId: "owner",
     providerAccountReference: "provider",
   });
 
-  // Act
+  // Log
   const completedAccount = pendingAccount.completeSetup("bank");
 
-  // Assert
+  // Oracle
   expect(pendingAccount.setupStatus).toBe("PENDING");
   expect(completedAccount).not.toBe(pendingAccount);
   expect(completedAccount.setupStatus).toBe("COMPLETE");
@@ -74,8 +97,9 @@ test("completeSetup_WhenSetupIsPending_ReturnsCompletedCopy", () => {
 
 Use fresh objects for independent scenarios. Assert rejections directly with
 `expect(() => action()).toThrow(expect.objectContaining({ code: "..." }))`.
-Label this combined phase `// Act & Assert`, since the assertion executes the
-action. Do not introduce error-capture helpers just to separate those phases.
+Label this combined section `// Log & Oracle`: the matcher executes the command,
+observes the thrown error, and compares it with the expected error. Keep this
+direct assertion instead of adding an error-capture helper.
 Run the assertion while the subject is in the state named by the test; do not
 save an action callback and invoke it after subsequent state changes. When
 atomicity matters, also assert that rejection leaves state unchanged.
@@ -113,13 +137,13 @@ explicit in the scenario instead of adding a general-purpose state builder.
 
 ```ts
 test("completeSettlement_WhenPayoutIsPending_ReleasesHeldShares", () => {
-  // Arrange
+  // Input
   const session = new Session(pendingPayoutDetails(["alice", "ben"]));
 
-  // Act
+  // Log
   const completion = session.completeSettlement("out", sessionEndsAt);
 
-  // Assert
+  // Oracle
   expect(session.status).toBe("SETTLED");
   expect(session.pendingSettlement).toBeUndefined();
   expect(
@@ -150,8 +174,10 @@ Test collection query/immutability behavior separately from role workflows;
 failed Session recording must preserve both roster and queue state.
 
 Avoid generic error-capture helpers and setup hooks that hide the scenario.
-Domain tests assume declared input types and exercise business constraints;
-external input parsing belongs in boundary tests.
+Domain tests exercise business constraints through declared input types.
+Constructor-hydration cases also preserve deliberate malformed-state checks,
+including missing required related data; keep their necessary type escapes
+local to the invalid input. External request parsing belongs in boundary tests.
 
 ## Time expressions
 
@@ -190,8 +216,10 @@ session end and rejected one millisecond earlier.
 
 ## Examples and verification
 
-The rationale for this convention is recorded in
+The suite structure follows
 [ADR-0005: Domain unit-test structure](../../docs/adr/0005-domain-unit-test-structure.md).
+The lecture terminology and result snapshots are recorded in
+[ADR-0018: Domain test inputs, oracles, and logs](../../docs/adr/0018-domain-test-input-oracle-log.md).
 
 Examples following this standard are
 [user.test.ts](./accounts/user.test.ts) and
@@ -205,3 +233,26 @@ names. Run the affected files, then `npm test`, `npm run typecheck`, and
 `npm run lint`. Splitting scenarios may increase the test count without changing
 production behavior. Report newly exposed production defects separately during
 a tests-only cleanup.
+
+## Result snapshots
+
+The **2026-10-23** snapshot covers **599 passing cases across 43 files**. Each
+table has a linked Name and Location, Input, Oracle (expected result), Log
+(actual outcome verified by assertions), and separate execution status.
+
+| Area | Cases | Tables |
+|---|---:|---|
+| Accounts | 94 | [Account cases](./accounts/README.md) |
+| Booker | 53 | [Booker cases](./accounts/booker/README.md) |
+| Participant | 77 | [Participant cases](./accounts/participant/README.md) |
+| Finance | 55 | [Finance cases](./finance/README.md) |
+| Money | 83 | [Money cases](./finance/money/README.md) |
+| Groups | 34 | [Group cases](./groups/README.md) |
+| Reliability | 33 | [Reliability cases](./reliability/README.md) |
+| Sessions | 88 | [Session value and pricing cases](./sessions/README.md) |
+| Session lifecycle | 82 | [Session lifecycle cases](./sessions/session/README.md) |
+
+The [execution evidence and refresh procedure](./results/README.md) retain the
+JSON report, source hashes, and baseline-to-final scenario mapping. Log values
+are assertion-verified observations, not captured runtime payloads. The report
+is a dated snapshot and must be refreshed after relevant source changes.

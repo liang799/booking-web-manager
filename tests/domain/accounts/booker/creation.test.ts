@@ -10,19 +10,22 @@ import { readyBookerUser } from "../user-fixtures";
 
 describe("Booker", () => {
   test("createSession_WhenEmailIsUnverified_AllowsCreation", () => {
-    // Arrange
+    // Input
     const booker = createTestUser({
       userId: "booker",
       emailVerified: false,
       payoutAccount: readyBookerUser().payoutAccount,
     }).asBooker();
 
-    // Act & Assert
-    expect(booker.createSession(creationDetails()).bookerId).toBe("booker");
+    // Log
+    const bookingSession = booker.createSession(creationDetails());
+
+    // Oracle
+    expect(bookingSession.bookerId).toBe("booker");
   });
 
   test("createSession_WhenEmailIsMissing_RejectsWithEmailRequired", () => {
-    // Arrange
+    // Input
     const booker = createTestUser({
       userId: "booker",
       email: null,
@@ -30,33 +33,33 @@ describe("Booker", () => {
       payoutAccount: readyBookerUser().payoutAccount,
     }).asBooker();
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => booker.createSession(creationDetails())).toThrow(
       expect.objectContaining({ code: "EMAIL_REQUIRED" }),
     );
   });
 
   test("assertCanCreateSession_WhenEmailIsUnverified_AllowsCreation", () => {
-    // Arrange
+    // Input
     const booker = createTestUser({
       userId: "booker",
       emailVerified: false,
       payoutAccount: readyBookerUser().payoutAccount,
     }).asBooker();
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => booker.assertCanCreateSession()).not.toThrow();
   });
 
   test("createSession_WhenRoleWasCreatedBeforeDeactivation_ThrowsInactiveAccount", () => {
-    // Arrange
-    const owner = createTestUser({
+    // Input
+    const bookerUser = createTestUser({
       userId: "booker",
       availableFundsCents: 0,
       payoutAccount: readyBookerUser().payoutAccount,
     });
-    const booker = owner.asBooker();
-    owner.deactivate({
+    const booker = bookerUser.asBooker();
+    bookerUser.deactivate({
       availableBalance: Money.fromCents(0),
       heldBalance: Money.fromCents(0),
       activeCommitments: 0,
@@ -65,24 +68,24 @@ describe("Booker", () => {
       activeOwnedGroups: 0,
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => booker.createSession(creationDetails())).toThrow(
       expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
     );
   });
 
   test("createSession_WhenOptionalSettingsAreOmitted_UsesPrivateVisibilityAndEmptyLifecycle", () => {
-    // Arrange
+    // Input
     const booker = readyBooker();
     const details = creationDetails();
 
-    // Act
+    // Log
     const bookingSession = booker.createSession({
       ...details,
       visibility: undefined,
     });
 
-    // Assert
+    // Oracle
     expect(bookingSession.bookerId).toBe(booker.userId);
     expect(bookingSession.visibility).toBe("PRIVATE");
     expect(bookingSession.status).toBe("OPEN");
@@ -94,92 +97,96 @@ describe("Booker", () => {
   });
 
   test("createSession_WhenBookerIsInactive_ThrowsInactiveAccount", () => {
-    // Arrange
+    // Input
+    const booker = createTestUser({
+      userId: "booker",
+      accountStatus: "INACTIVE",
+    }).asBooker();
     const details = creationDetails();
 
-    // Act & Assert
-    expect(() =>
-      createTestUser({ userId: "booker", accountStatus: "INACTIVE" })
-        .asBooker()
-        .createSession(details),
-    ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
+    // Log & Oracle
+    expect(() => booker.createSession(details)).toThrow(
+      expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
+    );
   });
 
   test("createSession_WhenPayoutAccountIsIncomplete_ThrowsPayoutAccountNotReady", () => {
-    // Arrange
+    // Input
+    const booker = createTestUser({
+      userId: "booker",
+      payoutAccount: PayoutAccount.create({
+        payoutAccountId: "pa",
+        userId: "booker",
+        providerAccountReference: "provider",
+      }),
+    }).asBooker();
     const details = creationDetails();
 
-    // Act & Assert
-    expect(() =>
-      createTestUser({
-        userId: "booker",
-        payoutAccount: PayoutAccount.create({
-          payoutAccountId: "pa",
-          userId: "booker",
-          providerAccountReference: "provider",
-        }),
-      })
-        .asBooker()
-        .createSession(details),
-    ).toThrow(expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }));
+    // Log & Oracle
+    expect(() => booker.createSession(details)).toThrow(
+      expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
+    );
   });
 
   test("createSession_WhenShareWouldBeZero_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = creationDetails();
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().createSession({ ...details, totalSlots: 1001 }),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
   });
 
   test("createSession_WhenCapacityIsOne_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = creationDetails();
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().createSession({ ...details, totalSlots: 1 }),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
   });
 
   test("createSession_WhenMinimumHeadcountIsOne_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = creationDetails();
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().createSession({ ...details, minimumHeadcount: 1 }),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
   });
 
   test("createSession_WhenMinimumHeadcountExceedsCapacity_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const details = creationDetails(3);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().createSession({ ...details, minimumHeadcount: 4 }),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
   });
 
   test("createSession_WhenMinimumHeadcountEqualsCapacity_PreservesMinimumHeadcount", () => {
-    // Arrange
+    // Input
     const details = creationDetails(3);
 
-    // Act
-    const session = readyBooker().createSession({ ...details, minimumHeadcount: 3 });
+    // Log
+    const session = readyBooker().createSession({
+      ...details,
+      minimumHeadcount: 3,
+    });
 
-    // Assert
+    // Oracle
     expect(session.minimumHeadcount).toBe(3);
   });
 
   test("createSession_WhenBookingHasEnded_ThrowsSessionStarted", () => {
-    // Arrange
+    // Input
     const details = { ...creationDetails(), now: sessionEndsAt };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => readyBooker().createSession(details)).toThrow(
       expect.objectContaining({ code: "SESSION_STARTED" }),
     );

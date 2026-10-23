@@ -3,229 +3,229 @@ import { describe, expect, test } from "vitest";
 
 describe("ReliabilityScore", () => {
   test("from_WhenScoreIsZero_PreservesValue", () => {
-    // Arrange
+    // Input
     const value = 0;
 
-    // Act
+    // Log
     const score = ReliabilityScore.from(value);
 
-    // Assert
-    expect(score.toNumber()).toBe(value);
+    // Oracle
+    expect(score.toNumber()).toBe(0);
   });
 
   test("from_WhenScoreIsMaximum_PreservesValue", () => {
-    // Arrange
+    // Input
     const value = 100;
 
-    // Act
+    // Log
     const score = ReliabilityScore.from(value);
 
-    // Assert
-    expect(score.toNumber()).toBe(value);
+    // Oracle
+    expect(score.toNumber()).toBe(100);
   });
 
   test("from_WhenScoreIsWholeNumber_PreservesValue", () => {
-    // Arrange
+    // Input
     const value = 48;
 
-    // Act
+    // Log
     const score = ReliabilityScore.from(value);
 
-    // Assert
-    expect(score.toNumber()).toBe(value);
+    // Oracle
+    expect(score.toNumber()).toBe(48);
   });
 
   test("from_WhenScoreIsFraction_PreservesValue", () => {
-    // Arrange
+    // Input
     const value = 66.66666666666667;
 
-    // Act
+    // Log
     const score = ReliabilityScore.from(value);
 
-    // Assert
-    expect(score.toNumber()).toBe(value);
+    // Oracle
+    expect(score.toNumber()).toBe(66.66666666666667);
   });
 
   test("from_WhenScoreIsNegativeZero_NormalizesToZero", () => {
-    // Arrange
+    // Input
     const score = -0;
 
-    // Act
+    // Log
     const reliability = ReliabilityScore.from(score);
 
-    // Assert
+    // Oracle
     expect(reliability.toNumber()).toBe(0);
   });
 
   test("from_WhenScoreIsBelowZero_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const value = -0.001;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.from(value)).toThrow(RangeError);
   });
 
   test("from_WhenScoreIsAboveMaximum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const value = 100.001;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.from(value)).toThrow(RangeError);
   });
 
   test("from_WhenScoreIsNaN_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const value = Number.NaN;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.from(value)).toThrow(RangeError);
   });
 
   test("from_WhenScoreIsPositiveInfinity_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const value = Number.POSITIVE_INFINITY;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.from(value)).toThrow(RangeError);
   });
 
   test("from_WhenScoreIsNegativeInfinity_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const value = Number.NEGATIVE_INFINITY;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.from(value)).toThrow(RangeError);
   });
 
   test("equals_WhenValuesAreEqual_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const other = ReliabilityScore.from(75.5);
 
-    // Act
+    // Log
     const comparison = score.equals(other);
 
-    // Assert
+    // Oracle
     expect(score).not.toBe(other);
     expect(comparison).toBe(true);
   });
 
   test("equals_WhenValuesDiffer_ReturnsFalse", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const other = ReliabilityScore.from(80);
 
-    // Act
+    // Log
     const comparison = score.equals(other);
 
-    // Assert
+    // Oracle
     expect(comparison).toBe(false);
   });
 
   test("compareTo_WhenValuesAreEqual_ReturnsZero", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const other = ReliabilityScore.from(75.5);
 
-    // Act
+    // Log
     const comparison = score.compareTo(other);
 
-    // Assert
+    // Oracle
     expect(comparison).toBe(0);
   });
 
   test("compareTo_WhenValueIsSmaller_ReturnsNegativeOne", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const other = ReliabilityScore.from(80);
 
-    // Act
+    // Log
     const comparison = score.compareTo(other);
 
-    // Assert
+    // Oracle
     expect(comparison).toBe(-1);
   });
 
   test("compareTo_WhenValueIsGreater_ReturnsOne", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(80);
     const other = ReliabilityScore.from(75.5);
 
-    // Act
+    // Log
     const comparison = score.compareTo(other);
 
-    // Assert
+    // Oracle
     expect(comparison).toBe(1);
   });
 
   test("meetsMinimum_WhenAboveThreshold_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const threshold = ReliabilityScore.from(75);
 
-    // Act
+    // Log
     const meetsThreshold = score.meetsMinimum(threshold);
 
-    // Assert
+    // Oracle
     expect(meetsThreshold).toBe(true);
   });
 
   test("meetsMinimum_WhenAtThreshold_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const threshold = ReliabilityScore.from(75.5);
 
-    // Act
+    // Log
     const meetsThreshold = score.meetsMinimum(threshold);
 
-    // Assert
+    // Oracle
     expect(meetsThreshold).toBe(true);
   });
 
   test("meetsMinimum_WhenBelowThreshold_ReturnsFalse", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(75.5);
     const threshold = ReliabilityScore.from(75.5001);
 
-    // Act
+    // Log
     const meetsThreshold = score.meetsMinimum(threshold);
 
-    // Assert
+    // Oracle
     expect(meetsThreshold).toBe(false);
   });
 
   test("meetsMinimum_WhenBothZero_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(0);
     const threshold = ReliabilityScore.from(0);
 
-    // Act
+    // Log
     const meetsThreshold = score.meetsMinimum(threshold);
 
-    // Assert
+    // Oracle
     expect(meetsThreshold).toBe(true);
   });
 
   test("meetsMinimum_WhenBothMaximum_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(100);
     const threshold = ReliabilityScore.from(100);
 
-    // Act
+    // Log
     const meetsThreshold = score.meetsMinimum(threshold);
 
-    // Assert
+    // Oracle
     expect(meetsThreshold).toBe(true);
   });
 
   test("toNumber_WhenScoreIsFractional_PreservesImmutableValue", () => {
-    // Arrange
+    // Input
     const score = ReliabilityScore.from(66.66666666666667);
 
-    // Act
+    // Log
     const numericScore = score.toNumber();
 
-    // Assert
+    // Oracle
     expect(Object.isFrozen(score)).toBe(true);
     expect(numericScore).toBe(66.66666666666667);
   });

@@ -4,18 +4,18 @@ import { hoursBeforeSessionStart, sessionDetails } from "./session-fixtures";
 
 describe("Session", () => {
   test("constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference", () => {
-    // Arrange
+    // Input
     const replacement = replacementCommitment("ben", "p-missing");
     const details = sessionDetails({ participations: [replacement] });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenDepartedWaiterClaimsInvitation_RejectsPhantomAcceptance", () => {
-    // Arrange
+    // Input
     const inviter = refundedInvitation();
     const departedWaiter = new Participation({
       participationId: "p-ben",
@@ -31,28 +31,28 @@ describe("Session", () => {
       nextQueueSequence: 2,
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient", () => {
-    // Arrange
+    // Input
     const inviter = refundedInvitation();
     const wrongRecipient = replacementCommitment("cara", "p-alice");
     const details = sessionDetails({
       participations: [inviter, wrongRecipient],
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenReplacedWithdrawalIsNotRefunded_RejectsUnsettledAcceptance", () => {
-    // Arrange
+    // Input
     const aliceCommittedAt = hoursBeforeSessionStart(48);
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const inviter = new Participation({
@@ -69,14 +69,14 @@ describe("Session", () => {
     const replacement = replacementCommitment("ben", "p-alice");
     const details = sessionDetails({ participations: [inviter, replacement] });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenTargetWasCancelledWithoutWithdrawal_RejectsUnrelatedRefund", () => {
-    // Arrange
+    // Input
     const aliceCommittedAt = hoursBeforeSessionStart(48);
     const cancelledAt = hoursBeforeSessionStart(40);
     const cancelledParticipant = new Participation({
@@ -92,14 +92,14 @@ describe("Session", () => {
       participations: [cancelledParticipant, replacement],
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenRemovedReplacementHasNoCommitmentHistory_RejectsPhantomAcceptance", () => {
-    // Arrange
+    // Input
     const inviter = refundedInvitation();
     const uncommittedReplacement = new Participation({
       participationId: "p-ben",
@@ -112,22 +112,22 @@ describe("Session", () => {
       participations: [inviter, uncommittedReplacement],
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(details)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation", () => {
-    // Arrange
+    // Input
     const inviter = refundedInvitation();
     const replacement = replacementCommitment("ben", "p-alice");
     const details = sessionDetails({ participations: [inviter, replacement] });
 
-    // Act
+    // Log
     const restored = new Session(details);
 
-    // Assert
+    // Oracle
     expect(restored.participantList.reservedCount).toBe(0);
     expect(
       restored.participantList.personalReplacementForInvitee("ben"),
@@ -137,7 +137,7 @@ describe("Session", () => {
   });
 
   test("constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed", () => {
-    // Arrange
+    // Input
     const benWithdrewAt = hoursBeforeSessionStart(10);
     const availabilityCheckedAt = hoursBeforeSessionStart(9);
     const inviter = refundedInvitation();
@@ -151,10 +151,10 @@ describe("Session", () => {
       participations: [inviter, withdrawnReplacement],
     });
 
-    // Act
+    // Log
     const restored = new Session(details);
 
-    // Assert
+    // Oracle
     expect(restored.participantList.reservedCount).toBe(0);
     expect(
       restored.participantList.personalReplacementForInvitee("ben"),
@@ -167,7 +167,7 @@ describe("Session", () => {
   });
 
   test("constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed", () => {
-    // Arrange
+    // Input
     const benRemovedAt = hoursBeforeSessionStart(38);
     const availabilityCheckedAt = hoursBeforeSessionStart(37);
     const inviter = refundedInvitation();
@@ -179,10 +179,10 @@ describe("Session", () => {
       participations: [inviter, removedReplacement],
     });
 
-    // Act
+    // Log
     const restored = new Session(details);
 
-    // Assert
+    // Oracle
     expect(restored.participantList.reservedCount).toBe(0);
     expect(
       restored.participantList.personalReplacementForInvitee("ben"),
@@ -195,7 +195,7 @@ describe("Session", () => {
   });
 
   test("constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory", () => {
-    // Arrange
+    // Input
     const inviter = refundedInvitation();
     const replacement = replacementCommitment("ben", "p-alice");
     const details = sessionDetails({
@@ -208,10 +208,10 @@ describe("Session", () => {
       ],
     });
 
-    // Act
+    // Log
     const restored = new Session(details);
 
-    // Assert
+    // Oracle
     expect(restored.status).toBe("CANCELLED");
     expect(restored.participantList.reservedCount).toBe(0);
     expect(

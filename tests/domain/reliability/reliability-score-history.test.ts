@@ -7,33 +7,34 @@ const recentEnd = new Date(asOf.getTime() - day);
 
 describe("ReliabilityScore", () => {
   test("fromHistory_WhenHistoryIsEmpty_ReturnsMaximumScore", () => {
-    // Arrange
+    // Input
     const history: { participation: Participation; endAt: Date }[] = [];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
+    // Oracle
     expect(score.toNumber()).toBe(100);
   });
 
   test("fromHistory_WhenAbsenceIsOneHalfLifeOlder_WeightsItByHalf", () => {
-    // Arrange
+    // Input
     const olderEnd = new Date(recentEnd.getTime() - 90 * day);
     const history = [
       { participation: attended("a"), endAt: recentEnd },
       { participation: absent("b", olderEnd), endAt: olderEnd },
     ];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
-    expect(score.toNumber()).toBeCloseTo(100 / 1.5, 8);
+    // Oracle
+    // One attendance has twice the weight of the older absence.
+    expect(score.toNumber()).toBeCloseTo(66.66666666666667, 8);
   });
 
   test("fromHistory_WhenLateWithdrawalIsFinalized_CountsOneNegativeOutcome", () => {
-    // Arrange
+    // Input
     const end = recentEnd;
     const forfeitedHold = new FundHold({
       holdId: "h",
@@ -61,15 +62,15 @@ describe("ReliabilityScore", () => {
       { participation: finalizedWithdrawal, endAt: end },
     ];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
+    // Oracle
     expect(score.toNumber()).toBe(50);
   });
 
   test("fromHistory_WhenClockAdvances_PreservesRelativeWeights", () => {
-    // Arrange
+    // Input
     const olderEnd = new Date(recentEnd.getTime() - 90 * day);
     const history = [
       { participation: attended("a"), endAt: recentEnd },
@@ -77,29 +78,30 @@ describe("ReliabilityScore", () => {
     ];
     const originalScore = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Act
+    // Log
     const laterScore = ReliabilityScore.fromHistory(
       "alice",
       history,
       new Date(asOf.getTime() + 365 * day),
     );
 
-    // Assert
+    // Oracle
     expect(laterScore.toNumber()).toBe(originalScore.toNumber());
+    expect(laterScore.toNumber()).toBeCloseTo(66.66666666666667, 8);
   });
 
   test("fromHistory_WhenParticipationIsDuplicated_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const entry = { participation: attended("a"), endAt: recentEnd };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       ReliabilityScore.fromHistory("alice", [entry, entry], asOf),
     ).toThrow(RangeError);
   });
 
   test("fromHistory_WhenParticipationBelongsToAnotherUser_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const participation = Participation.createWaitlisted({
       participationId: "foreign",
       userId: "ben",
@@ -107,7 +109,7 @@ describe("ReliabilityScore", () => {
       queueSequence: 1,
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       ReliabilityScore.fromHistory(
         "alice",
@@ -118,7 +120,7 @@ describe("ReliabilityScore", () => {
   });
 
   test("fromHistory_WhenParticipationIsUnfinished_ExcludesEntry", () => {
-    // Arrange
+    // Input
     const participation = Participation.createWaitlisted({
       participationId: "waiting",
       userId: "alice",
@@ -127,29 +129,29 @@ describe("ReliabilityScore", () => {
     });
     const history = [{ participation, endAt: recentEnd }];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
+    // Oracle
     expect(score.toNumber()).toBe(100);
   });
 
   test("fromHistory_WhenSessionEndsInFuture_ExcludesEntry", () => {
-    // Arrange
+    // Input
     const future = new Date(asOf.getTime() + day);
     const history = [
       { participation: absent("future-end", future), endAt: future },
     ];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
+    // Oracle
     expect(score.toNumber()).toBe(100);
   });
 
   test("fromHistory_WhenOutcomeIsFinalizedInFuture_ExcludesEntry", () => {
-    // Arrange
+    // Input
     const future = new Date(asOf.getTime() + day);
     const history = [
       {
@@ -158,40 +160,40 @@ describe("ReliabilityScore", () => {
       },
     ];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
+    // Oracle
     expect(score.toNumber()).toBe(100);
   });
 
   test("fromHistory_WhenOutcomeIsFinalizedAtCutoff_IncludesOutcomeInImmutableScore", () => {
-    // Arrange
+    // Input
     const history = [{ participation: absent("at-cutoff", asOf), endAt: asOf }];
 
-    // Act
+    // Log
     const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
-    // Assert
+    // Oracle
     expect(score.toNumber()).toBe(0);
     expect(Object.isFrozen(score)).toBe(true);
   });
 
   test("fromHistory_WhenCalculationDateIsInvalid_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const invalidDate = new Date(NaN);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.fromHistory("alice", [], invalidDate)).toThrow(
       RangeError,
     );
   });
 
   test("fromHistory_WhenSessionEndDateIsInvalid_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const history = [{ participation: attended("a"), endAt: new Date(NaN) }];
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => ReliabilityScore.fromHistory("alice", history, asOf)).toThrow(
       RangeError,
     );

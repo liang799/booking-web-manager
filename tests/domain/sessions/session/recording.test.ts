@@ -14,12 +14,15 @@ import {
 
 describe("Session", () => {
   test("recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges", () => {
-    // Arrange
+    // Input
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const danaTriedToJoinAt = hoursBeforeSessionStart(9);
-    const source = createTestSession({ committedUserIds: ["alice", "ben"] });
-    const alice = source.participantList.requireParticipation("p-alice");
-    const reserved = alice.withdraw(
+    const originalSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+    });
+    const alice =
+      originalSession.participantList.requireParticipation("p-alice");
+    const aliceInvitation = alice.withdraw(
       alice.hold!.awaitReplacement(),
       aliceInvitedAt,
       "DIRECT_INVITE",
@@ -28,8 +31,8 @@ describe("Session", () => {
     const bookingSession = new Session(
       sessionDetails({
         participations: [
-          reserved,
-          source.participantList.requireParticipation("p-ben"),
+          aliceInvitation,
+          originalSession.participantList.requireParticipation("p-ben"),
         ],
       }),
     );
@@ -40,7 +43,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(admission, undefined, danaTriedToJoinAt),
     ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
@@ -48,19 +51,20 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges", () => {
-    // Arrange
+    // Input
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const caraTriedToJoinAt = hoursBeforeSessionStart(9);
-    const source = createTestSession({ committedUserIds: ["alice"] });
-    const alice = source.participantList.requireParticipation("p-alice");
-    const reserved = alice.withdraw(
+    const originalSession = createTestSession({ committedUserIds: ["alice"] });
+    const alice =
+      originalSession.participantList.requireParticipation("p-alice");
+    const aliceInvitation = alice.withdraw(
       alice.hold!.awaitReplacement(),
       aliceInvitedAt,
       "DIRECT_INVITE",
       "cara",
     );
     const bookingSession = new Session(
-      sessionDetails({ participations: [reserved] }),
+      sessionDetails({ participations: [aliceInvitation] }),
     );
     const admission = committedParticipation(
       bookingSession,
@@ -70,7 +74,7 @@ describe("Session", () => {
     const previousList = bookingSession.participantList;
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(admission, undefined, caraTriedToJoinAt),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -80,19 +84,20 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges", () => {
-    // Arrange
+    // Input
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const danaTriedToAcceptAt = hoursBeforeSessionStart(9);
-    const source = createTestSession({ committedUserIds: ["alice"] });
-    const alice = source.participantList.requireParticipation("p-alice");
-    const reserved = alice.withdraw(
+    const originalSession = createTestSession({ committedUserIds: ["alice"] });
+    const alice =
+      originalSession.participantList.requireParticipation("p-alice");
+    const aliceInvitation = alice.withdraw(
       alice.hold!.awaitReplacement(),
       aliceInvitedAt,
       "DIRECT_INVITE",
       "cara",
     );
     const bookingSession = new Session(
-      sessionDetails({ participations: [reserved] }),
+      sessionDetails({ participations: [aliceInvitation] }),
     );
     const candidate = committedParticipation(
       bookingSession,
@@ -104,15 +109,15 @@ describe("Session", () => {
       userId: candidate.userId,
       committedAt: danaTriedToAcceptAt,
       hold: candidate.hold!,
-      replacesParticipationId: reserved.participationId,
+      replacesParticipationId: aliceInvitation.participationId,
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         admission,
-        reserved.refundReplacement(danaTriedToAcceptAt),
+        aliceInvitation.refundReplacement(danaTriedToAcceptAt),
         danaTriedToAcceptAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -120,30 +125,30 @@ describe("Session", () => {
   });
 
   test("constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState", () => {
-    // Arrange
+    // Input
     const aliceInvitedAt = hoursBeforeSessionStart(48);
-    const source = createTestSession();
-    const alice = committedParticipation(source, "alice");
-    const reserved = alice.withdraw(
+    const originalSession = createTestSession();
+    const alice = committedParticipation(originalSession, "alice");
+    const aliceInvitation = alice.withdraw(
       alice.hold!.refund(aliceInvitedAt),
       aliceInvitedAt,
       "DIRECT_INVITE",
       "dana",
     );
     const participations = [
-      reserved,
-      committedParticipation(source, "ben"),
-      committedParticipation(source, "cara"),
+      aliceInvitation,
+      committedParticipation(originalSession, "ben"),
+      committedParticipation(originalSession, "cara"),
     ];
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Session(sessionDetails({ participations }))).toThrow(
       expect.objectContaining({ code: "CAPACITY_EXCEEDED" }),
     );
   });
 
   test("recordAdmission_WhenHoldIdIsDuplicated_PreservesListAndQueries", () => {
-    // Arrange
+    // Input
     const benTriedToJoinAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const previousList = bookingSession.participantList;
@@ -163,7 +168,7 @@ describe("Session", () => {
       }),
     });
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         invalidAdmission,
@@ -186,7 +191,7 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList", () => {
-    // Arrange
+    // Input
     const benJoinedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const previousList = bookingSession.participantList;
@@ -209,10 +214,10 @@ describe("Session", () => {
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
     const validAdmission = committedParticipation(bookingSession, "ben");
 
-    // Act
+    // Log
     bookingSession.recordAdmission(validAdmission, undefined, benJoinedAt);
 
-    // Assert
+    // Oracle
     expect(bookingSession.participantList).not.toBe(previousList);
     expect(bookingSession.participantList.requireParticipation("p-ben")).toBe(
       validAdmission,
@@ -229,7 +234,7 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const admissionAttemptedAt = sessionStartsAt;
     const bookingSession = createTestSession();
     const admission = committedParticipation(
@@ -239,7 +244,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         admission,
@@ -251,14 +256,14 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
     });
     const admission = committedParticipation(bookingSession, "cara");
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         admission,
@@ -270,7 +275,7 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession({
       committedUserIds: ["ben"],
       waitlistedUserIds: ["waiting"],
@@ -278,7 +283,7 @@ describe("Session", () => {
     const admission = committedParticipation(bookingSession, "newcomer");
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         admission,
@@ -293,9 +298,9 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const waitlistedAt = hoursBeforeSessionStart(48);
-    const source = createTestSession({
+    const originalSession = createTestSession({
       committedUserIds: ["alice", "ben"],
     });
     const departedWaiter = new Participation({
@@ -309,7 +314,7 @@ describe("Session", () => {
     const bookingSession = new Session(
       sessionDetails({
         participations: [
-          ...source.participantList.participations,
+          ...originalSession.participantList.participations,
           departedWaiter,
         ],
         nextQueueSequence: 2,
@@ -323,7 +328,7 @@ describe("Session", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(admission, undefined, waitlistedAt),
     ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
@@ -331,7 +336,7 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged", () => {
-    // Arrange
+    // Input
     const aliceWithdrewAt = hoursBeforeSessionStart(10);
     const replacementTriedToJoinAt = hoursBeforeSessionStart(9);
     const bookingSession = new Session(
@@ -355,7 +360,7 @@ describe("Session", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         admission,
@@ -367,7 +372,7 @@ describe("Session", () => {
   });
 
   test("recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged", () => {
-    // Arrange
+    // Input
     const aliceWithdrewAt = hoursBeforeSessionStart(10);
     const benWithdrewAt = hoursBeforeSessionStart(9);
     const replacementTriedToJoinAt = hoursBeforeSessionStart(8);
@@ -379,7 +384,8 @@ describe("Session", () => {
         ],
       }),
     );
-    const newer = bookingSession.participantList.requireParticipation("p-ben");
+    const benWithdrawal =
+      bookingSession.participantList.requireParticipation("p-ben");
     const candidate = committedParticipation(
       bookingSession,
       "replacement",
@@ -392,14 +398,14 @@ describe("Session", () => {
       hold: candidate.hold!,
       replacesParticipationId: "p-alice",
     });
-    const refund = newer.refundReplacement(replacementTriedToJoinAt);
+    const benRefund = benWithdrawal.refundReplacement(replacementTriedToJoinAt);
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAdmission(
         admission,
-        refund,
+        benRefund,
         replacementTriedToJoinAt,
       ),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -407,11 +413,12 @@ describe("Session", () => {
   });
 
   test("recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges", () => {
-    // Arrange
+    // Input
     const aliceInvitedAt = hoursBeforeSessionStart(40);
     const choiceChangeAttemptedAt = hoursBeforeSessionStart(39);
-    const source = createTestSession({ committedUserIds: ["alice"] });
-    const committed = source.participantList.requireParticipation("p-alice");
+    const originalSession = createTestSession({ committedUserIds: ["alice"] });
+    const committed =
+      originalSession.participantList.requireParticipation("p-alice");
     const withdrawn = committed.withdraw(
       committed.hold!.refund(aliceInvitedAt),
       aliceInvitedAt,
@@ -434,7 +441,7 @@ describe("Session", () => {
     const previousList = bookingSession.participantList;
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordParticipationTransition(
         withdrawn,
@@ -447,11 +454,12 @@ describe("Session", () => {
   });
 
   test("recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges", () => {
-    // Arrange
+    // Input
     const aliceOpenedSeatAt = hoursBeforeSessionStart(10);
     const choiceChangeAttemptedAt = hoursBeforeSessionStart(9);
-    const source = createTestSession({ committedUserIds: ["alice"] });
-    const committed = source.participantList.requireParticipation("p-alice");
+    const originalSession = createTestSession({ committedUserIds: ["alice"] });
+    const committed =
+      originalSession.participantList.requireParticipation("p-alice");
     const withdrawn = committed.withdraw(
       committed.hold!.awaitReplacement(),
       aliceOpenedSeatAt,
@@ -474,7 +482,7 @@ describe("Session", () => {
     const previousList = bookingSession.participantList;
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordParticipationTransition(
         withdrawn,
@@ -487,7 +495,7 @@ describe("Session", () => {
   });
 
   test("recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const transitionAttemptedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const existing =
@@ -506,7 +514,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordParticipationTransition(
         existing,
@@ -518,7 +526,7 @@ describe("Session", () => {
   });
 
   test("recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const removalAttemptedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const existing =
@@ -529,7 +537,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordParticipationTransition(
         existing,
@@ -541,7 +549,7 @@ describe("Session", () => {
   });
 
   test("recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const existing = Participation.createWaitlisted({
       participationId: "p-waiting",
       userId: "waiting",
@@ -558,7 +566,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordParticipationTransition(existing, departed),
     ).toThrow(expect.objectContaining({ code: "SESSION_CLOSED" }));
@@ -566,25 +574,30 @@ describe("Session", () => {
   });
 
   test("recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged", () => {
-    // Arrange
+    // Input
     const cancellationAttemptedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
     });
-    const first =
+    const alice =
       bookingSession.participantList.requireParticipation("p-alice");
-    const cancelled = first.cancel(first.hold!.refund(cancellationAttemptedAt));
+    const cancelledAlice = alice.cancel(
+      alice.hold!.refund(cancellationAttemptedAt),
+    );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
-      bookingSession.recordCancellation([cancelled], cancellationAttemptedAt),
+      bookingSession.recordCancellation(
+        [cancelledAlice],
+        cancellationAttemptedAt,
+      ),
     ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const cancellationAttemptedAt = sessionStartsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const existing =
@@ -594,7 +607,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordCancellation([cancelled], cancellationAttemptedAt),
     ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
@@ -602,7 +615,7 @@ describe("Session", () => {
   });
 
   test("recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged", () => {
-    // Arrange
+    // Input
     const attendanceRecordedAt = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const verified = bookingSession.participantList
@@ -610,7 +623,7 @@ describe("Session", () => {
       .verify("ATTENDED", "BOOKER", attendanceRecordedAt);
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAttendance(
         [verified, verified],
@@ -621,7 +634,7 @@ describe("Session", () => {
   });
 
   test("recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged", () => {
-    // Arrange
+    // Input
     const attendanceAttemptedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const verified = bookingSession.participantList
@@ -629,7 +642,7 @@ describe("Session", () => {
       .verify("ATTENDED", "BOOKER", attendanceAttemptedAt);
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAttendance([verified], attendanceAttemptedAt),
     ).toThrow(expect.objectContaining({ code: "SESSION_NOT_ENDED" }));
@@ -637,15 +650,15 @@ describe("Session", () => {
   });
 
   test("recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied", () => {
-    // Arrange
+    // Input
     const attendanceRecordedAt = sessionEndsAt;
     const alreadyVerified = verifiedParticipation("alice", "ATTENDED");
-    const source = createTestSession({ committedUserIds: ["ben"] });
+    const originalSession = createTestSession({ committedUserIds: ["ben"] });
     const bookingSession = new Session(
       sessionDetails({
         participations: [
           alreadyVerified,
-          ...source.participantList.participations,
+          ...originalSession.participantList.participations,
         ],
       }),
     );
@@ -654,7 +667,7 @@ describe("Session", () => {
       .verify("ATTENDED", "BOOKER", attendanceRecordedAt);
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordAttendance(
         [newMark, alreadyVerified],
@@ -668,11 +681,11 @@ describe("Session", () => {
   });
 
   test("recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordSettlementPreparation(
         {
@@ -687,7 +700,7 @@ describe("Session", () => {
   });
 
   test("recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged", () => {
-    // Arrange
+    // Input
     const bookingSession = new Session(
       sessionDetails({
         status: "AWAITING_PAYOUT",
@@ -696,7 +709,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordSettlementPreparation(
         {
@@ -711,7 +724,7 @@ describe("Session", () => {
   });
 
   test("recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged", () => {
-    // Arrange
+    // Input
     const details = pendingPayoutDetails(["alice", "ben"]);
     const batch = details.pendingSettlement!;
     const bookingSession = new Session(
@@ -722,7 +735,7 @@ describe("Session", () => {
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.recordSettlementPreparation(
         {

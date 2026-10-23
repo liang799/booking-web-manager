@@ -3,32 +3,32 @@ import { describe, expect, test } from "vitest";
 
 describe("GroupMembership", () => {
   test("constructor_WhenDateIsInvalid_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = { userId: "owner", joinedAt: new Date("invalid") };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new GroupMembership(details)).toThrow(DomainError);
   });
 
   test("constructor_WhenUserIdIsBlank_ThrowsDomainError", () => {
-    // Arrange
+    // Input
     const details = { userId: " ", joinedAt: now() };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new GroupMembership(details)).toThrow(DomainError);
   });
 
   test("joinedAt_WhenSourceAndExposedDatesAreMutated_PreservesTimestamp", () => {
-    // Arrange
+    // Input
     const joinedAt = now();
     const membership = new GroupMembership({ userId: "owner", joinedAt });
 
-    // Act
+    // Log
     joinedAt.setUTCFullYear(2000);
     membership.joinedAt.setUTCFullYear(2000);
 
-    // Assert
-    expect(membership.joinedAt).toEqual(now());
+    // Oracle
+    expect(membership.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
   });
 });
 

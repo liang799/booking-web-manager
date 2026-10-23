@@ -3,203 +3,203 @@ import { describe, expect, test } from "vitest";
 
 describe("Email", () => {
   test("constructor_WhenStandardAddress_PreservesExactAddress", () => {
-    // Arrange
+    // Input
     const address = "owner@example.com";
 
-    // Act
+    // Log
     const email = new Email(address);
 
-    // Assert
-    expect(email.toString()).toBe(address);
+    // Oracle
+    expect(email.toString()).toBe("owner@example.com");
   });
 
   test("constructor_WhenMixedCaseAndPlusTag_PreservesExactAddress", () => {
-    // Arrange
+    // Input
     const address = "Owner+bookings@Example.COM";
 
-    // Act
+    // Log
     const email = new Email(address);
 
-    // Assert
-    expect(email.toString()).toBe(address);
+    // Oracle
+    expect(email.toString()).toBe("Owner+bookings@Example.COM");
   });
 
   test("constructor_WhenLocalhostDomain_PreservesExactAddress", () => {
-    // Arrange
+    // Input
     const address = "owner@localhost";
 
-    // Act
+    // Log
     const email = new Email(address);
 
-    // Assert
-    expect(email.toString()).toBe(address);
+    // Oracle
+    expect(email.toString()).toBe("owner@localhost");
   });
 
   test("constructor_WhenAddressHasEmpty_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasWhitespaceOnly_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = " ";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasMissingAtSign_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner.example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasMissingLocalPart_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "@example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasMissingDomain_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasConsecutiveAtSigns_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@@example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasMultipleAtSigns_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@example@com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasLeadingSpace_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = " owner@example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasTrailingSpace_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@example.com ";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasSpaceInLocalPart_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "own er@example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasSpaceInDomain_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@exam ple.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasTab_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner\t@example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasTrailingNewline_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@example.com\n";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasTrailingCrLf_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@example.com\r\n";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasUnicodeLineSeparator_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@example.com\u2028";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenAddressHasNonBreakingSpace_ThrowsInvalidInput", () => {
-    // Arrange
+    // Input
     const address = "owner@\u00a0example.com";
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Email(address)).toThrow(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
   });
 
   test("constructor_WhenMutationIsAttempted_PreservesPublicSurface", () => {
-    // Arrange
+    // Input
     const email = new Email("owner@example.com");
 
-    // Act
+    // Log
     const valueChanged = Reflect.set(email, "value", "other@example.com");
     const methodChanged = Reflect.set(
       email,
@@ -207,7 +207,7 @@ describe("Email", () => {
       () => "other@example.com",
     );
 
-    // Assert
+    // Oracle
     expect(Object.isFrozen(email)).toBe(true);
     expect(valueChanged).toBe(false);
     expect(methodChanged).toBe(false);
@@ -215,50 +215,50 @@ describe("Email", () => {
   });
 
   test("equals_WhenSameText_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const email = new Email("Owner@example.com");
     const other = new Email("Owner@example.com");
 
-    // Act
+    // Log
     const equalAddresses = email.equals(other);
 
-    // Assert
+    // Oracle
     expect(equalAddresses).toBe(true);
   });
 
   test("equals_WhenDifferentLocalCase_ReturnsFalse", () => {
-    // Arrange
+    // Input
     const email = new Email("Owner@example.com");
     const other = new Email("owner@example.com");
 
-    // Act
+    // Log
     const equalAddresses = email.equals(other);
 
-    // Assert
+    // Oracle
     expect(equalAddresses).toBe(false);
   });
 
   test("equals_WhenDifferentDomainCase_ReturnsFalse", () => {
-    // Arrange
+    // Input
     const email = new Email("Owner@example.com");
     const other = new Email("Owner@EXAMPLE.COM");
 
-    // Act
+    // Log
     const equalAddresses = email.equals(other);
 
-    // Assert
+    // Oracle
     expect(equalAddresses).toBe(false);
   });
 
   test("equals_WhenDifferentAddress_ReturnsFalse", () => {
-    // Arrange
+    // Input
     const email = new Email("Owner@example.com");
     const other = new Email("other@example.com");
 
-    // Act
+    // Log
     const equalAddresses = email.equals(other);
 
-    // Assert
+    // Oracle
     expect(equalAddresses).toBe(false);
   });
 });

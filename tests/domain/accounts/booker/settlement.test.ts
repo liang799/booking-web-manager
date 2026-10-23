@@ -1,4 +1,4 @@
-import { Money, Session, type SessionDetails } from "@/domain";
+import { Money, Participation, Session, type SessionDetails } from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
@@ -14,15 +14,15 @@ import { readyBookerUser } from "../user-fixtures";
 
 describe("Booker", () => {
   test("preparePayout_WhenRoleWasCreatedBeforeDeactivation_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const payoutTime = sessionEndsAt;
-    const owner = createTestUser({
+    const bookerUser = createTestUser({
       userId: "booker",
       availableFundsCents: 0,
       payoutAccount: readyBookerUser().payoutAccount,
     });
-    const booker = owner.asBooker();
-    owner.deactivate({
+    const booker = bookerUser.asBooker();
+    bookerUser.deactivate({
       availableBalance: Money.fromCents(0),
       heldBalance: Money.fromCents(0),
       activeCommitments: 0,
@@ -33,7 +33,7 @@ describe("Booker", () => {
     const bookingSession = createTestSession();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       booker.preparePayout(bookingSession, {
         payoutId: "out",
@@ -45,7 +45,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenAttendanceIsIncomplete_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
@@ -57,7 +57,7 @@ describe("Booker", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().preparePayout(bookingSession, {
         payoutId: "out",
@@ -69,7 +69,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenHoldsNeedReleaseAndForfeiture_KeepsFundsPending", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
@@ -87,17 +87,17 @@ describe("Booker", () => {
       now: attendanceVerificationTime,
     });
 
-    // Act
-    const batch = readyBooker().preparePayout(bookingSession, {
+    // Log
+    const payout = readyBooker().preparePayout(bookingSession, {
       payoutId: "out",
       idempotencyKey: "key",
       now: payoutTime,
     });
 
-    // Assert
+    // Oracle
     expect(bookingSession.status).toBe("PAYOUT_PENDING");
-    expect(batch?.destination).toEqual(destination);
-    expect(batch?.lines.map((line) => line.kind)).toEqual([
+    expect(payout?.destination).toEqual(destination);
+    expect(payout?.lines.map((line) => line.kind)).toEqual([
       "FORFEIT",
       "RELEASE",
     ]);
@@ -109,32 +109,12 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenAnotherPayoutIsPending_RejectsWithoutChangingState", () => {
-    // Arrange
-    const withdrawalTime = hoursBeforeSessionStart(2);
-    const attendanceVerificationTime = sessionEndsAt;
+    // Input
     const payoutTime = sessionEndsAt;
-    const bookingSession = createTestSession({
-      committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-ben", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
-    });
-    readyBooker().preparePayout(bookingSession, {
-      payoutId: "out",
-      idempotencyKey: "key",
-      now: payoutTime,
-    });
-
+    const bookingSession = new Session(pendingReleaseAndForfeitureDetails());
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().preparePayout(bookingSession, {
         payoutId: "another",
@@ -146,33 +126,13 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenFailedPayoutIdIsReused_RejectsWithoutChangingState", () => {
-    // Arrange
-    const withdrawalTime = hoursBeforeSessionStart(2);
-    const attendanceVerificationTime = sessionEndsAt;
-    const payoutFailureTime = sessionEndsAt;
+    // Input
     const payoutTime = sessionEndsAt;
-    const bookingSession = createTestSession({
-      committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "alice" })
-      .asParticipant()
-      .withdraw(bookingSession, {
-        participationId: "p-alice",
-        now: withdrawalTime,
-      });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [{ participationId: "p-ben", attendance: "ATTENDED" }],
-      now: attendanceVerificationTime,
-    });
-    readyBooker().preparePayout(bookingSession, {
-      payoutId: "out",
-      idempotencyKey: "key",
-      now: payoutTime,
-    });
-    bookingSession.failSettlement("out", payoutFailureTime);
+    const bookingSession = new Session(pendingReleaseAndForfeitureDetails());
+    bookingSession.failSettlement("out", sessionEndsAt);
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().preparePayout(bookingSession, {
         payoutId: "out",
@@ -184,29 +144,13 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState", () => {
-    // Arrange
-    const attendanceVerificationTime = sessionEndsAt;
-    const payoutFailureTime = sessionEndsAt;
+    // Input
     const payoutTime = sessionEndsAt;
-    const bookingSession = createTestSession({
-      committedUserIds: ["alice", "ben"],
-    });
-    readyBooker().verifyAttendance(bookingSession, {
-      marks: [
-        { participationId: "p-alice", attendance: "ATTENDED" },
-        { participationId: "p-ben", attendance: "ATTENDED" },
-      ],
-      now: attendanceVerificationTime,
-    });
-    readyBooker().preparePayout(bookingSession, {
-      payoutId: "out",
-      idempotencyKey: "key",
-      now: payoutTime,
-    });
-    bookingSession.failSettlement("out", payoutFailureTime);
+    const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
+    bookingSession.failSettlement("out", sessionEndsAt);
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().preparePayout(bookingSession, {
         payoutId: "retry",
@@ -224,7 +168,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenFailedAttemptIsRetriedWithNewIdentity_RecordsRetry", () => {
-    // Arrange
+    // Input
     const payoutFailureTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
@@ -235,14 +179,14 @@ describe("Booker", () => {
     bookingSession.failSettlement("out", payoutFailureTime);
     const booker = readyBooker();
 
-    // Act
+    // Log
     const retryBatch = booker.preparePayout(bookingSession, {
       payoutId: "retry",
       idempotencyKey: "retry-key",
       now: payoutTime,
     });
 
-    // Assert
+    // Oracle
     expect(retryBatch?.payoutId).toBe("retry");
     expect(retryBatch?.idempotencyKey).toBe("retry-key");
     expect(bookingSession.status).toBe("PAYOUT_PENDING");
@@ -263,25 +207,25 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenSessionHasNoHolds_SettlesWithoutPayout", () => {
-    // Arrange
+    // Input
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession();
 
-    // Act
-    const batch = readyBooker().preparePayout(bookingSession, {
+    // Log
+    const payout = readyBooker().preparePayout(bookingSession, {
       payoutId: "unused",
       idempotencyKey: "unused",
       now: payoutTime,
     });
     const status = bookingSession.status;
 
-    // Assert
-    expect(batch).toBeUndefined();
+    // Oracle
+    expect(payout).toBeUndefined();
     expect(status).toBe("SETTLED");
   });
 
   test("preparePayout_WhenReplacementSweepWasMissed_ExpiresOutstandingReplacement", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
@@ -292,23 +236,23 @@ describe("Booker", () => {
         now: withdrawalTime,
       });
 
-    // Act
-    const batch = readyBooker().preparePayout(bookingSession, {
+    // Log
+    const payout = readyBooker().preparePayout(bookingSession, {
       payoutId: "out",
       idempotencyKey: "key",
       now: payoutTime,
     });
 
-    // Assert
+    // Oracle
     expect(
       bookingSession.participantList.requireParticipation("p-alice").hold
         ?.state,
     ).toBe("FORFEITURE_DUE");
-    expect(batch?.lines).toMatchObject([{ kind: "FORFEIT" }]);
+    expect(payout?.lines).toMatchObject([{ kind: "FORFEIT" }]);
   });
 
   test("preparePayout_WhenAttendanceIsIncomplete_LeavesExpiryUnapplied", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({
@@ -327,10 +271,10 @@ describe("Booker", () => {
     };
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
-    expect(() =>
-      readyBooker().preparePayout(bookingSession, command),
-    ).toThrow(expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }));
+    // Log & Oracle
+    expect(() => readyBooker().preparePayout(bookingSession, command)).toThrow(
+      expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }),
+    );
     expect(sessionState(bookingSession)).toEqual(previousState);
     expect(
       bookingSession.participantList.requireParticipation("p-alice").hold
@@ -339,7 +283,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
@@ -363,7 +307,7 @@ describe("Booker", () => {
     };
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker("foreign").preparePayout(bookingSession, command),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -373,7 +317,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
@@ -396,16 +340,16 @@ describe("Booker", () => {
       now: payoutTime,
     };
 
-    // Establish a rejected foreign attempt before exercising the owner retry.
+    // Establish a rejected foreign attempt before the owning booker retries.
     expect(() =>
       readyBooker("foreign").preparePayout(bookingSession, command),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
 
-    // Act
-    const batch = readyBooker().preparePayout(bookingSession, command);
+    // Log
+    const payout = readyBooker().preparePayout(bookingSession, command);
 
-    // Assert
-    expect(batch?.lines.map((line) => line.kind)).toEqual([
+    // Oracle
+    expect(payout?.lines.map((line) => line.kind)).toEqual([
       "FORFEIT",
       "RELEASE",
     ]);
@@ -418,7 +362,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedPayoutId", () => {
-    // Arrange
+    // Input
     const payoutTime = sessionEndsAt;
     const bookingSession = new Session({
       ...pendingPayoutDetails(),
@@ -428,7 +372,7 @@ describe("Booker", () => {
     const booker = readyBooker();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       booker.preparePayout(bookingSession, {
         payoutId: "out",
@@ -440,7 +384,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey", () => {
-    // Arrange
+    // Input
     const payoutTime = sessionEndsAt;
     const bookingSession = new Session({
       ...pendingPayoutDetails(),
@@ -450,7 +394,7 @@ describe("Booker", () => {
     const booker = readyBooker();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       booker.preparePayout(bookingSession, {
         payoutId: "retry",
@@ -462,32 +406,60 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenFailedPayoutHistoryIsRestored_AllowsNewIdentityIndependentlyOfSource", () => {
-    // Arrange
+    // Input
     const payoutTime = sessionEndsAt;
     const details: SessionDetails = {
       ...pendingPayoutDetails(),
       status: "AWAITING_PAYOUT",
       pendingSettlement: undefined,
     };
-    const source = new Session(details);
+    const originalSession = new Session(details);
     const restoredSession = new Session(details);
-    const sourceState = sessionState(source);
+    const sourceState = sessionState(originalSession);
     const booker = readyBooker();
 
-    // Act
+    // Log
     const retryBatch = booker.preparePayout(restoredSession, {
       payoutId: "retry",
       idempotencyKey: "retry-key",
       now: payoutTime,
     });
 
-    // Assert
+    // Oracle
     expect(retryBatch?.payoutId).toBe("retry");
     expect(retryBatch?.idempotencyKey).toBe("retry-key");
     expect(restoredSession.status).toBe("PAYOUT_PENDING");
     expect(restoredSession.pendingSettlement?.payoutId).toBe("retry");
     expect(restoredSession.payoutAttemptIds).toEqual(["out", "retry"]);
     expect(restoredSession.payoutIdempotencyKeys).toEqual(["key", "retry-key"]);
-    expect(sessionState(source)).toEqual(sourceState);
+    expect(sessionState(originalSession)).toEqual(sourceState);
   });
 });
+
+/** Pending payout with Alice's late withdrawal and Ben's attended share. */
+function pendingReleaseAndForfeitureDetails(): SessionDetails {
+  const details = pendingPayoutDetails(["alice", "ben"]);
+  const [alice, ben] = details.participations;
+  const withdrawnAlice = new Participation({
+    participationId: "p-alice",
+    userId: "alice",
+    status: "WITHDRAWN",
+    attendance: "UNVERIFIED",
+    committedAt: hoursBeforeSessionStart(48),
+    withdrawnAt: hoursBeforeSessionStart(2),
+    replacementMode: "OPEN_SLOT",
+    hold: alice!.hold!.awaitReplacement().markForfeitureDue(sessionEndsAt),
+  });
+  const pendingSettlement = details.pendingSettlement!;
+  return {
+    ...details,
+    participations: [withdrawnAlice, ben!],
+    pendingSettlement: {
+      ...pendingSettlement,
+      lines: [
+        { ...pendingSettlement.lines[0]!, kind: "FORFEIT" },
+        pendingSettlement.lines[1]!,
+      ],
+    },
+  };
+}

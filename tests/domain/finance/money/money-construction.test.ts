@@ -3,135 +3,135 @@ import { describe, expect, test } from "vitest";
 
 describe("Money", () => {
   test("fromCents_WhenZero_PreservesExactCents", () => {
-    // Arrange
+    // Input
     const cents = 0;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
-    expect(money.toCents()).toBe(cents);
+    // Oracle
+    expect(money.toCents()).toBe(0);
   });
 
   test("fromCents_WhenPositiveCent_PreservesExactCents", () => {
-    // Arrange
+    // Input
     const cents = 1;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
-    expect(money.toCents()).toBe(cents);
+    // Oracle
+    expect(money.toCents()).toBe(1);
   });
 
   test("fromCents_WhenNegativeCent_PreservesExactCents", () => {
-    // Arrange
+    // Input
     const cents = -1;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
-    expect(money.toCents()).toBe(cents);
+    // Oracle
+    expect(money.toCents()).toBe(-1);
   });
 
   test("fromCents_WhenWholeCents_PreservesExactCents", () => {
-    // Arrange
+    // Input
     const cents = 1001;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
-    expect(money.toCents()).toBe(cents);
+    // Oracle
+    expect(money.toCents()).toBe(1001);
   });
 
   test("fromCents_WhenMaximumSafeInteger_PreservesExactCents", () => {
-    // Arrange
+    // Input
     const cents = Number.MAX_SAFE_INTEGER;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
-    expect(money.toCents()).toBe(cents);
+    // Oracle
+    expect(money.toCents()).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   test("fromCents_WhenMinimumSafeInteger_PreservesExactCents", () => {
-    // Arrange
+    // Input
     const cents = Number.MIN_SAFE_INTEGER;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
-    expect(money.toCents()).toBe(cents);
+    // Oracle
+    expect(money.toCents()).toBe(Number.MIN_SAFE_INTEGER);
   });
 
   test("fromCents_WhenNegativeZero_NormalizesToZero", () => {
-    // Arrange
+    // Input
     const cents = -0;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
+    // Oracle
     expect(money.toCents()).toBe(0);
   });
 
   test("fromCents_WhenPositiveFraction_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = 0.1;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 
   test("fromCents_WhenNegativeFraction_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = -0.1;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 
   test("fromCents_WhenNaN_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = Number.NaN;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 
   test("fromCents_WhenPositiveInfinity_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = Number.POSITIVE_INFINITY;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 
   test("fromCents_WhenNegativeInfinity_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = Number.NEGATIVE_INFINITY;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 
   test("fromCents_WhenAboveMaximum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = Number.MAX_SAFE_INTEGER + 1;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 
   test("fromCents_WhenBelowMinimum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const cents = Number.MIN_SAFE_INTEGER - 1;
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => Money.fromCents(cents)).toThrow(RangeError);
   });
 });

@@ -3,107 +3,109 @@ import { describe, expect, test } from "vitest";
 
 describe("Money", () => {
   test("fromCents_WhenCreated_ReturnsFrozenInstance", () => {
-    // Arrange
+    // Input
     const cents = 500;
 
-    // Act
+    // Log
     const money = Money.fromCents(cents);
 
-    // Assert
+    // Oracle
     expect(Object.isFrozen(money)).toBe(true);
   });
 
   test("add_WhenBothAmountsArePositive_ReturnsTheirSum", () => {
-    // Arrange
+    // Input
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Act
+    // Log
     const sum = first.add(second);
 
-    // Assert
+    // Oracle
     expect(sum.toCents()).toBe(1200);
   });
 
   test("add_WhenChainedAfterSubtraction_ReturnsExactAmount", () => {
-    // Arrange
+    // Input
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Act
+    // Log
     const combined = first.subtract(second).add(first);
 
-    // Assert
+    // Oracle
     expect(combined.toCents()).toBe(300);
   });
 
   test("add_WhenAddingZero_ReturnsNewInstance", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(500);
 
-    // Act
+    // Log
     const sum = money.add(Money.fromCents(0));
 
-    // Assert
+    // Oracle
     expect(sum).not.toBe(money);
+    expect(sum.toCents()).toBe(500);
   });
 
   test("add_WhenAppliedToOperands_PreservesBothValues", () => {
-    // Arrange
+    // Input
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Act
+    // Log
     first.add(second);
 
-    // Assert
+    // Oracle
     expect(first.toCents()).toBe(500);
     expect(second.toCents()).toBe(700);
   });
 
   test("subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference", () => {
-    // Arrange
+    // Input
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Act
+    // Log
     const difference = first.subtract(second);
 
-    // Assert
+    // Oracle
     expect(difference.toCents()).toBe(-200);
   });
 
   test("subtract_WhenAmountIsNegative_IncreasesValue", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(500);
 
-    // Act
+    // Log
     const difference = money.subtract(Money.fromCents(-100));
 
-    // Assert
+    // Oracle
     expect(difference.toCents()).toBe(600);
   });
 
   test("subtract_WhenSubtractingZero_ReturnsNewInstance", () => {
-    // Arrange
+    // Input
     const money = Money.fromCents(500);
 
-    // Act
+    // Log
     const difference = money.subtract(Money.fromCents(0));
 
-    // Assert
+    // Oracle
     expect(difference).not.toBe(money);
+    expect(difference.toCents()).toBe(500);
   });
 
   test("subtract_WhenAppliedToOperands_PreservesBothValues", () => {
-    // Arrange
+    // Input
     const first = Money.fromCents(500);
     const second = Money.fromCents(700);
 
-    // Act
+    // Log
     first.subtract(second);
 
-    // Assert
+    // Oracle
     expect(first.toCents()).toBe(500);
     expect(second.toCents()).toBe(700);
   });

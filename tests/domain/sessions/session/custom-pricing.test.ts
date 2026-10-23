@@ -1,53 +1,189 @@
 import { describe, expect, test } from "vitest";
 import { Money } from "@/domain";
-import { creationDetails, createTestUser, hoursBeforeSessionStart, readyBooker, sessionEndsAt } from "./session-fixtures";
+import {
+  creationDetails,
+  createTestUser,
+  hoursBeforeSessionStart,
+  readyBooker,
+  sessionEndsAt,
+} from "./session-fixtures";
 
-describe("Session custom pricing", () => {
+describe("Session", () => {
   test("join_WhenPriceExceedsEqualSplit_LocksChosenPrice", () => {
-    // Arrange
-    const session = readyBooker().createSession({ ...creationDetails(), bookingShare: Money.fromCents(750) });
-    const participant = createTestUser({ userId: "alice", availableFundsCents: 750 }).asParticipant();
-    // Act
-    const result = participant.join(session, { participationId: "p", holdId: "h", now: hoursBeforeSessionStart(48) });
-    // Assert
-    expect(result.instructions[0]?.amount.toCents()).toBe(750);
-    expect(session.participantList.requireParticipation("p").hold?.amount.toCents()).toBe(750);
+    // Input
+    const booker = readyBooker();
+    const session = booker.createSession({
+      ...creationDetails(),
+      bookingShare: Money.fromCents(750),
+    });
+    const alice = createTestUser({
+      userId: "alice",
+      availableFundsCents: 750,
+    }).asParticipant();
+
+    // Log
+    const admission = alice.join(session, {
+      participationId: "p-alice",
+      holdId: "h-alice",
+      now: hoursBeforeSessionStart(48),
+    });
+
+    // Oracle
+    expect(
+      admission.instructions.map(({ kind, amount }) => [
+        kind,
+        amount.toCents(),
+      ]),
+    ).toEqual([["LOCK", 750]]);
+    expect(
+      session.participantList
+        .requireParticipation("p-alice")
+        .hold?.amount.toCents(),
+    ).toBe(750);
     expect(session.bookingShare.toCents()).toBe(750);
   });
+
   test("withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice", () => {
-    // Arrange
-    const session = readyBooker().createSession({ ...creationDetails(), bookingShare: Money.fromCents(750) });
-    const participant = createTestUser({ userId: "alice", availableFundsCents: 750 }).asParticipant();
-    participant.join(session, { participationId: "p", holdId: "h", now: hoursBeforeSessionStart(48) });
-    // Act
-    const result = participant.withdraw(session, { participationId: "p", now: hoursBeforeSessionStart(31) });
-    // Assert
-    expect(result.instructions[0]?.amount.toCents()).toBe(750);
-    expect(session.participantList.requireParticipation("p").hold?.state).toBe("REFUNDED");
-  });
-  test("cancel_WhenCustomPriceWasCollected_RefundsTheFullHold", () => {
-    // Arrange
+    // Input
     const booker = readyBooker();
-    const session = booker.createSession({ ...creationDetails(), bookingShare: Money.fromCents(750) });
-    createTestUser({ userId: "alice", availableFundsCents: 750 }).asParticipant().join(session, { participationId: "p", holdId: "h", now: hoursBeforeSessionStart(48) });
-    // Act
-    const result = booker.cancel(session, hoursBeforeSessionStart(30));
-    // Assert
-    expect(result.instructions[0]?.amount.toCents()).toBe(750);
+    const session = booker.createSession({
+      ...creationDetails(),
+      bookingShare: Money.fromCents(750),
+    });
+    const alice = createTestUser({
+      userId: "alice",
+      availableFundsCents: 750,
+    }).asParticipant();
+    alice.join(session, {
+      participationId: "p-alice",
+      holdId: "h-alice",
+      now: hoursBeforeSessionStart(48),
+    });
+
+    // Log
+    const withdrawal = alice.withdraw(session, {
+      participationId: "p-alice",
+      now: hoursBeforeSessionStart(31),
+    });
+
+    // Oracle
+    expect(
+      withdrawal.instructions.map(({ kind, amount }) => [
+        kind,
+        amount.toCents(),
+      ]),
+    ).toEqual([["REFUND", 750]]);
+    expect(
+      session.participantList.requireParticipation("p-alice").hold?.state,
+    ).toBe("REFUNDED");
+  });
+
+  test("cancel_WhenCustomPriceWasCollected_RefundsTheFullHold", () => {
+    // Input
+    const booker = readyBooker();
+    const session = booker.createSession({
+      ...creationDetails(),
+      bookingShare: Money.fromCents(750),
+    });
+    const alice = createTestUser({
+      userId: "alice",
+      availableFundsCents: 750,
+    }).asParticipant();
+    alice.join(session, {
+      participationId: "p-alice",
+      holdId: "h-alice",
+      now: hoursBeforeSessionStart(48),
+    });
+
+    // Log
+    const cancellation = booker.cancel(session, hoursBeforeSessionStart(30));
+
+    // Oracle
+    expect(
+      cancellation.instructions.map(({ kind, amount }) => [
+        kind,
+        amount.toCents(),
+      ]),
+    ).toEqual([["REFUND", 750]]);
     expect(session.bookingShare.toCents()).toBe(750);
   });
-  test("preparePayout_WhenCustomPriceAttendanceIsVerified_ReleasesTheChosenAmount", () => {
-    // Arrange
+
+  test("preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount", () => {
+    // Input
     const booker = readyBooker();
-    const session = booker.createSession({ ...creationDetails(), bookingShare: Money.fromCents(750) });
-    createTestUser({ userId: "alice", availableFundsCents: 750 }).asParticipant().join(session, { participationId: "p", holdId: "h", now: hoursBeforeSessionStart(48) });
-    booker.verifyAttendance(session, { now: sessionEndsAt, marks: [{ participationId: "p", attendance: "ATTENDED" }] });
-    // Act
-    const batch = booker.preparePayout(session, { payoutId: "out", idempotencyKey: "key", now: sessionEndsAt });
-    const result = session.completeSettlement("out", sessionEndsAt);
-    // Assert
-    expect(batch?.lines[0]?.amount.toCents()).toBe(750);
-    expect(result.instructions[0]?.amount.toCents()).toBe(750);
-    expect(session.participantList.requireParticipation("p").hold?.state).toBe("RELEASED");
+    const session = booker.createSession({
+      ...creationDetails(),
+      bookingShare: Money.fromCents(750),
+    });
+    const alice = createTestUser({
+      userId: "alice",
+      availableFundsCents: 750,
+    }).asParticipant();
+    alice.join(session, {
+      participationId: "p-alice",
+      holdId: "h-alice",
+      now: hoursBeforeSessionStart(48),
+    });
+    booker.verifyAttendance(session, {
+      now: sessionEndsAt,
+      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
+    });
+
+    // Log
+    const payout = booker.preparePayout(session, {
+      payoutId: "out",
+      idempotencyKey: "key",
+      now: sessionEndsAt,
+    });
+
+    // Oracle
+    expect(
+      payout?.lines.map(({ kind, amount }) => [kind, amount.toCents()]),
+    ).toEqual([["RELEASE", 750]]);
+    expect(session.status).toBe("PAYOUT_PENDING");
+    expect(
+      session.participantList.requireParticipation("p-alice").hold?.state,
+    ).toBe("HELD");
+  });
+
+  test("completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount", () => {
+    // Input
+    const booker = readyBooker();
+    const session = booker.createSession({
+      ...creationDetails(),
+      bookingShare: Money.fromCents(750),
+    });
+    const alice = createTestUser({
+      userId: "alice",
+      availableFundsCents: 750,
+    }).asParticipant();
+    alice.join(session, {
+      participationId: "p-alice",
+      holdId: "h-alice",
+      now: hoursBeforeSessionStart(48),
+    });
+    booker.verifyAttendance(session, {
+      now: sessionEndsAt,
+      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
+    });
+    booker.preparePayout(session, {
+      payoutId: "out",
+      idempotencyKey: "key",
+      now: sessionEndsAt,
+    });
+
+    // Log
+    const completion = session.completeSettlement("out", sessionEndsAt);
+
+    // Oracle
+    expect(
+      completion.instructions.map(({ kind, amount }) => [
+        kind,
+        amount.toCents(),
+      ]),
+    ).toEqual([["RELEASE", 750]]);
+    expect(
+      session.participantList.requireParticipation("p-alice").hold?.state,
+    ).toBe("RELEASED");
   });
 });

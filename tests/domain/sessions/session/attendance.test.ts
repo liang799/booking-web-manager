@@ -10,23 +10,23 @@ import {
 
 describe("Session", () => {
   test("autoVerifyAttendance_WhenOneMillisecondBeforeDue_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const automaticVerificationDueAt = hoursAfterSessionEnd(72);
     const oneMillisecondBeforeAutomaticVerification = new Date(
       automaticVerificationDueAt.getTime() - 1,
     );
-    const source = createTestSession({ committedUserIds: ["ben"] });
+    const unverifiedSession = createTestSession({ committedUserIds: ["ben"] });
     const bookingSession = new Session(
       sessionDetails({
         participations: [
           verifiedParticipation("alice", "ABSENT"),
-          ...source.participantList.participations,
+          ...unverifiedSession.participantList.participations,
         ],
       }),
     );
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       bookingSession.autoVerifyAttendance(
         oneMillisecondBeforeAutomaticVerification,
@@ -36,22 +36,22 @@ describe("Session", () => {
   });
 
   test("autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants", () => {
-    // Arrange
+    // Input
     const automaticVerificationDueAt = hoursAfterSessionEnd(72);
-    const source = createTestSession({ committedUserIds: ["ben"] });
+    const unverifiedSession = createTestSession({ committedUserIds: ["ben"] });
     const bookingSession = new Session(
       sessionDetails({
         participations: [
           verifiedParticipation("alice", "ABSENT"),
-          ...source.participantList.participations,
+          ...unverifiedSession.participantList.participations,
         ],
       }),
     );
 
-    // Act
+    // Log
     bookingSession.autoVerifyAttendance(automaticVerificationDueAt);
 
-    // Assert
+    // Oracle
     expect(
       bookingSession.participantList.participations.map((participation) => [
         participation.attendance,

@@ -9,87 +9,76 @@ import { describe, expect, test } from "vitest";
 describe("RegularGroup", () => {
   describe("Construction and membership", () => {
     test("constructor_WhenMembershipsAreEmpty_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      // Input
+      const details = groupDetails({ memberships: [] });
 
-      // Act & Assert
-      expect(() => new RegularGroup({ ...details, memberships: [] })).toThrow(
-        DomainError,
-      );
+      // Log & Oracle
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenMembershipsAreDuplicated_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      // Input
+      const ownerMembership = new GroupMembership({ userId: "owner", joinedAt: now() });
+      const details = groupDetails({ memberships: [ownerMembership, ownerMembership] });
 
-      // Act & Assert
-      expect(
-        () =>
-          new RegularGroup({
-            ...details,
-            memberships: [...details.memberships, ...details.memberships],
-          }),
-      ).toThrow(DomainError);
+      // Log & Oracle
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenOwnerIsNotAMember_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      // Input
+      const details = groupDetails({ ownerId: "missing" });
 
-      // Act & Assert
-      expect(
-        () => new RegularGroup({ ...details, ownerId: "missing" }),
-      ).toThrow(DomainError);
+      // Log & Oracle
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenArchivedInvitationIsActive_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      // Input
+      const details = groupDetails({ status: "ARCHIVED", invitationActive: true });
 
-      // Act & Assert
-      expect(
-        () => new RegularGroup({ ...details, status: "ARCHIVED" }),
-      ).toThrow(DomainError);
+      // Log & Oracle
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenSourceMembershipsAreMutated_PreservesMembersAndDates", () => {
-      // Arrange
+      // Input
       const memberships = [
         new GroupMembership({ userId: "owner", joinedAt: now() }),
       ];
       const details = groupDetails({ memberships });
       const group = new RegularGroup(details);
 
-      // Act
+      // Log
       memberships[0]?.joinedAt.setUTCFullYear(2000);
       memberships.pop();
 
-      // Assert
-      expect(group.memberships).toHaveLength(1);
-      expect(group.memberships[0]?.joinedAt).toEqual(now());
+      // Oracle
+      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(group.memberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
     });
 
     test("memberships_WhenReturnedMembershipsAreMutated_PreservesMembersAndDates", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const returnedMemberships = group.memberships as GroupMembership[];
 
-      // Act
+      // Log
       returnedMemberships[0]?.joinedAt.setUTCFullYear(2000);
       returnedMemberships.pop();
 
-      // Assert
-      expect(group.memberships).toHaveLength(1);
-      expect(group.memberships[0]?.joinedAt).toEqual(now());
+      // Oracle
+      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(group.memberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
     });
   });
 
   describe("Joining and invitations", () => {
     test("join_WhenMemberJoinsAgain_PreservesSingleMembership", () => {
-      // Arrange
+      // Input
       const group = newGroup();
 
-      // Act
+      // Log
       const firstJoin = group.join({
         userId: "player",
         invitationToken: "first-token",
@@ -101,7 +90,7 @@ describe("RegularGroup", () => {
         now: now(),
       });
 
-      // Assert
+      // Oracle
       expect(group.status).toBe("ACTIVE");
       expect(group.memberships.map((member) => member.userId)).toEqual([
         "owner",
@@ -113,12 +102,12 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.revokeInvitation("owner");
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.join({
           userId: "owner",
@@ -130,7 +119,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenTokenWasRotated_ThrowsInvalidInvitation", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.revokeInvitation("owner");
       group.rotateInvitation({
@@ -139,7 +128,7 @@ describe("RegularGroup", () => {
       });
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.join({
           userId: "player",
@@ -151,7 +140,7 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenRevokedInvitationIsRotated_AcceptsNewToken", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.revokeInvitation("owner");
       group.rotateInvitation({
@@ -159,24 +148,24 @@ describe("RegularGroup", () => {
         invitationToken: "next-token",
       });
 
-      // Act
+      // Log
       const admission = group.join({
         userId: "player",
         invitationToken: "next-token",
         now: now(),
       });
 
-      // Assert
+      // Oracle
       expect(admission).toBe("JOINED");
     });
 
     test("join_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.join({
           userId: "player",
@@ -188,11 +177,11 @@ describe("RegularGroup", () => {
     });
 
     test("rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.rotateInvitation({ actorId: "other", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -200,12 +189,12 @@ describe("RegularGroup", () => {
     });
 
     test("rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.rotateInvitation({ actorId: "owner", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -213,11 +202,11 @@ describe("RegularGroup", () => {
     });
 
     test("revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => group.revokeInvitation("other")).toThrow(
         expect.objectContaining({ code: "UNAUTHORIZED" }),
       );
@@ -227,11 +216,11 @@ describe("RegularGroup", () => {
 
   describe("Owner management", () => {
     test("rename_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.rename({ actorId: "other", name: "New name" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -239,22 +228,22 @@ describe("RegularGroup", () => {
     });
 
     test("rename_WhenOwnerProvidesName_UpdatesName", () => {
-      // Arrange
+      // Input
       const group = newGroup();
 
-      // Act
+      // Log
       group.rename({ actorId: "owner", name: "Saturday tennis" });
 
-      // Assert
+      // Oracle
       expect(group.name).toBe("Saturday tennis");
     });
 
     test("rename_WhenNameIsBlank_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => group.rename({ actorId: "owner", name: " " })).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -262,12 +251,12 @@ describe("RegularGroup", () => {
     });
 
     test("rename_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => group.rename({ actorId: "owner", name: "New" })).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
@@ -275,11 +264,11 @@ describe("RegularGroup", () => {
     });
 
     test("removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.removeMember({ actorId: "other", userId: "owner" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -287,7 +276,7 @@ describe("RegularGroup", () => {
     });
 
     test("removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.join({
         userId: "player",
@@ -295,20 +284,19 @@ describe("RegularGroup", () => {
         now: now(),
       });
 
-      // Act
+      // Log
       group.removeMember({ actorId: "owner", userId: "player" });
 
-      // Assert
-      expect(group.memberships).toHaveLength(1);
-      expect(group.memberships[0]?.userId).toBe("owner");
+      // Oracle
+      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
     });
 
     test("removeMember_WhenTargetIsOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.removeMember({ actorId: "owner", userId: "owner" }),
       ).toThrow(expect.objectContaining({ code: "OWNER_REMOVAL" }));
@@ -316,11 +304,11 @@ describe("RegularGroup", () => {
     });
 
     test("removeMember_WhenMemberIsMissing_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.removeMember({ actorId: "owner", userId: "missing" }),
       ).toThrow(expect.objectContaining({ code: "NOT_FOUND" }));
@@ -328,11 +316,11 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.archive({ actorId: "other", unsettledLinkedSessions: 0 }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -340,11 +328,11 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.archive({ actorId: "owner", unsettledLinkedSessions: 1 }),
       ).toThrow(expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }));
@@ -352,11 +340,11 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() =>
         group.archive({ actorId: "owner", unsettledLinkedSessions: -1 }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
@@ -364,31 +352,31 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent", () => {
-      // Arrange
+      // Input
       const group = newGroup();
 
-      // Act
+      // Log
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
 
-      // Assert
+      // Oracle
       expect(group.status).toBe("ARCHIVED");
       expect(group.invitationActive).toBe(false);
-      expect(group.memberships).toHaveLength(1);
+      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
     });
   });
 
   describe("Leaving", () => {
     test("leave_WhenMemberLeaves_RemovesOnlyThatMember", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
       group.join({ userId: "ben", invitationToken: "first-token", now: now() });
 
-      // Act
+      // Log
       group.leave({ userId: "aisha" });
 
-      // Assert
+      // Oracle
       expect(group.memberships.map((member) => member.userId)).toEqual([
         "owner",
         "ben",
@@ -396,12 +384,12 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenUserIsOwner_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => group.leave({ userId: "owner" })).toThrow(
         expect.objectContaining({ code: "OWNER_REMOVAL" }),
       );
@@ -409,11 +397,11 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenUserIsNotAMember_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => group.leave({ userId: "stranger" })).toThrow(
         expect.objectContaining({ code: "NOT_FOUND" }),
       );
@@ -421,7 +409,7 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
+      // Input
       const group = new RegularGroup(
         groupDetails({
           status: "ARCHIVED",
@@ -434,7 +422,7 @@ describe("RegularGroup", () => {
       );
       const before = groupState(group);
 
-      // Act & Assert
+      // Log & Oracle
       expect(() => group.leave({ userId: "aisha" })).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
@@ -442,20 +430,20 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain", () => {
-      // Arrange
+      // Input
       const group = newGroup();
       group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
       group.leave({ userId: "aisha" });
 
-      // Act
-      const result = group.join({
+      // Log
+      const readmission = group.join({
         userId: "aisha",
         invitationToken: "first-token",
         now: now(),
       });
 
-      // Assert
-      expect(result).toBe("JOINED");
+      // Oracle
+      expect(readmission).toBe("JOINED");
       expect(group.memberships.map((member) => member.userId)).toEqual([
         "owner",
         "aisha",

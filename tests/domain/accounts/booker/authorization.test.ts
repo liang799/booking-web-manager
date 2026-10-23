@@ -9,12 +9,12 @@ import {
 
 describe("Booker", () => {
   test("cancel_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const cancellationTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker("other").cancel(bookingSession, cancellationTime),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -22,12 +22,12 @@ describe("Booker", () => {
   });
 
   test("changeVisibility_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const visibilityChangeTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker("other").changeVisibility(
         bookingSession,
@@ -39,12 +39,12 @@ describe("Booker", () => {
   });
 
   test("verifyAttendance_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker("other").verifyAttendance(bookingSession, {
         marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
@@ -55,7 +55,7 @@ describe("Booker", () => {
   });
 
   test("preparePayout_WhenBookerIsForeign_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const attendanceVerificationTime = sessionEndsAt;
     const payoutTime = sessionEndsAt;
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
@@ -65,7 +65,7 @@ describe("Booker", () => {
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker("other").preparePayout(bookingSession, {
         payoutId: "out",

@@ -10,58 +10,89 @@ import {
 } from "../../sessions/session/session-fixtures";
 
 describe("Booker", () => {
+  test("cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions", () => {
+    // Input
+    const cancellationTime = hoursBeforeSessionStart(48);
+    const booker = readyBooker();
+    const session = createTestSession();
+
+    // Log
+    const cancellation = booker.cancel(session, cancellationTime);
+
+    // Oracle
+    expect(session.bookerId).toBe(booker.userId);
+    expect(session.status).toBe("CANCELLED");
+    expect(cancellation.instructions).toEqual([]);
+  });
+
   test("assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
-    const booker = createTestUser({ userId: "booker", emailVerified: false }).asBooker();
+    const booker = createTestUser({
+      userId: "booker",
+      emailVerified: false,
+    }).asBooker();
     const previousState = sessionState(bookingSession);
 
-    // Act
+    // Log
     booker.assertCanCancel(bookingSession, hoursBeforeSessionStart(48));
 
-    // Assert
+    // Oracle
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
-    expect(() => readyBooker().assertCanCancel(bookingSession, sessionStartsAt)).toThrow(
-      expect.objectContaining({ code: "SESSION_STARTED" }),
-    );
+    // Log & Oracle
+    expect(() =>
+      readyBooker().assertCanCancel(bookingSession, sessionStartsAt),
+    ).toThrow(expect.objectContaining({ code: "SESSION_STARTED" }));
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession();
-    const booker = createTestUser({ userId: "booker", emailVerified: false }).asBooker();
+    const booker = createTestUser({
+      userId: "booker",
+      emailVerified: false,
+    }).asBooker();
     const previousState = sessionState(bookingSession);
 
-    // Act
-    booker.assertCanChangeVisibility(bookingSession, "PRIVATE", hoursBeforeSessionStart(48));
+    // Log
+    booker.assertCanChangeVisibility(
+      bookingSession,
+      "PRIVATE",
+      hoursBeforeSessionStart(48),
+    );
 
-    // Assert
+    // Oracle
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure", () => {
-    // Arrange
-    const bookingSession = createTestSession({ committedUserIds: ["alice", "ben"] });
+    // Input
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+    });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
-    expect(() => readyBooker().assertCanChangeVisibility(
-      bookingSession, "PRIVATE", hoursBeforeSessionStart(48),
-    )).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
+    // Log & Oracle
+    expect(() =>
+      readyBooker().assertCanChangeVisibility(
+        bookingSession,
+        "PRIVATE",
+        hoursBeforeSessionStart(48),
+      ),
+    ).toThrow(expect.objectContaining({ code: "CAPACITY_EXCEEDED" }));
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus", () => {
-    // Arrange
+    // Input
     const cancellationTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -73,7 +104,7 @@ describe("Booker", () => {
       "INVALID_STATE",
       "Second cancellation failed",
     );
-    const cancellation = vi
+    const cancelBen = vi
       .spyOn(
         bookingSession.participantList.requireParticipation("p-ben"),
         "cancel",
@@ -83,19 +114,19 @@ describe("Booker", () => {
       });
 
     try {
-      // Act & Assert
+      // Log & Oracle
       expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
         failure,
       );
-      expect(cancellation).toHaveBeenCalledOnce();
+      expect(cancelBen).toHaveBeenCalledOnce();
       expect(sessionState(bookingSession)).toEqual(previousState);
     } finally {
-      cancellation.mockRestore();
+      cancelBen.mockRestore();
     }
   });
 
   test("cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds", () => {
-    // Arrange
+    // Input
     const cancellationTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -106,7 +137,7 @@ describe("Booker", () => {
       "INVALID_STATE",
       "Second cancellation failed",
     );
-    const cancellation = vi
+    const cancelBen = vi
       .spyOn(
         bookingSession.participantList.requireParticipation("p-ben"),
         "cancel",
@@ -121,27 +152,26 @@ describe("Booker", () => {
         failure,
       );
     } finally {
-      cancellation.mockRestore();
+      cancelBen.mockRestore();
     }
 
-    // Act
-    const result = booker.cancel(bookingSession, cancellationTime);
+    // Log
+    const cancellation = booker.cancel(bookingSession, cancellationTime);
 
-    // Assert
-    expect(result.instructions.map((instruction) => instruction.kind)).toEqual([
-      "REFUND",
-      "REFUND",
-    ]);
+    // Oracle
+    expect(
+      cancellation.instructions.map((instruction) => instruction.kind),
+    ).toEqual(["REFUND", "REFUND"]);
     expect(bookingSession.status).toBe("CANCELLED");
     expect(
-      bookingSession.participantList.participations.every(
-        (participation) => participation.status === "CANCELLED",
+      bookingSession.participantList.participations.map(
+        (participation) => participation.status,
       ),
-    ).toBe(true);
+    ).toEqual(["CANCELLED", "CANCELLED", "CANCELLED"]);
   });
 
   test("cancel_WhenOwnerIsInactive_StillCancelsAndRefunds", () => {
-    // Arrange
+    // Input
     const cancellationTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const booker = createTestUser({
@@ -149,16 +179,16 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
-    // Act
-    const result = booker.cancel(bookingSession, cancellationTime);
+    // Log
+    const cancellation = booker.cancel(bookingSession, cancellationTime);
 
-    // Assert
+    // Oracle
     expect(bookingSession.status).toBe("CANCELLED");
-    expect(result.instructions[0]?.kind).toBe("REFUND");
+    expect(cancellation.instructions[0]?.kind).toBe("REFUND");
   });
 
   test("changeVisibility_WhenOwnerIsInactive_StillChangesVisibility", () => {
-    // Arrange
+    // Input
     const visibilityChangeTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession();
     const booker = createTestUser({
@@ -166,22 +196,22 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
-    // Act
+    // Log
     booker.changeVisibility(bookingSession, "PRIVATE", visibilityChangeTime);
 
-    // Assert
+    // Oracle
     expect(bookingSession.visibility).toBe("PRIVATE");
   });
 
   test("changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const visibilityChangeTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
     });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker().changeVisibility(
         bookingSession,
@@ -193,7 +223,7 @@ describe("Booker", () => {
   });
 
   test("removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds", () => {
-    // Arrange
+    // Input
     const removalTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const booker = createTestUser({
@@ -201,14 +231,14 @@ describe("Booker", () => {
       accountStatus: "INACTIVE",
     }).asBooker();
 
-    // Act
-    const result = booker.removeParticipant(
+    // Log
+    const removal = booker.removeParticipant(
       bookingSession,
       "p-alice",
       removalTime,
     );
 
-    // Assert
+    // Oracle
     expect(
       bookingSession.participantList.requireParticipation("p-alice").status,
     ).toBe("REMOVED");
@@ -216,16 +246,16 @@ describe("Booker", () => {
       bookingSession.participantList.requireParticipation("p-alice").hold
         ?.state,
     ).toBe("REFUNDED");
-    expect(result.instructions[0]?.kind).toBe("REFUND");
+    expect(removal.instructions[0]?.kind).toBe("REFUND");
   });
 
   test("removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const removalTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() =>
       readyBooker("other").removeParticipant(
         bookingSession,
@@ -237,18 +267,21 @@ describe("Booker", () => {
   });
 
   test("removeParticipant_WhenBookerRemovesParticipant_RefundsHold", () => {
-    // Arrange
+    // Input
     const removalTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
 
-    // Act
+    // Log
     const removal = readyBooker().removeParticipant(
       bookingSession,
       "p-alice",
       removalTime,
     );
 
-    // Assert
+    const removed =
+      bookingSession.participantList.requireParticipation("p-alice");
+
+    // Oracle
     expect(removal.instructions).toEqual([
       expect.objectContaining({
         kind: "REFUND",
@@ -258,18 +291,16 @@ describe("Booker", () => {
       }),
     ]);
     expect(removal.instructions[0]?.amount.toCents()).toBe(500);
-    const removed =
-      bookingSession.participantList.requireParticipation("p-alice");
     expect(removed.status).toBe("REMOVED");
     expect(removed.hold?.state).toBe("REFUNDED");
   });
 
   test("cancel_WhenSessionStartsNow_RejectsWithoutChangingState", () => {
-    // Arrange
+    // Input
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => readyBooker().cancel(bookingSession, sessionStartsAt)).toThrow(
       expect.objectContaining({ code: "SESSION_STARTED" }),
     );
@@ -277,7 +308,7 @@ describe("Booker", () => {
   });
 
   test("cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue", () => {
-    // Arrange
+    // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const cancellationTime = hoursBeforeSessionStart(1);
     const bookingSession = createTestSession({
@@ -291,22 +322,22 @@ describe("Booker", () => {
         now: withdrawalTime,
       });
 
-    // Act
+    // Log
     const cancellation = readyBooker().cancel(bookingSession, cancellationTime);
 
-    // Assert
+    // Oracle
     expect(cancellation.instructions).toHaveLength(2);
-    expect(cancellation.instructions.every((i) => i.kind === "REFUND")).toBe(
-      true,
-    );
+    expect(
+      cancellation.instructions.map((instruction) => instruction.kind),
+    ).toEqual(["REFUND", "REFUND"]);
     expect(bookingSession.status).toBe("CANCELLED");
     expect(
       bookingSession.participantList.nextWaitlisted()?.userId,
     ).toBeUndefined();
     expect(
-      bookingSession.participantList.participations.every(
-        (p) => !p.hold || p.hold.state === "REFUNDED",
+      bookingSession.participantList.participations.map(
+        (participation) => participation.hold?.state,
       ),
-    ).toBe(true);
+    ).toEqual(["REFUNDED", "REFUNDED", undefined]);
   });
 });

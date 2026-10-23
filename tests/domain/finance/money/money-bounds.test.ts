@@ -3,96 +3,95 @@ import { describe, expect, test } from "vitest";
 
 describe("Money", () => {
   test("add_WhenMaximumAndMinimumAreCombined_ReturnsZero", () => {
-    // Arrange
+    // Input
     const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
     const minimum = Money.fromCents(Number.MIN_SAFE_INTEGER);
 
-    // Act
+    // Log
     const sum = maximum.add(minimum);
 
-    // Assert
+    // Oracle
     expect(sum.toCents()).toBe(0);
   });
 
   test("add_WhenResultExceedsMaximum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => maximum.add(Money.fromCents(1))).toThrow(RangeError);
   });
 
   test("add_WhenResultFallsBelowMinimum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const minimum = Money.fromCents(Number.MIN_SAFE_INTEGER);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => minimum.add(Money.fromCents(-1))).toThrow(RangeError);
   });
 
   test("subtract_WhenOneIsSubtractedFromMaximum_PreservesExactValue", () => {
-    // Arrange
+    // Input
     const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
-    // Act
+    // Log
     const difference = maximum.subtract(Money.fromCents(1));
 
-    // Assert
+    // Oracle
     expect(difference.toCents()).toBe(Number.MAX_SAFE_INTEGER - 1);
   });
 
   test("subtract_WhenResultExceedsMaximum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => maximum.subtract(Money.fromCents(-1))).toThrow(RangeError);
   });
 
   test("subtract_WhenResultFallsBelowMinimum_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const minimum = Money.fromCents(Number.MIN_SAFE_INTEGER);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => minimum.subtract(Money.fromCents(1))).toThrow(RangeError);
   });
 
   test("multiply_WhenMinimumIsNegated_ReturnsMaximum", () => {
-    // Arrange
+    // Input
     const minimum = Money.fromCents(Number.MIN_SAFE_INTEGER);
-    const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
-    // Act
+    // Log
     const negatedMinimum = minimum.multiply(-1);
 
-    // Assert
-    expect(negatedMinimum.equals(maximum)).toBe(true);
+    // Oracle
+    expect(negatedMinimum.toCents()).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   test("multiply_WhenOneCentIsScaledToMaximum_PreservesExactValue", () => {
-    // Arrange
-    const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
+    // Input
+    const oneCent = Money.fromCents(1);
 
-    // Act
-    const scaledUnit = Money.fromCents(1).multiply(Number.MAX_SAFE_INTEGER);
+    // Log
+    const scaledUnit = oneCent.multiply(Number.MAX_SAFE_INTEGER);
 
-    // Assert
-    expect(scaledUnit.equals(maximum)).toBe(true);
+    // Oracle
+    expect(scaledUnit.toCents()).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   test("multiply_WhenMaximumIsDoubled_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const maximum = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => maximum.multiply(2)).toThrow(RangeError);
   });
 
   test("multiply_WhenMinimumIsDoubled_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const minimum = Money.fromCents(Number.MIN_SAFE_INTEGER);
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => minimum.multiply(2)).toThrow(RangeError);
   });
 });

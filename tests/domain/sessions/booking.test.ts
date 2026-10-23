@@ -12,95 +12,95 @@ const details = {
 
 describe("Booking", () => {
   test("constructor_WhenCostIsZero_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const invalidDetails = { ...details, totalCost: Money.fromCents(0) };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Booking(invalidDetails)).toThrow(RangeError);
   });
 
   test("constructor_WhenVenueIsBlank_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const invalidDetails = { ...details, venueName: " " };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Booking(invalidDetails)).toThrow(RangeError);
   });
 
   test("constructor_WhenStartEqualsEnd_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const invalidDetails = { ...details, startAt: details.endAt };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Booking(invalidDetails)).toThrow(RangeError);
   });
 
   test("constructor_WhenEndDateIsInvalid_ThrowsRangeError", () => {
-    // Arrange
+    // Input
     const invalidDetails = { ...details, endAt: new Date(Number.NaN) };
 
-    // Act & Assert
+    // Log & Oracle
     expect(() => new Booking(invalidDetails)).toThrow(RangeError);
   });
 
   test("constructor_WhenSourceAndExposedDatesAreMutated_PreservesTimes", () => {
-    // Arrange
-    const source = { ...details, startAt: new Date(details.startAt) };
-    const booking = new Booking(source);
+    // Input
+    const input = { ...details, startAt: new Date(details.startAt) };
 
-    // Act
-    source.startAt.setFullYear(2000);
+    // Log
+    const booking = new Booking(input);
+    input.startAt.setFullYear(2000);
     booking.startAt.setFullYear(2001);
     booking.endAt.setFullYear(2002);
 
-    // Assert
+    // Oracle
     expect(booking.startAt).toEqual(details.startAt);
     expect(booking.endAt).toEqual(details.endAt);
   });
 
   test("equals_WhenValuesMatch_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const booking = new Booking(details);
-    const other = new Booking(details);
+    const identicalBooking = new Booking(details);
 
-    // Act
-    const equalBookings = booking.equals(other);
+    // Log
+    const equalBookings = booking.equals(identicalBooking);
 
-    // Assert
+    // Oracle
     expect(equalBookings).toBe(true);
   });
 
   test("equals_WhenVenueDiffers_ReturnsFalse", () => {
-    // Arrange
+    // Input
     const booking = new Booking(details);
-    const other = new Booking({ ...details, venueName: "Other" });
+    const otherVenueBooking = new Booking({ ...details, venueName: "Other" });
 
-    // Act
-    const equalBookings = booking.equals(other);
+    // Log
+    const equalBookings = booking.equals(otherVenueBooking);
 
-    // Assert
+    // Oracle
     expect(equalBookings).toBe(false);
   });
 
   test("hasStarted_WhenTimeEqualsStart_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const booking = new Booking(details);
 
-    // Act
+    // Log
     const hasStarted = booking.hasStarted(details.startAt);
 
-    // Assert
+    // Oracle
     expect(hasStarted).toBe(true);
   });
 
   test("hasEnded_WhenTimeEqualsEnd_ReturnsTrue", () => {
-    // Arrange
+    // Input
     const booking = new Booking(details);
 
-    // Act
+    // Log
     const hasEnded = booking.hasEnded(details.endAt);
 
-    // Assert
+    // Oracle
     expect(hasEnded).toBe(true);
   });
 });
