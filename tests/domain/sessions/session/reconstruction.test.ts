@@ -5,6 +5,7 @@ import {
   sessionEndsAt,
   pendingPayoutDetails,
   createTestSession,
+  readyBooker,
   sessionDetails,
   sessionStartsAt,
 } from "./session-fixtures";
@@ -170,6 +171,34 @@ describe("Session", () => {
         // @ts-expect-error A pending batch must not fill omitted key history at runtime.
         return new Session(details);
       }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
+    });
+
+    test("constructor_WhenCancelledRosterHasRemovedParticipant_PreservesRemovedStatus", () => {
+      // Input
+      const cancelledSession = createTestSession({
+        committedUserIds: ["alice", "ben"],
+        waitlistedUserIds: ["cara"],
+      });
+      const booker = readyBooker();
+      booker.removeParticipant(
+        cancelledSession,
+        "p-alice",
+        hoursBeforeSessionStart(48),
+      );
+      booker.cancel(cancelledSession, hoursBeforeSessionStart(24));
+      const details = sessionDetails({
+        status: "CANCELLED",
+        participations: cancelledSession.participantList.participations,
+        nextQueueSequence: cancelledSession.participantList.nextQueueSequence,
+      });
+
+      // Log
+      const restoredSession = new Session(details);
+      const restoredAlice =
+        restoredSession.participantList.requireParticipation("p-alice");
+
+      // Oracle
+      expect(restoredAlice.status).toBe("REMOVED");
     });
 
     test("constructor_WhenSessionIsSettled_RestoresStatusAndEndTime", () => {

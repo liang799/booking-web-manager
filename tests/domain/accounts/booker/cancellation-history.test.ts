@@ -20,20 +20,11 @@ describe("Booker", () => {
 
     // Log
     const cancellation = booker.cancel(session, hoursBeforeSessionStart(24));
-    const restoredSession = new Session(
-      sessionDetails({
-        status: "CANCELLED",
-        participations: session.participantList.participations,
-        nextQueueSequence: session.participantList.nextQueueSequence,
-      }),
-    );
     const sessionStatus = session.status;
     const aliceParticipation =
       session.participantList.requireParticipation("p-alice");
     const caraParticipation =
       session.participantList.requireParticipation("p-cara");
-    const restoredAlice =
-      restoredSession.participantList.requireParticipation("p-alice");
 
     // Oracle
     expect(sessionStatus).toBe("CANCELLED");
@@ -45,7 +36,6 @@ describe("Booker", () => {
       ]),
     ).toEqual([["p-ben", 500]]);
     expect(caraParticipation.status).toBe("CANCELLED");
-    expect(restoredAlice.status).toBe("REMOVED");
   });
 
   test("cancel_WhenRosterHasPreviouslyCancelledParticipant_PreservesTerminalHold", () => {

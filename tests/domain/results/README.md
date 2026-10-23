@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **23 October 2026, 23:19:29 SGT**
-(`2026-10-23T15:19:29.043Z`). All **600 tests in 43 files passed**.
+Snapshot run: **23 October 2026, 23:30:02 SGT**
+(`2026-10-23T15:30:02.897Z`). All **603 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-23-vitest.json
@@ -12,11 +12,11 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-23-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `f66756b0a56c7cdfa0a080e79cda9751fce29d71b9e5f5a568bce6be250bec67`.
+  `76da83f3ef01ac312396eb3628f38e5e45a34ecd8d8b42056d3d7b74f370b23a`.
 - [Coverage mapping](./2026-10-23-coverage-map.json): all 598 release-baseline cases
-  mapped to 599 retained scenarios, plus one new visibility-change case.
+  mapped to 602 retained scenarios, plus one new visibility-change case.
   Includes before/after assertion expressions for changed explicit scenarios.
-- [Table index](../README.md#result-snapshots): nine directories, 600 rows,
+- [Table index](../README.md#result-snapshots): nine directories, 603 rows,
   exactly one row per final case. Each row links to its test definition.
 
 Base revision: `00f6c88462e16ffce8f91dd78b72aa649918e9f7`. The run includes the
@@ -66,6 +66,10 @@ in 45 files**. This cleanup preserves both sets of cases and assertions:
 - One custom-price scenario became two independent cases for payout
   preparation and completion. The batch amount and released amount/state
   assertions remain, adding one test.
+- Cancellation and reconstruction of its removed-participant history now have
+  separate cases. Two settlement cases also have separate reliability-query
+  cases. Each split keeps the four related action assertions together and
+  moves one independent assertion into its own freshly prepared scenario.
 - A separate visibility-change case starts with a PUBLIC session, calls
   `changeVisibility` as an unverified owner, captures the resulting visibility,
   and expects PRIVATE. The existing permission-check case remains independent.
@@ -82,13 +86,14 @@ The mapping was reconciled by source path and test identity. Assertion changes
 were reviewed, including cases with renamed local variables; equal test counts
 alone were not used as coverage evidence.
 
-The final suite contains **600 cases and 1,229 assertions**, including eight
-prerequisite assertions. The suite-wide Log grouping retains every case name,
-matcher, negation, expected argument, and underlying observed expression from
-the preceding cleanup revision (`a673037`). Named captures group successful
-actions with their outcomes. Direct unchanged-state comparisons stay after the
-exception assertion that executes the rejected command, under its existing
-`Log & Oracle` comment.
+The final suite contains **603 cases and 1,229 assertions**, including eight
+prerequisite assertions. The three behavior splits preserve every assertion
+from the preceding 600-case revision (`acac1b5`), including matcher, negation,
+expected argument, and observed expression. Their original case names remain;
+the three new names identify the moved reconstruction and reliability checks.
+Named captures group successful actions with their outcomes. Direct
+unchanged-state comparisons stay after the exception assertion that executes
+the rejected command, under its existing `Log & Oracle` comment.
 Fault-injection oracles construct independent expected errors inline, retaining
 their original error-equality checks.
 
@@ -96,9 +101,9 @@ their original error-equality checks.
 
 | Check | Result |
 |---|---|
-| Domain suite | 600 passed across 43 files |
-| Shuffled domain suite, seed `2006` | 600 passed across 43 files |
-| Full `rtk npm test` | 2,791 passed; 3 failed; 42 skipped; 1 todo |
+| Domain suite | 603 passed across 43 files |
+| Shuffled domain suite, seed `2006` | 603 passed across 43 files |
+| Full `rtk npm test` | 2,794 passed; 3 failed; 42 skipped; 1 todo |
 | `rtk npm run typecheck` | Failed on 25 existing errors in the profile page and app shell |
 | `rtk npx eslint tests/domain` | Passed |
 | `rtk npm run lint` | Failed on an existing unused `MobileNavigation` import in the app shell |

@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "digest": "f66756b0a56c7cdfa0a080e79cda9751fce29d71b9e5f5a568bce6be250bec67",
+  "digest": "76da83f3ef01ac312396eb3628f38e5e45a34ecd8d8b42056d3d7b74f370b23a",
   "files": {
     "domain/accounts/booker.ts": "5ff925e4fdcab3cc1ca3c90f5bd77ebd740e90ec806bee88e75d8f29aec6145f",
     "domain/accounts/booking-account-eligibility.ts": "9cbf127166a8c3f3ee602915b45459b211b937261f058466d6a797b5c68d9075",
@@ -46,7 +46,7 @@
     "tests/domain/accounts/booker/administration.test.ts": "84764e0cc4c230cd938fcb3b76552327017e0f992338748a81dbc40240e5d957",
     "tests/domain/accounts/booker/attendance.test.ts": "c1a6a9d554c5b3db423ebb1833ab29d00ff64d127ec201995fc86f9092f6c96d",
     "tests/domain/accounts/booker/authorization.test.ts": "8642fc28e1a1904251aa131d43be50f47a229fd5deeb2dcc1962c01349cae6ae",
-    "tests/domain/accounts/booker/cancellation-history.test.ts": "c5350ff801c987d478857ff447d606700f85a17f65ffd2d38a09dd9f072c3d07",
+    "tests/domain/accounts/booker/cancellation-history.test.ts": "fd8a126c3ec1ecd8f9bfc5e3a08cb54cd4122fd432d149878fd216ccf8bc3eb9",
     "tests/domain/accounts/booker/creation.test.ts": "edcd7234d8c51bcdcd1cc68db1ed3adf5987a52754f6119a86d8137b973aea1c",
     "tests/domain/accounts/booker/settlement.test.ts": "80e5acce52d4f7b0ac054cc2169a281facdcc7f0371a872e2a843a1dea86ee61",
     "tests/domain/accounts/deactivation-policy.test.ts": "0d3f9f2923f8305fa04a025dba8f041b5f0d00d26a8d5ddb288a9adabd9a9c20",
@@ -78,16 +78,16 @@
     "tests/domain/sessions/booking.test.ts": "897c89c9760bf0ac32e1edc1d374de4acc5c63eebf867ace70621d0c4f167a07",
     "tests/domain/sessions/fund-hold.test.ts": "cd4ad79cfb98f0a7cdf9acbb0818e5931422e210d6038a5a3b804547292c9e03",
     "tests/domain/sessions/participant-list.test.ts": "00d5d14c4125fd360de002fb671821668fb5d6f3c3f62db8b5e9186727838288",
-    "tests/domain/sessions/participation.test.ts": "727b7090ada7df3814c42dc3069c542641de1b04fb14f58d072226d99b8e07b7",
+    "tests/domain/sessions/participation.test.ts": "1bc361e567a24f41d762d6c65109fcdef0a7b1e09973080a248744a422f9e546",
     "tests/domain/sessions/pricing.test.ts": "2c35e0dc0f1ff7fc1b95d09316e1090e4d5b14e8e4754d9de5df15c35bcf1009",
     "tests/domain/sessions/session/admission.test.ts": "df99ea14cdaae41675e964526e3c6ecf77c57ccad2a07ab30333e7a5951a2370",
     "tests/domain/sessions/session/attendance.test.ts": "4a404d97e2b3acb8cf7310cad6e83477a6e76b61f76d854f8ec9d76097129bf0",
     "tests/domain/sessions/session/custom-pricing.test.ts": "b5e8a9c70e4ac07b5d69f10aaa28e1ce769830d53b438a90f6ce642c36ffadec",
-    "tests/domain/sessions/session/reconstruction.test.ts": "f1d2577b13e76c508afef87b7e5dd983380dc2c5d41e188149aedadcad72e2e9",
+    "tests/domain/sessions/session/reconstruction.test.ts": "3178e89567d76ab1c21f55f9b27536388fc003b3046165e063ec12b52d27a57e",
     "tests/domain/sessions/session/recording.test.ts": "5c4b361c4c6a877c2bc31cbd0a5bb0a790db352ba4ec1ddd882d705cc14f5ad6",
     "tests/domain/sessions/session/replacement-hydration.test.ts": "d11a9d825d27e2ad076c63c750c2ecb095067f1b8d1ba1856f677227514d6d97",
     "tests/domain/sessions/session/session-fixtures.ts": "fffd64e063d0a59bea7e2dc2be8e7b368d2eef73049701134d136a9c1bfc20e3",
-    "tests/domain/sessions/session/settlement.test.ts": "916f69843716ef5eb591b96c15e6a32c349b298e60016a39dfd9e02050da96ba",
+    "tests/domain/sessions/session/settlement.test.ts": "394e8861cd5ff8b5b2e32c6b1d5fbaa5a9419c39eab4d3201205bfddbeb34c8d",
     "tsconfig.json": "f54c2e7a98dd8165dd966766429686e90bac5ee22668e95252c30149a317c9f0",
     "vitest.config.ts": "c0bcd713aaf78ed3bb7ad176ae95a388cdb9ba78f1a11eea26270d667410c995"
   }

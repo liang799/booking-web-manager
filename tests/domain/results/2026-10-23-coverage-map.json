@@ -1,7 +1,7 @@
 {
   "baselineRevision": "00f6c88462e16ffce8f91dd78b72aa649918e9f7",
   "baselineTests": 598,
-  "finalTests": 600,
+  "finalTests": 603,
   "baselineFiles": 45,
   "finalFiles": 43,
   "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The original 593-case baseline is retained along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values. Additions are listed separately from retained baseline coverage.",
@@ -4615,9 +4615,14 @@
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy",
           "line": 419
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero",
+          "line": 441
         }
       ],
-      "reason": "Preserved",
+      "reason": "Separated hold settlement from the subsequent reliability query; retained four settlement assertions and the zero-reliability assertion",
       "assertionsBefore": [
         "expect(finalized).not.toBe(withdrawn)",
         "expect(withdrawn.hold?.state).toBe(\"FORFEITURE_DUE\")",
@@ -4642,7 +4647,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsUnverified_RejectsRelease",
-          "line": 443
+          "line": 459
         }
       ],
       "reason": "Preserved"
@@ -4656,7 +4661,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
-          "line": 453
+          "line": 469
         }
       ],
       "reason": "Preserved",
@@ -4678,7 +4683,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenParticipantAttended_RejectsForfeiture",
-          "line": 468
+          "line": 484
         }
       ],
       "reason": "Preserved"
@@ -5467,9 +5472,14 @@
           "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
           "name": "cancel_WhenRosterHasRemovedParticipant_PreservesRemovalWithoutSecondRefund",
           "line": 11
+        },
+        {
+          "file": "tests/domain/sessions/session/reconstruction.test.ts",
+          "name": "constructor_WhenCancelledRosterHasRemovedParticipant_PreservesRemovedStatus",
+          "line": 176
         }
       ],
-      "reason": "Preserved",
+      "reason": "Separated cancellation outcomes from reconstruction of the cancelled roster; retained four cancellation assertions and the removed-status hydration assertion",
       "assertionsBefore": [
         "expect(session.status).toBe(\"CANCELLED\")",
         "expect(session.participantList.requireParticipation(\"p-alice\")).toBe(removed)",
@@ -5494,7 +5504,7 @@
         {
           "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
           "name": "cancel_WhenRosterHasPreviouslyCancelledParticipant_PreservesTerminalHold",
-          "line": 51
+          "line": 41
         }
       ],
       "reason": "Preserved",
@@ -7644,7 +7654,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenInputsAndGettersAreMutated_PreservesRosterAndHistory",
-          "line": 14
+          "line": 15
         }
       ],
       "reason": "Preserved",
@@ -7678,7 +7688,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenBothHistoriesAreOmittedWithoutPendingPayout_ThrowsInvalidInput",
-          "line": 60
+          "line": 61
         }
       ],
       "reason": "Preserved"
@@ -7692,7 +7702,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenAttemptHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput",
-          "line": 75
+          "line": 76
         }
       ],
       "reason": "Preserved"
@@ -7706,7 +7716,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenKeyHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput",
-          "line": 90
+          "line": 91
         }
       ],
       "reason": "Preserved"
@@ -7720,7 +7730,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenAttemptHistoryIsNotAnArray_ThrowsInvalidInput",
-          "line": 105
+          "line": 106
         }
       ],
       "reason": "Preserved"
@@ -7734,7 +7744,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenKeyHistoryIsNotAnArray_ThrowsInvalidInput",
-          "line": 116
+          "line": 117
         }
       ],
       "reason": "Preserved"
@@ -7748,7 +7758,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenBothHistoriesAreOmittedWithPendingPayout_ThrowsInvalidInput",
-          "line": 130
+          "line": 131
         }
       ],
       "reason": "Preserved"
@@ -7762,7 +7772,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenAttemptHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput",
-          "line": 145
+          "line": 146
         }
       ],
       "reason": "Preserved"
@@ -7776,7 +7786,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenKeyHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput",
-          "line": 160
+          "line": 161
         }
       ],
       "reason": "Preserved"
@@ -7790,7 +7800,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenSessionIsSettled_RestoresStatusAndEndTime",
-          "line": 175
+          "line": 204
         }
       ],
       "reason": "Preserved"
@@ -7804,7 +7814,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenFailedPayoutHistoryIsRestored_PreservesAttemptsAndKeys",
-          "line": 187
+          "line": 216
         }
       ],
       "reason": "Preserved",
@@ -7832,7 +7842,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenRosterIsDuplicated_ThrowsDomainError",
-          "line": 209
+          "line": 238
         }
       ],
       "reason": "Preserved"
@@ -7846,7 +7856,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenDifferentUsersShareParticipationId_ThrowsDuplicateId",
-          "line": 223
+          "line": 252
         }
       ],
       "reason": "Preserved"
@@ -7860,7 +7870,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenDifferentParticipationsShareUserId_ThrowsDuplicateId",
-          "line": 249
+          "line": 278
         }
       ],
       "reason": "Preserved"
@@ -7874,7 +7884,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenDifferentParticipationsShareHoldId_ThrowsDuplicateId",
-          "line": 275
+          "line": 304
         }
       ],
       "reason": "Preserved"
@@ -7888,7 +7898,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenWaiterReusesHistoricalQueueSequence_ThrowsDuplicateId",
-          "line": 304
+          "line": 333
         }
       ],
       "reason": "Preserved"
@@ -7902,7 +7912,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingPayoutHasNoBatch_ThrowsDomainError",
-          "line": 330
+          "line": 359
         }
       ],
       "reason": "Preserved"
@@ -7916,7 +7926,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenNextSequenceDoesNotFollowQueue_ThrowsDomainError",
-          "line": 338
+          "line": 367
         }
       ],
       "reason": "Preserved"
@@ -7930,7 +7940,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenSettledRosterStillHasHeldFunds_ThrowsDomainError",
-          "line": 355
+          "line": 384
         }
       ],
       "reason": "Preserved"
@@ -7944,7 +7954,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenHoldUsesForeignAccount_ThrowsDomainError",
-          "line": 370
+          "line": 399
         }
       ],
       "reason": "Preserved"
@@ -7958,7 +7968,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPayoutAttemptIdsAreDuplicated_ThrowsDomainError",
-          "line": 385
+          "line": 414
         }
       ],
       "reason": "Preserved"
@@ -7972,7 +7982,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPayoutKeysAreDuplicated_ThrowsDomainError",
-          "line": 393
+          "line": 422
         }
       ],
       "reason": "Preserved"
@@ -7986,7 +7996,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenNextSequenceFollowsQueue_RestoresNextWaiter",
-          "line": 403
+          "line": 432
         }
       ],
       "reason": "Preserved",
@@ -8006,7 +8016,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingBatchBelongsToAnotherSession_ThrowsDomainError",
-          "line": 426
+          "line": 455
         }
       ],
       "reason": "Preserved"
@@ -8020,7 +8030,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingLineUsesForeignWallet_ThrowsDomainError",
-          "line": 441
+          "line": 470
         }
       ],
       "reason": "Preserved"
@@ -8034,7 +8044,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingAttemptIsMissingFromHistory_ThrowsDomainError",
-          "line": 459
+          "line": 488
         }
       ],
       "reason": "Preserved"
@@ -8048,7 +8058,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "constructor_WhenPendingKeyIsMissingFromHistory_ThrowsDomainError",
-          "line": 469
+          "line": 498
         }
       ],
       "reason": "Preserved"
@@ -8062,7 +8072,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "pendingSettlement_WhenInputsAndOutputsAreMutated_PreservesBatchAndHistory",
-          "line": 479
+          "line": 508
         }
       ],
       "reason": "Preserved",
@@ -8092,7 +8102,7 @@
         {
           "file": "tests/domain/sessions/session/reconstruction.test.ts",
           "name": "completeSettlement_WhenPendingSessionIsRestored_SettlesIndependentlyOfSource",
-          "line": 511
+          "line": 540
         }
       ],
       "reason": "Preserved",
@@ -8789,9 +8799,14 @@
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds",
           "line": 138
+        },
+        {
+          "file": "tests/domain/sessions/session/settlement.test.ts",
+          "name": "reliabilityOutcome_WhenSessionSettlementForfeitsWithdrawal_ReturnsZero",
+          "line": 180
         }
       ],
-      "reason": "Preserved",
+      "reason": "Separated mixed payout completion from the subsequent reliability query; retained four financial assertions and the zero-reliability assertion",
       "assertionsBefore": [
         "expect( completion.instructions.map((instruction) => instruction.kind), ).toEqual([\"FORFEIT\", \"RELEASE\"])",
         "expect( completion.instructions.map((instruction) => instruction.payoutId), ).toEqual([\"out\", \"out\"])",
@@ -8816,7 +8831,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity",
-          "line": 185
+          "line": 213
         }
       ],
       "reason": "Preserved",
@@ -8844,7 +8859,7 @@
         {
           "file": "tests/domain/sessions/session/settlement.test.ts",
           "name": "failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory",
-          "line": 222
+          "line": 250
         }
       ],
       "reason": "Preserved",

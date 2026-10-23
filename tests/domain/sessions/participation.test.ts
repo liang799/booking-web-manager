@@ -430,13 +430,29 @@ describe("Participation", () => {
       const finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt);
 
       const withdrawnHoldState = withdrawn.hold?.state;
-      const reliabilityValue = finalized.reliabilityOutcome(settledAt)?.value;
 
       // Oracle
       expect(finalized).not.toBe(withdrawn);
       expect(withdrawnHoldState).toBe("FORFEITURE_DUE");
       expect(finalized.hold?.state).toBe("FORFEITED");
       expect(finalized.hold?.payoutId).toBe("payout");
+    });
+
+    test("reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero", () => {
+      // Input
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: createdAt,
+          hold: new FundHold(holdDetails({ state: "FORFEITURE_DUE" })),
+        }),
+      );
+      const finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt);
+
+      // Log
+      const reliabilityValue = finalized.reliabilityOutcome(settledAt)?.value;
+
+      // Oracle
       expect(reliabilityValue).toBe(0);
     });
 

@@ -139,7 +139,6 @@ describe("Session", () => {
     // Input
     const withdrawalTime = hoursBeforeSessionStart(2);
     const completionTime = sessionEndsAt;
-    const reliabilityEvaluationTime = sessionEndsAt;
     const details = pendingPayoutDetails(["alice", "ben"]);
     const alice = withdrawnParticipationWithForfeitureDue(
       "alice",
@@ -162,9 +161,6 @@ describe("Session", () => {
     const completion = bookingSession.completeSettlement("out", completionTime);
     const sessionStatus = bookingSession.status;
     const settledParticipations = bookingSession.participantList.participations;
-    const aliceReliability = bookingSession.participantList
-      .requireParticipation("p-alice")
-      .reliabilityOutcome(reliabilityEvaluationTime);
 
     // Oracle
     expect(
@@ -179,6 +175,38 @@ describe("Session", () => {
         (participation) => participation.hold?.state,
       ),
     ).toEqual(["FORFEITED", "RELEASED"]);
+  });
+
+  test("reliabilityOutcome_WhenSessionSettlementForfeitsWithdrawal_ReturnsZero", () => {
+    // Input
+    const withdrawalTime = hoursBeforeSessionStart(2);
+    const completionTime = sessionEndsAt;
+    const reliabilityEvaluationTime = sessionEndsAt;
+    const details = pendingPayoutDetails(["alice", "ben"]);
+    const alice = withdrawnParticipationWithForfeitureDue(
+      "alice",
+      withdrawalTime,
+    );
+    const ben = verifiedParticipation("ben", "ATTENDED");
+    const bookingSession = new Session({
+      ...details,
+      participations: [alice, ben],
+      pendingSettlement: {
+        ...details.pendingSettlement!,
+        lines: [
+          payoutLineFor(alice.hold!, "FORFEIT"),
+          payoutLineFor(ben.hold!, "RELEASE"),
+        ],
+      },
+    });
+    bookingSession.completeSettlement("out", completionTime);
+
+    // Log
+    const aliceReliability = bookingSession.participantList
+      .requireParticipation("p-alice")
+      .reliabilityOutcome(reliabilityEvaluationTime);
+
+    // Oracle
     expect(aliceReliability?.value).toBe(0);
   });
 

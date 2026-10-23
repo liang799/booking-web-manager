@@ -26,6 +26,10 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
 - Give each test one observable domain behavior. Arrange prerequisite transitions
   before exercising that behavior; split cases that independently check joining,
   withdrawal, promotion, or payout completion.
+- Keep multiple assertions when they describe the same outcome, such as a
+  cancellation's status, refunds, and roster changes. Give reconstruction and
+  independent reliability rules their own cases. Each case establishes its own
+  prerequisites in Input and exercises its named behavior under Log.
 - A domain unit test may use real collaborating entities and value objects.
   Test the subject's public behavior without replacing those collaborators with
   mocks merely to reduce the number of objects in the test.
@@ -285,7 +289,7 @@ a tests-only cleanup.
 
 ## Result snapshots
 
-The **2026-10-23** snapshot covers **600 passing cases across 43 files**. Each
+The **2026-10-23** snapshot covers **603 passing cases across 43 files**. Each
 table has a linked Name and Location, Input, Oracle (expected result), Log
 (actual outcome verified by assertions), and separate execution status.
 
@@ -298,8 +302,8 @@ table has a linked Name and Location, Input, Oracle (expected result), Log
 | Money | 83 | [Money cases](./finance/money/README.md) |
 | Groups | 34 | [Group cases](./groups/README.md) |
 | Reliability | 33 | [Reliability cases](./reliability/README.md) |
-| Sessions | 88 | [Session value and pricing cases](./sessions/README.md) |
-| Session lifecycle | 82 | [Session lifecycle cases](./sessions/session/README.md) |
+| Sessions | 89 | [Session value and pricing cases](./sessions/README.md) |
+| Session lifecycle | 84 | [Session lifecycle cases](./sessions/session/README.md) |
 
 The [execution evidence and refresh procedure](./results/README.md) retain the
 JSON report, source hashes, and baseline-to-final scenario mapping. Log values
