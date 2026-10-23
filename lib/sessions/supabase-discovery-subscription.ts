@@ -4,7 +4,7 @@ const TOPIC = "discovery:public:v1";
 const EVENT = "invalidate";
 
 /**
- * Receives payload-free hints, never rows. This dedicated public client does not
+ * Receives invalidation hints, never session rows. This dedicated public client does not
  * depend on login, read tables, or share channel teardown with authenticated UI.
  */
 export function subscribeToDiscoveryInvalidation(

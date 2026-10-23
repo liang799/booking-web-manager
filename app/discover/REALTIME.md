@@ -20,8 +20,10 @@ the notification. A failed notification must not fail the booking itself.
 
 ## Privacy and anonymous browsing
 
-Migration `0015_discovery_realtime.sql` emits `{}` on the public topic
-`discovery:public:v1`, event `invalidate`. It never sends the old/new row, IDs,
+Migration `0015_discovery_realtime.sql` passes `{}` to `realtime.send` on the public
+topic `discovery:public:v1`, event `invalidate`. Supabase adds a generated broadcast
+UUID as transport metadata, including `payload.id` on the current runtime. This is
+not a session ID. The notification never sends the old/new row, session IDs,
 room tokens, booker/participant identities or financial records. There are no new
 browser table grants, RLS relaxations or Postgres Changes publications.
 
@@ -42,8 +44,9 @@ optional authentication cannot block the notification subscription.
 
 ## Timing and lifecycle
 
-Events coalesce over 250 ms, including subscription acknowledgement to close the
-initial-read/subscribe race. In-flight refreshes never overlap; an event during a
+Events coalesce over 250 ms. An initial catch-up read and another invalidation on
+subscription acknowledgement cover changes around page loading and connection.
+In-flight refreshes never overlap; an event during a
 read or foreground navigation remains pending for a subsequent refresh. Sustained
 events do not keep resetting the debounce window. Existing error presentation,
 foreground loading, URL history, drafts, focus, scroll and cursor behavior remain.
@@ -56,12 +59,19 @@ A 30-second reconciliation timer repairs missed events and supports deployments
 without Realtime settings or service availability. At idle this is about two
 background reads per minute instead of sixty, plus connection/resume reads.
 A separate timer refreshes at the first displayed session's start time because
-clock-driven expiry does not generate a database change.
+clock-driven expiry does not generate a database change. The server supplies that
+start and its current time as page-only metadata; the browser schedules the
+remaining duration using its monotonic clock. Refresh throttling uses the same
+monotonic clock, so changing the device's wall clock does not delay events or
+expiry. A response still containing an expired session rearms a bounded retry.
+This does not change the public discovery API projection.
 
 The existing three-second visibility target applies to a healthy visible online
 page with Realtime configured and delivering events. The 30-second degraded-mode
 fallback does NOT satisfy that target. Delivery plus database/render latency
 must be verified in the deployment; the debounce interval is not a latency SLA.
+In particular, a channel's `SUBSCRIBED` acknowledgement does not prove that a cold
+database broadcast stream is ready. Missed startup events rely on reconciliation.
 
 ## Deployment
 
@@ -69,12 +79,13 @@ must be verified in the deployment; the debounce interval is not a latency SLA.
    relying on Realtime freshness. Coordinate the sequence with Rishi before merge.
 2. Supply the existing `NEXT_PUBLIC_SUPABASE_URL` and
    `NEXT_PUBLIC_SUPABASE_ANON_KEY` at build time. Never expose a service-role key.
-3. Enable Supabase Realtime and allow public channels for the payload-free topic.
+3. Enable Supabase Realtime and allow public channels for the invalidation topic.
    No `sessions` publication or SELECT grant is required. Do not disable private
    channel authorization for unrelated features.
 4. Verify in two browsers, including a signed-out Discover visitor: publish, hide
    and cancel a session; check appearance/disappearance within three seconds and
-   inspect the broadcast to confirm its payload is empty.
+   inspect the broadcast to confirm it contains only generated broadcast metadata,
+   with no session IDs, tokens, rows or participant information.
 5. Disconnect Realtime, verify slower reconciliation, then reconnect. Check hidden
    tabs, pending filter edits and navigation away for cleanup and state preservation.
 
@@ -98,11 +109,18 @@ require changing session data or permissions.
 ## Validation
 
 Unit tests cover scheduler coalescing, in-flight invalidations, navigation guards,
-visibility/connectivity, expiry, cleanup, adapter retries and optional settings.
+visibility/connectivity, expiry across clock skew and wall-clock changes, cleanup,
+adapter retries and optional settings.
 `tests/integration/discovery-realtime.test.ts` uses the actual disposable Realtime
 service to verify anonymous delivery, private/past/closed exclusions, unchanged
-writes, rollback, payload privacy and retained table restrictions. The integration
-runner now enables Realtime instead of weakening three-second browser assertions.
+writes, rollback, payload privacy and retained table restrictions. Before running
+tests, the guarded disposable runner repeatedly sends a synthetic nonce through
+the database on a unique public test topic until an anonymous client receives it.
+It retains that connection through the test run, including builds, and disposes
+it during cleanup. This establishes actual delivery readiness instead of assuming
+that `SUBSCRIBED` means the database stream is ready. No real session data is used
+by this probe. The integration runner enables Realtime without weakening the
+three-second browser assertions.
 
 Run:
 
@@ -114,8 +132,11 @@ npm run test:integration
 npm run test:e2e:integration
 ```
 
-Existing visibility/cancellation browser tests and the background-refresh
-Storybook story remain regression coverage. These tests need the disposable local
+Anonymous browser tests verify publish/hide delivery and session expiry with the
+browser clock ahead or behind the server. Existing visibility/cancellation browser
+tests and the background-refresh Storybook story remain regression coverage.
+Delayed-refresh and teardown tests explicitly mutate the public projection to
+exercise invalidations. These tests need the disposable local
 stack; do not run them against a hosted or production project.
 
 ## Deliberately unchanged

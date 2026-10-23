@@ -39,7 +39,7 @@ begin
   -- Supabase's send writes transactionally to realtime.messages, not an HTTP API.
   if to_regprocedure('realtime.send(jsonb,text,text,boolean)') is not null then
     begin
-      -- Public discovery includes signed-out visitors. Send no IDs, rows, tokens,
+      -- Public discovery includes signed-out visitors. Send no session IDs, rows, tokens,
       -- old/new values or participant/money details, even when hiding a session.
       perform realtime.send('{}'::jsonb, 'invalidate', 'discovery:public:v1', false);
     exception when others then

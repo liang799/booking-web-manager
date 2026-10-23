@@ -213,7 +213,7 @@ disposable session stack via `npm run test:sessions:integration`.
 
 ## Background visibility updates (UC2-03a)
 
-A valid committed query subscribes to payload-free Supabase Realtime invalidations
+A valid committed query subscribes to Supabase Realtime invalidations without session data
 while visible and online. Events trigger the existing server refresh path, with
 250 ms burst coalescing and at most one refresh per second. The server remains the
 only owner of results. No UI markup or styling changes accompany this transport.
@@ -231,8 +231,9 @@ and hiding the last session on a page can leave it empty. Background updates nev
 send the user back to page one.
 
 A 30-second reconciliation timer repairs missed messages or unavailable Realtime.
-A separate timer refreshes when the first displayed session starts, even if no
-row changes. The three-second appearance/disappearance target requires healthy
+A separate timer uses server-relative time and a monotonic browser clock to
+refresh when the first displayed session starts, even if no row changes or the
+device's wall clock is inaccurate. The three-second appearance/disappearance target requires healthy
 Realtime delivery plus a healthy visible online page; degraded-mode reconciliation
 does not meet that target. Initial public reads still work without Realtime.
 

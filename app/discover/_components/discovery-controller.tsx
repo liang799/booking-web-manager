@@ -7,13 +7,14 @@ import { discoveryHref } from "../navigation";
 import { subscribeToDiscoveryChanges } from "../client-updates";
 import { DiscoveryFormController } from "./discovery-form-controller";
 import type { DiscoveryOutcome } from "./discovery-state";
-import { startDiscoveryUpdates, type DiscoveryUpdates } from "./discovery-updates";
+import { startDiscoveryUpdates, type DiscoveryUpdates, type DiscoveryExpiry } from "./discovery-updates";
 
 /** The URL owns committed filters and paging; React tracks only navigation and draft validation. */
-export function DiscoveryController({ filters, outcome, queryKey, returnTo }: {
+export function DiscoveryController({ filters, outcome, queryKey, returnTo, expiry }: {
   readonly filters: DiscoveryFilters;
   readonly outcome: DiscoveryOutcome;
   readonly queryKey: string;
+  readonly expiry: DiscoveryExpiry | null;
   readonly returnTo?: string;
 }) {
   const router = useRouter();
@@ -23,11 +24,15 @@ export function DiscoveryController({ filters, outcome, queryKey, returnTo }: {
   const valid = outcome.status !== "invalid";
   const conditions = useRef({ valid, busy: false });
   const updates = useRef<DiscoveryUpdates | null>(null);
+  const readStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
     if (!valid) return;
     const refreshes = startDiscoveryUpdates({
-      refresh: () => startTransition(() => router.refresh()),
+      refresh: () => {
+        readStartedAt.current = performance.now();
+        startTransition(() => router.refresh());
+      },
       canRefresh: () => conditions.current.valid && !conditions.current.busy,
       subscribe: subscribeToDiscoveryChanges,
       document, window, online: () => navigator.onLine,
@@ -45,14 +50,15 @@ export function DiscoveryController({ filters, outcome, queryKey, returnTo }: {
   }, [valid, pending, foreground]);
 
   useEffect(() => {
-    // Results are ordered by start time. Remove expired cards even without a DB write.
-    const startAt = outcome.status === "ready" ? outcome.page.items[0]?.startAt : undefined;
-    updates.current?.expireAt(startAt === undefined ? undefined : Date.parse(startAt));
-  }, [outcome, queryKey, valid]);
+    const elapsed = readStartedAt.current === null ? 0 : performance.now() - readStartedAt.current;
+    updates.current?.expireAt(expiry, elapsed);
+    readStartedAt.current = null;
+  }, [expiry, outcome, queryKey, valid]);
 
   function navigate(query?: string) {
     // Block background work immediately, before React commits the transition state.
     conditions.current.busy = true;
+    readStartedAt.current = performance.now();
     setForeground(true);
     startTransition(() => {
       if (query === undefined || query === queryKey) router.refresh();

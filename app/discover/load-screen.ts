@@ -1,3 +1,4 @@
+import type { DiscoveryExpiry } from "./_components/discovery-updates";
 import type { DiscoveryOutcome } from "./_components/discovery-state";
 import { toDiscoveryPage } from "./contracts";
 import { DiscoveryApiUnavailableError } from "./discovery-api-unavailable";
@@ -26,5 +27,8 @@ export async function loadDiscoveryScreen(searchParams: PageSearchParams) {
       outcome = { status: "error", kind: error instanceof DiscoveryApiUnavailableError ? "unavailable" : "unexpected" };
     }
   }
-  return { queryKey: parsed.queryKey, filters: parsed.filters, outcome };
+  const startsAt = outcome.status === "ready" ? outcome.page.items[0]?.startAt : undefined;
+  const expiry: DiscoveryExpiry | null = startsAt === undefined
+    ? null : { startsAt: Date.parse(startsAt), serverNow: Date.now() };
+  return { queryKey: parsed.queryKey, filters: parsed.filters, outcome, expiry };
 }

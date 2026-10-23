@@ -225,8 +225,8 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
     const participant = await context.identity(false);
     const first = `Refresh-A-${randomUUID().slice(0, 8)}`;
     const second = `Refresh-B-${randomUUID().slice(0, 8)}`;
-    await insertSession(context, participant.userId, first, { visibility: "PUBLIC" });
-    await insertSession(context, participant.userId, second, { visibility: "PUBLIC" });
+    const firstId = await insertSession(context, participant.userId, first, { visibility: "PUBLIC" });
+    const secondId = await insertSession(context, participant.userId, second, { visibility: "PUBLIC" });
     await login(page, participant, `/discover?q=${first}`);
     await expect(row(page, first)).toBeVisible();
     let announce: (() => void) | undefined;
@@ -242,6 +242,8 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
         await route.fulfill({ response });
       } else await route.continue();
     });
+    // Drive a real invalidation rather than waiting for the reconciliation interval.
+    await context.pool.query("update sessions set end_at=end_at + interval '1 minute' where session_id=$1", [firstId]);
     await intercepted;
     const input = page.getByRole("searchbox");
     await expect(input).toBeEnabled();
@@ -266,7 +268,9 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
     await page.goto("/sessions");
     await expect(page.getByRole("heading", { name: "Sessions", exact: true })).toBeVisible();
     discoveryRequestsAfterLeaving = 0;
-    // A deliberate two-poll observation window verifies interval teardown.
+    // A leaked subscription would refresh the departed query after this event.
+    await context.pool.query("update sessions set end_at=end_at + interval '1 minute' where session_id=$1", [secondId]);
+    // Allow the maximum refresh throttle and a coalescing window to elapse.
     await page.waitForTimeout(2200);
     expect(discoveryRequestsAfterLeaving).toBe(0);
   } finally {

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { z } from "zod";
 import { PLATFORM_HOLDING_ACCOUNT_ID } from "@/lib/money/constants";
 import { sessionTestContext, sessionTestEnvironment, type SessionTestContext } from "../support/session-test-context";
 
@@ -10,11 +11,20 @@ describe("UC2-01 / UC2-03a database broadcast invalidation", () => {
   let client: SupabaseClient;
   let channel: RealtimeChannel;
   let bookerId: string;
-  const messages: unknown[] = [];
+  let previousMessageIds: string[];
+  const sessionIds = new Set<string>();
+  const messages: { payload: unknown; meta: unknown }[] = [];
+  // Supabase versions may add a generated message ID to the supplied empty
+  // payload. Only that transport metadata is allowed; no session fields.
+  const payloadSchema = z.object({ id: z.string().uuid().optional() }).strict();
+  const metadataSchema = z.object({ id: z.string().uuid(), replayed: z.literal(false).optional() }).strict();
 
   beforeAll(async () => {
     context = sessionTestContext();
     bookerId = (await context.identity(false)).userId;
+    previousMessageIds = (await context.pool.query<{ id: string }>(
+      "select id from realtime.messages where topic='discovery:public:v1'",
+    )).rows.map((row) => row.id);
     const settings = sessionTestEnvironment();
     client = createClient(settings.supabaseUrl, settings.anonKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -22,7 +32,9 @@ describe("UC2-01 / UC2-03a database broadcast invalidation", () => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error("Disposable Realtime did not subscribe")), 10_000);
       channel = client.channel("discovery:public:v1", { config: { private: false } })
-        .on("broadcast", { event: "invalidate" }, (message) => { messages.push(message.payload); })
+        .on("broadcast", { event: "invalidate" }, (message) => {
+          messages.push({ payload: message.payload, meta: message.meta });
+        })
         .subscribe((status) => {
           if (status === "SUBSCRIBED") { clearTimeout(timeout); resolve(); }
           else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
@@ -39,6 +51,7 @@ describe("UC2-01 / UC2-03a database broadcast invalidation", () => {
 
   async function insert(visibility = "PUBLIC", status = "OPEN", offset = 86_400_000) {
     const sessionId = randomUUID();
+    sessionIds.add(sessionId);
     const startAt = new Date(Date.now() + offset);
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
@@ -52,8 +65,32 @@ describe("UC2-01 / UC2-03a database broadcast invalidation", () => {
   }
 
   async function expectEvents(count: number) {
+    // Committed rows are visible synchronously. Check their count first so an
+    // unexpected earlier hint cannot satisfy the browser count before the final
+    // committed write (the delivery barrier) arrives.
+    const { rows } = await context.pool.query<{ id: string; payload: unknown }>(
+      `select id, payload from realtime.messages
+       where topic='discovery:public:v1' and not (id = any($1::uuid[]))`,
+      [previousMessageIds],
+    );
+    expect(rows).toHaveLength(count);
     await expect.poll(() => messages.length, { timeout: 3_000 }).toBe(count);
-    expect(messages).toEqual(Array.from({ length: count }, () => ({})));
+    const broadcasts = new Map(rows.map((row) => [row.id, row]));
+    const receivedIds = new Set<string>();
+    for (const message of messages) {
+      const payload = payloadSchema.parse(message.payload);
+      const metadata = message.meta === undefined ? undefined : metadataSchema.parse(message.meta);
+      const id = metadata?.id ?? payload.id;
+      expect(id).toBeDefined();
+      if (id === undefined) throw new Error("Broadcast lacks its transport message ID");
+      const row = broadcasts.get(id);
+      expect(row).toBeDefined();
+      expect(payload).toEqual(row?.payload);
+      if (payload.id !== undefined) expect(payload.id).toBe(id);
+      expect(sessionIds.has(id)).toBe(false);
+      receivedIds.add(id);
+    }
+    expect(receivedIds.size).toBe(count);
   }
 
   test("anonymous clients receive creation, hide, publish and cancellation without row data", async () => {

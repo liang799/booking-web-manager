@@ -4,7 +4,7 @@ import { DISCOVERY_RECONCILE_MS, startDiscoveryUpdates } from "@/app/discover/_c
 afterEach(() => vi.useRealTimers());
 
 function scenario() {
-  vi.useFakeTimers();
+  vi.useFakeTimers({ toFake: ["Date", "performance", "setTimeout", "clearTimeout", "setInterval", "clearInterval"] });
   vi.setSystemTime(0);
   const documentEvents = new EventTarget();
   const windowEvents = new EventTarget();
@@ -39,9 +39,12 @@ function scenario() {
 describe("discovery event-driven refresh", () => {
   test("does not poll every second; reconciles after thirty seconds", () => {
     const s = scenario();
+    vi.advanceTimersByTime(250);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.complete(); s.refresh.mockClear();
     vi.advanceTimersByTime(DISCOVERY_RECONCILE_MS - 1);
     expect(s.refresh).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(251);
+    vi.advanceTimersByTime(1);
     expect(s.refresh).toHaveBeenCalledOnce();
     s.updates.stop();
   });
@@ -121,27 +124,118 @@ describe("discovery event-driven refresh", () => {
     s.updates.stop();
   });
 
-  test("expires a displayed session without requiring a database update", () => {
+  test.each([-60_000, 60_000])("expires using server duration despite browser clock skew %ims", (skew) => {
     const s = scenario();
-    s.updates.expireAt(2_000);
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    vi.setSystemTime(250 + skew);
+    s.updates.expireAt({ startsAt: 2_250, serverNow: 250 });
     vi.advanceTimersByTime(2_249);
     expect(s.refresh).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(s.refresh).toHaveBeenCalledOnce();
-    s.updates.complete(); s.updates.expireAt(2_000);
-    vi.advanceTimersByTime(5_000);
-    expect(s.refresh).toHaveBeenCalledOnce();
-    s.updates.expireAt(8_000); vi.advanceTimersByTime(1_000);
-    expect(s.refresh).toHaveBeenCalledTimes(2);
     s.updates.stop();
   });
 
-  test("cancels obsolete expiry timers and does not overflow distant starts", () => {
+  test("wall-clock jumps do not postpone throttled events or displayed expiry", () => {
     const s = scenario();
-    s.updates.expireAt(1_000); s.updates.expireAt(undefined);
-    vi.advanceTimersByTime(2_000);
+    s.notify(); vi.advanceTimersByTime(250); s.updates.complete();
+    s.updates.expireAt({ startsAt: 2_000, serverNow: 250 });
+    vi.setSystemTime(-3_600_000);
+    s.notify(); vi.advanceTimersByTime(1_000);
+    expect(s.refresh).toHaveBeenCalledTimes(2);
+    s.updates.complete();
+    vi.setSystemTime(3_600_000);
+    vi.advanceTimersByTime(1_000);
+    expect(s.refresh).toHaveBeenCalledTimes(3);
+    s.updates.stop();
+  });
+
+  test("accounts for a delayed read instead of extending the server expiry", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    vi.advanceTimersByTime(1_000);
+    s.updates.expireAt({ startsAt: 6_000, serverNow: 5_000 }, 1_200);
+    vi.advanceTimersByTime(249);
     expect(s.refresh).not.toHaveBeenCalled();
-    s.updates.expireAt(3_000_000_000);
+    vi.advanceTimersByTime(1);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.stop();
+  });
+
+  test("an unchanged future session does not push back its existing deadline", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    s.updates.expireAt({ startsAt: 4_000, serverNow: 250 });
+    vi.advanceTimersByTime(1_000);
+    s.updates.expireAt({ startsAt: 4_000, serverNow: 500 });
+    vi.advanceTimersByTime(2_999);
+    expect(s.refresh).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.stop();
+  });
+
+  test("rearms the same session after an early read and backs off already-due responses", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    s.updates.expireAt({ startsAt: 2_000, serverNow: 250 });
+    vi.advanceTimersByTime(2_000);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.complete();
+    s.updates.expireAt({ startsAt: 2_000, serverNow: 1_500 });
+    vi.advanceTimersByTime(1_000);
+    expect(s.refresh).toHaveBeenCalledTimes(2);
+    s.updates.complete();
+    s.updates.expireAt({ startsAt: 2_000, serverNow: 3_250 });
+    vi.advanceTimersByTime(1_000);
+    expect(s.refresh).toHaveBeenCalledTimes(2);
+    vi.advanceTimersByTime(1_250);
+    expect(s.refresh).toHaveBeenCalledTimes(3);
+    s.updates.stop();
+  });
+
+  test("persistently stale responses do not turn expiry into continuous polling", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    s.refresh.mockImplementation(() => {
+      s.updates.complete();
+      s.updates.expireAt({ startsAt: 0, serverNow: Date.now() });
+    });
+    s.updates.expireAt({ startsAt: 0, serverNow: 250 });
+    vi.advanceTimersByTime(60_000);
+    expect(s.refresh.mock.calls.length).toBeGreaterThan(1);
+    expect(s.refresh.mock.calls.length).toBeLessThan(10);
+    s.updates.stop();
+  });
+
+  test("a different first session replaces the obsolete expiry deadline", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    s.updates.expireAt({ startsAt: 1_000, serverNow: 250 });
+    s.updates.expireAt({ startsAt: 3_000, serverNow: 250 });
+    vi.advanceTimersByTime(2_999);
+    expect(s.refresh).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.stop();
+  });
+
+  test("empty or failed result props cancel expiry and retain reconciliation", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    s.updates.expireAt({ startsAt: 1_000, serverNow: 250 });
+    s.updates.expireAt(null);
+    vi.advanceTimersByTime(29_999);
+    expect(s.refresh).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.stop();
+  });
+
+  test("does not overflow distant starts", () => {
+    const s = scenario();
+    vi.advanceTimersByTime(250); s.updates.complete(); s.refresh.mockClear();
+    s.updates.expireAt({ startsAt: 3_000_000_000, serverNow: 250 });
     vi.advanceTimersByTime(5_000);
     expect(s.refresh).not.toHaveBeenCalled();
     s.updates.stop();
@@ -149,9 +243,9 @@ describe("discovery event-driven refresh", () => {
 
   test("stops timers, subscriptions and late callbacks on departure", () => {
     const s = scenario();
-    s.notify(); s.updates.expireAt(10_000);
+    s.notify(); s.updates.expireAt({ startsAt: 10_000, serverNow: 0 });
     s.updates.stop(); s.updates.stop();
-    s.notify(); s.updates.complete(); s.updates.expireAt(1);
+    s.notify(); s.updates.complete(); s.updates.expireAt({ startsAt: 1, serverNow: 0 });
     s.visible(false); s.visible(true); s.online(false); s.online(true);
     vi.advanceTimersByTime(60_000);
     expect(s.refresh).not.toHaveBeenCalled();
