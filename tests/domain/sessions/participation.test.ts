@@ -90,6 +90,22 @@ describe("Participation state and fund lifecycle", () => {
   });
 
   describe("Withdrawal and replacement reservations", () => {
+    test("withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory", () => {
+      const replacement = new Participation(
+        participationDetails({ replacesParticipationId: "original-participation" }),
+      );
+      const awaitingHold = new FundHold(
+        holdDetails({ state: "AWAITING_REPLACEMENT" }),
+      );
+
+      const withdrawn = replacement.withdraw(awaitingHold, settledAt, "OPEN_SLOT");
+
+      expect(withdrawn.status).toBe("WITHDRAWN");
+      expect(withdrawn.replacesParticipationId).toBe("original-participation");
+      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
+      expect(replacement.status).toBe("COMMITTED");
+    });
+
     test("constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError", () => {
       const details = participationDetails({
         status: "WITHDRAWN",
@@ -281,6 +297,38 @@ describe("Participation state and fund lifecycle", () => {
   });
 
   describe("Cancellation and removal", () => {
+    test("remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory", () => {
+      const replacement = new Participation(
+        participationDetails({ replacesParticipationId: "original-participation" }),
+      );
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
+
+      const removed = replacement.remove(refundedHold);
+
+      expect(removed.status).toBe("REMOVED");
+      expect(removed.replacesParticipationId).toBe("original-participation");
+      expect(removed.hold?.state).toBe("REFUNDED");
+      expect(replacement.status).toBe("COMMITTED");
+    });
+
+    test("cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory", () => {
+      const replacement = new Participation(
+        participationDetails({ replacesParticipationId: "original-participation" }),
+      );
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
+
+      const cancelled = replacement.cancel(refundedHold);
+
+      expect(cancelled.status).toBe("CANCELLED");
+      expect(cancelled.replacesParticipationId).toBe("original-participation");
+      expect(cancelled.hold?.state).toBe("REFUNDED");
+      expect(replacement.status).toBe("COMMITTED");
+    });
+
     test("constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError", () => {
       const details = participationDetails({ status: "CANCELLED" });
 

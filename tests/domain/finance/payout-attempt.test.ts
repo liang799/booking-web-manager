@@ -136,8 +136,8 @@ describe("Payout request and provider outcome handling", () => {
       expect(intent).toMatchObject({
         kind: "PAYOUT_REQUESTED",
         payoutId: "payout",
-        amount: Money.fromCents(100),
       });
+      expect(intent.amount.toCents()).toBe(100);
     });
   });
 

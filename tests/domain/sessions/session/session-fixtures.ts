@@ -307,7 +307,15 @@ export function verifiedParticipation(
 /** A fixed release-only payout state; tests declare other outcomes explicitly. */
 export function pendingPayoutDetails(
   userIds: readonly string[] = ["alice"],
-  { bookingShare }: { readonly bookingShare?: Money } = {},
+  {
+    bookingShare,
+    payoutId = "out",
+    idempotencyKey = "key",
+  }: {
+    readonly bookingShare?: Money;
+    readonly payoutId?: string;
+    readonly idempotencyKey?: string;
+  } = {},
 ): SessionDetails {
   const share = bookingShare ?? Money.fromCents(500);
   return sessionDetails({
@@ -320,9 +328,9 @@ export function pendingPayoutDetails(
       }),
     ),
     pendingSettlement: {
-      payoutId: "out",
+      payoutId,
       sessionId: "s",
-      idempotencyKey: "key",
+      idempotencyKey,
       requestedAt: new Date(sessionEndsAt),
       destination: { ...destination },
       lines: userIds.map((userId) => ({
@@ -334,8 +342,8 @@ export function pendingPayoutDetails(
         kind: "RELEASE",
       })),
     },
-    payoutAttemptIds: ["out"],
-    payoutIdempotencyKeys: ["key"],
+    payoutAttemptIds: [payoutId],
+    payoutIdempotencyKeys: [idempotencyKey],
   });
 }
 

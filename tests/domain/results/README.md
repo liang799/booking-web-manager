@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **24 October 2026, 00:59:33 SGT**
-(`2026-10-23T16:59:33.147Z`). All **607 tests in 43 files passed**.
+Snapshot run: **24 October 2026, 01:17:29 SGT**
+(`2026-10-23T17:17:29.248Z`). All **624 tests in 44 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-24-vitest.json
@@ -12,12 +12,13 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-24-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `95e001d6bf3cdb0b585e2a60a9a35ed0e91c6c3ccf19b31ef0bc61a411d79806`.
+  `6c095de7e925d56547b003a81c69a1d7b5c9f0bc60b91e4ae679c8d47b118164`.
 - [Coverage mapping](./2026-10-24-coverage-map.json): all 598 release-baseline cases
-  mapped to 602 retained scenarios, plus five focused additions: visibility,
-  creation settings, two payout-setup failure cases, and invitation revocation.
+  mapped to 602 retained scenarios, plus 22 focused additions: visibility,
+  creation settings, two payout-setup failure cases, invitation revocation,
+  three replacement-history transitions, and fourteen shared-fixture contracts.
   Includes before/after assertion expressions for changed explicit scenarios.
-- [Table index](../README.md#result-snapshots): nine directories, 607 rows,
+- [Table index](../README.md#result-snapshots): nine directories, 624 rows,
   exactly one row per final case. Each row links to its test definition.
 
 Base revision: `00f6c88462e16ffce8f91dd78b72aa649918e9f7`. The run includes the
@@ -112,7 +113,7 @@ now use constructor state. Shared fixture exports and existing defaults remain
 compatible. All 603 prior cases and 1,229 assertions remain; four focused cases
 add 14 assertions for successful payout-setup failure, invitation revocation,
 and custom session-creation settings previously covered indirectly in setup.
-The final suite has **607 cases and 1,243 assertions**, including eight
+Before the review fixes, the suite had **607 cases and 1,243 assertions**, including eight
 prerequisite assertions.
 
 Every original matcher, negation, expected argument, and assertion order is
@@ -138,17 +139,25 @@ no shared setup or execution-order dependencies.
 
 The coverage map records each file's grouping rationale and maps the previous
 and current execution prefixes for every case. The result tables use the same
-outer and inner behavior headings. All 607 full execution identities, source
-links, and tested-source hashes reconcile with the JSON run, including the 591
+outer and inner behavior headings. At `ecdc64b`, all 607 full execution identities, source
+links, and tested-source hashes reconciled with that JSON run, including the 591
 cases whose execution prefixes changed in this pass.
+
+## Review fixes
+
+Three focused Participation tests now verify that withdrawal, removal, and cancellation preserve accepted replacement history. Fourteen fixture contract tests cover attendance hydration, rounded/custom shares, roster order, override rejection, fresh instances, historical states, and payout defaults/identity overrides. The duplicate-key test declares its original key explicitly. The payout-intent test reads `amount.toCents()`; matching a Money object cannot verify its private cents field.
+
+The current suite has **624 cases and 1,311 assertions across 44 files**.
+
+[Mutation checks](./2026-10-24-mutation-checks.json) deliberately drop replacement links and return the wrong payout amount in isolated copies. All 607 previous tests passed those defects; the repaired suite rejects them in the four intended tests. Production code is unchanged. Current execution, hashes, mapping locations, and all 624 table rows were reconciled after these fixes. Earlier pass counts above describe their historical revisions.
 
 ## Other validation
 
 | Check | Result |
 |---|---|
-| Domain suite | 607 passed across 43 files |
-| Shuffled domain suite, seed `2006` | 607 passed across 43 files |
-| Full `rtk npm test` | 2,798 passed; 3 failed; 42 skipped; 1 todo |
+| Domain suite | 624 passed across 44 files |
+| Shuffled domain suite, seed `2006` | 624 passed across 44 files |
+| Full `rtk npm test` | 2,815 passed; 3 failed; 42 skipped; 1 todo |
 | `rtk npm run typecheck` | Failed on 25 existing errors in the profile page and app shell |
 | `rtk npx eslint tests/domain` | Passed |
 | `rtk npm run lint` | Failed on an existing unused `MobileNavigation` import in the app shell |

@@ -108,6 +108,9 @@ Never move an observation across a mutation or execute a command again merely
 to inline its result. Prefer concrete states, cents, instructions, and collection
 contents to vague change checks or collection-wide booleans. Derive expected
 values independently of the implementation being tested.
+For value objects with private fields, assert their public primitive values:
+`expect(intent.amount.toCents()).toBe(100)`. An object matcher containing
+`Money.fromCents(100)` cannot inspect Money's private cents field.
 
 ## Rejections, retries, and injected failures
 
@@ -173,6 +176,11 @@ inside those fixtures. Keep scenario-defining amounts, dates, identities, invali
 fields, and the transition being tested visible. Preserve exported
 fixture defaults because use-case and other suites consume them. Keep local
 helpers below the tests; avoid setup hooks or builders that hide the scenario.
+Shared fixture behavior has maintained contract tests in
+[session-fixtures.test.ts](./sessions/session/session-fixtures.test.ts), including
+attendance, financial terms, roster order, invalid overrides, and payout identity.
+When a payout ID or idempotency key defines the scenario, supply it through
+`pendingPayoutDetails` options instead of relying on its default.
 
 ```ts
 const alice = createTestUser({ userId: "alice", availableFundsCents: 500 });
@@ -318,7 +326,7 @@ The table vocabulary follows *Lecture 16: Testing Introduction*, slides 15–18.
 Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
-The **2026-10-24** snapshot covers **607 passing cases across 43 files**. Each
+The **2026-10-24** snapshot covers **624 passing cases across 44 files**. Each
 table follows its suite’s behavior headings and has a linked Name and Location,
 Input, Oracle (expected result), Log
 (actual outcome verified by assertions), and separate execution status.
@@ -332,8 +340,8 @@ Input, Oracle (expected result), Log
 | Money | 83 | [Money cases](./finance/money/README.md) |
 | Groups | 35 | [Group cases](./groups/README.md) |
 | Reliability | 33 | [Reliability cases](./reliability/README.md) |
-| Sessions | 89 | [Session value and pricing cases](./sessions/README.md) |
-| Session lifecycle | 84 | [Session lifecycle cases](./sessions/session/README.md) |
+| Sessions | 92 | [Session value and pricing cases](./sessions/README.md) |
+| Session lifecycle and fixtures | 98 | [Session lifecycle cases](./sessions/session/README.md) |
 
 The [execution evidence and refresh procedure](./results/README.md) retain the
 JSON report, source hashes, and baseline-to-final scenario mapping. Log values

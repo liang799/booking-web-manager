@@ -1,9 +1,9 @@
 {
   "baselineRevision": "00f6c88462e16ffce8f91dd78b72aa649918e9f7",
   "baselineTests": 598,
-  "finalTests": 607,
+  "finalTests": 624,
   "baselineFiles": 45,
-  "finalFiles": 43,
+  "finalFiles": 44,
   "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The original 593-case baseline is retained along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values. Additions are listed separately from retained baseline coverage.",
   "mappings": [
     {
@@ -3940,7 +3940,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenAttendanceHasNoVerification_ThrowsDomainError",
-          "line": 320
+          "line": 368
         }
       ],
       "reason": "Preserved"
@@ -3954,7 +3954,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError",
-          "line": 326
+          "line": 374
         }
       ],
       "reason": "Preserved"
@@ -3996,7 +3996,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError",
-          "line": 93
+          "line": 109
         }
       ],
       "reason": "Preserved"
@@ -4010,7 +4010,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError",
-          "line": 284
+          "line": 332
         }
       ],
       "reason": "Preserved"
@@ -4024,7 +4024,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenRemovedParticipationHasHold_ThrowsDomainError",
-          "line": 290
+          "line": 338
         }
       ],
       "reason": "Preserved"
@@ -4052,7 +4052,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenParticipationReplacesItself_ThrowsDomainError",
-          "line": 102
+          "line": 118
         }
       ],
       "reason": "Preserved"
@@ -4066,7 +4066,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError",
-          "line": 110
+          "line": 126
         }
       ],
       "reason": "Preserved"
@@ -4080,7 +4080,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation",
-          "line": 119
+          "line": 135
         }
       ],
       "reason": "Preserved"
@@ -4094,7 +4094,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation",
-          "line": 132
+          "line": 148
         }
       ],
       "reason": "Preserved"
@@ -4108,7 +4108,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement",
-          "line": 146
+          "line": 162
         }
       ],
       "reason": "Preserved"
@@ -4122,7 +4122,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata",
-          "line": 160
+          "line": 176
         }
       ],
       "reason": "Preserved"
@@ -4136,7 +4136,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata",
-          "line": 174
+          "line": 190
         }
       ],
       "reason": "Preserved"
@@ -4164,7 +4164,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund",
-          "line": 187
+          "line": 203
         }
       ],
       "reason": "Preserved"
@@ -4178,7 +4178,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement",
-          "line": 208
+          "line": 224
         }
       ],
       "reason": "Preserved"
@@ -4192,7 +4192,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace",
-          "line": 227
+          "line": 243
         }
       ],
       "reason": "Preserved"
@@ -4206,7 +4206,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation",
-          "line": 246
+          "line": 262
         }
       ],
       "reason": "Preserved"
@@ -4220,7 +4220,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata",
-          "line": 296
+          "line": 344
         }
       ],
       "reason": "Preserved"
@@ -4234,7 +4234,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "refundReplacement_WhenReplacementIsFound_ReturnsNewChild",
-          "line": 264
+          "line": 280
         }
       ],
       "reason": "Preserved"
@@ -4248,7 +4248,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy",
-          "line": 374
+          "line": 422
         }
       ],
       "reason": "Preserved"
@@ -4262,12 +4262,12 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy",
-          "line": 393
+          "line": 441
         },
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero",
-          "line": 410
+          "line": 458
         }
       ],
       "reason": "Separated hold settlement from the subsequent reliability query; retained four settlement assertions and the zero-reliability assertion",
@@ -4295,7 +4295,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsUnverified_RejectsRelease",
-          "line": 335
+          "line": 383
         }
       ],
       "reason": "Preserved"
@@ -4309,7 +4309,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
-          "line": 343
+          "line": 391
         }
       ],
       "reason": "Preserved"
@@ -4323,7 +4323,7 @@
         {
           "file": "tests/domain/sessions/participation.test.ts",
           "name": "settleHold_WhenParticipantAttended_RejectsForfeiture",
-          "line": 358
+          "line": 406
         }
       ],
       "reason": "Preserved"
@@ -5430,7 +5430,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedAttemptIsRetriedWithNewIdentity_RecordsRetry",
-          "line": 176
+          "line": 179
         }
       ],
       "reason": "Preserved"
@@ -5466,7 +5466,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenReplacementSweepWasMissed_ExpiresOutstandingReplacement",
-          "line": 219
+          "line": 222
         }
       ],
       "reason": "Preserved",
@@ -5488,7 +5488,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenAttendanceIsIncomplete_LeavesExpiryUnapplied",
-          "line": 246
+          "line": 249
         }
       ],
       "reason": "Preserved",
@@ -5512,7 +5512,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenBookerIsForeign_LeavesExpiryAndHistoryUnapplied",
-          "line": 277
+          "line": 280
         }
       ],
       "reason": "Preserved"
@@ -5526,7 +5526,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt",
-          "line": 308
+          "line": 311
         }
       ],
       "reason": "Preserved",
@@ -5554,7 +5554,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedPayoutId",
-          "line": 350
+          "line": 353
         }
       ],
       "reason": "Preserved"
@@ -5568,7 +5568,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey",
-          "line": 371
+          "line": 374
         }
       ],
       "reason": "Preserved"
@@ -5582,7 +5582,7 @@
         {
           "file": "tests/domain/accounts/booker/settlement.test.ts",
           "name": "preparePayout_WhenFailedPayoutHistoryIsRestored_AllowsNewIdentityIndependentlyOfSource",
-          "line": 392
+          "line": 395
         }
       ],
       "reason": "Preserved",
@@ -9664,6 +9664,209 @@
         "expect(group.invitationActive).toBe(false)",
         "expect(group.invitationToken).toBe(\"first-token\")"
       ]
+    },
+    {
+      "file": "tests/domain/sessions/participation.test.ts",
+      "name": "withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory",
+      "line": 93,
+      "reason": "Restores transition coverage for accepted replacement history",
+      "assertions": [
+        "expect(withdrawn.status).toBe(\"WITHDRAWN\")",
+        "expect(withdrawn.replacesParticipationId).toBe(\"original-participation\")",
+        "expect(withdrawn.hold?.state).toBe(\"AWAITING_REPLACEMENT\")",
+        "expect(replacement.status).toBe(\"COMMITTED\")"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/participation.test.ts",
+      "name": "remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory",
+      "line": 300,
+      "reason": "Restores transition coverage for accepted replacement history",
+      "assertions": [
+        "expect(removed.status).toBe(\"REMOVED\")",
+        "expect(removed.replacesParticipationId).toBe(\"original-participation\")",
+        "expect(removed.hold?.state).toBe(\"REFUNDED\")",
+        "expect(replacement.status).toBe(\"COMMITTED\")"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/participation.test.ts",
+      "name": "cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory",
+      "line": 316,
+      "reason": "Restores transition coverage for accepted replacement history",
+      "assertions": [
+        "expect(cancelled.status).toBe(\"CANCELLED\")",
+        "expect(cancelled.replacesParticipationId).toBe(\"original-participation\")",
+        "expect(cancelled.hold?.state).toBe(\"REFUNDED\")",
+        "expect(replacement.status).toBe(\"COMMITTED\")"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenOnlyOneAttendanceMarkIsProvided_LeavesOtherUsersUnverified",
+      "line": 16,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(session.status).toBe(\"OPEN\")",
+        "expect(alice.attendance).toBe(\"ABSENT\")",
+        "expect(alice.verifiedAt).toEqual(sessionEndsAt)",
+        "expect(alice.verificationMethod).toBe(\"BOOKER\")",
+        "expect(ben.attendance).toBe(\"UNVERIFIED\")",
+        "expect(ben.verifiedAt).toBeUndefined()"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenCostDoesNotDivideEvenly_HydratesRoundedShares",
+      "line": 33,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(session.bookingShare.toCents()).toBe(333)",
+        "expect(amounts).toEqual([333, 333])"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenCustomShareIsProvided_UsesItForEveryHeldShare",
+      "line": 48,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(session.bookingShare.toCents()).toBe(750)",
+        "expect(amounts).toEqual([750, 750])"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenRosterEntryIsOverridden_PreservesItsPositionAndQueueMetadata",
+      "line": 63,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(session.participantList.participations.map((entry) => entry.userId))\n        .toEqual([\"alice\", \"ben\", \"cara\", \"dan\"])",
+        "expect(session.participantList.requireParticipation(\"p-alice\")).toBe(withdrawn)",
+        "expect(session.participantList.requireParticipation(\"p-cara\").queueSequence).toBe(1)",
+        "expect(session.participantList.requireParticipation(\"p-dan\").queueSequence).toBe(2)",
+        "expect(session.participantList.nextQueueSequence).toBe(3)"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenOverrideUserIsOutsideRoster_RejectsTheOverride",
+      "line": 84,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(() => createTestSession({\n        committedUserIds: [\"alice\"],\n        participationOverrides: { outsider },\n      })).toThrow(\"Participation override must match a roster user: outsider\")"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenOverrideIdentityDoesNotMatchItsKey_RejectsTheOverride",
+      "line": 93,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(() => createTestSession({\n        waitlistedUserIds: [\"alice\"],\n        participationOverrides: { alice: ben },\n      })).toThrow(\"Participation override must match a roster user: alice\")"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "createTestSession_WhenCalledTwice_CreatesIndependentRostersAndHolds",
+      "line": 102,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(second).not.toBe(first)",
+        "expect(second.participantList.requireParticipation(\"p-alice\"))\n        .not.toBe(first.participantList.requireParticipation(\"p-alice\"))",
+        "expect(second.participantList.requireParticipation(\"p-alice\").hold)\n        .not.toBe(first.participantList.requireParticipation(\"p-alice\").hold)"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "withdrawnParticipation_WhenRefundedWithCustomTerms_PreservesHistoryAndFinancialIdentity",
+      "line": 116,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(withdrawn.status).toBe(\"WITHDRAWN\")",
+        "expect(withdrawn.replacesParticipationId).toBe(\"previous-participation\")",
+        "expect(withdrawn.hold?.holdingAccountId).toBe(\"custom-platform\")",
+        "expect(withdrawn.hold?.amount.toCents()).toBe(750)",
+        "expect(withdrawn.hold?.state).toBe(\"REFUNDED\")",
+        "expect(withdrawn.hold?.settledAt).toEqual(withdrawalTime)"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "withdrawnParticipation_WhenAwaitingNamedReplacement_PreservesReservationWithoutSettlement",
+      "line": 133,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(withdrawn.replacementMode).toBe(\"DIRECT_INVITE\")",
+        "expect(withdrawn.replacementInviteeId).toBe(\"ben\")",
+        "expect(withdrawn.hold?.amount.toCents()).toBe(500)",
+        "expect(withdrawn.hold?.state).toBe(\"AWAITING_REPLACEMENT\")",
+        "expect(withdrawn.hold?.settledAt).toBeUndefined()"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "removedParticipation_WhenReplacementWasRemoved_PreservesRefundTimeAndReplacementLink",
+      "line": 148,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(removed.status).toBe(\"REMOVED\")",
+        "expect(removed.replacesParticipationId).toBe(\"p-alice\")",
+        "expect(removed.hold?.state).toBe(\"REFUNDED\")",
+        "expect(removed.hold?.settledAt).toEqual(refundTime)"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "cancelledParticipation_WhenReplacementWasCancelled_PreservesRefundTimeAndReplacementLink",
+      "line": 162,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(cancelled.status).toBe(\"CANCELLED\")",
+        "expect(cancelled.replacesParticipationId).toBe(\"p-alice\")",
+        "expect(cancelled.hold?.state).toBe(\"REFUNDED\")",
+        "expect(cancelled.hold?.settledAt).toEqual(refundTime)"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "leftWaitlistedParticipation_WhenQueueEntryIsClosed_PreservesQueueWithoutAHold",
+      "line": 176,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(departed.status).toBe(\"LEFT_WAITLIST\")",
+        "expect(departed.queueSequence).toBe(7)",
+        "expect(departed.waitlistedAt).toEqual(waitingTime)",
+        "expect(departed.hold).toBeUndefined()"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "pendingPayoutDetails_WhenOptionsAreOmitted_PreservesExistingFixtureDefaults",
+      "line": 187,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(session.pendingSettlement?.payoutId).toBe(\"out\")",
+        "expect(session.pendingSettlement?.idempotencyKey).toBe(\"key\")",
+        "expect(session.pendingSettlement?.lines[0]?.amount.toCents()).toBe(500)",
+        "expect(session.payoutAttemptIds).toEqual([\"out\"])",
+        "expect(session.payoutIdempotencyKeys).toEqual([\"key\"])"
+      ]
+    },
+    {
+      "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+      "name": "pendingPayoutDetails_WhenTermsAndIdentityAreProvided_HydratesMatchingPayoutHistory",
+      "line": 199,
+      "reason": "Maintained contract test for shared fixture construction",
+      "assertions": [
+        "expect(session.status).toBe(\"PAYOUT_PENDING\")",
+        "expect(session.pendingSettlement?.payoutId).toBe(\"original-payout\")",
+        "expect(session.pendingSettlement?.idempotencyKey).toBe(\"original-key\")",
+        "expect(session.pendingSettlement?.lines.map((line) => line.amount.toCents()))\n        .toEqual([750, 750])",
+        "expect(session.participantList.participations.map((entry) => entry.hold?.amount.toCents()))\n        .toEqual([750, 750])",
+        "expect(session.payoutAttemptIds).toEqual([\"original-payout\"])",
+        "expect(session.payoutIdempotencyKeys).toEqual([\"original-key\"])"
+      ]
     }
   ],
   "readabilityPass": {
@@ -12709,6 +12912,33 @@
               "failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory"
             ]
           }
+        ]
+      }
+    ]
+  },
+  "reviewFixPass": {
+    "previousRevision": "ecdc64b0cb4b4cbc0bc0c749c7ea91b81ac9e40e",
+    "previousTests": 607,
+    "finalTests": 624,
+    "addedTransitionTests": 3,
+    "addedFixtureTests": 14,
+    "mutationEvidence": "2026-10-24-mutation-checks.json",
+    "note": "Retained assertion counts in earlier pass records are historical. Constructor-only history cases had lost transition detection despite retaining their assertions. Dedicated transition tests restore it; requestedIntent now asserts integer cents, and the failed-key case declares its original identity.",
+    "updatedAssertions": [
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "name": "preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState",
+        "assertions": [
+          "expect(() =>\n        readyBooker().preparePayout(bookingSession, {\n          payoutId: \"retry\",\n          idempotencyKey: \"original-key\",\n          now: payoutTime,\n        }),\n      ).toThrow(\n        expect.objectContaining({\n          code: \"DUPLICATE_ID\",\n          message:\n            \"A payout idempotency key can only be used once for this session\",\n        }),\n      )",
+          "expect(sessionState(bookingSession)).toEqual(previousState)"
+        ]
+      },
+      {
+        "file": "tests/domain/finance/payout-attempt.test.ts",
+        "name": "requestedIntent_WhenPayoutIsRequested_ContainsDurableRequestDetails",
+        "assertions": [
+          "expect(intent).toMatchObject({\n        kind: \"PAYOUT_REQUESTED\",\n        payoutId: \"payout\",\n      })",
+          "expect(intent.amount.toCents()).toBe(100)"
         ]
       }
     ]

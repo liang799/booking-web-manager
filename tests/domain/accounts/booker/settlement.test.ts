@@ -151,15 +151,18 @@ describe("Booker payout preparation", () => {
     test("preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState", () => {
       const payoutTime = sessionEndsAt;
       const bookingSession = new Session(
-        pendingPayoutDetails(["alice", "ben"]),
+        pendingPayoutDetails(["alice", "ben"], {
+          payoutId: "original-payout",
+          idempotencyKey: "original-key",
+        }),
       );
-      bookingSession.failSettlement("out", sessionEndsAt);
+      bookingSession.failSettlement("original-payout", sessionEndsAt);
       const previousState = sessionState(bookingSession);
 
       expect(() =>
         readyBooker().preparePayout(bookingSession, {
           payoutId: "retry",
-          idempotencyKey: "key",
+          idempotencyKey: "original-key",
           now: payoutTime,
         }),
       ).toThrow(
