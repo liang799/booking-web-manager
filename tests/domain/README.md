@@ -14,11 +14,16 @@ and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/
 - Focused behavior files for the same entity may remain separate, such as
   Money arithmetic, Session admission, reliability history, and User related
   data. Each file still tests one entity and names its top-level `describe`
-  after that entity. Separate suites that mix different entities.
+  after that entity, optionally adding its responsibility, such as
+  `Booker administration`. Separate suites that mix different entities.
 - Larger entities may use one additional level of `describe` groups for related
   behaviors, such as construction, profile changes, payout setup, and
   deactivation. Order tests by method within each group, include related getters,
   and avoid deeper nesting or shared setup hooks.
+- Group a mixed administration suite by domain behavior: session cancellation,
+  session visibility, and participant removal. Keep permission guards with their
+  commands and failure/retry cases together. These labels organize independent
+  tests; they do not imply a workflow or execution order.
 - Split files when responsibilities, fixtures, dependencies, or ownership warrant
   it. Line count alone is not a reason to split a cohesive entity's tests.
 - Name each test `method_WhenCondition_ExpectedResult`. Use `constructor` for

@@ -15,7 +15,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions",
-          "line": 15
+          "line": 16
         }
       ],
       "reason": "Moved into its existing behavior suite"
@@ -4701,7 +4701,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession",
-          "line": 27
+          "line": 28
         }
       ],
       "reason": "Preserved"
@@ -4715,7 +4715,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
-          "line": 41
+          "line": 42
         }
       ],
       "reason": "Preserved",
@@ -4737,7 +4737,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
-          "line": 52
+          "line": 183
         }
       ],
       "reason": "Preserved"
@@ -4751,7 +4751,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
-          "line": 69
+          "line": 200
         }
       ],
       "reason": "Preserved",
@@ -4773,7 +4773,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
-          "line": 86
+          "line": 53
         }
       ],
       "reason": "Preserved",
@@ -4797,7 +4797,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
-          "line": 117
+          "line": 84
         }
       ],
       "reason": "Preserved",
@@ -4823,7 +4823,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
-          "line": 157
+          "line": 124
         }
       ],
       "reason": "Preserved",
@@ -4845,7 +4845,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
-          "line": 186
+          "line": 232
         }
       ],
       "reason": "Preserved"
@@ -4859,7 +4859,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
-          "line": 199
+          "line": 245
         }
       ],
       "reason": "Preserved"
@@ -4873,7 +4873,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
-          "line": 217
+          "line": 265
         }
       ],
       "reason": "Preserved",
@@ -4897,7 +4897,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
-          "line": 238
+          "line": 286
         }
       ],
       "reason": "Preserved"
@@ -4911,7 +4911,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
-          "line": 254
+          "line": 302
         }
       ],
       "reason": "Preserved"
@@ -4925,7 +4925,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
-          "line": 280
+          "line": 138
         }
       ],
       "reason": "Preserved"
@@ -4939,7 +4939,7 @@
         {
           "file": "tests/domain/accounts/booker/administration.test.ts",
           "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
-          "line": 291
+          "line": 149
         }
       ],
       "reason": "Preserved",
@@ -9613,7 +9613,7 @@
     {
       "file": "tests/domain/accounts/booker/administration.test.ts",
       "name": "changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
-      "line": 171,
+      "line": 217,
       "reason": "Added an explicit PUBLIC-to-PRIVATE command scenario for an unverified owner; retained the separate permission-check scenario.",
       "assertions": [
         "expect(bookingSession.visibility).toBe(\"PRIVATE\")"
@@ -10913,6 +10913,114 @@
         "assertionsBefore": 1,
         "assertionsAfter": 1,
         "review": "Hydrated prerequisite state; retained dates, amounts, queue order, identities and all assertions."
+      }
+    ]
+  },
+  "behaviorGroupingPass": {
+    "baselineRevision": "9d2248d567556c92413533175ad33ef6c1dc1673",
+    "file": "tests/domain/accounts/booker/administration.test.ts",
+    "groups": {
+      "Session cancellation": 8,
+      "Session visibility": 5,
+      "Participant removal": 3
+    },
+    "testNamesAndBodies": "All 16 test names, callback bodies, assertions and comments unchanged; only suite labels, grouping and case ordering changed. No shared hooks or deeper nesting.",
+    "executionIdentityMapping": [
+      {
+        "name": "cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions",
+        "before": "Booker cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions",
+        "after": "Booker administration Session cancellation cancel_WhenOwnerCancelsEmptySession_ReturnsNoInstructions",
+        "line": 16
+      },
+      {
+        "name": "assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession",
+        "before": "Booker assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession",
+        "after": "Booker administration Session cancellation assertCanCancel_WhenOwnerIsUnverified_AllowsExitWithoutChangingSession",
+        "line": 28
+      },
+      {
+        "name": "assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
+        "before": "Booker assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
+        "after": "Booker administration Session cancellation assertCanCancel_WhenSessionHasStarted_ReportsCommandLifecycleFailure",
+        "line": 42
+      },
+      {
+        "name": "cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
+        "before": "Booker cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
+        "after": "Booker administration Session cancellation cancel_WhenSecondChildFails_PreservesParticipantsHoldsAndStatus",
+        "line": 53
+      },
+      {
+        "name": "cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
+        "before": "Booker cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
+        "after": "Booker administration Session cancellation cancel_WhenPreviousChildFailureWasResolved_CancelsAndRefunds",
+        "line": 84
+      },
+      {
+        "name": "cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
+        "before": "Booker cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
+        "after": "Booker administration Session cancellation cancel_WhenOwnerIsInactive_StillCancelsAndRefunds",
+        "line": 124
+      },
+      {
+        "name": "cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
+        "before": "Booker cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
+        "after": "Booker administration Session cancellation cancel_WhenSessionStartsNow_RejectsWithoutChangingState",
+        "line": 138
+      },
+      {
+        "name": "cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
+        "before": "Booker cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
+        "after": "Booker administration Session cancellation cancel_WhenRosterIncludesActiveWithdrawnAndWaitingParticipants_RefundsHoldsAndClearsQueue",
+        "line": 149
+      },
+      {
+        "name": "assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
+        "before": "Booker assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
+        "after": "Booker administration Session visibility assertCanChangeVisibility_WhenOwnerIsUnverified_DoesNotChangeVisibility",
+        "line": 183
+      },
+      {
+        "name": "assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
+        "before": "Booker assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
+        "after": "Booker administration Session visibility assertCanChangeVisibility_WhenSessionIsFull_ReportsCommandCapacityFailure",
+        "line": 200
+      },
+      {
+        "name": "changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
+        "before": "Booker changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
+        "after": "Booker administration Session visibility changeVisibility_WhenOwnerIsUnverified_ChangesPublicSessionToPrivate",
+        "line": 217
+      },
+      {
+        "name": "changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
+        "before": "Booker changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
+        "after": "Booker administration Session visibility changeVisibility_WhenOwnerIsInactive_StillChangesVisibility",
+        "line": 232
+      },
+      {
+        "name": "changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
+        "before": "Booker changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
+        "after": "Booker administration Session visibility changeVisibility_WhenSessionIsFull_RejectsWithoutChangingState",
+        "line": 245
+      },
+      {
+        "name": "removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
+        "before": "Booker removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
+        "after": "Booker administration Participant removal removeParticipant_WhenOwnerIsInactive_StillRemovesAndRefunds",
+        "line": 265
+      },
+      {
+        "name": "removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
+        "before": "Booker removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
+        "after": "Booker administration Participant removal removeParticipant_WhenActorIsNotBooker_RejectsWithoutChangingState",
+        "line": 286
+      },
+      {
+        "name": "removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
+        "before": "Booker removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
+        "after": "Booker administration Participant removal removeParticipant_WhenBookerRemovesParticipant_RefundsHold",
+        "line": 302
       }
     ]
   }

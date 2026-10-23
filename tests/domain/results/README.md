@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **24 October 2026, 00:37:27 SGT**
-(`2026-10-23T16:37:27.686Z`). All **607 tests in 43 files passed**.
+Snapshot run: **24 October 2026, 00:45:54 SGT**
+(`2026-10-23T16:45:54.062Z`). All **607 tests in 43 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-24-vitest.json
@@ -12,7 +12,7 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-24-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `b9a03b5a9c51cdb2e27f7bd4738da900d5c413a0d7a31cd7c39ae226555e0645`.
+  `09a1f9e7ad403e0e8e75ac1f60d18a067e9e818acbad44d59a43bb4c6c8d9424`.
 - [Coverage mapping](./2026-10-24-coverage-map.json): all 598 release-baseline cases
   mapped to 602 retained scenarios, plus five focused additions: visibility,
   creation settings, two payout-setup failure cases, and invitation revocation.
@@ -126,6 +126,13 @@ reviews retained identity handles, observation timing, failure injection, and
 sequences whose repeated calls are the behavior under test. The coverage map
 contains per-case notes for changed scenarios and reasons for the four added
 cases.
+
+The Booker administration suite groups its 16 cases under session cancellation,
+session visibility, and participant removal. Guards stay beside their commands;
+cancellation failure and retry remain adjacent. This grouping changes execution
+identity prefixes and ordering only: all test names, bodies, assertions, and
+comments are preserved. The coverage map records the old and new full names,
+and the adjacent result tables use the same behavior groups.
 
 ## Other validation
 
