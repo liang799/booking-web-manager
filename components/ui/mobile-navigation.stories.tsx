@@ -34,7 +34,7 @@ function NavigationDemo({ width = 390 }: { readonly width?: number }) {
       <h1 className="mb-6 text-lg font-semibold">Find your next game.</h1>
       <MobileNavigationProvider>
         <div onClickCapture={navigate}>
-          <MobileNavigation key={pathname} pathname={pathname} />
+          <MobileNavigation key={pathname} pathname={pathname} compact={pathname === "/wallet"} />
         </div>
       </MobileNavigationProvider>
       <p className="mt-7 text-sm" role="status">{pageLabel} page</p>
@@ -70,7 +70,7 @@ function FocusedFlowDemo() {
       <h1 className="mb-6 text-lg font-semibold">Focused-flow navigation</h1>
       <MobileNavigationProvider>
         <div hidden={focused}>
-          <MobileNavigation key={pathname} pathname={pathname} enabled={!focused} />
+          <MobileNavigation key={pathname} pathname={pathname} enabled={!focused} compact={pathname === "/wallet"} />
         </div>
       </MobileNavigationProvider>
       <button
@@ -209,6 +209,92 @@ export const Interactive: Story = {
     await userEvent.keyboard("{Enter}");
     await expectSelection(navigation(), "Sessions");
     await expect(canvas.getByRole("status")).toHaveTextContent("Sessions page");
+  },
+};
+
+/** Wallet changes the shell padding while the provider carries the rendered selection between shells. */
+export const WalletTransitions: Story = {
+  play: async ({ canvas }) => {
+    const navigation = () => canvas.getByRole("navigation", { name: "Main" });
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    async function transition(action: () => void, selectedLabel: string) {
+      const previousNav = navigation();
+      const before = selectionPill(previousNav).getBoundingClientRect();
+      flushSync(action);
+      const nav = navigation();
+      const pill = selectionPill(nav);
+      // Sample the same painted instant: elapsed test-runner time must not count as a jump.
+      const after = pill.getBoundingClientRect();
+      const animations = pill.getAnimations();
+      await expect(nav).not.toBe(previousNav);
+      await expect(getComputedStyle(nav).padding).toBe(selectedLabel === "Wallet" ? "7px" : "10px");
+      await expect(within(nav).getByRole("link", { name: selectedLabel })).toHaveAttribute("aria-current", "page");
+      if (reducedMotion) {
+        await expect(animations).toHaveLength(0);
+        await expectSelection(nav, selectedLabel);
+      } else {
+        await expect(animations).toHaveLength(1);
+        await expect(Math.abs(after.left - before.left)).toBeLessThan(1);
+        await expect(Math.abs(after.width - before.width)).toBeLessThan(1);
+      }
+      return nav;
+    }
+
+    const select = (label: string) => () => within(navigation()).getByRole("link", { name: label }).click();
+    await expectSelection(navigation(), "Home");
+    await transition(select("Wallet"), "Wallet");
+    await expectSelection(navigation(), "Wallet");
+    await transition(select("Settings"), "Settings");
+    await expectSelection(navigation(), "Settings");
+    await transition(select("Home"), "Home");
+    await expectSelection(navigation(), "Home");
+
+    const homePosition = selectionPill(navigation()).getBoundingClientRect().left;
+    const walletNav = await transition(select("Wallet"), "Wallet");
+    if (!reducedMotion) {
+      // Seek a rendered frame so the reverse-tap assertion is independent of machine speed.
+      for (const animation of walletNav.getAnimations({ subtree: true })) {
+        animation.pause();
+        animation.currentTime = 100;
+      }
+      await expect(selectionPill(walletNav).getBoundingClientRect().left).toBeGreaterThan(homePosition + 5);
+    }
+    await transition(select("Home"), "Home");
+    await expectSelection(navigation(), "Home");
+
+    await transition(() => canvas.getByRole("button", { name: "Back" }).click(), "Wallet");
+    await expectSelection(navigation(), "Wallet");
+    await transition(() => canvas.getByRole("button", { name: "Forward" }).click(), "Home");
+    await expectSelection(navigation(), "Home");
+  },
+};
+
+/** A real resize still settles the selection instead of replaying stale geometry. */
+export const ResizingStopsWalletTransition: Story = {
+  play: async ({ canvas }) => {
+    const preview = canvas.getByRole("main", { name: "Mobile navigation preview" });
+    const navigation = () => canvas.getByRole("navigation", { name: "Main" });
+    await expectSelection(navigation(), "Home");
+    flushSync(() => within(navigation()).getByRole("link", { name: "Wallet" }).click());
+    const pill = selectionPill(navigation());
+    const animations = pill.getAnimations();
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      await expect(animations).toHaveLength(1);
+      // Hold an in-flight frame so natural completion cannot satisfy the resize assertion.
+      animations[0]!.pause();
+      animations[0]!.currentTime = 100;
+    }
+    const originalWidth = preview.style.width;
+    try {
+      preview.style.width = "360px";
+      await nextPaint();
+      await expect(preview.getBoundingClientRect().width).toBe(360);
+      await expect(pill.getAnimations()).toHaveLength(0);
+      await expectSelection(navigation(), "Wallet");
+    } finally {
+      preview.style.width = originalWidth;
+    }
   },
 };
 
