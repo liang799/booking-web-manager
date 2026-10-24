@@ -1,11 +1,15 @@
 import type { UUID } from "@/domain";
-import { loadDependencies } from "@/app/http/load-dependencies";
-import { requireUserId } from "@/app/http/require-user-id";
-import { invalidRequest } from "@/app/http/request-failure";
+import { createAuthenticatedActions } from "@/app/http/authenticated-action";
+import { isRequestFailure } from "@/app/http/request-failure";
 import type { WalletApiDependencies } from "./dependencies";
 import { getWalletDependencies } from "./server-dependencies";
 import { walletErrorResponse } from "./wallet-response";
 import { z } from "zod";
+
+const actions = createAuthenticatedActions({
+  getDependencies: getWalletDependencies,
+  errorResponse: walletErrorResponse,
+});
 
 export interface WalletPostAction<Input, Output> {
   readonly serialize?: (output: Output) => unknown;
@@ -52,38 +56,14 @@ export interface WalletQueryAction<Input, Output> {
 export function walletAction<Input, Output>(
   action: WalletPostAction<Input, Output>,
 ): (request: Request) => Promise<Response> {
-  return async (request: Request) => {
-    try {
-      const dependencies = await loadDependencies(getWalletDependencies);
-      const userId = await requireUserId(request, dependencies.authenticate);
-
-      let body: unknown;
-      try {
-        body = await request.json();
-      } catch (cause) {
-        if (cause instanceof SyntaxError) throw invalidRequest("Request body must be valid JSON");
-        throw new Error("Request body could not be read", { cause });
-      }
-
-      let input: Input;
-      try {
-        input = action.parse(userId, body);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw invalidRequest(action.invalidRequestMessage);
-        }
-        throw error;
-      }
-
-      const result = await action.run(dependencies, input);
-      return Response.json(action.serialize ? action.serialize(result) : result, {
-        status: action.successStatus ?? 200,
-        headers: { "Cache-Control": "no-store" },
-      });
-    } catch (error) {
-      return walletErrorResponse(error);
-    }
-  };
+  return actions.json({
+    ...action,
+    parse: (userId, body) => parseWalletInput(() => action.parse(userId, body)),
+    run: (dependencies, parsed) => {
+      if (!parsed.ok) throw parsed.error;
+      return action.run(dependencies, parsed.input);
+    },
+  });
 }
 
 /**
@@ -94,19 +74,7 @@ export function walletAction<Input, Output>(
 export function walletGetAction<Output>(
   action: WalletGetAction<Output>,
 ): (request: Request) => Promise<Response> {
-  return async (request: Request) => {
-    try {
-      const dependencies = await loadDependencies(getWalletDependencies);
-      const userId = await requireUserId(request, dependencies.authenticate);
-      const result = await action.run(dependencies, userId);
-      return Response.json(action.serialize ? action.serialize(result) : result, {
-        status: 200,
-        headers: { "Cache-Control": "no-store" },
-      });
-    } catch (error) {
-      return walletErrorResponse(error);
-    }
-  };
+  return actions.get({ ...action, parse: (userId) => userId });
 }
 
 /**
@@ -117,30 +85,28 @@ export function walletGetAction<Output>(
 export function walletQueryAction<Input, Output>(
   action: WalletQueryAction<Input, Output>,
 ): (request: Request) => Promise<Response> {
-  return async (request: Request) => {
-    try {
-      const dependencies = await loadDependencies(getWalletDependencies);
-      const userId = await requireUserId(request, dependencies.authenticate);
+  return actions.get({
+    ...action,
+    parse: (userId, _params, request) => parseWalletInput(() => action.parse(userId, request)),
+    run: (dependencies, parsed) => {
+      if (!parsed.ok) throw parsed.error;
+      return action.run(dependencies, parsed.input);
+    },
+  });
+}
 
-      let input: Input;
-      try {
-        input = action.parse(userId, request);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          throw invalidRequest(
-            action.invalidRequestMessage ?? "Invalid request parameters",
-          );
-        }
-        throw error;
-      }
+type WalletInput<Input> =
+  | { readonly ok: true; readonly input: Input }
+  | { readonly ok: false; readonly error: unknown };
 
-      const result = await action.run(dependencies, input);
-      return Response.json(action.serialize ? action.serialize(result) : result, {
-        status: 200,
-        headers: { "Cache-Control": "no-store" },
-      });
-    } catch (error) {
-      return walletErrorResponse(error);
-    }
-  };
+/** Wallet validation also declares business failures, such as top-up limits (422). */
+function parseWalletInput<Input>(parse: () => Input): WalletInput<Input> {
+  try {
+    return { ok: true, input: parse() };
+  } catch (error) {
+    // Request failures retain the shared boundary's 400 policy. Preserve the
+    // wallet mapper for its existing domain failures without running a use case.
+    if (error instanceof z.ZodError || isRequestFailure(error)) throw error;
+    return { ok: false, error };
+  }
 }
