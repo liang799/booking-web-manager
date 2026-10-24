@@ -18,7 +18,8 @@ test("serves the shared OpenAPI document with creation, discovery, visibility an
     },
   });
   const discovery = document.paths["/api/sessions"].get;
-  expect(discovery.security).toEqual([]);
+  expect(discovery.security).toEqual([{ bearerAuth: [] }, { loginCookie: [] }]);
+  expect(discovery.responses["401"].content["application/json"].example.error.code).toBe("UNAUTHENTICATED");
   expect(discovery.responses["200"].content["application/json"].examples.empty.value).toEqual({
     items: [],
     nextCursor: null,

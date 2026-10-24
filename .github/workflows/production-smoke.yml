@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   smoke:
-    name: Live production API health (HTTP 200 required)
+    name: Deployed API contract health
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
