@@ -98,8 +98,14 @@ async function provider<T>(call: () => Promise<T>): Promise<T> {
   try {
     return await call();
   } catch (cause) {
-    if (cause instanceof Stripe.errors.StripeError)
+    if (cause instanceof Stripe.errors.StripeError) {
+      // The response stays generic; the log keeps Stripe's reason for operators.
+      console.error("Stripe payout account request failed", {
+        type: cause.type, code: cause.code, statusCode: cause.statusCode,
+        requestId: cause.requestId, message: cause.message,
+      });
       throw new PayoutProviderError("The payout provider could not complete the request", { cause });
+    }
     throw cause;
   }
 }
