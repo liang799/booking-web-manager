@@ -18,6 +18,8 @@ At 1536 × 1024 the selected 24 October session reproduces the composition of [`
 
 The before/after images crop the Sessions canvas from identical 1536 × 1024 viewports. Before uses the existing native-scroll implementation; after uses the final gesture coordinator. Both use fictional Storybook fixtures. The full screenshot includes the temporary validation shell described below; shared-shell changes are excluded from this PR.
 
+[`joined-gesture-browsing.gif`](./joined-gesture-browsing.gif) records browser wheel gestures through 21 → 23 → 24 → 25 October and back to 21. It uses the same production Storybook preview and validation shell, captured at 1536 × 1024 and displayed at 960 × 640. Repeated still frames are compressed while preserving the browsing sequence and transition timing.
+
 Validation:
 
 - 15 gesture-classifier unit tests pass; all 113 focused Sessions Storybook checks pass, including URL restoration, account resets, pagination anchoring, entrance interruption and dialog focus.
