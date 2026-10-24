@@ -152,7 +152,8 @@ export const ReliabilityUnavailable: Story = {
     const main = canvas.getByRole("main");
     const page = within(main);
     await expect(page.getByText("Reliability score unavailable right now.")).toBeVisible();
-    await expect(page.queryByText(/Reliability 5\.0/)).not.toBeInTheDocument();
+    await expect(page.queryByText("5.0")).not.toBeInTheDocument();
+    await expect(page.queryByText("Reliability", { exact: true })).not.toBeInTheDocument();
     await expectSettingsLinks(main);
   },
 };
