@@ -3,7 +3,6 @@ name: Live production API health
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: "17 * * * *"
@@ -17,7 +16,7 @@ concurrency:
 
 jobs:
   smoke:
-    name: Live production API health (HTTP 200 required)
+    name: Live production API authentication health
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
