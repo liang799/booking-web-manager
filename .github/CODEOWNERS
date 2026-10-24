@@ -144,6 +144,8 @@
 /tests/use-cases/support/create-session-unit-of-work.ts @liang799
 /scripts/prepare-session-account.ts @liang799
 /scripts/test-session-integration.mjs @liang799
+/scripts/session-realtime-readiness.* @liang799 @rbrishi15
+/tests/scripts/session-realtime-readiness.test.ts @liang799 @rbrishi15
 /tests/support/session-test-context.ts @liang799
 /vitest.integration.config.ts @liang799
 /playwright.integration.config.ts @liang799
@@ -151,6 +153,7 @@
 /supabase/migrations/0007_session_management.sql @liang799
 /supabase/migrations/0008_session_pricing.sql @liang799 @harr008
 /supabase/migrations/0013_session_slot_limit.sql @liang799
+/supabase/migrations/0015_discovery_realtime.sql @liang799 @rbrishi15
 /domain/sessions/capacity.ts @rbrishi15 @liang799
 
 # Joseph: identity, shared authentication adapters, groups and frontend platform.

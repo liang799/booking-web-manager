@@ -27,8 +27,9 @@ User. The page invokes the same use case. Cookie authentication is optional for
 the signed-in navigation and verification prompt; an unavailable auth provider
 must not block public browsing. Other personal screens remain protected.
 
-Discovery requires only `DATABASE_URL` and the existing session schema. It has no
-new migration, browser table grants, wallet dependency or cached results. The
+Discovery reads require only `DATABASE_URL` and the existing session schema, with
+no browser table grants, wallet dependency or cached results. Optional Realtime
+invalidation uses migration 0015; the query and listing JSON stay unchanged. The
 GET route declares `parse`, `run` and `serialize` through
 [`discoveryAction`](./discovery-action.ts). Its factory owns one error boundary
 around dependency loading, query validation, querying and serialization; the
@@ -37,7 +38,10 @@ serializer applies pagination. It does not authenticate or read a request body.
 Unexpected failures return a category, execution stage, request identifier and
 safe exception/cause diagnostics. Original exceptions stay in server logs.
 The factory preserves the four diagnostic stages described below.
-All responses use `Cache-Control: no-store`. See
+All responses use `Cache-Control: no-store`. Successful responses also include
+`X-Server-Time`, the server's Unix time in milliseconds when the response is
+constructed. This additive header anchors browser expiry scheduling without
+adding clock fields to `{ items, nextCursor }` or trusting the device wall clock. See
 [ADR-0015](../../docs/adr/0015-declarative-session-http-actions.md).
 
 [`readDiscoveryRequest`](./request.ts) adapts the existing query parser to HTTP
@@ -134,10 +138,12 @@ to add another feature's operations.
 
 ## React state and Storybook
 
-The URL owns applied filters and pagination; server props own results. Form
-fields own unsubmitted edits. A small navigation controller derives a tagged
-`loading | ready | invalid | error` view from the server outcome, React's pending
-transition and tagged local validation feedback. Empty results and next-page
+The URL owns applied filters and pagination. The controller owns the displayed
+outcome, seeded from server props and updated from the existing discovery API for
+background reads of that committed query. Form fields own unsubmitted edits. A
+small navigation controller derives a tagged `loading | ready | invalid | error`
+view from that outcome, foreground navigation/read progress and tagged local
+validation feedback. Empty results and next-page
 availability are derived from a successful page, not stored as independent flags.
 
 Apply validates before navigation and resets pagination. Editing clears local
@@ -170,7 +176,7 @@ sidebar provides navigation. The heading block is not focusable, so moving it to
 top with CSS `order` keeps the keyboard order (search, then chips, then results) the
 same at every width. The styles live in
 [`discovery-search-view.module.css`](./_components/discovery-search-view.module.css)
-and apply only from 768px. Labels, form behavior, polling and the shared join
+and apply only from 768px. Labels, form behavior, background updates and the shared join
 confirmation are the same at every width. Each sport chip has its own icon:
 Lucide has no tennis, badminton, basketball, football or futsal icons, so
 [`sport-icons.tsx`](./_components/sport-icons.tsx) draws them in the same style.
@@ -212,22 +218,36 @@ disposable session stack via `npm run test:sessions:integration`.
 
 ## Background visibility updates (UC2-03a)
 
-A valid committed query refreshes once per second while discovery is visible
-and online, with an immediate refresh when visibility or connectivity returns.
-Results remain server-owned. Background refresh does not create navigation
-history, reset scroll, disable controls, or display the foreground loading state.
-The mounted form retains unsubmitted drafts, focus and expanded filters. Explicit
-Search, Apply, Next and Retry retain their existing loading behavior.
+A valid committed query subscribes to Supabase Realtime invalidations without session data
+while visible and online. Events trigger `GET /api/sessions` for the committed URL
+query, with 250 ms burst coalescing and at most one read per second. The endpoint
+still owns filtering, authorization, ordering and pagination; the controller
+replaces its displayed outcome with the validated response. No UI markup or
+styling changes accompany this transport.
+Background refresh does not create navigation history, reset scroll, disable
+controls, or display the foreground loading state. The mounted form retains
+unsubmitted drafts, focus and expanded filters. Explicit Search, Apply, Next and
+Retry retain their existing loading behavior.
 
-Polling avoids overlapping refreshes, pauses new work during navigation and
-cleans up when the page unmounts. Server errors use the existing error outcome.
-The cursor and return destination remain unchanged: a newly public session before
-the current cursor belongs to an earlier page, and hiding the last session on a
-page can leave that page empty. The user is never sent back to page one by polling.
+Events received during an unfinished read or navigation are retained for one
+follow-up read. Network Promise settlement explicitly releases the scheduler's
+in-flight state; it does not depend on a React Server Component refresh transition
+finishing. Hidden/offline pages unsubscribe and catch up on return; leaving
+the page cancels timers, channels, requests and pending reconnect work. Stale
+responses cannot update a different committed query. Server errors use
+the existing error outcome. The cursor and return destination remain unchanged:
+a newly public session before the current cursor belongs to an earlier page,
+and hiding the last session on a page can leave it empty. Background updates never
+send the user back to page one.
 
-The acceptance target is appearance/disappearance within three seconds after a
-booker's committed change on a healthy, visible, online discovery page. Browser
-throttling, offline periods and provider failures cannot satisfy that timing.
-One-second refresh repeats matching-session reads; this follows
-the current small-project scale assumption. Larger deployments should revisit
-the query cost and polling frequency together.
+A 30-second reconciliation timer repairs missed messages or unavailable Realtime.
+A separate timer uses initial page `serverNow` metadata, then the API's
+`X-Server-Time` header, with a monotonic browser clock to
+refresh when the first displayed session starts, even if no row changes or the
+device's wall clock is inaccurate. The three-second appearance/disappearance target requires healthy
+Realtime delivery plus a healthy visible online page; degraded-mode reconciliation
+does not meet that target. Initial public reads still work without Realtime.
+
+See [the Realtime runbook](./REALTIME.md) for migration 0015, public channel setup,
+privacy boundaries, validation commands and rollback instructions. This change
+leaves the existing complete matching-list read and application pagination intact.
