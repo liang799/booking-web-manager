@@ -2,85 +2,176 @@
 
 Snapshot: **2026-10-24** · **35 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one independently executable test; its first input value links to the test definition. **Oracle** is the expected result. **Log** contains assertion-verified observations from the recorded run, not captured runtime payloads. A result states only what that case's assertions establish; partial matches, approximate values, and identity checks retain their narrower meaning. Refresh this snapshot after relevant source changes.
 
-## Group membership identity and join timestamp
+All timestamps are UTC. Unless overridden in a table, group `group` is ACTIVE, owned by `owner`, and contains only `owner`; memberships and commands use 2026-09-15 00:00:00 UTC. Construction cases use name `Badminton` and active token `invite`; command cases use name `Sunday badminton` and active token `first-token`. “State unchanged” covers name, invitation token/active flag, ordered membership IDs and join dates, and group status.
 
-Source: [group-membership.test.ts](group-membership.test.ts)
+## Group membership
 
-`now()` returns a fresh date for the fixed instant `2026-09-15T00:00:00Z`. It does not read the system clock.
+### Construct a membership
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+**Input:** User ID, Joined at (UTC) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| User ID | Joined at (UTC) | Expected Result | Test Result |
+|---|---|---|---|
+| [owner](group-membership.test.ts#L5) | Invalid date | DomainError | DomainError |
+| [One space](group-membership.test.ts#L11) | 2026-09-15 00:00:00 | DomainError | DomainError |
+
+### Read the join date after attempted date mutation
+
+**Input:** User ID, Original join date (UTC), Attempted year on supplied and returned dates · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| User ID | Original join date (UTC) | Attempted year on supplied and returned dates | Expected Result | Test Result |
 |---|---|---|---|---|
-| [constructor_WhenDateIsInvalid_ThrowsDomainError](group-membership.test.ts#L5) | <code>details = { userId: "owner", joinedAt: new Date("invalid") }</code><br>**Input commands:** <code>new GroupMembership(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenUserIdIsBlank_ThrowsDomainError](group-membership.test.ts#L11) | <code>details = { userId: " ", joinedAt: now() }</code><br>**Input commands:** <code>new GroupMembership(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [joinedAt_WhenSourceAndExposedDatesAreMutated_PreservesTimestamp](group-membership.test.ts#L17) | <code>joinedAt = now()</code><br><code>membership = new GroupMembership({ userId: "owner", joinedAt })</code><br>**Input commands:** <code>joinedAt.setUTCFullYear(2000)</code><br><code>membership.joinedAt.setUTCFullYear(2000)</code> | <code>membership.joinedAt</code> matches <code>new Date("2026-09-15T00:00:00Z")</code> | **Verified outcomes:** <code>membership.joinedAt</code> matched <code>new Date("2026-09-15T00:00:00Z")</code> | Passed |
+| [owner](group-membership.test.ts#L17) | 2026-09-15 00:00:00 | 2000 | Joined at: 2026-09-15 00:00:00 UTC | Joined at: 2026-09-15 00:00:00 UTC |
 
-## Regular group membership and administration
+## Regular group construction and membership copies
 
-Source: [regular-group.test.ts](regular-group.test.ts)
+### Restore a group
 
-`now()` returns a fresh date at `2026-09-15T00:00:00Z`. `newGroup(overrides)` directly constructs active group `group`, named `Sunday badminton`, with owner `owner` as its only member and active invitation token `first-token`, then applies the row overrides. `groupMemberships(...userIds)` directly constructs fresh memberships in the listed order, each joined at `now()`. `groupDetails()` supplies the same owner-only active state but uses name `Badminton` and token `invite`, before applying overrides. Archived fixtures explicitly set status `ARCHIVED` and `invitationActive: false`; revoked fixtures set `invitationActive: false`. `groupState()` captures name, invitation, memberships and joining dates, and status for unchanged-state checks.
+**Input:** Owner ID, Member IDs, Group status, Invitation active · **Oracle:** Expected Result · **Log:** Test Result
 
+Execution: **4 passed / 4 cases**.
 
-### Restored membership and invitation state
+| Owner ID | Member IDs | Group status | Invitation active | Expected Result | Test Result |
+|---|---|---|---|---|---|
+| [owner](regular-group.test.ts#L11) | None | ACTIVE | true | DomainError | DomainError |
+| [owner](regular-group.test.ts#L17) | owner, owner (same membership instance) | ACTIVE | true | DomainError | DomainError |
+| [missing](regular-group.test.ts#L24) | owner | ACTIVE | true | DomainError | DomainError |
+| [owner](regular-group.test.ts#L30) | owner | ARCHIVED | true | DomainError | DomainError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+### Read memberships after attempted collection and date mutation
+
+**Input:** Original member IDs, Mutation target, Attempted changes · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| Original member IDs | Mutation target | Attempted changes | Expected Result | Test Result |
 |---|---|---|---|---|
-| [constructor_WhenMembershipsAreEmpty_ThrowsDomainError](regular-group.test.ts#L11) | <code>details = groupDetails({ memberships: [] })</code><br>**Input commands:** <code>new RegularGroup(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenMembershipsAreDuplicated_ThrowsDomainError](regular-group.test.ts#L17) | <code>ownerMembership = new GroupMembership({ userId: "owner", joinedAt: now() })</code><br><code>details = groupDetails({ memberships: [ownerMembership, ownerMembership] })</code><br>**Input commands:** <code>new RegularGroup(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenOwnerIsNotAMember_ThrowsDomainError](regular-group.test.ts#L24) | <code>details = groupDetails({ ownerId: "missing" })</code><br>**Input commands:** <code>new RegularGroup(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenArchivedInvitationIsActive_ThrowsDomainError](regular-group.test.ts#L30) | <code>details = groupDetails({ status: "ARCHIVED", invitationActive: true })</code><br>**Input commands:** <code>new RegularGroup(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenSourceMembershipsAreMutated_PreservesMembersAndDates](regular-group.test.ts#L36) | <code>memberships = [ new GroupMembership({ userId: "owner", joinedAt: now() }), ]</code><br><code>details = groupDetails({ memberships })</code><br><code>group = new RegularGroup(details)</code><br>**Input commands:** <code>memberships[0]?.joinedAt.setUTCFullYear(2000)</code><br><code>memberships.pop()</code> | <code>storedMemberships.map((member) =&gt; member.userId)</code> matches <code>["owner"]</code><br><code>storedMemberships[0]?.joinedAt</code> matches <code>new Date("2026-09-15T00:00:00Z")</code> | **Observation bindings:** <code>storedMemberships = group.memberships</code><br>**Verified outcomes:** <code>storedMemberships.map((member) =&gt; member.userId)</code> matched <code>["owner"]</code><br><code>storedMemberships[0]?.joinedAt</code> matched <code>new Date("2026-09-15T00:00:00Z")</code> | Passed |
-| [memberships_WhenReturnedMembershipsAreMutated_PreservesMembersAndDates](regular-group.test.ts#L52) | <code>group = newGroup()</code><br><code>returnedMemberships = group.memberships as GroupMembership[]</code><br>**Input commands:** <code>returnedMemberships[0]?.joinedAt.setUTCFullYear(2000)</code><br><code>returnedMemberships.pop()</code> | <code>storedMemberships.map((member) =&gt; member.userId)</code> matches <code>["owner"]</code><br><code>storedMemberships[0]?.joinedAt</code> matches <code>new Date("2026-09-15T00:00:00Z")</code> | **Observation bindings:** <code>storedMemberships = group.memberships</code><br>**Verified outcomes:** <code>storedMemberships.map((member) =&gt; member.userId)</code> matched <code>["owner"]</code><br><code>storedMemberships[0]?.joinedAt</code> matched <code>new Date("2026-09-15T00:00:00Z")</code> | Passed |
+| [owner](regular-group.test.ts#L36) | Supplied memberships | Set first join year to 2000; remove last membership | Members: owner; joined at: 2026-09-15 00:00:00 UTC | Members: owner; joined at: 2026-09-15 00:00:00 UTC |
+| [owner](regular-group.test.ts#L52) | Returned memberships | Set first join year to 2000; remove last membership | Members: owner; joined at: 2026-09-15 00:00:00 UTC | Members: owner; joined at: 2026-09-15 00:00:00 UTC |
 
-### Invitation access and rotation
+## Invitation access
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+### Join using an invitation
+
+**Input:** User ID, Group status, Current token, Invitation active, Supplied token, Join attempts · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| User ID | Group status | Current token | Invitation active | Supplied token | Join attempts | Expected Result | Test Result |
+|---|---|---|---|---|---|---|---|
+| [player](regular-group.test.ts#L67) | ACTIVE | first-token | true | first-token | 2 | First: JOINED; repeat: ALREADY_MEMBER; ACTIVE; members: owner, player (2) | First: JOINED; repeat: ALREADY_MEMBER; ACTIVE; members: owner, player (2) |
+| [owner](regular-group.test.ts#L92) | ACTIVE | first-token | false | first-token | 1 | INVALID_INVITATION; state unchanged | INVALID_INVITATION; state unchanged |
+| [player](regular-group.test.ts#L106) | ACTIVE | next-token | true | first-token | 1 | INVALID_INVITATION; state unchanged | INVALID_INVITATION; state unchanged |
+| [player](regular-group.test.ts#L136) | ARCHIVED | first-token | false | first-token | 1 | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+
+### Rotate a revoked invitation, then join
+
+**Input:** Actor ID, Invitation initially active, New token, Joining user ID, Supplied token · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Actor ID | Invitation initially active | New token | Joining user ID | Supplied token | Expected Result | Test Result |
+|---|---|---|---|---|---|---|
+| [owner](regular-group.test.ts#L120) | false | next-token | player | next-token | JOINED | JOINED |
+
+### Rotate an invitation
+
+**Input:** Actor ID, Group status, Invitation active, New token · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| Actor ID | Group status | Invitation active | New token | Expected Result | Test Result |
+|---|---|---|---|---|---|
+| [other](regular-group.test.ts#L150) | ACTIVE | true | new | UNAUTHORIZED; state unchanged | UNAUTHORIZED; state unchanged |
+| [owner](regular-group.test.ts#L160) | ARCHIVED | false | new | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+
+### Revoke an invitation
+
+**Input:** Actor ID, Current token, Invitation active · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| Actor ID | Current token | Invitation active | Expected Result | Test Result |
 |---|---|---|---|---|
-| [join_WhenMemberJoinsAgain_PreservesSingleMembership](regular-group.test.ts#L67) | <code>group = newGroup()</code> | <code>group.status</code> equals <code>"ACTIVE"</code><br><code>memberships.map((member) =&gt; member.userId)</code> matches <code>[ "owner", "player", ]</code><br><code>firstJoin</code> equals <code>"JOINED"</code><br><code>repeatedJoin</code> equals <code>"ALREADY_MEMBER"</code><br><code>memberships</code> length is <code>2</code> | **Observation bindings:** <code>firstJoin = group.join({ userId: "player", invitationToken: "first-token", now: now(), })</code><br><code>repeatedJoin = group.join({ userId: "player", invitationToken: "first-token", now: now(), })</code><br><code>memberships = group.memberships</code><br>**Verified outcomes:** <code>group.status</code> was <code>"ACTIVE"</code><br><code>memberships.map((member) =&gt; member.userId)</code> matched <code>[ "owner", "player", ]</code><br><code>firstJoin</code> was <code>"JOINED"</code><br><code>repeatedJoin</code> was <code>"ALREADY_MEMBER"</code><br><code>memberships</code> length was <code>2</code> | Passed |
-| [join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation](regular-group.test.ts#L92) | <code>group = newGroup({ invitationActive: false })</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.join({ userId: "owner", invitationToken: "first-token", now: now(), })</code> | Throws <code>error code INVALID_INVITATION</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INVITATION</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [join_WhenTokenWasRotated_ThrowsInvalidInvitation](regular-group.test.ts#L106) | <code>group = newGroup({ invitationToken: "next-token" })</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.join({ userId: "player", invitationToken: "first-token", now: now(), })</code> | Throws <code>error code INVALID_INVITATION</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INVITATION</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [join_WhenRevokedInvitationIsRotated_AcceptsNewToken](regular-group.test.ts#L120) | <code>group = newGroup({ invitationActive: false })</code><br>**Input commands:** <code>group.rotateInvitation({ actorId: "owner", invitationToken: "next-token", })</code> | <code>admission</code> equals <code>"JOINED"</code> | **Observation bindings:** <code>admission = group.join({ userId: "player", invitationToken: "next-token", now: now(), })</code><br>**Verified outcomes:** <code>admission</code> was <code>"JOINED"</code> | Passed |
-| [join_WhenGroupIsArchived_RejectsWithoutChangingState](regular-group.test.ts#L136) | <code>group = newGroup({ status: "ARCHIVED", invitationActive: false })</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.join({ userId: "player", invitationToken: "first-token", now: now(), })</code> | Throws <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState](regular-group.test.ts#L150) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.rotateInvitation({ actorId: "other", invitationToken: "new" })</code> | Throws <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState](regular-group.test.ts#L160) | <code>group = newGroup({ status: "ARCHIVED", invitationActive: false })</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.rotateInvitation({ actorId: "owner", invitationToken: "new" })</code> | Throws <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [revokeInvitation_WhenOwnerRevokesInvitation_DisablesInvitation](regular-group.test.ts#L170) | <code>group = newGroup({ invitationActive: true })</code><br>**Input commands:** <code>group.revokeInvitation("owner")</code> | <code>group.invitationActive</code> equals <code>false</code><br><code>group.invitationToken</code> equals <code>"first-token"</code> | **Verified outcomes:** <code>group.invitationActive</code> was <code>false</code><br><code>group.invitationToken</code> was <code>"first-token"</code> | Passed |
-| [revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState](regular-group.test.ts#L179) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.revokeInvitation("other")</code> | Throws <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
+| [owner](regular-group.test.ts#L170) | first-token | true | Invitation inactive; token: first-token | Invitation inactive; token: first-token |
+| [other](regular-group.test.ts#L179) | first-token | true | UNAUTHORIZED; state unchanged | UNAUTHORIZED; state unchanged |
 
-### Group naming
+## Group naming
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+### Rename a group
+
+Archived groups have an inactive invitation.
+
+**Input:** Actor ID, Group status, New name · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Actor ID | Group status | New name | Expected Result | Test Result |
 |---|---|---|---|---|
-| [rename_WhenActorIsNotOwner_RejectsWithoutChangingState](regular-group.test.ts#L191) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.rename({ actorId: "other", name: "New name" })</code> | Throws <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [rename_WhenOwnerProvidesName_UpdatesName](regular-group.test.ts#L201) | <code>group = newGroup()</code><br>**Input commands:** <code>group.rename({ actorId: "owner", name: "Saturday tennis" })</code> | <code>group.name</code> equals <code>"Saturday tennis"</code> | **Verified outcomes:** <code>group.name</code> was <code>"Saturday tennis"</code> | Passed |
-| [rename_WhenNameIsBlank_RejectsWithoutChangingState](regular-group.test.ts#L209) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.rename({ actorId: "owner", name: " " })</code> | Throws <code>error code INVALID_INPUT</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [rename_WhenGroupIsArchived_RejectsWithoutChangingState](regular-group.test.ts#L219) | <code>group = newGroup({ status: "ARCHIVED", invitationActive: false })</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.rename({ actorId: "owner", name: "New" })</code> | Throws <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
+| [other](regular-group.test.ts#L191) | ACTIVE | New name | UNAUTHORIZED; state unchanged | UNAUTHORIZED; state unchanged |
+| [owner](regular-group.test.ts#L201) | ACTIVE | Saturday tennis | Name: Saturday tennis | Name: Saturday tennis |
+| [owner](regular-group.test.ts#L209) | ACTIVE | One space | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+| [owner](regular-group.test.ts#L219) | ARCHIVED | New | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
 
-### Member removal
+## Membership removal
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+### Remove a member
+
+**Input:** Actor ID, Existing member IDs, Target user ID · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Actor ID | Existing member IDs | Target user ID | Expected Result | Test Result |
 |---|---|---|---|---|
-| [removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState](regular-group.test.ts#L231) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.removeMember({ actorId: "other", userId: "owner" })</code> | Throws <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner](regular-group.test.ts#L241) | <code>group = newGroup({ memberships: groupMemberships("owner", "player") })</code><br>**Input commands:** <code>group.removeMember({ actorId: "owner", userId: "player" })</code> | <code>group.memberships.map((member) =&gt; member.userId)</code> matches <code>["owner"]</code> | **Verified outcomes:** <code>group.memberships.map((member) =&gt; member.userId)</code> matched <code>["owner"]</code> | Passed |
-| [removeMember_WhenTargetIsOwner_RejectsWithoutChangingState](regular-group.test.ts#L249) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.removeMember({ actorId: "owner", userId: "owner" })</code> | Throws <code>error code OWNER_REMOVAL</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code OWNER_REMOVAL</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [removeMember_WhenMemberIsMissing_RejectsWithoutChangingState](regular-group.test.ts#L259) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.removeMember({ actorId: "owner", userId: "missing" })</code> | Throws <code>error code NOT_FOUND</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code NOT_FOUND</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
+| [other](regular-group.test.ts#L231) | owner | owner | UNAUTHORIZED; state unchanged | UNAUTHORIZED; state unchanged |
+| [owner](regular-group.test.ts#L241) | owner, player | player | Members: owner | Members: owner |
+| [owner](regular-group.test.ts#L249) | owner | owner | OWNER_REMOVAL; state unchanged | OWNER_REMOVAL; state unchanged |
+| [owner](regular-group.test.ts#L259) | owner | missing | NOT_FOUND; state unchanged | NOT_FOUND; state unchanged |
 
-### Group archiving
+## Archiving
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+### Archive a group
+
+**Input:** Actor ID, Unsettled linked sessions, Archive attempts · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Actor ID | Unsettled linked sessions | Archive attempts | Expected Result | Test Result |
 |---|---|---|---|---|
-| [archive_WhenActorIsNotOwner_RejectsWithoutChangingState](regular-group.test.ts#L271) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.archive({ actorId: "other", unsettledLinkedSessions: 0 })</code> | Throws <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code UNAUTHORIZED</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState](regular-group.test.ts#L281) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.archive({ actorId: "owner", unsettledLinkedSessions: 1 })</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState](regular-group.test.ts#L291) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.archive({ actorId: "owner", unsettledLinkedSessions: -1 })</code> | Throws <code>error code INVALID_INPUT</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent](regular-group.test.ts#L301) | <code>group = newGroup()</code><br>**Input commands:** <code>group.archive({ actorId: "owner", unsettledLinkedSessions: 0 })</code><br><code>group.archive({ actorId: "owner", unsettledLinkedSessions: 0 })</code> | <code>group.status</code> equals <code>"ARCHIVED"</code><br><code>group.invitationActive</code> equals <code>false</code><br><code>group.memberships.map((member) =&gt; member.userId)</code> matches <code>["owner"]</code> | **Verified outcomes:** <code>group.status</code> was <code>"ARCHIVED"</code><br><code>group.invitationActive</code> was <code>false</code><br><code>group.memberships.map((member) =&gt; member.userId)</code> matched <code>["owner"]</code> | Passed |
+| [other](regular-group.test.ts#L271) | 0 | 1 | UNAUTHORIZED; state unchanged | UNAUTHORIZED; state unchanged |
+| [owner](regular-group.test.ts#L281) | 1 | 1 | ACTIVE_OBLIGATIONS; state unchanged | ACTIVE_OBLIGATIONS; state unchanged |
+| [owner](regular-group.test.ts#L291) | -1 | 1 | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+| [owner](regular-group.test.ts#L301) | 0 | 2 | ARCHIVED; invitation inactive; members: owner | ARCHIVED; invitation inactive; members: owner |
 
-### Leaving and rejoining
+## Leaving and rejoining
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
+### Leave a group
+
+The archived case uses the construction defaults and an inactive invitation.
+
+**Input:** Leaving user ID, Group status, Existing member IDs · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Leaving user ID | Group status | Existing member IDs | Expected Result | Test Result |
 |---|---|---|---|---|
-| [leave_WhenMemberLeaves_RemovesOnlyThatMember](regular-group.test.ts#L314) | <code>group = newGroup({ memberships: groupMemberships("owner", "aisha", "ben"), })</code><br>**Input commands:** <code>group.leave({ userId: "aisha" })</code> | <code>group.memberships.map((member) =&gt; member.userId)</code> matches <code>[ "owner", "ben", ]</code> | **Verified outcomes:** <code>group.memberships.map((member) =&gt; member.userId)</code> matched <code>[ "owner", "ben", ]</code> | Passed |
-| [leave_WhenUserIsOwner_RejectsWithoutChangingState](regular-group.test.ts#L327) | <code>group = newGroup({ memberships: groupMemberships("owner", "aisha") })</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.leave({ userId: "owner" })</code> | Throws <code>error code OWNER_REMOVAL</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code OWNER_REMOVAL</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [leave_WhenUserIsNotAMember_RejectsWithoutChangingState](regular-group.test.ts#L337) | <code>group = newGroup()</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.leave({ userId: "stranger" })</code> | Throws <code>error code NOT_FOUND</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code NOT_FOUND</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [leave_WhenGroupIsArchived_RejectsWithoutChangingState](regular-group.test.ts#L347) | <code>group = new RegularGroup( groupDetails({ status: "ARCHIVED", invitationActive: false, memberships: [ new GroupMembership({ userId: "owner", joinedAt: now() }), new GroupMembership({ userId: "aisha", joinedAt: now() }), ], }), )</code><br><code>before = groupState(group)</code><br>**Input commands:** <code>group.leave({ userId: "aisha" })</code> | Throws <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>groupState(group)</code> matched <code>before</code> | Passed |
-| [join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain](regular-group.test.ts#L366) | <code>group = newGroup({ memberships: groupMemberships("owner", "aisha") })</code><br>**Input commands:** <code>group.leave({ userId: "aisha" })</code> | <code>readmission</code> equals <code>"JOINED"</code><br><code>group.memberships.map((member) =&gt; member.userId)</code> matches <code>[ "owner", "aisha", ]</code> | **Observation bindings:** <code>readmission = group.join({ userId: "aisha", invitationToken: "first-token", now: now(), })</code><br>**Verified outcomes:** <code>readmission</code> was <code>"JOINED"</code><br><code>group.memberships.map((member) =&gt; member.userId)</code> matched <code>[ "owner", "aisha", ]</code> | Passed |
+| [aisha](regular-group.test.ts#L314) | ACTIVE | owner, aisha, ben | Members: owner, ben | Members: owner, ben |
+| [owner](regular-group.test.ts#L327) | ACTIVE | owner, aisha | OWNER_REMOVAL; state unchanged | OWNER_REMOVAL; state unchanged |
+| [stranger](regular-group.test.ts#L337) | ACTIVE | owner | NOT_FOUND; state unchanged | NOT_FOUND; state unchanged |
+| [aisha](regular-group.test.ts#L347) | ARCHIVED | owner, aisha | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+
+### Leave, then rejoin using the current invitation
+
+**Input:** User ID, Initial member IDs, Supplied token · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| User ID | Initial member IDs | Supplied token | Expected Result | Test Result |
+|---|---|---|---|---|
+| [aisha](regular-group.test.ts#L366) | owner, aisha | first-token | JOINED; members: owner, aisha | JOINED; members: owner, aisha |

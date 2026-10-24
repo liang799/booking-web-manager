@@ -2,186 +2,247 @@
 
 Snapshot: **2026-10-24** · **83 cases**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one independently executable test; its first input value links to the test definition. **Oracle** is the expected result. **Log** contains assertion-verified observations from the recorded run, not captured runtime payloads. A result states only what that case's assertions establish; partial matches, approximate values, and identity checks retain their narrower meaning. Refresh this snapshot after relevant source changes.
 
-## Money addition and subtraction
+Money amounts are expressed in cents; validation cases deliberately include invalid numeric values. Dollar formatting results are strings, and equality/ordering results are booleans or comparison signs. `NaN`, `Infinity`, and `-Infinity` denote the corresponding numeric inputs; `-0` is negative zero. Separate operand instances are used unless stated otherwise.
 
-Source: [money-arithmetic.test.ts](money-arithmetic.test.ts)
+## Addition, subtraction, and immutability
 
+### Money addition
 
-### Exact sums and differences
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [add_WhenBothAmountsArePositive_ReturnsTheirSum](money-arithmetic.test.ts#L6) | <code>first = Money.fromCents(500)</code><br><code>second = Money.fromCents(700)</code> | <code>sum.toCents()</code> equals <code>1200</code> | **Observation bindings:** <code>sum = first.add(second)</code><br>**Verified outcomes:** <code>sum.toCents()</code> was <code>1200</code> | Passed |
-| [add_WhenChainedAfterSubtraction_ReturnsExactAmount](money-arithmetic.test.ts#L15) | <code>first = Money.fromCents(500)</code><br><code>second = Money.fromCents(700)</code> | <code>combined.toCents()</code> equals <code>300</code> | **Observation bindings:** <code>combined = first.subtract(second).add(first)</code><br>**Verified outcomes:** <code>combined.toCents()</code> was <code>300</code> | Passed |
-| [subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference](money-arithmetic.test.ts#L24) | <code>first = Money.fromCents(500)</code><br><code>second = Money.fromCents(700)</code> | <code>difference.toCents()</code> equals <code>-200</code> | **Observation bindings:** <code>difference = first.subtract(second)</code><br>**Verified outcomes:** <code>difference.toCents()</code> was <code>-200</code> | Passed |
-| [subtract_WhenAmountIsNegative_IncreasesValue](money-arithmetic.test.ts#L33) | <code>money = Money.fromCents(500)</code> | <code>difference.toCents()</code> equals <code>600</code> | **Observation bindings:** <code>difference = money.subtract(Money.fromCents(-100))</code><br>**Verified outcomes:** <code>difference.toCents()</code> was <code>600</code> | Passed |
+Execution: **3 passed / 3 cases**.
 
-### Immutable operands and results
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [500](money-arithmetic.test.ts#L6) | 700 | 1200 | 1200 |
+| [500](money-arithmetic.test.ts#L51) | 0 | 500; new instance | 500; new instance |
+| [500](money-arithmetic.test.ts#L60) | 700 | Operands unchanged: 500, 700 | Operands unchanged: 500, 700 |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fromCents_WhenCreated_ReturnsFrozenInstance](money-arithmetic.test.ts#L43) | <code>cents = 500</code> | <code>Object.isFrozen(money)</code> equals <code>true</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>Object.isFrozen(money)</code> was <code>true</code> | Passed |
-| [add_WhenAddingZero_ReturnsNewInstance](money-arithmetic.test.ts#L51) | <code>money = Money.fromCents(500)</code> | <code>sum</code> is a different instance from <code>money</code><br><code>sum.toCents()</code> equals <code>500</code> | **Observation bindings:** <code>sum = money.add(Money.fromCents(0))</code><br>**Verified outcomes:** <code>sum</code> was a different instance from <code>money</code><br><code>sum.toCents()</code> was <code>500</code> | Passed |
-| [add_WhenAppliedToOperands_PreservesBothValues](money-arithmetic.test.ts#L60) | <code>first = Money.fromCents(500)</code><br><code>second = Money.fromCents(700)</code><br>**Input commands:** <code>first.add(second)</code> | <code>first.toCents()</code> equals <code>500</code><br><code>second.toCents()</code> equals <code>700</code> | **Verified outcomes:** <code>first.toCents()</code> was <code>500</code><br><code>second.toCents()</code> was <code>700</code> | Passed |
-| [subtract_WhenSubtractingZero_ReturnsNewInstance](money-arithmetic.test.ts#L70) | <code>money = Money.fromCents(500)</code> | <code>difference</code> is a different instance from <code>money</code><br><code>difference.toCents()</code> equals <code>500</code> | **Observation bindings:** <code>difference = money.subtract(Money.fromCents(0))</code><br>**Verified outcomes:** <code>difference</code> was a different instance from <code>money</code><br><code>difference.toCents()</code> was <code>500</code> | Passed |
-| [subtract_WhenAppliedToOperands_PreservesBothValues](money-arithmetic.test.ts#L79) | <code>first = Money.fromCents(500)</code><br><code>second = Money.fromCents(700)</code><br>**Input commands:** <code>first.subtract(second)</code> | <code>first.toCents()</code> equals <code>500</code><br><code>second.toCents()</code> equals <code>700</code> | **Verified outcomes:** <code>first.toCents()</code> was <code>500</code><br><code>second.toCents()</code> was <code>700</code> | Passed |
+### Subtract the second amount, then add the first amount
 
-## Money arithmetic at safe integer limits
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Source: [money-bounds.test.ts](money-bounds.test.ts)
+Execution: **1 passed / 1 case**.
 
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [500](money-arithmetic.test.ts#L15) | 700 | 300 | 300 |
 
-### Addition boundaries
+### Money subtraction
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [add_WhenMaximumAndMinimumAreCombined_ReturnsZero](money-bounds.test.ts#L6) | <code>maximum = Money.fromCents(Number.MAX_SAFE_INTEGER)</code><br><code>minimum = Money.fromCents(Number.MIN_SAFE_INTEGER)</code> | <code>sum.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>sum = maximum.add(minimum)</code><br>**Verified outcomes:** <code>sum.toCents()</code> was <code>0</code> | Passed |
-| [add_WhenResultExceedsMaximum_ThrowsRangeError](money-bounds.test.ts#L15) | <code>maximum = Money.fromCents(Number.MAX_SAFE_INTEGER)</code><br>**Input commands:** <code>maximum.add(Money.fromCents(1))</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [add_WhenResultFallsBelowMinimum_ThrowsRangeError](money-bounds.test.ts#L21) | <code>minimum = Money.fromCents(Number.MIN_SAFE_INTEGER)</code><br>**Input commands:** <code>minimum.add(Money.fromCents(-1))</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-### Subtraction boundaries
+Execution: **4 passed / 4 cases**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [subtract_WhenOneIsSubtractedFromMaximum_PreservesExactValue](money-bounds.test.ts#L29) | <code>maximum = Money.fromCents(Number.MAX_SAFE_INTEGER)</code> | <code>difference.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER - 1</code> | **Observation bindings:** <code>difference = maximum.subtract(Money.fromCents(1))</code><br>**Verified outcomes:** <code>difference.toCents()</code> was <code>Number.MAX_SAFE_INTEGER - 1</code> | Passed |
-| [subtract_WhenResultExceedsMaximum_ThrowsRangeError](money-bounds.test.ts#L37) | <code>maximum = Money.fromCents(Number.MAX_SAFE_INTEGER)</code><br>**Input commands:** <code>maximum.subtract(Money.fromCents(-1))</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [subtract_WhenResultFallsBelowMinimum_ThrowsRangeError](money-bounds.test.ts#L43) | <code>minimum = Money.fromCents(Number.MIN_SAFE_INTEGER)</code><br>**Input commands:** <code>minimum.subtract(Money.fromCents(1))</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [500](money-arithmetic.test.ts#L24) | 700 | -200 | -200 |
+| [500](money-arithmetic.test.ts#L33) | -100 | 600 | 600 |
+| [500](money-arithmetic.test.ts#L70) | 0 | 500; new instance | 500; new instance |
+| [500](money-arithmetic.test.ts#L79) | 700 | Operands unchanged: 500, 700 | Operands unchanged: 500, 700 |
 
-### Multiplication boundaries
+### Construct a frozen money value
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [multiply_WhenMinimumIsNegated_ReturnsMaximum](money-bounds.test.ts#L51) | <code>minimum = Money.fromCents(Number.MIN_SAFE_INTEGER)</code> | <code>negatedMinimum.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER</code> | **Observation bindings:** <code>negatedMinimum = minimum.multiply(-1)</code><br>**Verified outcomes:** <code>negatedMinimum.toCents()</code> was <code>Number.MAX_SAFE_INTEGER</code> | Passed |
-| [multiply_WhenOneCentIsScaledToMaximum_PreservesExactValue](money-bounds.test.ts#L59) | <code>oneCent = Money.fromCents(1)</code> | <code>scaledUnit.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER</code> | **Observation bindings:** <code>scaledUnit = oneCent.multiply(Number.MAX_SAFE_INTEGER)</code><br>**Verified outcomes:** <code>scaledUnit.toCents()</code> was <code>Number.MAX_SAFE_INTEGER</code> | Passed |
-| [multiply_WhenMaximumIsDoubled_ThrowsRangeError](money-bounds.test.ts#L67) | <code>maximum = Money.fromCents(Number.MAX_SAFE_INTEGER)</code><br>**Input commands:** <code>maximum.multiply(2)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [multiply_WhenMinimumIsDoubled_ThrowsRangeError](money-bounds.test.ts#L73) | <code>minimum = Money.fromCents(Number.MIN_SAFE_INTEGER)</code><br>**Input commands:** <code>minimum.multiply(2)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+**Input:** Amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-## Money equality and ordering
+Execution: **1 passed / 1 case**.
 
-Source: [money-comparison.test.ts](money-comparison.test.ts)
+| Amount (cents) | Expected Result | Test Result |
+|---|---|---|
+| [500](money-arithmetic.test.ts#L43) | Frozen instance | Frozen instance |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [equals_WhenSeparateInstancesHaveEqualValues_ReturnsTrue](money-comparison.test.ts#L5) | <code>first = Money.fromCents(500)</code><br><code>equal = Money.fromCents(500)</code> | <code>first</code> is a different instance from <code>equal</code><br><code>equalByValue</code> equals <code>true</code> | **Observation bindings:** <code>equalByValue = first.equals(equal)</code><br>**Verified outcomes:** <code>first</code> was a different instance from <code>equal</code><br><code>equalByValue</code> was <code>true</code> | Passed |
-| [equals_WhenValuesDiffer_ReturnsFalse](money-comparison.test.ts#L15) | <code>first = Money.fromCents(500)</code><br><code>greater = Money.fromCents(501)</code> | <code>equalByValue</code> equals <code>false</code> | **Observation bindings:** <code>equalByValue = first.equals(greater)</code><br>**Verified outcomes:** <code>equalByValue</code> was <code>false</code> | Passed |
-| [compareTo_WhenValuesAreEqual_ReturnsZero](money-comparison.test.ts#L24) | <code>first = Money.fromCents(500)</code><br><code>equal = Money.fromCents(500)</code> | <code>comparison</code> equals <code>0</code> | **Observation bindings:** <code>comparison = first.compareTo(equal)</code><br>**Verified outcomes:** <code>comparison</code> was <code>0</code> | Passed |
-| [compareTo_WhenValueIsSmaller_ReturnsNegativeOne](money-comparison.test.ts#L33) | <code>first = Money.fromCents(500)</code><br><code>greater = Money.fromCents(501)</code> | <code>comparison</code> equals <code>-1</code> | **Observation bindings:** <code>comparison = first.compareTo(greater)</code><br>**Verified outcomes:** <code>comparison</code> was <code>-1</code> | Passed |
-| [compareTo_WhenValueIsGreater_ReturnsOne](money-comparison.test.ts#L42) | <code>greater = Money.fromCents(501)</code><br><code>first = Money.fromCents(500)</code> | <code>comparison</code> equals <code>1</code> | **Observation bindings:** <code>comparison = greater.compareTo(first)</code><br>**Verified outcomes:** <code>comparison</code> was <code>1</code> | Passed |
-| [compareTo_WhenComparingNegativeToZero_ReturnsNegativeOne](money-comparison.test.ts#L51) | <code>negative = Money.fromCents(-1)</code><br><code>zero = Money.fromCents(0)</code> | <code>comparison</code> equals <code>-1</code> | **Observation bindings:** <code>comparison = negative.compareTo(zero)</code><br>**Verified outcomes:** <code>comparison</code> was <code>-1</code> | Passed |
+## Safe integer boundaries
 
-## Money creation from integer cents
+### Money addition at the limits
 
-Source: [money-construction.test.ts](money-construction.test.ts)
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
+Execution: **3 passed / 3 cases**.
 
-### Exact cent values
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [9007199254740991](money-bounds.test.ts#L6) | -9007199254740991 | 0 | 0 |
+| [9007199254740991](money-bounds.test.ts#L15) | 1 | RangeError | RangeError |
+| [-9007199254740991](money-bounds.test.ts#L21) | -1 | RangeError | RangeError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fromCents_WhenZero_PreservesExactCents](money-construction.test.ts#L6) | <code>cents = 0</code> | <code>money.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>0</code> | Passed |
-| [fromCents_WhenPositiveCent_PreservesExactCents](money-construction.test.ts#L14) | <code>cents = 1</code> | <code>money.toCents()</code> equals <code>1</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>1</code> | Passed |
-| [fromCents_WhenNegativeCent_PreservesExactCents](money-construction.test.ts#L22) | <code>cents = -1</code> | <code>money.toCents()</code> equals <code>-1</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>-1</code> | Passed |
-| [fromCents_WhenWholeCents_PreservesExactCents](money-construction.test.ts#L30) | <code>cents = 1001</code> | <code>money.toCents()</code> equals <code>1001</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>1001</code> | Passed |
-| [fromCents_WhenMaximumSafeInteger_PreservesExactCents](money-construction.test.ts#L38) | <code>cents = Number.MAX_SAFE_INTEGER</code> | <code>money.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>Number.MAX_SAFE_INTEGER</code> | Passed |
-| [fromCents_WhenMinimumSafeInteger_PreservesExactCents](money-construction.test.ts#L46) | <code>cents = Number.MIN_SAFE_INTEGER</code> | <code>money.toCents()</code> equals <code>Number.MIN_SAFE_INTEGER</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>Number.MIN_SAFE_INTEGER</code> | Passed |
-| [fromCents_WhenNegativeZero_NormalizesToZero](money-construction.test.ts#L54) | <code>cents = -0</code> | <code>money.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>money = Money.fromCents(cents)</code><br>**Verified outcomes:** <code>money.toCents()</code> was <code>0</code> | Passed |
+### Money subtraction at the limits
 
-### Cent input validation
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fromCents_WhenPositiveFraction_ThrowsRangeError](money-construction.test.ts#L64) | <code>cents = 0.1</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromCents_WhenNegativeFraction_ThrowsRangeError](money-construction.test.ts#L70) | <code>cents = -0.1</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromCents_WhenNaN_ThrowsRangeError](money-construction.test.ts#L76) | <code>cents = Number.NaN</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromCents_WhenPositiveInfinity_ThrowsRangeError](money-construction.test.ts#L82) | <code>cents = Number.POSITIVE_INFINITY</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromCents_WhenNegativeInfinity_ThrowsRangeError](money-construction.test.ts#L88) | <code>cents = Number.NEGATIVE_INFINITY</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromCents_WhenAboveMaximum_ThrowsRangeError](money-construction.test.ts#L94) | <code>cents = Number.MAX_SAFE_INTEGER + 1</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromCents_WhenBelowMinimum_ThrowsRangeError](money-construction.test.ts#L100) | <code>cents = Number.MIN_SAFE_INTEGER - 1</code><br>**Input commands:** <code>Money.fromCents(cents)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+Execution: **3 passed / 3 cases**.
 
-## Money division with floor rounding
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [9007199254740991](money-bounds.test.ts#L29) | 1 | 9007199254740990 | 9007199254740990 |
+| [9007199254740991](money-bounds.test.ts#L37) | -1 | RangeError | RangeError |
+| [-9007199254740991](money-bounds.test.ts#L43) | 1 | RangeError | RangeError |
 
-Source: [money-division.test.ts](money-division.test.ts)
+### Money multiplication at the limits
 
+**Input:** Amount (cents), Factor · **Oracle:** Expected Result · **Log:** Test Result
 
-### Floor rounding
+Execution: **4 passed / 4 cases**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [divideFloor_WhenPositiveRemainder_RoundsDownAndPreservesSource](money-division.test.ts#L6) | <code>money = Money.fromCents(1001)</code> | <code>quotient.toCents()</code> equals <code>333</code><br><code>money.toCents()</code> equals <code>1001</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>333</code><br><code>money.toCents()</code> was <code>1001</code> | Passed |
-| [divideFloor_WhenNegativeRemainder_RoundsDownAndPreservesSource](money-division.test.ts#L15) | <code>money = Money.fromCents(-1001)</code> | <code>quotient.toCents()</code> equals <code>-334</code><br><code>money.toCents()</code> equals <code>-1001</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>-334</code><br><code>money.toCents()</code> was <code>-1001</code> | Passed |
-| [divideFloor_WhenPositiveExactDivision_RoundsDownAndPreservesSource](money-division.test.ts#L24) | <code>money = Money.fromCents(1002)</code> | <code>quotient.toCents()</code> equals <code>334</code><br><code>money.toCents()</code> equals <code>1002</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>334</code><br><code>money.toCents()</code> was <code>1002</code> | Passed |
-| [divideFloor_WhenNegativeExactDivision_RoundsDownAndPreservesSource](money-division.test.ts#L33) | <code>money = Money.fromCents(-1002)</code> | <code>quotient.toCents()</code> equals <code>-334</code><br><code>money.toCents()</code> equals <code>-1002</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>-334</code><br><code>money.toCents()</code> was <code>-1002</code> | Passed |
-| [divideFloor_WhenPositiveCent_RoundsDownAndPreservesSource](money-division.test.ts#L42) | <code>money = Money.fromCents(1)</code> | <code>quotient.toCents()</code> equals <code>0</code><br><code>money.toCents()</code> equals <code>1</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>0</code><br><code>money.toCents()</code> was <code>1</code> | Passed |
-| [divideFloor_WhenNegativeCent_RoundsDownAndPreservesSource](money-division.test.ts#L51) | <code>money = Money.fromCents(-1)</code> | <code>quotient.toCents()</code> equals <code>-1</code><br><code>money.toCents()</code> equals <code>-1</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>-1</code><br><code>money.toCents()</code> was <code>-1</code> | Passed |
-| [divideFloor_WhenZero_RoundsDownAndPreservesSource](money-division.test.ts#L60) | <code>money = Money.fromCents(0)</code> | <code>quotient.toCents()</code> equals <code>0</code><br><code>money.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>quotient = money.divideFloor(3)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>0</code><br><code>money.toCents()</code> was <code>0</code> | Passed |
-| [divideFloor_WhenMaximumSafeInteger_RoundsDownAndPreservesSource](money-division.test.ts#L69) | <code>money = Money.fromCents(Number.MAX_SAFE_INTEGER)</code> | <code>quotient.toCents()</code> equals <code>4503599627370495</code><br><code>money.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER</code> | **Observation bindings:** <code>quotient = money.divideFloor(2)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>4503599627370495</code><br><code>money.toCents()</code> was <code>Number.MAX_SAFE_INTEGER</code> | Passed |
-| [divideFloor_WhenMinimumSafeInteger_RoundsDownAndPreservesSource](money-division.test.ts#L78) | <code>money = Money.fromCents(Number.MIN_SAFE_INTEGER)</code> | <code>quotient.toCents()</code> equals <code>-4503599627370496</code><br><code>money.toCents()</code> equals <code>Number.MIN_SAFE_INTEGER</code> | **Observation bindings:** <code>quotient = money.divideFloor(2)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>-4503599627370496</code><br><code>money.toCents()</code> was <code>Number.MIN_SAFE_INTEGER</code> | Passed |
-| [divideFloor_WhenJustBelowMaximumDivisor_RoundsDownAndPreservesSource](money-division.test.ts#L87) | <code>money = Money.fromCents(Number.MAX_SAFE_INTEGER - 1)</code> | <code>quotient.toCents()</code> equals <code>0</code><br><code>money.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER - 1</code> | **Observation bindings:** <code>quotient = money.divideFloor(Number.MAX_SAFE_INTEGER)</code><br>**Verified outcomes:** <code>quotient.toCents()</code> was <code>0</code><br><code>money.toCents()</code> was <code>Number.MAX_SAFE_INTEGER - 1</code> | Passed |
+| Amount (cents) | Factor | Expected Result | Test Result |
+|---|---|---|---|
+| [-9007199254740991](money-bounds.test.ts#L51) | -1 | 9007199254740991 | 9007199254740991 |
+| [1](money-bounds.test.ts#L59) | 9007199254740991 | 9007199254740991 | 9007199254740991 |
+| [9007199254740991](money-bounds.test.ts#L67) | 2 | RangeError | RangeError |
+| [-9007199254740991](money-bounds.test.ts#L73) | 2 | RangeError | RangeError |
 
-### Division by one and instance identity
+## Equality and ordering
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [divideFloor_WhenPositiveRemainderIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L98) | <code>money = Money.fromCents(1001)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>1001</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>1001</code> | Passed |
-| [divideFloor_WhenNegativeRemainderIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L107) | <code>money = Money.fromCents(-1001)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>-1001</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>-1001</code> | Passed |
-| [divideFloor_WhenPositiveExactDivisionIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L116) | <code>money = Money.fromCents(1002)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>1002</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>1002</code> | Passed |
-| [divideFloor_WhenNegativeExactDivisionIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L125) | <code>money = Money.fromCents(-1002)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>-1002</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>-1002</code> | Passed |
-| [divideFloor_WhenPositiveCentIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L134) | <code>money = Money.fromCents(1)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>1</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>1</code> | Passed |
-| [divideFloor_WhenNegativeCentIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L143) | <code>money = Money.fromCents(-1)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>-1</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>-1</code> | Passed |
-| [divideFloor_WhenZeroIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L152) | <code>money = Money.fromCents(0)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>0</code> | Passed |
-| [divideFloor_WhenMaximumSafeIntegerIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L161) | <code>money = Money.fromCents(Number.MAX_SAFE_INTEGER)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>Number.MAX_SAFE_INTEGER</code> | Passed |
-| [divideFloor_WhenMinimumSafeIntegerIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L170) | <code>money = Money.fromCents(Number.MIN_SAFE_INTEGER)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>Number.MIN_SAFE_INTEGER</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>Number.MIN_SAFE_INTEGER</code> | Passed |
-| [divideFloor_WhenJustBelowMaximumDivisorIsDividedByOne_ReturnsNewInstance](money-division.test.ts#L179) | <code>money = Money.fromCents(Number.MAX_SAFE_INTEGER - 1)</code> | <code>quotient</code> is a different instance from <code>money</code><br><code>quotient.toCents()</code> equals <code>Number.MAX_SAFE_INTEGER - 1</code> | **Observation bindings:** <code>quotient = money.divideFloor(1)</code><br>**Verified outcomes:** <code>quotient</code> was a different instance from <code>money</code><br><code>quotient.toCents()</code> was <code>Number.MAX_SAFE_INTEGER - 1</code> | Passed |
+### Compare money for equality
 
-### Divisor validation
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [divideFloor_WhenDivisorIsZero_ThrowsRangeError](money-division.test.ts#L190) | <code>money = Money.fromCents(100)</code><br>**Input commands:** <code>money.divideFloor(0)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [divideFloor_WhenDivisorIsNegative_ThrowsRangeError](money-division.test.ts#L196) | <code>money = Money.fromCents(100)</code><br>**Input commands:** <code>money.divideFloor(-1)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [divideFloor_WhenDivisorIsFractional_ThrowsRangeError](money-division.test.ts#L202) | <code>money = Money.fromCents(100)</code><br>**Input commands:** <code>money.divideFloor(0.5)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [divideFloor_WhenDivisorIsNaN_ThrowsRangeError](money-division.test.ts#L208) | <code>money = Money.fromCents(100)</code><br>**Input commands:** <code>money.divideFloor(Number.NaN)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [divideFloor_WhenDivisorIsInfinite_ThrowsRangeError](money-division.test.ts#L214) | <code>money = Money.fromCents(100)</code><br>**Input commands:** <code>money.divideFloor(Number.POSITIVE_INFINITY)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [divideFloor_WhenDivisorIsUnsafeInteger_ThrowsRangeError](money-division.test.ts#L222) | <code>money = Money.fromCents(100)</code><br>**Input commands:** <code>money.divideFloor(Number.MAX_SAFE_INTEGER + 1)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+Execution: **2 passed / 2 cases**.
 
-## Money formatting in dollars
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [500](money-comparison.test.ts#L5) | 500 | true; operands are distinct instances | true; operands are distinct instances |
+| [500](money-comparison.test.ts#L15) | 501 | false | false |
 
-Source: [money-dollars.test.ts](money-dollars.test.ts)
+### Compare money ordering
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [toDollars_WhenZero_ReturnsTwoDecimalPlaces](money-dollars.test.ts#L5) | <code>money = Money.fromCents(0)</code> | <code>dollars</code> equals <code>"0.00"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"0.00"</code> | Passed |
-| [toDollars_WhenOneCent_PadsTheFraction](money-dollars.test.ts#L13) | <code>money = Money.fromCents(1)</code> | <code>dollars</code> equals <code>"0.01"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"0.01"</code> | Passed |
-| [toDollars_WhenWholeDollars_PreservesTwoDecimalPlaces](money-dollars.test.ts#L21) | <code>money = Money.fromCents(1000)</code> | <code>dollars</code> equals <code>"10.00"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"10.00"</code> | Passed |
-| [toDollars_WhenFractionalDollars_ReturnsExactAmount](money-dollars.test.ts#L29) | <code>money = Money.fromCents(333)</code> | <code>dollars</code> equals <code>"3.33"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"3.33"</code> | Passed |
-| [toDollars_WhenNegativeCent_PreservesSign](money-dollars.test.ts#L37) | <code>money = Money.fromCents(-1)</code> | <code>dollars</code> equals <code>"-0.01"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"-0.01"</code> | Passed |
-| [toDollars_WhenNegativeDollars_ReturnsExactAmount](money-dollars.test.ts#L45) | <code>money = Money.fromCents(-333)</code> | <code>dollars</code> equals <code>"-3.33"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"-3.33"</code> | Passed |
-| [toDollars_WhenMaximumSafeInteger_PreservesEveryCent](money-dollars.test.ts#L53) | <code>money = Money.fromCents(Number.MAX_SAFE_INTEGER)</code> | <code>dollars</code> equals <code>"90071992547409.91"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"90071992547409.91"</code> | Passed |
-| [toDollars_WhenMinimumSafeInteger_PreservesEveryCent](money-dollars.test.ts#L61) | <code>money = Money.fromCents(Number.MIN_SAFE_INTEGER)</code> | <code>dollars</code> equals <code>"-90071992547409.91"</code> | **Observation bindings:** <code>dollars = money.toDollars()</code><br>**Verified outcomes:** <code>dollars</code> was <code>"-90071992547409.91"</code> | Passed |
+**Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-## Money multiplication by integer factors
+Execution: **4 passed / 4 cases**.
 
-Source: [money-multiplication.test.ts](money-multiplication.test.ts)
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---|---|---|---|
+| [500](money-comparison.test.ts#L24) | 500 | 0 | 0 |
+| [500](money-comparison.test.ts#L33) | 501 | -1 | -1 |
+| [501](money-comparison.test.ts#L42) | 500 | 1 | 1 |
+| [-1](money-comparison.test.ts#L51) | 0 | -1 | -1 |
 
+## Creation from cents
 
-### Products and source immutability
+### Construct a money value
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [multiply_WhenFactorIsPositive_ReturnsProductAndPreservesSource](money-multiplication.test.ts#L6) | <code>money = Money.fromCents(500)</code> | <code>product.toCents()</code> equals <code>1500</code><br><code>money.toCents()</code> equals <code>500</code> | **Observation bindings:** <code>product = money.multiply(3)</code><br>**Verified outcomes:** <code>product.toCents()</code> was <code>1500</code><br><code>money.toCents()</code> was <code>500</code> | Passed |
-| [multiply_WhenFactorIsNegative_ReturnsProductAndPreservesSource](money-multiplication.test.ts#L15) | <code>money = Money.fromCents(500)</code> | <code>product.toCents()</code> equals <code>-1500</code><br><code>money.toCents()</code> equals <code>500</code> | **Observation bindings:** <code>product = money.multiply(-3)</code><br>**Verified outcomes:** <code>product.toCents()</code> was <code>-1500</code><br><code>money.toCents()</code> was <code>500</code> | Passed |
-| [multiply_WhenFactorIsZero_ReturnsProductAndPreservesSource](money-multiplication.test.ts#L24) | <code>money = Money.fromCents(500)</code> | <code>product.toCents()</code> equals <code>0</code><br><code>money.toCents()</code> equals <code>500</code> | **Observation bindings:** <code>product = money.multiply(0)</code><br>**Verified outcomes:** <code>product.toCents()</code> was <code>0</code><br><code>money.toCents()</code> was <code>500</code> | Passed |
-| [multiply_WhenFactorIsOne_ReturnsNewInstance](money-multiplication.test.ts#L33) | <code>money = Money.fromCents(500)</code> | <code>product</code> is a different instance from <code>money</code><br><code>product.toCents()</code> equals <code>500</code> | **Observation bindings:** <code>product = money.multiply(1)</code><br>**Verified outcomes:** <code>product</code> was a different instance from <code>money</code><br><code>product.toCents()</code> was <code>500</code> | Passed |
+**Input:** Amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-### Integer factor validation
+Execution: **14 passed / 14 cases**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [multiply_WhenFactorIsFractional_RejectsEvenForZeroCents](money-multiplication.test.ts#L44) | <code>money = Money.fromCents(0)</code><br>**Input commands:** <code>money.multiply(0.5)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [multiply_WhenFactorIsNaN_RejectsEvenForZeroCents](money-multiplication.test.ts#L50) | <code>money = Money.fromCents(0)</code><br>**Input commands:** <code>money.multiply(Number.NaN)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [multiply_WhenFactorIsPositiveInfinity_RejectsEvenForZeroCents](money-multiplication.test.ts#L56) | <code>money = Money.fromCents(0)</code><br>**Input commands:** <code>money.multiply(Number.POSITIVE_INFINITY)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [multiply_WhenFactorIsNegativeInfinity_RejectsEvenForZeroCents](money-multiplication.test.ts#L62) | <code>money = Money.fromCents(0)</code><br>**Input commands:** <code>money.multiply(Number.NEGATIVE_INFINITY)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [multiply_WhenFactorIsAboveMaximum_RejectsEvenForZeroCents](money-multiplication.test.ts#L68) | <code>money = Money.fromCents(0)</code><br>**Input commands:** <code>money.multiply(Number.MAX_SAFE_INTEGER + 1)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [multiply_WhenFactorIsBelowMinimum_RejectsEvenForZeroCents](money-multiplication.test.ts#L76) | <code>money = Money.fromCents(0)</code><br>**Input commands:** <code>money.multiply(Number.MIN_SAFE_INTEGER - 1)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+| Amount (cents) | Expected Result | Test Result |
+|---|---|---|
+| [0](money-construction.test.ts#L6) | 0 | 0 |
+| [1](money-construction.test.ts#L14) | 1 | 1 |
+| [-1](money-construction.test.ts#L22) | -1 | -1 |
+| [1001](money-construction.test.ts#L30) | 1001 | 1001 |
+| [9007199254740991](money-construction.test.ts#L38) | 9007199254740991 | 9007199254740991 |
+| [-9007199254740991](money-construction.test.ts#L46) | -9007199254740991 | -9007199254740991 |
+| [-0](money-construction.test.ts#L54) | 0 | 0 |
+| [0.1](money-construction.test.ts#L64) | RangeError | RangeError |
+| [-0.1](money-construction.test.ts#L70) | RangeError | RangeError |
+| [NaN](money-construction.test.ts#L76) | RangeError | RangeError |
+| [Infinity](money-construction.test.ts#L82) | RangeError | RangeError |
+| [-Infinity](money-construction.test.ts#L88) | RangeError | RangeError |
+| [9007199254740992](money-construction.test.ts#L94) | RangeError | RangeError |
+| [-9007199254740992](money-construction.test.ts#L100) | RangeError | RangeError |
+
+## Division
+
+### Divide with floor rounding
+
+**Input:** Amount (cents), Divisor · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **10 passed / 10 cases**.
+
+| Amount (cents) | Divisor | Expected Result | Test Result |
+|---|---|---|---|
+| [1001](money-division.test.ts#L6) | 3 | 333; source unchanged: 1001 | 333; source unchanged: 1001 |
+| [-1001](money-division.test.ts#L15) | 3 | -334; source unchanged: -1001 | -334; source unchanged: -1001 |
+| [1002](money-division.test.ts#L24) | 3 | 334; source unchanged: 1002 | 334; source unchanged: 1002 |
+| [-1002](money-division.test.ts#L33) | 3 | -334; source unchanged: -1002 | -334; source unchanged: -1002 |
+| [1](money-division.test.ts#L42) | 3 | 0; source unchanged: 1 | 0; source unchanged: 1 |
+| [-1](money-division.test.ts#L51) | 3 | -1; source unchanged: -1 | -1; source unchanged: -1 |
+| [0](money-division.test.ts#L60) | 3 | 0; source unchanged: 0 | 0; source unchanged: 0 |
+| [9007199254740991](money-division.test.ts#L69) | 2 | 4503599627370495; source unchanged: 9007199254740991 | 4503599627370495; source unchanged: 9007199254740991 |
+| [-9007199254740991](money-division.test.ts#L78) | 2 | -4503599627370496; source unchanged: -9007199254740991 | -4503599627370496; source unchanged: -9007199254740991 |
+| [9007199254740990](money-division.test.ts#L87) | 9007199254740991 | 0; source unchanged: 9007199254740990 | 0; source unchanged: 9007199254740990 |
+
+### Divide by one
+
+**Input:** Amount (cents), Divisor · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **10 passed / 10 cases**.
+
+| Amount (cents) | Divisor | Expected Result | Test Result |
+|---|---|---|---|
+| [1001](money-division.test.ts#L98) | 1 | 1001; new instance | 1001; new instance |
+| [-1001](money-division.test.ts#L107) | 1 | -1001; new instance | -1001; new instance |
+| [1002](money-division.test.ts#L116) | 1 | 1002; new instance | 1002; new instance |
+| [-1002](money-division.test.ts#L125) | 1 | -1002; new instance | -1002; new instance |
+| [1](money-division.test.ts#L134) | 1 | 1; new instance | 1; new instance |
+| [-1](money-division.test.ts#L143) | 1 | -1; new instance | -1; new instance |
+| [0](money-division.test.ts#L152) | 1 | 0; new instance | 0; new instance |
+| [9007199254740991](money-division.test.ts#L161) | 1 | 9007199254740991; new instance | 9007199254740991; new instance |
+| [-9007199254740991](money-division.test.ts#L170) | 1 | -9007199254740991; new instance | -9007199254740991; new instance |
+| [9007199254740990](money-division.test.ts#L179) | 1 | 9007199254740990; new instance | 9007199254740990; new instance |
+
+### Reject invalid divisors
+
+**Input:** Amount (cents), Divisor · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **6 passed / 6 cases**.
+
+| Amount (cents) | Divisor | Expected Result | Test Result |
+|---|---|---|---|
+| [100](money-division.test.ts#L190) | 0 | RangeError | RangeError |
+| [100](money-division.test.ts#L196) | -1 | RangeError | RangeError |
+| [100](money-division.test.ts#L202) | 0.5 | RangeError | RangeError |
+| [100](money-division.test.ts#L208) | NaN | RangeError | RangeError |
+| [100](money-division.test.ts#L214) | Infinity | RangeError | RangeError |
+| [100](money-division.test.ts#L222) | 9007199254740992 | RangeError | RangeError |
+
+## Dollar formatting
+
+### Format as a dollar string
+
+**Input:** Amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **8 passed / 8 cases**.
+
+| Amount (cents) | Expected Result | Test Result |
+|---|---|---|
+| [0](money-dollars.test.ts#L5) | `0.00` | `0.00` |
+| [1](money-dollars.test.ts#L13) | `0.01` | `0.01` |
+| [1000](money-dollars.test.ts#L21) | `10.00` | `10.00` |
+| [333](money-dollars.test.ts#L29) | `3.33` | `3.33` |
+| [-1](money-dollars.test.ts#L37) | `-0.01` | `-0.01` |
+| [-333](money-dollars.test.ts#L45) | `-3.33` | `-3.33` |
+| [9007199254740991](money-dollars.test.ts#L53) | `90071992547409.91` | `90071992547409.91` |
+| [-9007199254740991](money-dollars.test.ts#L61) | `-90071992547409.91` | `-90071992547409.91` |
+
+## Multiplication
+
+### Multiply by an integer
+
+**Input:** Amount (cents), Factor · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Amount (cents) | Factor | Expected Result | Test Result |
+|---|---|---|---|
+| [500](money-multiplication.test.ts#L6) | 3 | 1500; source unchanged: 500 | 1500; source unchanged: 500 |
+| [500](money-multiplication.test.ts#L15) | -3 | -1500; source unchanged: 500 | -1500; source unchanged: 500 |
+| [500](money-multiplication.test.ts#L24) | 0 | 0; source unchanged: 500 | 0; source unchanged: 500 |
+| [500](money-multiplication.test.ts#L33) | 1 | 500; new instance | 500; new instance |
+
+### Reject invalid factors even for zero cents
+
+**Input:** Amount (cents), Factor · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **6 passed / 6 cases**.
+
+| Amount (cents) | Factor | Expected Result | Test Result |
+|---|---|---|---|
+| [0](money-multiplication.test.ts#L44) | 0.5 | RangeError | RangeError |
+| [0](money-multiplication.test.ts#L50) | NaN | RangeError | RangeError |
+| [0](money-multiplication.test.ts#L56) | Infinity | RangeError | RangeError |
+| [0](money-multiplication.test.ts#L62) | -Infinity | RangeError | RangeError |
+| [0](money-multiplication.test.ts#L68) | 9007199254740992 | RangeError | RangeError |
+| [0](money-multiplication.test.ts#L76) | -9007199254740992 | RangeError | RangeError |

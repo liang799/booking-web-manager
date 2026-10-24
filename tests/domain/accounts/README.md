@@ -1,211 +1,393 @@
-# accounts test cases
+# Account test cases
 
 Snapshot: **2026-10-24** · **96 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
-## Account deactivation eligibility
+## assertDeactivationAllowed — obligations
 
-Source: [deactivation-policy.test.ts](deactivation-policy.test.ts)
+Each row supplies all six obligation fields. Balances are integer cents; the count fields are the number of outstanding obligations.
 
-`clearStanding()` supplies zero available and held cents, zero active commitments, zero unsettled owned sessions, zero pending payouts, and zero active owned groups. Each row changes only the stated obligation.
+**Input:** Available balance (cents), Held balance (cents), Active commitments, Unsettled owned sessions, Pending payouts, Active owned groups · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [assertDeactivationAllowed_WhenNoObligationsRemain_AllowsDeactivation](deactivation-policy.test.ts#L5) | <code>standing = clearStanding()</code><br>**Input commands:** <code>assertDeactivationAllowed(standing)</code> | Does not throw an error | **Verified outcomes:** No error was thrown | Passed |
-| [assertDeactivationAllowed_WhenFundsAreHeld_ThrowsActiveObligations](deactivation-policy.test.ts#L11) | <code>standing = { ...clearStanding(), heldBalance: Money.fromCents(500) }</code><br>**Input commands:** <code>assertDeactivationAllowed(standing)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code> | Passed |
-| [assertDeactivationAllowed_WhenAnOwnedGroupIsActive_ThrowsActiveObligations](deactivation-policy.test.ts#L19) | <code>standing = { ...clearStanding(), activeOwnedGroups: 1 }</code><br>**Input commands:** <code>assertDeactivationAllowed(standing)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code> | Passed |
-| [assertDeactivationAllowed_WhenBalanceIsNegative_ThrowsInvalidInput](deactivation-policy.test.ts#L27) | <code>standing = { ...clearStanding(), availableBalance: Money.fromCents(-1) }</code><br>**Input commands:** <code>assertDeactivationAllowed(standing)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [assertDeactivationAllowed_WhenObligationCountIsFractional_ThrowsInvalidInput](deactivation-policy.test.ts#L35) | <code>standing = { ...clearStanding(), activeCommitments: 0.5 }</code><br>**Input commands:** <code>assertDeactivationAllowed(standing)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+Execution: **5 passed / 5 cases**.
 
-## Email address integrity and equality
+| Available balance (cents) | Held balance (cents) | Active commitments | Unsettled owned sessions | Pending payouts | Active owned groups | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [0](deactivation-policy.test.ts#L5) | 0 | 0 | 0 | 0 | 0 | No error | No error |
+| [0](deactivation-policy.test.ts#L11) | 500 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS | Throws error with code ACTIVE_OBLIGATIONS |
+| [0](deactivation-policy.test.ts#L19) | 0 | 0 | 0 | 0 | 1 | Throws error with code ACTIVE_OBLIGATIONS | Throws error with code ACTIVE_OBLIGATIONS |
+| [−1](deactivation-policy.test.ts#L27) | 0 | 0 | 0 | 0 | 0 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [0](deactivation-policy.test.ts#L35) | 0 | 0.5 | 0 | 0 | 0 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
 
-Source: [email.test.ts](email.test.ts)
+## Email constructor — address integrity
 
+Quoted values preserve spaces and escapes exactly; `\t`, `\n`, `\r`, `\u2028` and `\u00a0` denote the corresponding input characters, not literal backslashes.
 
-### Address preservation and immutability
+**Input:** Email address · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenStandardAddress_PreservesExactAddress](email.test.ts#L6) | <code>address = "owner@example.com"</code> | <code>email.toString()</code> equals <code>"owner@example.com"</code> | **Observation bindings:** <code>email = new Email(address)</code><br>**Verified outcomes:** <code>email.toString()</code> was <code>"owner@example.com"</code> | Passed |
-| [constructor_WhenMixedCaseAndPlusTag_PreservesExactAddress](email.test.ts#L14) | <code>address = "Owner+bookings@Example.COM"</code> | <code>email.toString()</code> equals <code>"Owner+bookings@Example.COM"</code> | **Observation bindings:** <code>email = new Email(address)</code><br>**Verified outcomes:** <code>email.toString()</code> was <code>"Owner+bookings@Example.COM"</code> | Passed |
-| [constructor_WhenLocalhostDomain_PreservesExactAddress](email.test.ts#L22) | <code>address = "owner@localhost"</code> | <code>email.toString()</code> equals <code>"owner@localhost"</code> | **Observation bindings:** <code>email = new Email(address)</code><br>**Verified outcomes:** <code>email.toString()</code> was <code>"owner@localhost"</code> | Passed |
-| [constructor_WhenMutationIsAttempted_PreservesPublicSurface](email.test.ts#L30) | <code>email = new Email("owner@example.com")</code> | <code>Object.isFrozen(email)</code> equals <code>true</code><br><code>valueChanged</code> equals <code>false</code><br><code>methodChanged</code> equals <code>false</code><br><code>email.toString()</code> equals <code>"owner@example.com"</code> | **Observation bindings:** <code>valueChanged = Reflect.set(email, "value", "other@example.com")</code><br><code>methodChanged = Reflect.set( email, "toString", () =&gt; "other@example.com", )</code><br>**Verified outcomes:** <code>Object.isFrozen(email)</code> was <code>true</code><br><code>valueChanged</code> was <code>false</code><br><code>methodChanged</code> was <code>false</code><br><code>email.toString()</code> was <code>"owner@example.com"</code> | Passed |
+Execution: **19 passed / 19 cases**.
 
-### Address structure
+| Email address | Expected Result | Test Result |
+| --- | --- | --- |
+| [`"owner@example.com"`](email.test.ts#L6) | Exact address: `"owner@example.com"` | Exact address: `"owner@example.com"` |
+| [`"Owner+bookings@Example.COM"`](email.test.ts#L14) | Exact address: `"Owner+bookings@Example.COM"` | Exact address: `"Owner+bookings@Example.COM"` |
+| [`"owner@localhost"`](email.test.ts#L22) | Exact address: `"owner@localhost"` | Exact address: `"owner@localhost"` |
+| [`""`](email.test.ts#L48) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner.example.com"`](email.test.ts#L56) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"@example.com"`](email.test.ts#L64) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@"`](email.test.ts#L72) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@@example.com"`](email.test.ts#L80) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example@com"`](email.test.ts#L88) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`" "`](email.test.ts#L98) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`" owner@example.com"`](email.test.ts#L106) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com "`](email.test.ts#L114) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"own er@example.com"`](email.test.ts#L122) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@exam ple.com"`](email.test.ts#L130) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner\t@example.com"`](email.test.ts#L138) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com\n"`](email.test.ts#L146) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com\r\n"`](email.test.ts#L154) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com\u2028"`](email.test.ts#L162) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@\u00a0example.com"`](email.test.ts#L170) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenAddressHasEmpty_ThrowsInvalidInput](email.test.ts#L48) | <code>address = ""</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasMissingAtSign_ThrowsInvalidInput](email.test.ts#L56) | <code>address = "owner.example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasMissingLocalPart_ThrowsInvalidInput](email.test.ts#L64) | <code>address = "@example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasMissingDomain_ThrowsInvalidInput](email.test.ts#L72) | <code>address = "owner@"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasConsecutiveAtSigns_ThrowsInvalidInput](email.test.ts#L80) | <code>address = "owner@@example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasMultipleAtSigns_ThrowsInvalidInput](email.test.ts#L88) | <code>address = "owner@example@com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+## Email constructor — immutable public surface
 
-### Whitespace rejection
+After construction, attempt to replace both the stored value and the string-conversion method with the replacement address.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenAddressHasWhitespaceOnly_ThrowsInvalidInput](email.test.ts#L98) | <code>address = " "</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasLeadingSpace_ThrowsInvalidInput](email.test.ts#L106) | <code>address = " owner@example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasTrailingSpace_ThrowsInvalidInput](email.test.ts#L114) | <code>address = "owner@example.com "</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasSpaceInLocalPart_ThrowsInvalidInput](email.test.ts#L122) | <code>address = "own er@example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasSpaceInDomain_ThrowsInvalidInput](email.test.ts#L130) | <code>address = "owner@exam ple.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasTab_ThrowsInvalidInput](email.test.ts#L138) | <code>address = "owner\t@example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasTrailingNewline_ThrowsInvalidInput](email.test.ts#L146) | <code>address = "owner@example.com\n"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasTrailingCrLf_ThrowsInvalidInput](email.test.ts#L154) | <code>address = "owner@example.com\r\n"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasUnicodeLineSeparator_ThrowsInvalidInput](email.test.ts#L162) | <code>address = "owner@example.com\u2028"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAddressHasNonBreakingSpace_ThrowsInvalidInput](email.test.ts#L170) | <code>address = "owner@\u00a0example.com"</code><br>**Input commands:** <code>new Email(address)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+**Input:** Email address, Replacement address · **Oracle:** Expected Result · **Log:** Test Result
 
-### Exact address equality
+Execution: **1 passed / 1 case**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [equals_WhenSameText_ReturnsTrue](email.test.ts#L180) | <code>email = new Email("Owner@example.com")</code><br><code>other = new Email("Owner@example.com")</code> | <code>equalAddresses</code> equals <code>true</code> | **Observation bindings:** <code>equalAddresses = email.equals(other)</code><br>**Verified outcomes:** <code>equalAddresses</code> was <code>true</code> | Passed |
-| [equals_WhenDifferentLocalCase_ReturnsFalse](email.test.ts#L189) | <code>email = new Email("Owner@example.com")</code><br><code>other = new Email("owner@example.com")</code> | <code>equalAddresses</code> equals <code>false</code> | **Observation bindings:** <code>equalAddresses = email.equals(other)</code><br>**Verified outcomes:** <code>equalAddresses</code> was <code>false</code> | Passed |
-| [equals_WhenDifferentDomainCase_ReturnsFalse](email.test.ts#L198) | <code>email = new Email("Owner@example.com")</code><br><code>other = new Email("Owner@EXAMPLE.COM")</code> | <code>equalAddresses</code> equals <code>false</code> | **Observation bindings:** <code>equalAddresses = email.equals(other)</code><br>**Verified outcomes:** <code>equalAddresses</code> was <code>false</code> | Passed |
-| [equals_WhenDifferentAddress_ReturnsFalse](email.test.ts#L207) | <code>email = new Email("Owner@example.com")</code><br><code>other = new Email("other@example.com")</code> | <code>equalAddresses</code> equals <code>false</code> | **Observation bindings:** <code>equalAddresses = email.equals(other)</code><br>**Verified outcomes:** <code>equalAddresses</code> was <code>false</code> | Passed |
+| Email address | Replacement address | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [`owner@example.com`](email.test.ts#L30) | `other@example.com` | Instance frozen; both replacements return false; address owner@example.com | Instance frozen; both replacements return false; address owner@example.com |
 
-## Payout account setup
-
-Source: [payout-account.test.ts](payout-account.test.ts)
-
-`payoutAccountDetails()` defaults to a `PENDING` account named `account`, owned by `owner`, with provider reference `provider` and no bank reference. Rows pass these details to the constructor, supplying `FAILED` or `COMPLETE` state and bank-reference overrides where relevant. The fixture does not run setup transitions; the named completion and failure commands run in the tests.
+## Email.equals — exact text equality
 
 
-### Restoring setup state
+**Input:** Email address, Other email address · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenCompletedWithBankDetails_RestoresCompletedAccount](payout-account.test.ts#L6) | <code>details = payoutAccountDetails({ setupStatus: "COMPLETE", bankAccountReference: "bank", })</code> | <code>account.setupStatus</code> equals <code>"COMPLETE"</code><br><code>account.bankAccountReference</code> equals <code>"bank"</code> | **Observation bindings:** <code>account = new PayoutAccount(details)</code><br>**Verified outcomes:** <code>account.setupStatus</code> was <code>"COMPLETE"</code><br><code>account.bankAccountReference</code> was <code>"bank"</code> | Passed |
-| [constructor_WhenCompletedWithoutBankDetails_ThrowsInvalidInput](payout-account.test.ts#L18) | <code>details = payoutAccountDetails({ setupStatus: "COMPLETE" })</code><br>**Input commands:** <code>new PayoutAccount(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenPendingWithBankDetails_ThrowsInvalidInput](payout-account.test.ts#L26) | <code>details = payoutAccountDetails({ bankAccountReference: "bank" })</code><br>**Input commands:** <code>new PayoutAccount(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+Execution: **4 passed / 4 cases**.
 
-### Setup outcomes and repeated confirmations
+| Email address | Other email address | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [`Owner@example.com`](email.test.ts#L180) | `Owner@example.com` | true | true |
+| [`Owner@example.com`](email.test.ts#L189) | `owner@example.com` | false | false |
+| [`Owner@example.com`](email.test.ts#L198) | `Owner@EXAMPLE.COM` | false | false |
+| [`Owner@example.com`](email.test.ts#L207) | `other@example.com` | false | false |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [completeSetup_WhenSetupIsPending_ReturnsCompletedCopy](payout-account.test.ts#L36) | <code>pendingAccount = new PayoutAccount(payoutAccountDetails())</code> | <code>completedAccount</code> is a different instance from <code>pendingAccount</code><br><code>pendingAccount.setupStatus</code> equals <code>"PENDING"</code><br><code>pendingAccount.bankAccountReference</code> is undefined<br><code>completedAccount.setupStatus</code> equals <code>"COMPLETE"</code><br><code>completedAccount.bankAccountReference</code> equals <code>"bank"</code> | **Observation bindings:** <code>completedAccount = pendingAccount.completeSetup("bank")</code><br>**Verified outcomes:** <code>completedAccount</code> was a different instance from <code>pendingAccount</code><br><code>pendingAccount.setupStatus</code> was <code>"PENDING"</code><br><code>pendingAccount.bankAccountReference</code> was undefined<br><code>completedAccount.setupStatus</code> was <code>"COMPLETE"</code><br><code>completedAccount.bankAccountReference</code> was <code>"bank"</code> | Passed |
-| [completeSetup_WhenConfirmationMatches_ReturnsSameCompletedAccount](payout-account.test.ts#L48) | <code>pendingAccount = new PayoutAccount(payoutAccountDetails())</code><br><code>completedAccount = pendingAccount.completeSetup("bank")</code> | <code>repeatedConfirmation</code> is the same instance as <code>completedAccount</code> | **Observation bindings:** <code>repeatedConfirmation = completedAccount.completeSetup("bank")</code><br>**Verified outcomes:** <code>repeatedConfirmation</code> was the same instance as <code>completedAccount</code> | Passed |
-| [completeSetup_WhenRestoredConfirmationMatches_ReturnsSameCompletedAccount](payout-account.test.ts#L57) | <code>restoredAccount = new PayoutAccount( payoutAccountDetails({ setupStatus: "COMPLETE", bankAccountReference: "bank", }), )</code> | <code>repeatedConfirmation</code> is the same instance as <code>restoredAccount</code> | **Observation bindings:** <code>repeatedConfirmation = restoredAccount.completeSetup("bank")</code><br>**Verified outcomes:** <code>repeatedConfirmation</code> was the same instance as <code>restoredAccount</code> | Passed |
-| [completeSetup_WhenSetupHasFailed_ThrowsInvalidState](payout-account.test.ts#L70) | <code>failedAccount = new PayoutAccount( payoutAccountDetails({ setupStatus: "FAILED" }), )</code><br>**Input commands:** <code>failedAccount.completeSetup("bank")</code> | Throws <code>error code INVALID_STATE</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code> | Passed |
-| [failSetup_WhenSetupIsPending_ReturnsFailedCopy](payout-account.test.ts#L80) | <code>pendingAccount = new PayoutAccount(payoutAccountDetails())</code> | <code>failedAccount</code> is a different instance from <code>pendingAccount</code><br><code>pendingAccount.setupStatus</code> equals <code>"PENDING"</code><br><code>failedAccount.setupStatus</code> equals <code>"FAILED"</code><br><code>failedAccount.bankAccountReference</code> is undefined | **Observation bindings:** <code>failedAccount = pendingAccount.failSetup()</code><br>**Verified outcomes:** <code>failedAccount</code> was a different instance from <code>pendingAccount</code><br><code>pendingAccount.setupStatus</code> was <code>"PENDING"</code><br><code>failedAccount.setupStatus</code> was <code>"FAILED"</code><br><code>failedAccount.bankAccountReference</code> was undefined | Passed |
+## PayoutAccount constructor — setup state
 
-## User loaded account data
+Payout account ID `account`, user `owner`, and provider account reference `provider` apply to all PayoutAccount cases below.
 
-Source: [user-related-data.test.ts](user-related-data.test.ts)
+**Input:** Setup status, Bank reference · **Oracle:** Expected Result · **Log:** Test Result
 
-`userLoadedAt` is `2026-10-08T10:00:00Z`. `createTestUserDetails()` defaults to an active account with a verified `<userId>@example.com` address, 10,000 available cents, reliability 100, empty preferences, and no group memberships or payout account. `fundedWallet(userId, cents)` creates wallet `w-<userId>` with one top-up for the stated cents at `userLoadedAt`; zero cents gives an empty history. Row overrides supply exceptional or malformed state.
+Execution: **3 passed / 3 cases**.
 
+| Setup status | Bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [COMPLETE](payout-account.test.ts#L6) | bank | Status COMPLETE; bank reference bank | Status COMPLETE; bank reference bank |
+| [COMPLETE](payout-account.test.ts#L18) | Absent | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [PENDING](payout-account.test.ts#L26) | bank | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
 
-### Wallet and membership requirements
+## PayoutAccount.completeSetup — confirmation
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenMembershipsAreMissing_ThrowsInvalidInput](user-related-data.test.ts#L17) | <code>details = { ...createTestUserDetails({ userId: "alice" }), memberGroupIds: undefined, } as unknown as UserDetails</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenMembershipsAreNull_ThrowsInvalidInput](user-related-data.test.ts#L28) | <code>details = { ...createTestUserDetails({ userId: "alice" }), memberGroupIds: null, } as unknown as UserDetails</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenWalletBelongsToAnotherUser_ThrowsInvalidInput](user-related-data.test.ts#L39) | <code>details = { ...createTestUserDetails({ userId: "alice" }), wallet: new Wallet({ walletId: "w-alice", userId: "other", transactions: [], }), }</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenMembershipIdIsBlank_ThrowsInvalidInput](user-related-data.test.ts#L54) | <code>details = { ...createTestUserDetails({ userId: "alice" }), memberGroupIds: [" "], }</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenMembershipsAreNotAnArray_ThrowsInvalidInput](user-related-data.test.ts#L65) | <code>details = { ...createTestUserDetails({ userId: "alice" }), memberGroupIds: new Set(["group"]), } as unknown as UserDetails</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [create_WhenRegistering_EstablishesWalletAndEmptyHistory](user-related-data.test.ts#L76) | <code>details = { userId: "new-user", email: new Email("new@example.com"), walletId: "new-wallet", now: userLoadedAt, }</code> | <code>user.userId</code> equals <code>"new-user"</code><br><code>user.wallet.userId</code> equals <code>"new-user"</code><br><code>user.email?.toString()</code> equals <code>"new@example.com"</code><br><code>user.wallet.walletId</code> equals <code>"new-wallet"</code><br><code>user.wallet.transactions</code> matches <code>[]</code><br><code>user.wallet.getAvailableBalance().toCents()</code> equals <code>0</code><br><code>user.reliabilityScore.toNumber()</code> equals <code>100</code><br><code>user.memberGroupIds</code> matches <code>[]</code> | **Observation bindings:** <code>user = User.create(details)</code><br>**Verified outcomes:** <code>user.userId</code> was <code>"new-user"</code><br><code>user.wallet.userId</code> was <code>"new-user"</code><br><code>user.email?.toString()</code> was <code>"new@example.com"</code><br><code>user.wallet.walletId</code> was <code>"new-wallet"</code><br><code>user.wallet.transactions</code> matched <code>[]</code><br><code>user.wallet.getAvailableBalance().toCents()</code> was <code>0</code><br><code>user.reliabilityScore.toNumber()</code> was <code>100</code><br><code>user.memberGroupIds</code> matched <code>[]</code> | Passed |
+The freshly completed case first completes a pending account with `bank`, then repeats that confirmation. The restored case starts with a constructed COMPLETE account.
 
-### Loaded data isolation
+**Input:** Initial setup status, Stored bank reference, Confirmation bank reference · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenSourceDataChanges_PreservesLoadedValues](user-related-data.test.ts#L98) | <code>wallet = fundedWallet("alice", 700)</code><br><code>reliabilityScore = ReliabilityScore.from(80)</code><br><code>memberGroupIds = ["group"]</code><br><code>details = { ...createTestUserDetails({ userId: "alice" }), wallet, reliabilityScore, memberGroupIds, }</code><br><code>user = new User(details)</code><br>**Input commands:** <code>details.wallet = fundedWallet("alice", 0)</code><br><code>details.reliabilityScore = ReliabilityScore.from(0)</code><br><code>memberGroupIds.push("other")</code> | <code>loadedWallet</code> is the same instance as <code>wallet</code><br><code>loadedWallet.walletId</code> equals <code>"w-alice"</code><br><code>loadedWallet.getAvailableBalance().toCents()</code> equals <code>700</code><br><code>loadedScore</code> is the same instance as <code>reliabilityScore</code><br><code>loadedScore.toNumber()</code> equals <code>80</code><br><code>user.memberGroupIds</code> matches <code>["group"]</code> | **Observation bindings:** <code>loadedWallet = user.wallet</code><br><code>loadedScore = user.reliabilityScore</code><br>**Verified outcomes:** <code>loadedWallet</code> was the same instance as <code>wallet</code><br><code>loadedWallet.walletId</code> was <code>"w-alice"</code><br><code>loadedWallet.getAvailableBalance().toCents()</code> was <code>700</code><br><code>loadedScore</code> was the same instance as <code>reliabilityScore</code><br><code>loadedScore.toNumber()</code> was <code>80</code><br><code>user.memberGroupIds</code> matched <code>["group"]</code> | Passed |
-| [memberGroupIds_WhenReturnedArrayChanges_PreservesMemberships](user-related-data.test.ts#L125) | <code>user = new User( createTestUserDetails({ userId: "alice", memberGroupIds: ["group"], }), )</code><br><code>memberships = user.memberGroupIds as string[]</code><br>**Input commands:** <code>memberships.push("injected")</code> | <code>user.memberGroupIds</code> matches <code>["group"]</code> | **Verified outcomes:** <code>user.memberGroupIds</code> matched <code>["group"]</code> | Passed |
-| [wallet_WhenReassignmentIsAttempted_PreservesLoadedWallet](user-related-data.test.ts#L140) | <code>wallet = fundedWallet("alice", 700)</code><br><code>user = new User(createTestUserDetails({ userId: "alice", wallet }))</code><br><code>replacement = fundedWallet("alice", 0)</code> | <code>walletReassigned</code> equals <code>false</code><br><code>retainedWallet</code> is the same instance as <code>wallet</code><br><code>retainedWallet.getAvailableBalance().toCents()</code> equals <code>700</code> | **Observation bindings:** <code>walletReassigned = Reflect.set(user, "wallet", replacement)</code><br><code>retainedWallet = user.wallet</code><br>**Verified outcomes:** <code>walletReassigned</code> was <code>false</code><br><code>retainedWallet</code> was the same instance as <code>wallet</code><br><code>retainedWallet.getAvailableBalance().toCents()</code> was <code>700</code> | Passed |
-| [reliabilityScore_WhenReassignmentIsAttempted_PreservesLoadedScore](user-related-data.test.ts#L153) | <code>reliabilityScore = ReliabilityScore.from(80)</code><br><code>user = new User( createTestUserDetails({ userId: "alice", reliabilityScore }), )</code><br><code>replacement = ReliabilityScore.from(0)</code> | <code>scoreReassigned</code> equals <code>false</code><br><code>retainedScore</code> is the same instance as <code>reliabilityScore</code><br><code>retainedScore.toNumber()</code> equals <code>80</code> | **Observation bindings:** <code>scoreReassigned = Reflect.set(user, "reliabilityScore", replacement)</code><br><code>retainedScore = user.reliabilityScore</code><br>**Verified outcomes:** <code>scoreReassigned</code> was <code>false</code><br><code>retainedScore</code> was the same instance as <code>reliabilityScore</code><br><code>retainedScore.toNumber()</code> was <code>80</code> | Passed |
+Execution: **4 passed / 4 cases**.
 
-## User account lifecycle
+| Initial setup status | Stored bank reference | Confirmation bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [PENDING](payout-account.test.ts#L36) | Absent | bank | Different returned instance: COMPLETE, bank bank; original stays PENDING with no bank reference | Different returned instance: COMPLETE, bank bank; original stays PENDING with no bank reference |
+| [COMPLETE (freshly completed)](payout-account.test.ts#L48) | bank | bank | Same completed account instance | Same completed account instance |
+| [COMPLETE (restored)](payout-account.test.ts#L57) | bank | bank | Same restored account instance | Same restored account instance |
+| [FAILED](payout-account.test.ts#L70) | Absent | bank | Throws error with code INVALID_STATE | Throws error with code INVALID_STATE |
 
-Source: [user.test.ts](user.test.ts)
-
-`userLoadedAt` is `2026-10-08T10:00:00Z`. `createUser(overrides)` directly constructs `owner` with `owner@example.com`, an unverified active account, empty wallet `w-owner`, reliability 100, empty preferences, no groups, and no payout account. Each row supplies any inactive-profile, preference, or payout-account overrides. `createPayoutAccount(setupStatus, bankAccountReference?)` directly constructs account `account` for `owner`, with provider reference `provider`; the requested status is required and the bank reference is absent unless supplied. `createTestUserDetails()` retains its separate shared defaults: active verified account, 10,000 available cents, reliability 100, and no memberships. `deactivationWithoutObligations()` sets both balances and all four obligation counts to zero. `accountStateOf()` records profile, verification, preferences, and payout-account state for before/after comparisons.
+## PayoutAccount.failSetup — failure
 
 
-### Registration and restored account data
+**Input:** Initial setup status, Stored bank reference · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenVerifiedEmailIsMissing_ThrowsInvalidInput](user.test.ts#L15) | <code>details = createTestUserDetails({ userId: "owner", email: null, emailVerified: true })</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenEmailIsProvided_PreservesTheEmailValue](user.test.ts#L21) | <code>email = new Email("Owner+bookings@Example.COM")</code><br><code>details = createTestUserDetails({ userId: "owner", email })</code> | <code>user.email</code> is the same instance as <code>email</code><br><code>user.email?.toString()</code> equals <code>"Owner+bookings@Example.COM"</code> | **Observation bindings:** <code>user = new User(details)</code><br>**Verified outcomes:** <code>user.email</code> was the same instance as <code>email</code><br><code>user.email?.toString()</code> was <code>"Owner+bookings@Example.COM"</code> | Passed |
-| [constructor_WhenActiveAccountHasNoEmail_LoadsAnUnverifiedAccount](user.test.ts#L31) | <code>details = createTestUserDetails({ userId: "owner", email: null, emailVerified: false, })</code> | <code>user.accountStatus</code> equals <code>"ACTIVE"</code><br><code>user.email</code> is null<br><code>user.emailVerified</code> equals <code>false</code> | **Observation bindings:** <code>user = new User(details)</code><br>**Verified outcomes:** <code>user.accountStatus</code> was <code>"ACTIVE"</code><br><code>user.email</code> was null<br><code>user.emailVerified</code> was <code>false</code> | Passed |
-| [constructor_WhenInactiveAccountHasEmail_ThrowsInvalidInput](user.test.ts#L45) | <code>details = createTestUserDetails({ userId: "owner", accountStatus: "INACTIVE", email: new Email("owner@example.com"), })</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenLoadingDeactivatedUser_RestoresAnonymisedProfile](user.test.ts#L57) | <code>original = createUser({ accountStatus: "INACTIVE", email: null, payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code><br><code>details = createTestUserDetails({ userId: "owner", accountStatus: "INACTIVE", email: null, payoutAccount: original.payoutAccount, })</code> | <code>restored.accountStatus</code> equals <code>"INACTIVE"</code><br><code>restored.email</code> is null<br><code>accountStateOf(restored)</code> matches <code>accountStateOf(original)</code> | **Observation bindings:** <code>restored = new User(details)</code><br>**Verified outcomes:** <code>restored.accountStatus</code> was <code>"INACTIVE"</code><br><code>restored.email</code> was null<br><code>accountStateOf(restored)</code> matched <code>accountStateOf(original)</code> | Passed |
-| [constructor_WhenPayoutAccountBelongsToAnotherUser_ThrowsInvalidInput](user.test.ts#L77) | <code>payoutAccount = PayoutAccount.create({ payoutAccountId: "account", userId: "other-user", providerAccountReference: "provider", })</code><br><code>details = createTestUserDetails({ userId: "owner", payoutAccount })</code><br>**Input commands:** <code>new User(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenSourcePreferencesChange_PreservesStoredPreferences](user.test.ts#L90) | <code>sports = new Set(["Tennis"])</code><br><code>regions = new Set(["West"])</code><br><code>user = new User( createTestUserDetails({ userId: "owner", preferredSports: sports, preferredRegions: regions, }), )</code><br>**Input commands:** <code>sports.clear()</code><br><code>regions.clear()</code> | <code>[...user.preferredSports]</code> matches <code>["Tennis"]</code><br><code>[...user.preferredRegions]</code> matches <code>["West"]</code> | **Verified outcomes:** <code>[...user.preferredSports]</code> matched <code>["Tennis"]</code><br><code>[...user.preferredRegions]</code> matched <code>["West"]</code> | Passed |
-| [create_WhenRegistrationIsValid_ReturnsAnActiveUser](user.test.ts#L109) | <code>email = new Email("owner@example.com")</code> | <code>user.accountStatus</code> equals <code>"ACTIVE"</code><br><code>user.email</code> is the same instance as <code>email</code><br><code>user.emailVerified</code> equals <code>false</code> | **Observation bindings:** <code>user = User.create({ userId: "owner", email, walletId: "w-owner", now: userLoadedAt, })</code><br>**Verified outcomes:** <code>user.accountStatus</code> was <code>"ACTIVE"</code><br><code>user.email</code> was the same instance as <code>email</code><br><code>user.emailVerified</code> was <code>false</code> | Passed |
-| [create_WhenSourcePreferencesChange_PreservesStoredPreferences](user.test.ts#L124) | <code>sports = new Set(["Tennis"])</code><br><code>regions = new Set(["West"])</code><br><code>user = User.create({ userId: "owner", email: new Email("owner@example.com"), walletId: "w-owner", now: userLoadedAt, preferredSports: sports, preferredRegions: regions, })</code><br>**Input commands:** <code>sports.clear()</code><br><code>regions.clear()</code> | <code>[...user.preferredSports]</code> matches <code>["Tennis"]</code><br><code>[...user.preferredRegions]</code> matches <code>["West"]</code> | **Verified outcomes:** <code>[...user.preferredSports]</code> matched <code>["Tennis"]</code><br><code>[...user.preferredRegions]</code> matched <code>["West"]</code> | Passed |
+Execution: **1 passed / 1 case**.
 
-### Profile updates and email verification
+| Initial setup status | Stored bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [PENDING](payout-account.test.ts#L80) | Absent | Different returned instance: FAILED with no bank reference; original stays PENDING | Different returned instance: FAILED with no bank reference; original stays PENDING |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [updateProfile_WhenVerifiedEmailChanges_RequiresFreshVerification](user.test.ts#L146) | <code>user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }))</code><br>**Input commands:** <code>user.updateProfile({ email: new Email("new@example.com") })</code> | <code>user.emailVerified</code> equals <code>false</code> | **Verified outcomes:** <code>user.emailVerified</code> was <code>false</code> | Passed |
-| [updateProfile_WhenVerifiedEmailIsUnchanged_PreservesVerification](user.test.ts#L154) | <code>user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }))</code><br>**Input commands:** <code>user.updateProfile({ email: new Email("owner@example.com") })</code> | <code>user.emailVerified</code> equals <code>true</code> | **Verified outcomes:** <code>user.emailVerified</code> was <code>true</code> | Passed |
-| [updateProfile_WhenAccountIsActive_ReplacesEmail](user.test.ts#L162) | <code>user = createUser()</code><br><code>email = new Email("new@example.com")</code><br>**Input commands:** <code>user.updateProfile({ email })</code> | <code>updatedEmail</code> is the same instance as <code>email</code><br><code>updatedEmail?.toString()</code> equals <code>"new@example.com"</code> | **Observation bindings:** <code>updatedEmail = user.email</code><br>**Verified outcomes:** <code>updatedEmail</code> was the same instance as <code>email</code><br><code>updatedEmail?.toString()</code> was <code>"new@example.com"</code> | Passed |
-| [updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState](user.test.ts#L173) | <code>user = createUser({ accountStatus: "INACTIVE", email: null })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.updateProfile({ email: new Email("new@example.com") })</code> | Throws <code>error code INACTIVE_ACCOUNT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INACTIVE_ACCOUNT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
+## User constructor — loaded wallet and memberships
 
-### Preferences and collection isolation
+Loaded-user defaults: ACTIVE, verified `<userId>@example.com`, wallet `w-<userId>` funded with 10000 cents, reliability 100, no groups, empty preferences and no payout account. Top-ups occur at **2026-10-08 10:00 UTC**, also the registration time. The table changes only the listed loaded data.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions](user.test.ts#L185) | <code>user = createUser()</code><br>**Input commands:** <code>user.updatePreferences({ preferredSports: new Set(["Tennis"]), preferredRegions: new Set(["West"]), })</code> | <code>[...user.preferredSports]</code> matches <code>["Tennis"]</code><br><code>[...user.preferredRegions]</code> matches <code>["West"]</code> | **Verified outcomes:** <code>[...user.preferredSports]</code> matched <code>["Tennis"]</code><br><code>[...user.preferredRegions]</code> matched <code>["West"]</code> | Passed |
-| [updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState](user.test.ts#L197) | <code>user = createUser()</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.updatePreferences({ preferredSports: new Set(["Tennis"]), preferredRegions: new Set([" "]), })</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState](user.test.ts#L210) | <code>user = createUser({ accountStatus: "INACTIVE", email: null })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.updatePreferences({ preferredSports: new Set(["Tennis"]), preferredRegions: new Set(["West"]), })</code> | Throws <code>error code INACTIVE_ACCOUNT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INACTIVE_ACCOUNT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [preferredSports_WhenReturnedSetChanges_PreservesStoredPreferences](user.test.ts#L223) | <code>user = new User( createTestUserDetails({ userId: "owner", preferredSports: new Set(["Tennis"]), }), )</code><br><code>exposedSports = user.preferredSports as Set&lt;string&gt;</code><br>**Input commands:** <code>exposedSports.clear()</code> | <code>[...user.preferredSports]</code> matches <code>["Tennis"]</code> | **Verified outcomes:** <code>[...user.preferredSports]</code> matched <code>["Tennis"]</code> | Passed |
-| [preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences](user.test.ts#L238) | <code>user = new User( createTestUserDetails({ userId: "owner", preferredRegions: new Set(["West"]), }), )</code><br><code>exposedRegions = user.preferredRegions as Set&lt;string&gt;</code><br>**Input commands:** <code>exposedRegions.clear()</code> | <code>[...user.preferredRegions]</code> matches <code>["West"]</code> | **Verified outcomes:** <code>[...user.preferredRegions]</code> matched <code>["West"]</code> | Passed |
+**Input:** User ID, Memberships, Wallet owner, Wallet funds (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-### Starting payout setup
+Execution: **5 passed / 5 cases**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount](user.test.ts#L255) | <code>user = createUser()</code><br>**Input commands:** <code>user.beginPayoutSetup({ payoutAccountId: "account", providerAccountReference: "provider", })</code> | <code>pendingAccount?.setupStatus</code> equals <code>"PENDING"</code><br><code>pendingAccount?.payoutAccountId</code> equals <code>"account"</code><br><code>pendingAccount?.userId</code> equals <code>"owner"</code> | **Observation bindings:** <code>pendingAccount = user.payoutAccount</code><br>**Verified outcomes:** <code>pendingAccount?.setupStatus</code> was <code>"PENDING"</code><br><code>pendingAccount?.payoutAccountId</code> was <code>"account"</code><br><code>pendingAccount?.userId</code> was <code>"owner"</code> | Passed |
-| [beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState](user.test.ts#L269) | <code>user = createUser({ payoutAccount: createPayoutAccount("PENDING") })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.beginPayoutSetup({ payoutAccountId: "replacement", providerAccountReference: "other-provider", })</code> | Throws <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState](user.test.ts#L282) | <code>user = createUser({ payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.beginPayoutSetup({ payoutAccountId: "replacement", providerAccountReference: "other-provider", })</code> | Throws <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete](user.test.ts#L297) | <code>user = createUser({ payoutAccount: createPayoutAccount("FAILED") })</code><br>**Input commands:** <code>user.beginPayoutSetup({ payoutAccountId: "replacement", providerAccountReference: "other-provider", })</code><br><code>user.completePayoutSetup("replacement-bank")</code> | <code>user.payoutAccount?.setupStatus</code> equals <code>"COMPLETE"</code><br><code>destination.payoutAccountId</code> equals <code>"replacement"</code><br><code>destination.bankAccountReference</code> equals <code>"replacement-bank"</code> | **Observation bindings:** <code>destination = user.payoutDestination()</code><br>**Verified outcomes:** <code>user.payoutAccount?.setupStatus</code> was <code>"COMPLETE"</code><br><code>destination.payoutAccountId</code> was <code>"replacement"</code><br><code>destination.bankAccountReference</code> was <code>"replacement-bank"</code> | Passed |
+| User ID | Memberships | Wallet owner | Wallet funds (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice](user-related-data.test.ts#L17) | undefined | alice | 10000 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [alice](user-related-data.test.ts#L28) | null | alice | 10000 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [alice](user-related-data.test.ts#L39) | Empty array | other | 0 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [alice](user-related-data.test.ts#L54) | Array containing `" "` | alice | 10000 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [alice](user-related-data.test.ts#L65) | Set containing group (not an array) | alice | 10000 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
 
-### Payout setup confirmation and failure
+## User.create — registration
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy](user.test.ts#L314) | <code>user = createUser({ payoutAccount: createPayoutAccount("PENDING") })</code><br><code>pendingAccount = user.payoutAccount</code><br>**Input commands:** <code>user.completePayoutSetup("bank")</code> | <code>pendingAccount?.setupStatus</code> equals <code>"PENDING"</code><br><code>completedAccount</code> does not equal <code>pendingAccount</code><br><code>completedAccount?.setupStatus</code> equals <code>"COMPLETE"</code><br><code>completedAccount?.bankAccountReference</code> equals <code>"bank"</code> | **Observation bindings:** <code>completedAccount = user.payoutAccount</code><br>**Verified outcomes:** <code>pendingAccount?.setupStatus</code> was <code>"PENDING"</code><br><code>completedAccount</code> did not equal <code>pendingAccount</code><br><code>completedAccount?.setupStatus</code> was <code>"COMPLETE"</code><br><code>completedAccount?.bankAccountReference</code> was <code>"bank"</code> | Passed |
-| [completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady](user.test.ts#L327) | <code>user = createUser()</code><br>**Input commands:** <code>user.completePayoutSetup("bank")</code> | Throws <code>error code PAYOUT_ACCOUNT_NOT_READY</code> | **Verified outcomes:** Threw <code>error code PAYOUT_ACCOUNT_NOT_READY</code> | Passed |
-| [completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput](user.test.ts#L335) | <code>user = createUser({ payoutAccount: createPayoutAccount("PENDING") })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.completePayoutSetup(" ")</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState](user.test.ts#L345) | <code>user = createUser({ payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.completePayoutSetup("different-bank")</code> | Throws <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [failPayoutSetup_WhenSetupIsPending_ReplacesAccountWithFailedCopy](user.test.ts#L357) | <code>pendingAccount = createPayoutAccount("PENDING")</code><br><code>user = createUser({ payoutAccount: pendingAccount })</code><br>**Input commands:** <code>user.failPayoutSetup()</code> | <code>pendingAccount.setupStatus</code> equals <code>"PENDING"</code><br><code>failedAccount</code> is a different instance from <code>pendingAccount</code><br><code>failedAccount?.setupStatus</code> equals <code>"FAILED"</code><br><code>failedAccount?.bankAccountReference</code> is undefined | **Observation bindings:** <code>failedAccount = user.payoutAccount</code><br>**Verified outcomes:** <code>pendingAccount.setupStatus</code> was <code>"PENDING"</code><br><code>failedAccount</code> was a different instance from <code>pendingAccount</code><br><code>failedAccount?.setupStatus</code> was <code>"FAILED"</code><br><code>failedAccount?.bankAccountReference</code> was undefined | Passed |
-| [failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady](user.test.ts#L370) | <code>user = createUser()</code><br>**Input commands:** <code>user.failPayoutSetup()</code> | Throws <code>error code PAYOUT_ACCOUNT_NOT_READY</code> | **Verified outcomes:** Threw <code>error code PAYOUT_ACCOUNT_NOT_READY</code> | Passed |
-| [failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState](user.test.ts#L378) | <code>user = createUser({ payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.failPayoutSetup()</code> | Throws <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
+Registration time is 2026-10-08 10:00 UTC. Preferences are empty unless shown otherwise.
 
-### Payout destinations
+**Input:** User ID, Email address, Wallet ID · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady](user.test.ts#L392) | <code>user = createUser()</code><br>**Input commands:** <code>user.payoutDestination()</code> | Throws <code>error code PAYOUT_ACCOUNT_NOT_READY</code> | **Verified outcomes:** Threw <code>error code PAYOUT_ACCOUNT_NOT_READY</code> | Passed |
-| [payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination](user.test.ts#L400) | <code>user = createUser({ payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code> | <code>destination</code> matches <code>{ payoutAccountId: "account", userId: "owner", providerAccountReference: "provider", bankAccountReference: "bank", }</code><br><code>Object.isFrozen(destination)</code> equals <code>true</code> | **Observation bindings:** <code>destination = user.payoutDestination()</code><br>**Verified outcomes:** <code>destination</code> matched <code>{ payoutAccountId: "account", userId: "owner", providerAccountReference: "provider", bankAccountReference: "bank", }</code><br><code>Object.isFrozen(destination)</code> was <code>true</code> | Passed |
-| [payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount](user.test.ts#L416) | <code>user = createUser({ accountStatus: "INACTIVE", email: null, payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code><br>**Input commands:** <code>user.payoutDestination()</code> | Throws <code>error code INACTIVE_ACCOUNT</code> | **Verified outcomes:** Threw <code>error code INACTIVE_ACCOUNT</code> | Passed |
+Execution: **2 passed / 2 cases**.
 
-### Account deactivation
+| User ID | Email address | Wallet ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [new-user](user-related-data.test.ts#L76) | new@example.com | new-wallet | User and wallet owner new-user; email new@example.com; wallet new-wallet; empty transactions; 0 cents; reliability 100; empty memberships | User and wallet owner new-user; email new@example.com; wallet new-wallet; empty transactions; 0 cents; reliability 100; empty memberships |
+| [owner](user.test.ts#L109) | owner@example.com | w-owner | Status ACTIVE; same Email instance supplied at registration; email unverified | Status ACTIVE; same Email instance supplied at registration; email unverified |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations](user.test.ts#L430) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), availableBalance: Money.fromCents(1), }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations](user.test.ts#L444) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), heldBalance: Money.fromCents(1), }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations](user.test.ts#L458) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), activeCommitments: 1, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput](user.test.ts#L472) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), activeCommitments: -1, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput](user.test.ts#L486) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), activeCommitments: 0.5, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations](user.test.ts#L500) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), unsettledOwnedSessions: 1, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput](user.test.ts#L514) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), unsettledOwnedSessions: -1, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput](user.test.ts#L528) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), unsettledOwnedSessions: 0.5, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations](user.test.ts#L542) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), pendingPayouts: 1 }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput](user.test.ts#L553) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), pendingPayouts: -1 }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput](user.test.ts#L564) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), pendingPayouts: 0.5, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations](user.test.ts#L578) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), activeOwnedGroups: 1, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code ACTIVE_OBLIGATIONS</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput](user.test.ts#L592) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), activeOwnedGroups: -1, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput](user.test.ts#L606) | <code>user = createUser()</code><br><code>input = { ...deactivationWithoutObligations(), activeOwnedGroups: 0.5, }</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(input)</code> | Throws <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>accountStateOf(user)</code> matched <code>before</code> | Passed |
-| [deactivate_WhenNoObligationsRemain_AnonymisesProfile](user.test.ts#L620) | <code>user = createUser({ preferredSports: new Set(["Tennis"]), preferredRegions: new Set(["West"]), })</code><br>**Input commands:** <code>user.deactivate(deactivationWithoutObligations())</code> | <code>user.accountStatus</code> equals <code>"INACTIVE"</code><br><code>user.email</code> is null<br><code>[...user.preferredSports]</code> matches <code>[]</code><br><code>[...user.preferredRegions]</code> matches <code>[]</code> | **Verified outcomes:** <code>user.accountStatus</code> was <code>"INACTIVE"</code><br><code>user.email</code> was null<br><code>[...user.preferredSports]</code> matched <code>[]</code><br><code>[...user.preferredRegions]</code> matched <code>[]</code> | Passed |
-| [deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity](user.test.ts#L634) | <code>user = createUser({ payoutAccount: createPayoutAccount("COMPLETE", "bank"), })</code><br><code>wallet = user.wallet</code><br><code>payoutAccount = user.payoutAccount</code><br>**Input commands:** <code>user.deactivate(deactivationWithoutObligations())</code> | <code>user.userId</code> equals <code>"owner"</code><br><code>user.wallet</code> is the same instance as <code>wallet</code><br><code>user.payoutAccount</code> equals <code>payoutAccount</code><br><code>user.payoutAccount?.bankAccountReference</code> equals <code>"bank"</code> | **Verified outcomes:** <code>user.userId</code> was <code>"owner"</code><br><code>user.wallet</code> was the same instance as <code>wallet</code><br><code>user.payoutAccount</code> was <code>payoutAccount</code><br><code>user.payoutAccount?.bankAccountReference</code> was <code>"bank"</code> | Passed |
-| [deactivate_WhenAlreadyInactive_LeavesStateUnchanged](user.test.ts#L649) | <code>user = createUser()</code><br><code>before = accountStateOf(user)</code><br>**Input commands:** <code>user.deactivate(deactivationWithoutObligations())</code><br><code>user.deactivate(deactivationWithoutObligations())</code> | <code>accountStateOf(user)</code> matches <code>before</code> | **Verified outcomes:** <code>accountStateOf(user)</code> matched <code>before</code> | Passed |
+## User constructor — supplied account data isolation
+
+Construct loaded user `alice` with wallet `w-alice`, then replace the supplied wallet with an empty wallet, replace its reliability with 0, and append `other` to the supplied memberships.
+
+**Input:** Wallet funds (cents), Reliability, Memberships, Replacement wallet funds (cents), Replacement reliability, Appended membership · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Wallet funds (cents) | Reliability | Memberships | Replacement wallet funds (cents) | Replacement reliability | Appended membership | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [700](user-related-data.test.ts#L98) | 80 | group | 0 | 0 | other | Same original wallet instance w-alice, 700 cents; same original reliability instance, 80; memberships exactly group | Same original wallet instance w-alice, 700 cents; same original reliability instance, 80; memberships exactly group |
+
+## User.memberGroupIds — returned collection isolation
+
+Read the memberships of loaded user `alice`, then append the stated ID to the returned array.
+
+**Input:** Stored memberships, Appended membership · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Stored memberships | Appended membership | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [group](user-related-data.test.ts#L125) | injected | Stored memberships exactly group | Stored memberships exactly group |
+
+## User.wallet — reassignment protection
+
+Attempt to assign a replacement wallet to loaded user `alice`; both wallets have ID `w-alice`.
+
+**Input:** Original wallet funds (cents), Replacement wallet funds (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Original wallet funds (cents) | Replacement wallet funds (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [700](user-related-data.test.ts#L140) | 0 | Reassignment returns false; same original wallet instance; 700 cents | Reassignment returns false; same original wallet instance; 700 cents |
+
+## User.reliabilityScore — reassignment protection
+
+Attempt to assign a replacement score to loaded user `alice`.
+
+**Input:** Original reliability, Replacement reliability · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Original reliability | Replacement reliability | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [80](user-related-data.test.ts#L153) | 0 | Reassignment returns false; same original score instance; 80 | Reassignment returns false; same original score instance; 80 |
+
+## User constructor — restored account state
+
+Use the loaded-user defaults above for user `owner`. An inactive account has unverified null email. Where present, payout account `account` has provider reference `provider`; COMPLETE state uses bank `bank`. “Account state” comparisons cover email, verification, account status, sports, regions, and payout account ID/status/bank reference.
+
+**Input:** Account status, Email address, Email verified, Payout status, Payout owner · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **6 passed / 6 cases**.
+
+| Account status | Email address | Email verified | Payout status | Payout owner | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ACTIVE](user.test.ts#L15) | null | true | Absent | — | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [ACTIVE](user.test.ts#L21) | Owner+bookings@Example.COM | true | Absent | — | Same supplied Email instance; exact text Owner+bookings@Example.COM | Same supplied Email instance; exact text Owner+bookings@Example.COM |
+| [ACTIVE](user.test.ts#L31) | null | false | Absent | — | Status ACTIVE; null email; email unverified | Status ACTIVE; null email; email unverified |
+| [INACTIVE](user.test.ts#L45) | owner@example.com | false | Absent | — | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [INACTIVE](user.test.ts#L57) | null | false | COMPLETE | owner | Status INACTIVE; null email; restored account state equals the original deactivated account | Status INACTIVE; null email; restored account state equals the original deactivated account |
+| [ACTIVE](user.test.ts#L77) | owner@example.com | true | PENDING | other-user | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+
+## User constructor — supplied preference isolation
+
+Use loaded user `owner`, then clear both supplied preference sets after construction.
+
+**Input:** Preferred sports, Preferred regions, Supplied sets after construction · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Preferred sports | Preferred regions | Supplied sets after construction | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [Tennis](user.test.ts#L90) | West | Both empty | Stored sports exactly Tennis; stored regions exactly West | Stored sports exactly Tennis; stored regions exactly West |
+
+## User.create — supplied preference isolation
+
+Register `owner`, email `owner@example.com`, wallet `w-owner` at 2026-10-08 10:00 UTC, then clear both supplied preference sets.
+
+**Input:** Preferred sports, Preferred regions, Supplied sets after registration · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Preferred sports | Preferred regions | Supplied sets after registration | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [Tennis](user.test.ts#L124) | West | Both empty | Stored sports exactly Tennis; stored regions exactly West | Stored sports exactly Tennis; stored regions exactly West |
+
+## User.updateProfile — email and verification
+
+User ID is `owner`; no groups or payout account; reliability 100; preferences empty. The verified-email cases have 10000 wallet cents; the unverified and inactive cases have 0 cents. Inactive accounts have null email. Account-state comparisons use the fields defined above.
+
+**Input:** Account status, Current email, Email verified, New email · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Account status | Current email | Email verified | New email | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [ACTIVE](user.test.ts#L146) | owner@example.com | true | new@example.com | Email unverified | Email unverified |
+| [ACTIVE](user.test.ts#L154) | owner@example.com | true | owner@example.com | Email remains verified | Email remains verified |
+| [ACTIVE](user.test.ts#L162) | owner@example.com | false | new@example.com | Same supplied new Email instance; text new@example.com | Same supplied new Email instance; text new@example.com |
+| [INACTIVE](user.test.ts#L173) | null | false | new@example.com | Throws error with code INACTIVE_ACCOUNT; account state unchanged | Throws error with code INACTIVE_ACCOUNT; account state unchanged |
+
+## User.updatePreferences — replacing preferences
+
+User `owner` starts with 0 wallet cents and empty preferences; ACTIVE accounts have unverified `owner@example.com`, INACTIVE accounts have null email. No payout account, groups, or other obligations.
+
+**Input:** Account status, New preferred sports, New preferred regions · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Account status | New preferred sports | New preferred regions | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [ACTIVE](user.test.ts#L185) | Tennis | West | Stored sports exactly Tennis; stored regions exactly West | Stored sports exactly Tennis; stored regions exactly West |
+| [ACTIVE](user.test.ts#L197) | Tennis | `" "` | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [INACTIVE](user.test.ts#L210) | Tennis | West | Throws error with code INACTIVE_ACCOUNT; account state unchanged | Throws error with code INACTIVE_ACCOUNT; account state unchanged |
+
+## User.preferredSports — returned set isolation
+
+Use loaded-user defaults for `owner`; clear the returned sports set.
+
+**Input:** Stored preferred sports, Returned sports after mutation · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Stored preferred sports | Returned sports after mutation | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [Tennis](user.test.ts#L223) | Empty set | Stored sports exactly Tennis | Stored sports exactly Tennis |
+
+## User.preferredRegions — returned set isolation
+
+Use loaded-user defaults for `owner`; clear the returned regions set.
+
+**Input:** Stored preferred regions, Returned regions after mutation · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Stored preferred regions | Returned regions after mutation | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [West](user.test.ts#L238) | Empty set | Stored regions exactly West | Stored regions exactly West |
+
+## User.beginPayoutSetup — starting setup
+
+For all lifecycle cases below, user `owner` defaults to ACTIVE, unverified `owner@example.com`, empty preferences, 0 wallet cents, reliability 100 and no memberships. Existing payout accounts use ID `account`, provider reference `provider`, and bank `bank` only when COMPLETE. Account-state comparisons use the fields defined above.
+
+**Input:** Existing payout status, New payout account ID, New provider account reference · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Existing payout status | New payout account ID | New provider account reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [Absent](user.test.ts#L255) | account | provider | Payout status PENDING; account ID account; user ID owner | Payout status PENDING; account ID account; user ID owner |
+| [PENDING](user.test.ts#L269) | replacement | other-provider | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+| [COMPLETE](user.test.ts#L282) | replacement | other-provider | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+
+## User.beginPayoutSetup then completePayoutSetup — replacing failed setup
+
+
+**Input:** Existing payout status, New payout account ID, New provider reference, Confirmation bank reference · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Existing payout status | New payout account ID | New provider reference | Confirmation bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [FAILED](user.test.ts#L297) | replacement | other-provider | replacement-bank | Payout status COMPLETE; destination account replacement; destination bank replacement-bank | Payout status COMPLETE; destination account replacement; destination bank replacement-bank |
+
+## User.completePayoutSetup — confirmation
+
+
+**Input:** Existing payout status, Stored bank reference, Confirmation bank reference · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Existing payout status | Stored bank reference | Confirmation bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [PENDING](user.test.ts#L314) | Absent | bank | New payout-account instance: COMPLETE, bank bank; original account stays PENDING | New payout-account instance: COMPLETE, bank bank; original account stays PENDING |
+| [Absent](user.test.ts#L327) | Absent | bank | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [PENDING](user.test.ts#L335) | Absent | `" "` | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [COMPLETE](user.test.ts#L345) | bank | different-bank | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+
+## User.failPayoutSetup — failure
+
+
+**Input:** Existing payout status, Stored bank reference · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Existing payout status | Stored bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [PENDING](user.test.ts#L357) | Absent | New payout-account instance: FAILED, bank reference absent; original account stays PENDING | New payout-account instance: FAILED, bank reference absent; original account stays PENDING |
+| [Absent](user.test.ts#L370) | Absent | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [COMPLETE](user.test.ts#L378) | bank | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+
+## User.payoutDestination — usable destination
+
+INACTIVE users have null email. Other lifecycle defaults remain as stated above.
+
+**Input:** Account status, Payout status, Bank reference · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Account status | Payout status | Bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [ACTIVE](user.test.ts#L392) | Absent | Absent | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [ACTIVE](user.test.ts#L400) | COMPLETE | bank | Frozen destination exactly: account account; user owner; provider provider; bank bank | Frozen destination exactly: account account; user owner; provider provider; bank bank |
+| [INACTIVE](user.test.ts#L416) | COMPLETE | bank | Throws error with code INACTIVE_ACCOUNT | Throws error with code INACTIVE_ACCOUNT |
+
+## User.deactivate — outstanding obligations
+
+Start with the ACTIVE lifecycle user described above. Each row passes all six deactivation fields; a rejection must preserve the complete observed account state.
+
+**Input:** Available balance (cents), Held balance (cents), Active commitments, Unsettled owned sessions, Pending payouts, Active owned groups · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **14 passed / 14 cases**.
+
+| Available balance (cents) | Held balance (cents) | Active commitments | Unsettled owned sessions | Pending payouts | Active owned groups | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [1](user.test.ts#L430) | 0 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L444) | 1 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L458) | 0 | 1 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L472) | 0 | -1 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L486) | 0 | 0.5 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L500) | 0 | 0 | 1 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L514) | 0 | 0 | -1 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L528) | 0 | 0 | 0.5 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L542) | 0 | 0 | 0 | 1 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L553) | 0 | 0 | 0 | -1 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L564) | 0 | 0 | 0 | 0.5 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L578) | 0 | 0 | 0 | 0 | 1 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L592) | 0 | 0 | 0 | 0 | -1 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L606) | 0 | 0 | 0 | 0 | 0.5 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+
+## User.deactivate — anonymisation and repeated requests
+
+Every deactivation field is zero. User ID remains `owner`; an initial COMPLETE payout account has ID `account`, provider `provider`, bank `bank`. The inactive case first deactivates an ordinary ACTIVE user, captures its resulting account state, then calls deactivate again.
+
+**Input:** Initial account status, Preferred sports, Preferred regions, Payout status · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Initial account status | Preferred sports | Preferred regions | Payout status | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [ACTIVE](user.test.ts#L620) | Tennis | West | Absent | Status INACTIVE; null email; sports and regions both empty | Status INACTIVE; null email; sports and regions both empty |
+| [ACTIVE](user.test.ts#L634) | Empty | Empty | COMPLETE | User ID owner; same wallet instance; same payout-account instance; bank bank | User ID owner; same wallet instance; same payout-account instance; bank bank |
+| [INACTIVE (already deactivated)](user.test.ts#L649) | Empty | Empty | Absent | Account state unchanged | Account state unchanged |

@@ -1,80 +1,121 @@
-# reliability test cases
+# Reliability test cases
 
 Snapshot: **2026-10-24** · **33 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
-## Reliability scoring from participation history
+## ReliabilityScore.fromHistory — weighted outcomes
 
-Source: [reliability-score-history.test.ts](reliability-score-history.test.ts)
+All histories are scored for `alice`. Unless stated otherwise, the calculation cutoff is **2026-09-15 00:00 UTC**. Ages are whole days before that cutoff. ATTENDED/ABSENT entries are committed participations with 100-cent held funds; commitment and hold creation occur one day before attendance finalization. Attendance is finalized at the session end unless a row supplies a different finalization date. ATTENDED entries use BOOKER verification; ABSENT entries use AUTOMATIC verification. The withdrawal row instead has a 100-cent FORFEITED hold, committed two days before the end, withdrawn one day before the end, and settled at the end with payout `payout`, replacement mode `OPEN_SLOT`, and UNVERIFIED attendance.
 
-`day` is 86,400,000 milliseconds; `asOf` is `2026-09-15T00:00:00Z`; `recentEnd` is one day earlier, `2026-09-14T00:00:00Z`. `attended(id, endAt)` and `absent(id, endAt)` directly construct `COMMITTED` participations for `alice`, with participation ID `id`, hold `h-${id}`, wallet `w-${id}`, holding account `platform`, and 100-cent `HELD` funds. Commitment and hold creation are one day before `endAt`. The constructors receive attendance verified at `endAt`: `ATTENDED` by `BOOKER`, or `ABSENT` by `AUTOMATIC`; no verification workflow runs inside either fixture. Both default `endAt` to `recentEnd`.
+**Input:** Participation IDs, Outcomes, Session ages (days), Calculation cutoff · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Participation IDs | Outcomes | Session ages (days) | Calculation cutoff | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [None](reliability-score-history.test.ts#L10) | Empty history | — | 2026-09-15 | 100 | 100 |
+| [`a`, `b`](reliability-score-history.test.ts#L18) | ATTENDED, ABSENT | 1, 91 | 2026-09-15 | ≈ 66.66666666666667 (precision 8) | ≈ 66.66666666666667 (precision 8) |
+| [`attended`, `p`](reliability-score-history.test.ts#L31) | ATTENDED, finalized WITHDRAWN | 1, 1 | 2026-09-15 | 50 | 50 |
+| [`a`, `b`](reliability-score-history.test.ts#L64) | ATTENDED, ABSENT | 1, 91 at the first cutoff | 2026-09-15, then 2027-09-15 | Later score equals the original exactly; ≈ 66.66666666666667 (precision 8) | Later score equals the original exactly; ≈ 66.66666666666667 (precision 8) |
+
+## ReliabilityScore.fromHistory — identity and date validation
+
+The target user remains `alice`. A waitlisted entry has queue sequence 1 and waitlist time 2026-09-14 00:00 UTC.
+
+**Input:** Participation IDs, Participation users, Outcomes, Session end, Calculation cutoff · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Participation IDs | Participation users | Outcomes | Session end | Calculation cutoff | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [`a`, `a` (same entry twice)](reliability-score-history.test.ts#L84) | alice, alice | ATTENDED, ATTENDED | 2026-09-14 | 2026-09-15 | Throws RangeError | Throws RangeError |
+| [`foreign`](reliability-score-history.test.ts#L92) | ben | WAITLISTED | 2026-09-14 | 2026-09-15 | Throws RangeError | Throws RangeError |
+| [None](reliability-score-history.test.ts#L109) | — | Empty history | — | Invalid Date | Throws RangeError | Throws RangeError |
+| [`a`](reliability-score-history.test.ts#L117) | alice | ATTENDED | Invalid Date | 2026-09-15 | Throws RangeError | Throws RangeError |
+
+## ReliabilityScore.fromHistory — finalized outcome cutoff
+
+The calculation cutoff is 2026-09-15 00:00 UTC. All entries belong to `alice`; all dates below are at 00:00 UTC.
+
+**Input:** Participation ID, Outcome, Session end, Finalized at · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Participation ID | Outcome | Session end | Finalized at | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [`waiting`](reliability-score-history.test.ts#L127) | WAITLISTED; queue sequence 1 | 2026-09-14 | Not finalized | 100 | 100 |
+| [`future-end`](reliability-score-history.test.ts#L141) | ABSENT | 2026-09-16 | 2026-09-16 | 100 | 100 |
+| [`future-finalization`](reliability-score-history.test.ts#L152) | ABSENT | 2026-09-14 | 2026-09-16 | 100 | 100 |
+| [`at-cutoff`](reliability-score-history.test.ts#L166) | ABSENT | 2026-09-15 | 2026-09-15 | 0; score instance is frozen | 0; score instance is frozen |
+
+## ReliabilityScore.from — score bounds
 
 
-### Outcome weighting
+**Input:** Score · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fromHistory_WhenHistoryIsEmpty_ReturnsMaximumScore](reliability-score-history.test.ts#L10) | <code>history = []</code> | <code>score.toNumber()</code> equals <code>100</code> | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>100</code> | Passed |
-| [fromHistory_WhenAbsenceIsOneHalfLifeOlder_WeightsItByHalf](reliability-score-history.test.ts#L18) | <code>olderEnd = new Date(recentEnd.getTime() - 90 * day)</code><br><code>history = [ { participation: attended("a"), endAt: recentEnd }, { participation: absent("b", olderEnd), endAt: olderEnd }, ]</code> | <code>score.toNumber()</code> is approximately <code>66.66666666666667</code> (precision <code>8</code>) | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was approximately <code>66.66666666666667</code> (precision <code>8</code>) | Passed |
-| [fromHistory_WhenLateWithdrawalIsFinalized_CountsOneNegativeOutcome](reliability-score-history.test.ts#L31) | <code>end = recentEnd</code><br><code>forfeitedHold = new FundHold({ holdId: "h", participationId: "p", holdingAccountId: "platform", walletId: "w", amount: Money.fromCents(100), state: "FORFEITED", createdAt: new Date(end.getTime() - 2 * day), settledAt: end, payoutId: "payout", })</code><br><code>finalizedWithdrawal = new Participation({ participationId: "p", userId: "alice", status: "WITHDRAWN", attendance: "UNVERIFIED", committedAt: new Date(end.getTime() - 2 * day), withdrawnAt: new Date(end.getTime() - day), replacementMode: "OPEN_SLOT", hold: forfeitedHold, })</code><br><code>history = [ { participation: attended("attended", end), endAt: end }, { participation: finalizedWithdrawal, endAt: end }, ]</code> | <code>score.toNumber()</code> equals <code>50</code> | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>50</code> | Passed |
-| [fromHistory_WhenClockAdvances_PreservesRelativeWeights](reliability-score-history.test.ts#L64) | <code>olderEnd = new Date(recentEnd.getTime() - 90 * day)</code><br><code>history = [ { participation: attended("a"), endAt: recentEnd }, { participation: absent("b", olderEnd), endAt: olderEnd }, ]</code><br><code>originalScore = ReliabilityScore.fromHistory("alice", history, asOf)</code> | <code>laterScore.toNumber()</code> equals <code>originalScore.toNumber()</code><br><code>laterScore.toNumber()</code> is approximately <code>66.66666666666667</code> (precision <code>8</code>) | **Observation bindings:** <code>laterScore = ReliabilityScore.fromHistory( "alice", history, new Date(asOf.getTime() + 365 * day), )</code><br>**Verified outcomes:** <code>laterScore.toNumber()</code> was <code>originalScore.toNumber()</code><br><code>laterScore.toNumber()</code> was approximately <code>66.66666666666667</code> (precision <code>8</code>) | Passed |
+Execution: **10 passed / 10 cases**.
 
-### History identity and date validation
+| Score | Expected Result | Test Result |
+| --- | --- | --- |
+| [0](reliability-score.test.ts#L6) | 0 | 0 |
+| [100](reliability-score.test.ts#L14) | 100 | 100 |
+| [48](reliability-score.test.ts#L22) | 48 | 48 |
+| [66.66666666666667](reliability-score.test.ts#L30) | 66.66666666666667 | 66.66666666666667 |
+| [−0](reliability-score.test.ts#L38) | 0 (positive zero) | 0 (positive zero) |
+| [−0.001](reliability-score.test.ts#L46) | Throws RangeError | Throws RangeError |
+| [100.001](reliability-score.test.ts#L52) | Throws RangeError | Throws RangeError |
+| [NaN](reliability-score.test.ts#L58) | Throws RangeError | Throws RangeError |
+| [+Infinity](reliability-score.test.ts#L64) | Throws RangeError | Throws RangeError |
+| [−Infinity](reliability-score.test.ts#L70) | Throws RangeError | Throws RangeError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fromHistory_WhenParticipationIsDuplicated_ThrowsRangeError](reliability-score-history.test.ts#L84) | <code>entry = { participation: attended("a"), endAt: recentEnd }</code><br>**Input commands:** <code>ReliabilityScore.fromHistory("alice", [entry, entry], asOf)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromHistory_WhenParticipationBelongsToAnotherUser_ThrowsRangeError](reliability-score-history.test.ts#L92) | <code>participation = Participation.createWaitlisted({ participationId: "foreign", userId: "ben", waitlistedAt: recentEnd, queueSequence: 1, })</code><br>**Input commands:** <code>ReliabilityScore.fromHistory( "alice", [{ participation, endAt: recentEnd }], asOf, )</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromHistory_WhenCalculationDateIsInvalid_ThrowsRangeError](reliability-score-history.test.ts#L109) | <code>invalidDate = new Date(NaN)</code><br>**Input commands:** <code>ReliabilityScore.fromHistory("alice", [], invalidDate)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [fromHistory_WhenSessionEndDateIsInvalid_ThrowsRangeError](reliability-score-history.test.ts#L117) | <code>history = [{ participation: attended("a"), endAt: new Date(NaN) }]</code><br>**Input commands:** <code>ReliabilityScore.fromHistory("alice", history, asOf)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-
-### Finalized outcome cutoff
-
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fromHistory_WhenParticipationIsUnfinished_ExcludesEntry](reliability-score-history.test.ts#L127) | <code>participation = Participation.createWaitlisted({ participationId: "waiting", userId: "alice", waitlistedAt: recentEnd, queueSequence: 1, })</code><br><code>history = [{ participation, endAt: recentEnd }]</code> | <code>score.toNumber()</code> equals <code>100</code> | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>100</code> | Passed |
-| [fromHistory_WhenSessionEndsInFuture_ExcludesEntry](reliability-score-history.test.ts#L141) | <code>future = new Date(asOf.getTime() + day)</code><br><code>history = [ { participation: absent("future-end", future), endAt: future }, ]</code> | <code>score.toNumber()</code> equals <code>100</code> | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>100</code> | Passed |
-| [fromHistory_WhenOutcomeIsFinalizedInFuture_ExcludesEntry](reliability-score-history.test.ts#L152) | <code>future = new Date(asOf.getTime() + day)</code><br><code>history = [ { participation: absent("future-finalization", future), endAt: recentEnd, }, ]</code> | <code>score.toNumber()</code> equals <code>100</code> | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>100</code> | Passed |
-| [fromHistory_WhenOutcomeIsFinalizedAtCutoff_IncludesOutcomeInImmutableScore](reliability-score-history.test.ts#L166) | <code>history = [{ participation: absent("at-cutoff", asOf), endAt: asOf }]</code> | <code>score.toNumber()</code> equals <code>0</code><br><code>Object.isFrozen(score)</code> equals <code>true</code> | **Observation bindings:** <code>score = ReliabilityScore.fromHistory("alice", history, asOf)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>0</code><br><code>Object.isFrozen(score)</code> was <code>true</code> | Passed |
-
-## Reliability score values and admission thresholds
-
-Source: [reliability-score.test.ts](reliability-score.test.ts)
+## ReliabilityScore.toNumber — immutable value
 
 
-### Score bounds and immutable values
+**Input:** Stored score · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [from_WhenScoreIsZero_PreservesValue](reliability-score.test.ts#L6) | <code>value = 0</code> | <code>score.toNumber()</code> equals <code>0</code> | **Observation bindings:** <code>score = ReliabilityScore.from(value)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>0</code> | Passed |
-| [from_WhenScoreIsMaximum_PreservesValue](reliability-score.test.ts#L14) | <code>value = 100</code> | <code>score.toNumber()</code> equals <code>100</code> | **Observation bindings:** <code>score = ReliabilityScore.from(value)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>100</code> | Passed |
-| [from_WhenScoreIsWholeNumber_PreservesValue](reliability-score.test.ts#L22) | <code>value = 48</code> | <code>score.toNumber()</code> equals <code>48</code> | **Observation bindings:** <code>score = ReliabilityScore.from(value)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>48</code> | Passed |
-| [from_WhenScoreIsFraction_PreservesValue](reliability-score.test.ts#L30) | <code>value = 66.66666666666667</code> | <code>score.toNumber()</code> equals <code>66.66666666666667</code> | **Observation bindings:** <code>score = ReliabilityScore.from(value)</code><br>**Verified outcomes:** <code>score.toNumber()</code> was <code>66.66666666666667</code> | Passed |
-| [from_WhenScoreIsNegativeZero_NormalizesToZero](reliability-score.test.ts#L38) | <code>score = -0</code> | <code>reliability.toNumber()</code> equals <code>0</code> | **Observation bindings:** <code>reliability = ReliabilityScore.from(score)</code><br>**Verified outcomes:** <code>reliability.toNumber()</code> was <code>0</code> | Passed |
-| [from_WhenScoreIsBelowZero_ThrowsRangeError](reliability-score.test.ts#L46) | <code>value = -0.001</code><br>**Input commands:** <code>ReliabilityScore.from(value)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [from_WhenScoreIsAboveMaximum_ThrowsRangeError](reliability-score.test.ts#L52) | <code>value = 100.001</code><br>**Input commands:** <code>ReliabilityScore.from(value)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [from_WhenScoreIsNaN_ThrowsRangeError](reliability-score.test.ts#L58) | <code>value = Number.NaN</code><br>**Input commands:** <code>ReliabilityScore.from(value)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [from_WhenScoreIsPositiveInfinity_ThrowsRangeError](reliability-score.test.ts#L64) | <code>value = Number.POSITIVE_INFINITY</code><br>**Input commands:** <code>ReliabilityScore.from(value)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [from_WhenScoreIsNegativeInfinity_ThrowsRangeError](reliability-score.test.ts#L70) | <code>value = Number.NEGATIVE_INFINITY</code><br>**Input commands:** <code>ReliabilityScore.from(value)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [toNumber_WhenScoreIsFractional_PreservesImmutableValue](reliability-score.test.ts#L76) | <code>score = ReliabilityScore.from(66.66666666666667)</code> | <code>Object.isFrozen(score)</code> equals <code>true</code><br><code>numericScore</code> equals <code>66.66666666666667</code> | **Observation bindings:** <code>numericScore = score.toNumber()</code><br>**Verified outcomes:** <code>Object.isFrozen(score)</code> was <code>true</code><br><code>numericScore</code> was <code>66.66666666666667</code> | Passed |
+Execution: **1 passed / 1 case**.
 
-### Score equality and ordering
+| Stored score | Expected Result | Test Result |
+| --- | --- | --- |
+| [66.66666666666667](reliability-score.test.ts#L76) | 66.66666666666667; score instance is frozen | 66.66666666666667; score instance is frozen |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [equals_WhenValuesAreEqual_ReturnsTrue](reliability-score.test.ts#L87) | <code>score = ReliabilityScore.from(75.5)</code><br><code>other = ReliabilityScore.from(75.5)</code> | <code>score</code> is a different instance from <code>other</code><br><code>comparison</code> equals <code>true</code> | **Observation bindings:** <code>comparison = score.equals(other)</code><br>**Verified outcomes:** <code>score</code> was a different instance from <code>other</code><br><code>comparison</code> was <code>true</code> | Passed |
-| [equals_WhenValuesDiffer_ReturnsFalse](reliability-score.test.ts#L97) | <code>score = ReliabilityScore.from(75.5)</code><br><code>other = ReliabilityScore.from(80)</code> | <code>comparison</code> equals <code>false</code> | **Observation bindings:** <code>comparison = score.equals(other)</code><br>**Verified outcomes:** <code>comparison</code> was <code>false</code> | Passed |
-| [compareTo_WhenValuesAreEqual_ReturnsZero](reliability-score.test.ts#L106) | <code>score = ReliabilityScore.from(75.5)</code><br><code>other = ReliabilityScore.from(75.5)</code> | <code>comparison</code> equals <code>0</code> | **Observation bindings:** <code>comparison = score.compareTo(other)</code><br>**Verified outcomes:** <code>comparison</code> was <code>0</code> | Passed |
-| [compareTo_WhenValueIsSmaller_ReturnsNegativeOne](reliability-score.test.ts#L115) | <code>score = ReliabilityScore.from(75.5)</code><br><code>other = ReliabilityScore.from(80)</code> | <code>comparison</code> equals <code>-1</code> | **Observation bindings:** <code>comparison = score.compareTo(other)</code><br>**Verified outcomes:** <code>comparison</code> was <code>-1</code> | Passed |
-| [compareTo_WhenValueIsGreater_ReturnsOne](reliability-score.test.ts#L124) | <code>score = ReliabilityScore.from(80)</code><br><code>other = ReliabilityScore.from(75.5)</code> | <code>comparison</code> equals <code>1</code> | **Observation bindings:** <code>comparison = score.compareTo(other)</code><br>**Verified outcomes:** <code>comparison</code> was <code>1</code> | Passed |
+## ReliabilityScore.equals — value equality
 
-### Minimum reliability thresholds
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [meetsMinimum_WhenAboveThreshold_ReturnsTrue](reliability-score.test.ts#L135) | <code>score = ReliabilityScore.from(75.5)</code><br><code>threshold = ReliabilityScore.from(75)</code> | <code>meetsThreshold</code> equals <code>true</code> | **Observation bindings:** <code>meetsThreshold = score.meetsMinimum(threshold)</code><br>**Verified outcomes:** <code>meetsThreshold</code> was <code>true</code> | Passed |
-| [meetsMinimum_WhenAtThreshold_ReturnsTrue](reliability-score.test.ts#L144) | <code>score = ReliabilityScore.from(75.5)</code><br><code>threshold = ReliabilityScore.from(75.5)</code> | <code>meetsThreshold</code> equals <code>true</code> | **Observation bindings:** <code>meetsThreshold = score.meetsMinimum(threshold)</code><br>**Verified outcomes:** <code>meetsThreshold</code> was <code>true</code> | Passed |
-| [meetsMinimum_WhenBelowThreshold_ReturnsFalse](reliability-score.test.ts#L153) | <code>score = ReliabilityScore.from(75.5)</code><br><code>threshold = ReliabilityScore.from(75.5001)</code> | <code>meetsThreshold</code> equals <code>false</code> | **Observation bindings:** <code>meetsThreshold = score.meetsMinimum(threshold)</code><br>**Verified outcomes:** <code>meetsThreshold</code> was <code>false</code> | Passed |
-| [meetsMinimum_WhenBothZero_ReturnsTrue](reliability-score.test.ts#L162) | <code>score = ReliabilityScore.from(0)</code><br><code>threshold = ReliabilityScore.from(0)</code> | <code>meetsThreshold</code> equals <code>true</code> | **Observation bindings:** <code>meetsThreshold = score.meetsMinimum(threshold)</code><br>**Verified outcomes:** <code>meetsThreshold</code> was <code>true</code> | Passed |
-| [meetsMinimum_WhenBothMaximum_ReturnsTrue](reliability-score.test.ts#L171) | <code>score = ReliabilityScore.from(100)</code><br><code>threshold = ReliabilityScore.from(100)</code> | <code>meetsThreshold</code> equals <code>true</code> | **Observation bindings:** <code>meetsThreshold = score.meetsMinimum(threshold)</code><br>**Verified outcomes:** <code>meetsThreshold</code> was <code>true</code> | Passed |
+**Input:** Score, Other score · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| Score | Other score | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [75.5](reliability-score.test.ts#L87) | 75.5 | true; operands are different instances | true; operands are different instances |
+| [75.5](reliability-score.test.ts#L97) | 80 | false | false |
+
+## ReliabilityScore.compareTo — ordering
+
+
+**Input:** Score, Other score · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Score | Other score | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [75.5](reliability-score.test.ts#L106) | 75.5 | 0 | 0 |
+| [75.5](reliability-score.test.ts#L115) | 80 | −1 | −1 |
+| [80](reliability-score.test.ts#L124) | 75.5 | 1 | 1 |
+
+## ReliabilityScore.meetsMinimum — admission threshold
+
+
+**Input:** Score, Minimum score · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **5 passed / 5 cases**.
+
+| Score | Minimum score | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [75.5](reliability-score.test.ts#L135) | 75 | true | true |
+| [75.5](reliability-score.test.ts#L144) | 75.5 | true | true |
+| [75.5](reliability-score.test.ts#L153) | 75.5001 | false | false |
+| [0](reliability-score.test.ts#L162) | 0 | true | true |
+| [100](reliability-score.test.ts#L171) | 100 | true | true |

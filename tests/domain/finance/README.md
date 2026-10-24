@@ -1,138 +1,257 @@
-# finance test cases
+# Finance test cases
 
 Snapshot: **2026-10-24** · **55 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
-## Holding account identity
-
-Source: [holding-account.test.ts](holding-account.test.ts)
-
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenIdentityIsValid_PreservesAccountId](holding-account.test.ts#L5) | <code>details = { accountId: "platform" }</code> | <code>account.accountId</code> equals <code>"platform"</code> | **Observation bindings:** <code>account = new HoldingAccount(details)</code><br>**Verified outcomes:** <code>account.accountId</code> was <code>"platform"</code> | Passed |
-| [constructor_WhenAccountIdIsBlank_ThrowsDomainError](holding-account.test.ts#L13) | <code>details = { accountId: " " }</code><br>**Input commands:** <code>new HoldingAccount(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-
-## Ledger transaction integrity
-
-Source: [ledger-transaction.test.ts](ledger-transaction.test.ts)
-
-`transactionDetails()` defaults to transaction `transaction`: a 500-cent `TOP_UP` into `wallet`, dated `2026-10-01T00:00:00Z`, with idempotency key `key`. Optional hold, payout, and external references are absent unless the row supplies them.
+## HoldingAccount constructor — identity
 
 
-### Transaction identity and references
+**Input:** Holding account ID · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenTransactionIdIsBlank_ThrowsDomainError](ledger-transaction.test.ts#L11) | <code>details = transactionDetails({ transactionId: " " })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenIdempotencyKeyIsBlank_ThrowsDomainError](ledger-transaction.test.ts#L17) | <code>details = transactionDetails({ idempotencyKey: " " })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenWalletIdIsBlank_ThrowsDomainError](ledger-transaction.test.ts#L23) | <code>details = transactionDetails({ walletId: " " })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenHoldIdIsBlank_ThrowsDomainError](ledger-transaction.test.ts#L29) | <code>details = transactionDetails({ holdId: " " })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenPayoutIdIsBlank_ThrowsDomainError](ledger-transaction.test.ts#L35) | <code>details = transactionDetails({ payoutId: " " })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenExternalReferenceIsBlank_ThrowsDomainError](ledger-transaction.test.ts#L41) | <code>details = transactionDetails({ externalReference: " " })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+Execution: **2 passed / 2 cases**.
 
-### Financial facts and timestamps
+| Holding account ID | Expected Result | Test Result |
+| --- | --- | --- |
+| [`platform`](holding-account.test.ts#L5) | Holding account ID: platform | Holding account ID: platform |
+| [`" "`](holding-account.test.ts#L13) | Throws DomainError | Throws DomainError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenDatesAreMutated_PreservesFinancialFact](ledger-transaction.test.ts#L49) | <code>input = transactionDetails()</code><br><code>transaction = new LedgerTransaction(input)</code><br>**Input commands:** <code>input.occurredAt.setTime(0)</code><br><code>transaction.occurredAt.setTime(0)</code> | <code>transaction.transactionId</code> equals <code>"transaction"</code><br><code>transaction.walletId</code> equals <code>"wallet"</code><br><code>transaction.kind</code> equals <code>"TOP_UP"</code><br><code>transaction.idempotencyKey</code> equals <code>"key"</code><br><code>transaction.amount.toCents()</code> equals <code>500</code><br><code>transaction.occurredAt</code> matches <code>new Date("2026-10-01")</code> | **Verified outcomes:** <code>transaction.transactionId</code> was <code>"transaction"</code><br><code>transaction.walletId</code> was <code>"wallet"</code><br><code>transaction.kind</code> was <code>"TOP_UP"</code><br><code>transaction.idempotencyKey</code> was <code>"key"</code><br><code>transaction.amount.toCents()</code> was <code>500</code><br><code>transaction.occurredAt</code> matched <code>new Date("2026-10-01")</code> | Passed |
-| [constructor_WhenAmountIsZero_ThrowsDomainError](ledger-transaction.test.ts#L65) | <code>details = transactionDetails({ amount: Money.fromCents(0) })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenAmountIsNegative_ThrowsDomainError](ledger-transaction.test.ts#L71) | <code>details = transactionDetails({ amount: Money.fromCents(-1) })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenKindIsUnknown_ThrowsDomainError](ledger-transaction.test.ts#L77) | <code>details = transactionDetails({ kind: "UNKNOWN" as LedgerTransactionDetails["kind"], })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenDateIsInvalid_ThrowsRangeError](ledger-transaction.test.ts#L85) | <code>details = transactionDetails({ occurredAt: new Date(NaN) })</code><br>**Input commands:** <code>new LedgerTransaction(details)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+## LedgerTransaction constructor — identity and references
 
-## Payout request and provider outcome handling
+Unless overridden, the transaction is `transaction`, wallet `wallet`, kind TOP_UP, amount 500 cents, idempotency key `key`, dated 2026-10-01 00:00 UTC. Optional hold, payout and external references are absent.
 
-Source: [payout-attempt.test.ts](payout-attempt.test.ts)
+**Input:** Transaction ID, Idempotency key, Wallet ID, Hold ID, Payout ID, External reference · **Oracle:** Expected Result · **Log:** Test Result
 
-`requestedAt` is `2026-10-10T12:00:00Z`. `batch()` supplies a fresh request date, payout `payout` for session `session`, idempotency key `key`, and destination account `account` owned by `booker`, with provider `provider` and bank `bank`. Its single `RELEASE` line holds 100 cents for participation `participation`, hold `hold`, wallet `wallet`, and holding account `platform`. `payoutDetails()` adds amount 100 cents, payout account `account`, and status `REQUESTED`. Completion and failure metadata are absent unless the row explicitly overrides status and its timestamp, provider reference, or failure reason for constructor-based setup.
+Execution: **6 passed / 6 cases**.
 
+| Transaction ID | Idempotency key | Wallet ID | Hold ID | Payout ID | External reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [`" "`](ledger-transaction.test.ts#L11) | key | wallet | Absent | Absent | Absent | Throws DomainError | Throws DomainError |
+| [transaction](ledger-transaction.test.ts#L17) | `" "` | wallet | Absent | Absent | Absent | Throws DomainError | Throws DomainError |
+| [transaction](ledger-transaction.test.ts#L23) | key | `" "` | Absent | Absent | Absent | Throws DomainError | Throws DomainError |
+| [transaction](ledger-transaction.test.ts#L29) | key | wallet | `" "` | Absent | Absent | Throws DomainError | Throws DomainError |
+| [transaction](ledger-transaction.test.ts#L35) | key | wallet | Absent | `" "` | Absent | Throws DomainError | Throws DomainError |
+| [transaction](ledger-transaction.test.ts#L41) | key | wallet | Absent | Absent | `" "` | Throws DomainError | Throws DomainError |
 
-### Restoring provider outcomes
+## LedgerTransaction constructor — financial facts
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenCompletionMetadataIsMissing_ThrowsDomainError](payout-attempt.test.ts#L14) | <code>details = payoutDetails({ status: "COMPLETED" })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenCompletedProviderReferenceIsBlank_ThrowsDomainError](payout-attempt.test.ts#L20) | <code>details = payoutDetails({ status: "COMPLETED", completedAt: requestedAt, providerReference: " ", })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenFailureReasonIsMissing_ThrowsDomainError](payout-attempt.test.ts#L30) | <code>details = payoutDetails({ status: "FAILED", failedAt: requestedAt })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenFailedPayoutHasCompletionDate_ThrowsDomainError](payout-attempt.test.ts#L36) | <code>details = payoutDetails({ status: "FAILED", failedAt: requestedAt, failureReason: "failure", completedAt: requestedAt, })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenRequestedPayoutHasCompletionDate_ThrowsDomainError](payout-attempt.test.ts#L47) | <code>details = payoutDetails({ completedAt: requestedAt })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenRequestedPayoutHasProviderReference_ThrowsDomainError](payout-attempt.test.ts#L53) | <code>details = payoutDetails({ providerReference: "provider" })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+Identity and reference defaults are the same as above.
 
-### Settlement batch integrity
+**Input:** Amount (cents), Kind, Occurred at · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenAmountDoesNotMatchLines_ThrowsDomainError](payout-attempt.test.ts#L61) | <code>details = payoutDetails({ amount: Money.fromCents(99) })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenAccountDoesNotMatchDestination_ThrowsDomainError](payout-attempt.test.ts#L67) | <code>details = payoutDetails({ payoutAccountId: "foreign" })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenLinesAreEmpty_ThrowsDomainError](payout-attempt.test.ts#L73) | <code>details = payoutDetails({ lines: [] })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenLinesAreDuplicated_ThrowsDomainError](payout-attempt.test.ts#L79) | <code>source = batch()</code><br><code>details = payoutDetails({ lines: [...source.lines, ...source.lines] })</code><br>**Input commands:** <code>new PayoutAttempt(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+Execution: **4 passed / 4 cases**.
 
-### Durable request and settlement data
+| Amount (cents) | Kind | Occurred at | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [0](ledger-transaction.test.ts#L65) | TOP_UP | 2026-10-01 | Throws DomainError | Throws DomainError |
+| [−1](ledger-transaction.test.ts#L71) | TOP_UP | 2026-10-01 | Throws DomainError | Throws DomainError |
+| [500](ledger-transaction.test.ts#L77) | UNKNOWN | 2026-10-01 | Throws DomainError | Throws DomainError |
+| [500](ledger-transaction.test.ts#L85) | TOP_UP | Invalid Date | Throws RangeError | Throws RangeError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenNestedInputsAndOutputsAreMutated_PreservesSettlementData](payout-attempt.test.ts#L88) | <code>source = batch()</code><br><code>completedAt = new Date(requestedAt)</code><br><code>payout = new PayoutAttempt({ ...source, payoutAccountId: "account", amount: Money.fromCents(100), status: "COMPLETED", completedAt, providerReference: "provider", })</code><br>**Input commands:** <code>completedAt.setTime(0)</code><br><code>payout.completedAt?.setTime(0)</code><br><code>( source.destination as { bankAccountReference: string } ).bankAccountReference = "changed"</code><br><code>(source.lines as unknown[]).pop()</code><br><code>( payout.destination as { bankAccountReference: string } ).bankAccountReference = "changed"</code><br><code>(payout.lines as unknown[]).pop()</code> | <code>payout.completedAt</code> matches <code>requestedAt</code><br><code>payout.destination.bankAccountReference</code> equals <code>"bank"</code><br><code>lines</code> length is <code>1</code><br><code>lines[0]?.amount.toCents()</code> equals <code>100</code> | **Observation bindings:** <code>lines = payout.lines</code><br>**Verified outcomes:** <code>payout.completedAt</code> matched <code>requestedAt</code><br><code>payout.destination.bankAccountReference</code> was <code>"bank"</code><br><code>lines</code> length was <code>1</code><br><code>lines[0]?.amount.toCents()</code> was <code>100</code> | Passed |
-| [create_WhenRequestDateIsMutated_PreservesRequestedBatch](payout-attempt.test.ts#L119) | <code>source = batch()</code><br><code>payout = PayoutAttempt.create(source)</code><br>**Input commands:** <code>source.requestedAt.setTime(0)</code><br><code>payout.requestedAt.setTime(0)</code> | <code>payout.amount.toCents()</code> equals <code>100</code><br><code>payout.requestedAt</code> matches <code>requestedAt</code> | **Verified outcomes:** <code>payout.amount.toCents()</code> was <code>100</code><br><code>payout.requestedAt</code> matched <code>requestedAt</code> | Passed |
-| [requestedIntent_WhenPayoutIsRequested_ContainsDurableRequestDetails](payout-attempt.test.ts#L131) | <code>const payout = PayoutAttempt.create(batch());</code><br><code>const intent = payout.requestedIntent();</code> | <code>expect(intent).toMatchObject({ kind: "PAYOUT_REQUESTED", payoutId: "payout", })</code><br><code>expect(intent.amount.toCents()).toBe(100)</code> | **Verified assertions:** <code>expect(intent).toMatchObject({ kind: "PAYOUT_REQUESTED", payoutId: "payout", })</code><br><code>expect(intent.amount.toCents()).toBe(100)</code> | Passed |
+## LedgerTransaction.occurredAt — date isolation
 
-### Completion callbacks
+Construct the default transaction above, then set both its supplied date and returned date to epoch 0.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [complete_WhenRestoredPayoutHasFailed_ThrowsStalePayout](payout-attempt.test.ts#L145) | <code>details = payoutDetails({ status: "FAILED", failedAt: requestedAt, failureReason: "failure", })</code><br><code>payout = new PayoutAttempt(details)</code><br>**Input commands:** <code>payout.complete("provider", requestedAt)</code> | Throws <code>error code STALE_PAYOUT</code> | **Verified outcomes:** Threw <code>error code STALE_PAYOUT</code> | Passed |
-| [complete_WhenSameCallbackIsRepeated_CompletesOnlyOnce](payout-attempt.test.ts#L158) | <code>payout = PayoutAttempt.create(batch())</code> | <code>completed</code> equals <code>true</code><br><code>repeatedCompletion</code> equals <code>false</code><br><code>payout.status</code> equals <code>"COMPLETED"</code><br><code>payout.providerReference</code> equals <code>"provider-result"</code> | **Observation bindings:** <code>completed = payout.complete("provider-result", requestedAt)</code><br><code>repeatedCompletion = payout.complete( "provider-result", requestedAt, )</code><br>**Verified outcomes:** <code>completed</code> was <code>true</code><br><code>repeatedCompletion</code> was <code>false</code><br><code>payout.status</code> was <code>"COMPLETED"</code><br><code>payout.providerReference</code> was <code>"provider-result"</code> | Passed |
-| [complete_WhenProviderReferenceConflicts_ThrowsPayoutConflict](payout-attempt.test.ts#L173) | <code>payout = new PayoutAttempt(payoutDetails({ status: "COMPLETED", completedAt: requestedAt, providerReference: "provider-result", }))</code><br>**Input commands:** <code>payout.complete("other-result", requestedAt)</code> | Throws <code>error code PAYOUT_CONFLICT</code> | **Verified outcomes:** Threw <code>error code PAYOUT_CONFLICT</code> | Passed |
-| [complete_WhenRestoredCompletionMatches_ReturnsFalse](payout-attempt.test.ts#L185) | <code>payout = new PayoutAttempt({ ...batch(), payoutAccountId: "account", amount: Money.fromCents(100), status: "COMPLETED", completedAt: requestedAt, providerReference: "provider-result", })</code> | <code>payout.status</code> equals <code>"COMPLETED"</code><br><code>payout.amount.toCents()</code> equals <code>100</code><br><code>payout.providerReference</code> equals <code>"provider-result"</code><br><code>repeatedCompletion</code> equals <code>false</code> | **Observation bindings:** <code>repeatedCompletion = payout.complete( "provider-result", requestedAt, )</code><br>**Verified outcomes:** <code>payout.status</code> was <code>"COMPLETED"</code><br><code>payout.amount.toCents()</code> was <code>100</code><br><code>payout.providerReference</code> was <code>"provider-result"</code><br><code>repeatedCompletion</code> was <code>false</code> | Passed |
-| [complete_WhenFailureHasBeenRecorded_RejectsLateCallback](payout-attempt.test.ts#L206) | <code>payout = new PayoutAttempt(payoutDetails({ status: "FAILED", failedAt: requestedAt, failureReason: "timeout", }))</code><br>**Input commands:** <code>payout.complete("late", requestedAt)</code> | Throws <code>error code STALE_PAYOUT</code> | **Verified outcomes:** Threw <code>error code STALE_PAYOUT</code> | Passed |
+**Input:** Original occurred-at date, Replacement timestamp (ms) · **Oracle:** Expected Result · **Log:** Test Result
 
-### Failure callbacks
+Execution: **1 passed / 1 case**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [fail_WhenRestoredFailureMatches_ReturnsFalse](payout-attempt.test.ts#L220) | <code>details = payoutDetails({ status: "FAILED", failedAt: requestedAt, failureReason: "failure", })</code><br><code>payout = new PayoutAttempt(details)</code> | <code>repeatedFailure</code> equals <code>false</code><br><code>payout.status</code> equals <code>"FAILED"</code><br><code>payout.failureReason</code> equals <code>"failure"</code> | **Observation bindings:** <code>repeatedFailure = payout.fail("failure", requestedAt)</code><br>**Verified outcomes:** <code>repeatedFailure</code> was <code>false</code><br><code>payout.status</code> was <code>"FAILED"</code><br><code>payout.failureReason</code> was <code>"failure"</code> | Passed |
-| [fail_WhenSameCallbackIsRepeated_FailsOnlyOnce](payout-attempt.test.ts#L235) | <code>payout = PayoutAttempt.create(batch())</code> | <code>failed</code> equals <code>true</code><br><code>repeatedFailure</code> equals <code>false</code><br><code>payout.status</code> equals <code>"FAILED"</code><br><code>payout.failureReason</code> equals <code>"timeout"</code> | **Observation bindings:** <code>failed = payout.fail("timeout", requestedAt)</code><br><code>repeatedFailure = payout.fail("timeout", requestedAt)</code><br>**Verified outcomes:** <code>failed</code> was <code>true</code><br><code>repeatedFailure</code> was <code>false</code><br><code>payout.status</code> was <code>"FAILED"</code><br><code>payout.failureReason</code> was <code>"timeout"</code> | Passed |
+| Original occurred-at date | Replacement timestamp (ms) | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [2026-10-01](ledger-transaction.test.ts#L49) | 0 | Transaction transaction; wallet wallet; kind TOP_UP; key key; amount 500 cents; occurred-at date 2026-10-01 | Transaction transaction; wallet wallet; kind TOP_UP; key key; amount 500 cents; occurred-at date 2026-10-01 |
 
-## Wallet funds and history integrity
+## PayoutAttempt constructor — provider outcome metadata
 
-Source: [wallet.test.ts](wallet.test.ts)
+The common batch is payout `payout`, session `session`, key `key`, requested at **2026-10-10 12:00 UTC**. It totals 100 cents and has one RELEASE line: hold `hold`, participation `participation`, holding account `platform`, wallet `wallet`, 100 cents. Destination: payout account `account`, user `booker`, provider account `provider`, bank `bank`. Unless specified, state is REQUESTED and completion/failure metadata is absent. Dates labelled request time mean the timestamp above.
 
-`wallet(history)` creates wallet `wallet` owned by `owner` using exactly the supplied transaction history. `entry(id, kind, cents)` creates a transaction for that wallet, dated `2026-10-01T10:00:00Z`, using `id` as both transaction ID and idempotency key. Its movement kind and integer cents are visible in each row; optional overrides change the stated fields.
+**Input:** Payout status, Completed at, Provider reference, Failed at, Failure reason · **Oracle:** Expected Result · **Log:** Test Result
 
+Execution: **6 passed / 6 cases**.
 
-### Wallet identity and history isolation
+| Payout status | Completed at | Provider reference | Failed at | Failure reason | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [COMPLETED](payout-attempt.test.ts#L14) | Absent | Absent | Absent | Absent | Throws DomainError | Throws DomainError |
+| [COMPLETED](payout-attempt.test.ts#L20) | Request time | `" "` | Absent | Absent | Throws DomainError | Throws DomainError |
+| [FAILED](payout-attempt.test.ts#L30) | Absent | Absent | Request time | Absent | Throws DomainError | Throws DomainError |
+| [FAILED](payout-attempt.test.ts#L36) | Request time | Absent | Request time | failure | Throws DomainError | Throws DomainError |
+| [REQUESTED](payout-attempt.test.ts#L47) | Request time | Absent | Absent | Absent | Throws DomainError | Throws DomainError |
+| [REQUESTED](payout-attempt.test.ts#L53) | Absent | provider | Absent | Absent | Throws DomainError | Throws DomainError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenInputIdentityIsMutated_PreservesWalletIdentity](wallet.test.ts#L13) | <code>input = { walletId: "wallet", userId: "owner", transactions: [] }</code><br><code>wallet = new Wallet(input)</code><br>**Input commands:** <code>input.walletId = "changed"</code><br><code>input.userId = "changed"</code> | <code>wallet.walletId</code> equals <code>"wallet"</code><br><code>wallet.userId</code> equals <code>"owner"</code><br><code>identityChanged</code> equals <code>false</code> | **Observation bindings:** <code>identityChanged = Reflect.set(wallet, "walletId", "changed")</code><br>**Verified outcomes:** <code>wallet.walletId</code> was <code>"wallet"</code><br><code>wallet.userId</code> was <code>"owner"</code><br><code>identityChanged</code> was <code>false</code> | Passed |
-| [constructor_WhenWalletIdIsBlank_ThrowsDomainError](wallet.test.ts#L27) | <code>details = { walletId: " ", userId: "owner", transactions: [] }</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenUserIdIsBlank_ThrowsDomainError](wallet.test.ts#L33) | <code>details = { walletId: "wallet", userId: " ", transactions: [] }</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [transactions_WhenInputsAndOutputsAreMutated_PreservesHistoryAndFunds](wallet.test.ts#L39) | <code>credit = entry("credit", "TOP_UP", 700)</code><br><code>history = [credit]</code><br><code>fundedWallet = wallet(history)</code><br>**Input commands:** <code>history.length = 0</code><br><code>(fundedWallet.transactions as LedgerTransaction[]).push( entry("extra", "TOP_UP", 100), )</code><br><code>credit.occurredAt.setTime(0)</code> | <code>amountChanged</code> equals <code>false</code><br><code>storedTransactions</code> matches <code>[credit]</code><br><code>storedTransactions[0]?.occurredAt.toISOString()</code> equals <code>"2026-10-01T10:00:00.000Z"</code><br><code>fundedWallet.getAvailableBalance().toCents()</code> equals <code>700</code> | **Observation bindings:** <code>amountChanged = Reflect.set(credit, "amount", Money.fromCents(0))</code><br><code>storedTransactions = fundedWallet.transactions</code><br>**Verified outcomes:** <code>amountChanged</code> was <code>false</code><br><code>storedTransactions</code> matched <code>[credit]</code><br><code>storedTransactions[0]?.occurredAt.toISOString()</code> was <code>"2026-10-01T10:00:00.000Z"</code><br><code>fundedWallet.getAvailableBalance().toCents()</code> was <code>700</code> | Passed |
+## PayoutAttempt constructor — settlement batch integrity
 
-### Transaction history integrity
+Use the common requested batch above, changing only the listed fields.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenHistoryIsMissing_ThrowsInvalidInput](wallet.test.ts#L63) | <code>details = { walletId: "wallet", userId: "owner", transactions: undefined, } as unknown as WalletDetails</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenHistoryIsNull_ThrowsInvalidInput](wallet.test.ts#L75) | <code>details = { walletId: "wallet", userId: "owner", transactions: null, } as unknown as WalletDetails</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenHistoryIsNotAnArray_ThrowsInvalidInput](wallet.test.ts#L87) | <code>details = { walletId: "wallet", userId: "owner", transactions: new Set(), } as unknown as WalletDetails</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenEntryBelongsToAnotherWallet_ThrowsInvalidInput](wallet.test.ts#L99) | <code>details = { walletId: "wallet", userId: "owner", transactions: [entry("foreign", "TOP_UP", 100, { walletId: "other" })], }</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenEntryHasNoWallet_ThrowsInvalidInput](wallet.test.ts#L111) | <code>details = { walletId: "wallet", userId: "owner", transactions: [ entry("unassigned", "TOP_UP", 100, { walletId: undefined }), ], }</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenTransactionIdsAreDuplicated_ThrowsInvalidInput](wallet.test.ts#L125) | <code>details = { walletId: "wallet", userId: "owner", transactions: [ entry("same", "TOP_UP", 100), entry("same", "REFUND", 100), ], }</code><br>**Input commands:** <code>new Wallet(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+**Input:** Total amount (cents), Payout account ID, Release lines (hold: cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-### Available funds
+Execution: **4 passed / 4 cases**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenBalanceWouldBeNegative_ThrowsInvalidInput](wallet.test.ts#L142) | <code>history = [ entry("credit", "TOP_UP", 500), entry("debit", "LOCK", 501), ]</code><br>**Input commands:** <code>wallet(history)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenFundsExceedSafeIntegerRange_ThrowsRangeError](wallet.test.ts#L153) | <code>history = [ entry("credit", "TOP_UP", Number.MAX_SAFE_INTEGER), entry("overflow", "TOP_UP", 1), ]</code><br>**Input commands:** <code>wallet(history)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [getAvailableBalance_WhenHistoryIsEmpty_ReturnsZero](wallet.test.ts#L162) | <code>emptyWallet = wallet([])</code> | <code>funds.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>funds = emptyWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>0</code> | Passed |
-| [getAvailableBalance_WhenHistoryIncludesTopUp_ReturnsSpendableBalance](wallet.test.ts#L170) | <code>fundedWallet = wallet([ entry("initial", "TOP_UP", 1_000), entry("movement", "TOP_UP", 200), ])</code> | <code>funds.toCents()</code> equals <code>1200</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>1200</code> | Passed |
-| [getAvailableBalance_WhenHistoryIncludesRefund_ReturnsSpendableBalance](wallet.test.ts#L181) | <code>fundedWallet = wallet([ entry("initial", "TOP_UP", 1_000), entry("movement", "REFUND", 200), ])</code> | <code>funds.toCents()</code> equals <code>1200</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>1200</code> | Passed |
-| [getAvailableBalance_WhenHistoryIncludesLock_ReturnsSpendableBalance](wallet.test.ts#L192) | <code>fundedWallet = wallet([ entry("initial", "TOP_UP", 1_000), entry("movement", "LOCK", 200), ])</code> | <code>funds.toCents()</code> equals <code>800</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>800</code> | Passed |
-| [getAvailableBalance_WhenHistoryIncludesPayout_ReturnsSpendableBalance](wallet.test.ts#L203) | <code>fundedWallet = wallet([ entry("initial", "TOP_UP", 1_000), entry("movement", "PAYOUT", 200), ])</code> | <code>funds.toCents()</code> equals <code>800</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>800</code> | Passed |
-| [getAvailableBalance_WhenHistoryIncludesRelease_ReturnsSpendableBalance](wallet.test.ts#L214) | <code>fundedWallet = wallet([ entry("initial", "TOP_UP", 1_000), entry("movement", "RELEASE", 200), ])</code> | <code>funds.toCents()</code> equals <code>1000</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>1000</code> | Passed |
-| [getAvailableBalance_WhenHistoryIncludesForfeit_ReturnsSpendableBalance](wallet.test.ts#L225) | <code>fundedWallet = wallet([ entry("initial", "TOP_UP", 1_000), entry("movement", "FORFEIT", 200), ])</code> | <code>funds.toCents()</code> equals <code>1000</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>1000</code> | Passed |
-| [getAvailableBalance_WhenHoldsAreRefundedReleasedOrForfeited_AppliesEachMovementOnce](wallet.test.ts#L236) | <code>fundedWallet = wallet([ entry("top-up", "TOP_UP", 1_000), entry("lock-refunded", "LOCK", 200), entry("refund", "REFUND", 200), entry("lock-released", "LOCK", 300), entry("release", "RELEASE", 300), entry("lock-forfeited", "LOCK", 100), entry("forfeit", "FORFEIT", 100), entry("withdrawal", "PAYOUT", 150), ])</code> | <code>funds.toCents()</code> equals <code>450</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>450</code> | Passed |
-| [getAvailableBalance_WhenExactAvailableAmountIsSpent_ReturnsZero](wallet.test.ts#L253) | <code>fundedWallet = wallet([ entry("credit", "TOP_UP", 500), entry("debit", "LOCK", 500), ])</code> | <code>funds.toCents()</code> equals <code>0</code> | **Observation bindings:** <code>funds = fundedWallet.getAvailableBalance()</code><br>**Verified outcomes:** <code>funds.toCents()</code> was <code>0</code> | Passed |
-| [getAvailableBalance_WhenTransactionOrderChanges_PreservesExactBalance](wallet.test.ts#L264) | <code>history = [ entry("credit", "TOP_UP", Number.MAX_SAFE_INTEGER), entry("extra", "TOP_UP", 1), entry("debit", "PAYOUT", Number.MAX_SAFE_INTEGER), ]</code> | <code>forwardFunds.toCents()</code> equals <code>1</code><br><code>reversedFunds.toCents()</code> equals <code>1</code> | **Observation bindings:** <code>forwardFunds = wallet(history).getAvailableBalance()</code><br><code>reversedFunds = wallet([...history].reverse()).getAvailableBalance()</code><br>**Verified outcomes:** <code>forwardFunds.toCents()</code> was <code>1</code><br><code>reversedFunds.toCents()</code> was <code>1</code> | Passed |
+| Total amount (cents) | Payout account ID | Release lines (hold: cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [99](payout-attempt.test.ts#L61) | account | hold: 100 | Throws DomainError | Throws DomainError |
+| [100](payout-attempt.test.ts#L67) | foreign | hold: 100 | Throws DomainError | Throws DomainError |
+| [100](payout-attempt.test.ts#L73) | account | None | Throws DomainError | Throws DomainError |
+| [100](payout-attempt.test.ts#L79) | account | hold: 100; hold: 100 (duplicated) | Throws DomainError | Throws DomainError |
+
+## PayoutAttempt constructor — settlement data isolation
+
+Start with the common batch in COMPLETED state, completed at request time with provider reference `provider`. Mutate both supplied and returned completion dates to epoch 0, both bank references to `changed`, and remove the release line from both supplied and returned arrays.
+
+**Input:** Completed at, Bank reference, Release amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Completed at | Bank reference | Release amount (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [2026-10-10 12:00 UTC](payout-attempt.test.ts#L88) | bank | 100 | Completed at 2026-10-10 12:00 UTC; bank bank; exactly one line, amount 100 cents | Completed at 2026-10-10 12:00 UTC; bank bank; exactly one line, amount 100 cents |
+
+## PayoutAttempt.create — request date isolation
+
+Create the common batch, then set both supplied and returned request dates to epoch 0.
+
+**Input:** Requested at, Release amount (cents), Replacement timestamp (ms) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Requested at | Release amount (cents) | Replacement timestamp (ms) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [2026-10-10 12:00 UTC](payout-attempt.test.ts#L119) | 100 | 0 | Amount 100 cents; requested at 2026-10-10 12:00 UTC | Amount 100 cents; requested at 2026-10-10 12:00 UTC |
+
+## PayoutAttempt.requestedIntent — durable request
+
+Read the intent of the common REQUESTED batch.
+
+**Input:** Payout ID, Total amount (cents), Payout status · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Payout ID | Total amount (cents) | Payout status | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [payout](payout-attempt.test.ts#L131) | 100 | REQUESTED | Contains kind PAYOUT_REQUESTED and payout ID payout (partial match); amount 100 cents | Contains kind PAYOUT_REQUESTED and payout ID payout (partial match); amount 100 cents |
+
+## PayoutAttempt.complete — provider callbacks
+
+All callbacks occur at request time. Restored completed/failed states use that same completion/failure timestamp and the common 100-cent batch.
+
+**Input:** Initial status, Stored provider reference, Stored failure reason, Callback provider reference, Callback count · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **5 passed / 5 cases**.
+
+| Initial status | Stored provider reference | Stored failure reason | Callback provider reference | Callback count | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [FAILED](payout-attempt.test.ts#L145) | Absent | failure | provider | 1 | Throws error with code STALE_PAYOUT | Throws error with code STALE_PAYOUT |
+| [REQUESTED](payout-attempt.test.ts#L158) | Absent | Absent | provider-result | 2 | Returns true, then false; status COMPLETED; provider reference provider-result | Returns true, then false; status COMPLETED; provider reference provider-result |
+| [COMPLETED](payout-attempt.test.ts#L173) | provider-result | Absent | other-result | 1 | Throws error with code PAYOUT_CONFLICT | Throws error with code PAYOUT_CONFLICT |
+| [COMPLETED](payout-attempt.test.ts#L185) | provider-result | Absent | provider-result | 1 | Returns false; status COMPLETED; amount 100 cents; provider reference provider-result | Returns false; status COMPLETED; amount 100 cents; provider reference provider-result |
+| [FAILED](payout-attempt.test.ts#L206) | Absent | timeout | late | 1 | Throws error with code STALE_PAYOUT | Throws error with code STALE_PAYOUT |
+
+## PayoutAttempt.fail — failure callbacks
+
+All callbacks and restored failure dates are at request time, using the common batch.
+
+**Input:** Initial status, Stored failure reason, Callback failure reason, Callback count · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| Initial status | Stored failure reason | Callback failure reason | Callback count | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [FAILED](payout-attempt.test.ts#L220) | failure | failure | 1 | Returns false; status FAILED; failure reason failure | Returns false; status FAILED; failure reason failure |
+| [REQUESTED](payout-attempt.test.ts#L235) | Absent | timeout | 2 | Returns true, then false; status FAILED; failure reason timeout | Returns true, then false; status FAILED; failure reason timeout |
+
+## Wallet constructor — identity
+
+Each wallet starts with empty transaction history. The mutation case changes both supplied identity fields to `changed` and attempts to set the wallet ID on the constructed instance.
+
+**Input:** Wallet ID, User ID, Attempted replacement identity · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed / 3 cases**.
+
+| Wallet ID | User ID | Attempted replacement identity | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [wallet](wallet.test.ts#L13) | owner | changed | Wallet ID wallet; user ID owner; instance wallet-ID reassignment returns false | Wallet ID wallet; user ID owner; instance wallet-ID reassignment returns false |
+| [`" "`](wallet.test.ts#L27) | owner | None | Throws DomainError | Throws DomainError |
+| [wallet](wallet.test.ts#L33) | `" "` | None | Throws DomainError | Throws DomainError |
+
+## Wallet.transactions — history isolation
+
+Wallet `wallet` belongs to `owner`. The history initially contains transaction/key `credit`, TOP_UP 700 cents at 2026-10-01 10:00 UTC. Clear the supplied array, append TOP_UP `extra` for 100 cents to the returned array, mutate the credit date to epoch 0, and attempt to replace its amount with 0 cents.
+
+**Input:** Original top-up (cents), Returned-array extra top-up (cents), Replacement credit amount (cents), Replacement timestamp (ms) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Original top-up (cents) | Returned-array extra top-up (cents) | Replacement credit amount (cents) | Replacement timestamp (ms) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [700](wallet.test.ts#L39) | 100 | 0 | 0 | Amount reassignment returns false; stored history equals the single original credit; date 2026-10-01T10:00:00.000Z; available funds 700 cents | Amount reassignment returns false; stored history equals the single original credit; date 2026-10-01T10:00:00.000Z; available funds 700 cents |
+
+## Wallet constructor — history structure and ownership
+
+All wallets have ID `wallet`, user `owner`. Transaction dates are 2026-10-01 10:00 UTC and idempotency keys equal transaction IDs.
+
+**Input:** Transaction collection, Transaction IDs, Kinds, Amounts (cents), Transaction wallet IDs · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **6 passed / 6 cases**.
+
+| Transaction collection | Transaction IDs | Kinds | Amounts (cents) | Transaction wallet IDs | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [undefined](wallet.test.ts#L63) | — | — | — | — | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [null](wallet.test.ts#L75) | — | — | — | — | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [Empty Set (not an array)](wallet.test.ts#L87) | — | — | — | — | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [Array](wallet.test.ts#L99) | foreign | TOP_UP | 100 | other | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [Array](wallet.test.ts#L111) | unassigned | TOP_UP | 100 | Absent | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [Array](wallet.test.ts#L125) | same, same | TOP_UP, REFUND | 100, 100 | wallet, wallet | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+
+## Wallet constructor — balance bounds
+
+Use wallet `wallet`, owner `owner`, and the transaction timestamp/key convention above. Transactions run in the listed order.
+
+**Input:** Initial top-up (cents), Second transaction kind, Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed / 2 cases**.
+
+| Initial top-up (cents) | Second transaction kind | Second amount (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [500](wallet.test.ts#L142) | LOCK | 501 | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [9007199254740991](wallet.test.ts#L153) | TOP_UP | 1 | Throws RangeError | Throws RangeError |
+
+## Wallet.getAvailableBalance — transaction effects
+
+Use wallet `wallet`, owner `owner`, and the timestamp/key convention above. The first transaction, when present, is a top-up; the second is the listed movement.
+
+**Input:** Initial top-up (cents), Next transaction kind, Next amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **8 passed / 8 cases**.
+
+| Initial top-up (cents) | Next transaction kind | Next amount (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [None (empty history)](wallet.test.ts#L162) | None | — | 0 cents | 0 cents |
+| [1000](wallet.test.ts#L170) | TOP_UP | 200 | 1200 cents | 1200 cents |
+| [1000](wallet.test.ts#L181) | REFUND | 200 | 1200 cents | 1200 cents |
+| [1000](wallet.test.ts#L192) | LOCK | 200 | 800 cents | 800 cents |
+| [1000](wallet.test.ts#L203) | PAYOUT | 200 | 800 cents | 800 cents |
+| [1000](wallet.test.ts#L214) | RELEASE | 200 | 1000 cents | 1000 cents |
+| [1000](wallet.test.ts#L225) | FORFEIT | 200 | 1000 cents | 1000 cents |
+| [500](wallet.test.ts#L253) | LOCK | 500 | 0 cents | 0 cents |
+
+## Wallet.getAvailableBalance — settled holds
+
+Transactions occur in this order: top-up, refunded lock/refund, released lock/release, forfeited lock/forfeit, payout. Each lock and its settlement use the same amount.
+
+**Input:** Top-up (cents), Refunded hold (cents), Released hold (cents), Forfeited hold (cents), Payout (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| Top-up (cents) | Refunded hold (cents) | Released hold (cents) | Forfeited hold (cents) | Payout (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [1000](wallet.test.ts#L236) | 200 | 300 | 100 | 150 | 450 cents | 450 cents |
+
+## Wallet.getAvailableBalance — order independence
+
+Compare the listed history with a separate wallet containing the same transactions in reverse order.
+
+**Input:** First top-up (cents), Second top-up (cents), Payout (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 case**.
+
+| First top-up (cents) | Second top-up (cents) | Payout (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [9007199254740991](wallet.test.ts#L264) | 1 | 9007199254740991 | 1 cent in both forward and reverse order | 1 cent in both forward and reverse order |

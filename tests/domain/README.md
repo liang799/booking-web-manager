@@ -305,6 +305,8 @@ The suite structure follows
 [ADR-0005: Domain unit-test structure](../../docs/adr/0005-domain-unit-test-structure.md).
 The readability convention and result snapshots are recorded in
 [ADR-0018: Readable domain tests and execution evidence](../../docs/adr/0018-domain-test-input-oracle-log.md).
+The result-table layout follows
+[ADR-0019: Domain result tables follow the lecture format](../../docs/adr/0019-domain-result-table-layout.md).
 
 Examples following this standard are
 [user.test.ts](./accounts/user.test.ts) and
@@ -327,9 +329,34 @@ Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
 The **2026-10-24** snapshot covers **624 passing cases across 44 files**. Each
-table follows its suite’s behavior headings and has a linked Name and Location,
-Input, Oracle (expected result), Log
-(actual outcome verified by assertions), and separate execution status.
+row is one test case. Group cases by operation and compatible input fields, put
+the operation in the heading, and give the inputs separate domain-specific
+columns with units. End each table with **Expected Result** and **Test Result**.
+Explain Input, Oracle, and Log above the table; show execution counts there too.
+Test names, operations, and execution status do not occupy table columns.
+
+Link the first input value in every row to its test definition. The source link
+identifies the exact test and suite in the execution report even when two rows
+have identical inputs. Use concrete values and concise outcomes rather than
+variable assignments, fixture calls, or assertion expressions. Put shared
+prerequisites above the relevant tables. Preserve all asserted effects,
+including unchanged state, reference identity, partial matches, and approximate
+values; do not imply a complete object match when only selected fields were
+asserted.
+
+### Example: Money addition
+
+All amounts are in cents.
+
+**Input:** First amount, Second amount · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 illustrative case** (also included in the Money table).
+
+| First amount (cents) | Second amount (cents) | Expected Result | Test Result |
+|---:|---:|---:|---:|
+| [500](./finance/money/money-arithmetic.test.ts#L6) | 700 | 1200 | 1200 |
+
+### Table index
 
 | Area | Cases | Tables |
 |---|---:|---|
@@ -347,3 +374,6 @@ The [execution evidence and refresh procedure](./results/README.md) retain the
 JSON report, source hashes, and baseline-to-final scenario mapping. Log values
 are assertion-verified observations, not captured runtime payloads. The report
 is a dated snapshot and must be refreshed after relevant source changes.
+Failed cases report available actual diagnostics. Skipped or unexecuted cases
+say **Not run**, with no claimed observation. A layout-only revision retains
+the original execution date when the recorded source hashes still match.

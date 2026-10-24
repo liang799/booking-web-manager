@@ -1,247 +1,569 @@
-# sessions/session test cases
+# Session test cases
 
-Snapshot: **2026-10-24** · **98 cases**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24** · **98 cases, 98 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one independently executable test; its first input value links to the test definition. **Test Result** contains assertion-verified observations derived from executed assertions and their recorded status, not captured runtime payloads. Expected Result is the **Oracle**; Test Result is the **Log**. A matching result reports only the stated assertions, including partial matches, identity and unchanged-state checks. Refresh the snapshot after relevant source changes.
 
-## Session admission and availability
+Shared defaults: session s, booker booker, Court / North / Badminton, PUBLIC and OPEN, two slots, minimum headcount two, total cost 1,000 cents, share 500 cents (an omitted price uses the cost divided by slots, rounded down), holding account platform, room token room, empty roster and payout histories, next queue sequence 1. **Start** is 2026-10-10 10:00 UTC; **end** is 2026-10-10 12:00 UTC. Relative times name these anchors. Participants use IDs p-user, holds h-user and wallets w-user, with the actual user ID replacing user; commitments and waitlist entries begin 48 hours before start. Unspecified attendance is UNVERIFIED. Booker marks are recorded at end. Users are active with 10,000 cents unless overridden; booker has completed payout setup.
 
-Source: [admission.test.ts](admission.test.ts)
+A **pending payout** has status PAYOUT_PENDING, payout out, key key, request time end, destination account pa / user booker / provider provider / bank bank, and a 500-cent RELEASE line for each attended participant. Its histories contain out and key; holds remain HELD. Withdrawn, removed and cancelled fixtures default to 500-cent holds committed 48 hours before start; refunded withdrawals settle at withdrawal unless a later time is stated. Scenario values below override these defaults. **State unchanged** refers to the source test’s complete public-state comparison, including roster, financial metadata, queue and payout histories.
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+## Admission and availability
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordAdmission_WhenBookerTakesEighthSlot_FillsSession](admission.test.ts#L11) | <code>bookerJoinedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ totalSlots: 8, committedUserIds: [ "alice", "ben", "cara", "dana", "evan", "farah", "grace", ], })</code><br><code>bookerAdmission = committedParticipation(bookingSession, "booker")</code><br>**Input commands:** <code>bookingSession.recordAdmission( bookerAdmission, undefined, bookerJoinedAt, )</code> | <code>participantList.findByUserId("booker")</code> is the same instance as <code>bookerAdmission</code><br><code>participantList.participations.map((entry) =&gt; entry.status)</code> matches <code>[ "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", ]</code><br><code>bookingSession.getAvailableSlots(bookerJoinedAt)</code> equals <code>0</code> | **Observation bindings:** <code>participantList = bookingSession.participantList</code><br>**Verified outcomes:** <code>participantList.findByUserId("booker")</code> was the same instance as <code>bookerAdmission</code><br><code>participantList.participations.map((entry) =&gt; entry.status)</code> matched <code>[ "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", "COMMITTED", ]</code><br><code>bookingSession.getAvailableSlots(bookerJoinedAt)</code> was <code>0</code> | Passed |
-| [recordAdmission_WhenSessionIsFull_RecordsWaitlistedParticipation](admission.test.ts#L51) | <code>waitlistedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ totalSlots: 8, committedUserIds: [ "booker", "alice", "ben", "cara", "dana", "evan", "farah", "grace", ], })</code><br><code>waiting = Participation.createWaitlisted({ participationId: "p-waiting", userId: "waiting", waitlistedAt, queueSequence: 1, })</code><br>**Input commands:** <code>bookingSession.recordAdmission(waiting, undefined, waitlistedAt)</code> | <code>participantList.requireParticipation("p-waiting")</code> is the same instance as <code>waiting</code><br><code>participantList.nextWaitlisted()</code> is the same instance as <code>waiting</code><br><code>participantList.committedCount</code> equals <code>8</code><br><code>participantList.nextQueueSequence</code> equals <code>2</code><br><code>bookingSession.getAvailableSlots(waitlistedAt)</code> equals <code>0</code> | **Observation bindings:** <code>participantList = bookingSession.participantList</code><br>**Verified outcomes:** <code>participantList.requireParticipation("p-waiting")</code> was the same instance as <code>waiting</code><br><code>participantList.nextWaitlisted()</code> was the same instance as <code>waiting</code><br><code>participantList.committedCount</code> was <code>8</code><br><code>participantList.nextQueueSequence</code> was <code>2</code><br><code>bookingSession.getAvailableSlots(waitlistedAt)</code> was <code>0</code> | Passed |
-| [getAvailableSlots_WhenSessionStartsNow_ReturnsZero](admission.test.ts#L83) | <code>bookingSession = createTestSession()</code> | <code>availableSlots</code> equals <code>0</code> | **Observation bindings:** <code>availableSlots = bookingSession.getAvailableSlots(sessionStartsAt)</code><br>**Verified outcomes:** <code>availableSlots</code> was <code>0</code> | Passed |
+Source: [admission.test.ts](admission.test.ts).
 
-## Session automatic attendance verification
+### Record admission
 
-Source: [attendance.test.ts](attendance.test.ts)
+**Input:** Slots, Committed users, Admitted user, Admission state, Queue sequence, Admission time · **Oracle:** Expected Result · **Log:** Test Result
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+Execution: **2 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [autoVerifyAttendance_WhenOneMillisecondBeforeDue_RejectsWithoutChangingState](attendance.test.ts#L9) | <code>automaticVerificationDueAt = hoursAfterSessionEnd(72)</code><br><code>oneMillisecondBeforeAutomaticVerification = new Date( automaticVerificationDueAt.getTime() - 1, )</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice", "ben"], attendanceByUserId: { alice: "ABSENT" }, })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.autoVerifyAttendance( oneMillisecondBeforeAutomaticVerification, )</code> | Throws <code>error code AUTO_VERIFICATION_NOT_DUE</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code AUTO_VERIFICATION_NOT_DUE</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [autoVerifyAttendance_WhenExactlySeventyTwoHoursAfterEnd_VerifiesOnlyRemainingParticipants](attendance.test.ts#L28) | <code>automaticVerificationDueAt = hoursAfterSessionEnd(72)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice", "ben"], attendanceByUserId: { alice: "ABSENT" }, })</code><br>**Input commands:** <code>bookingSession.autoVerifyAttendance(automaticVerificationDueAt)</code> | <code>attendanceRecords</code> matches <code>[ ["ABSENT", "BOOKER"], ["ATTENDED", "AUTOMATIC"], ]</code> | **Observation bindings:** <code>attendanceRecords = bookingSession.participantList.participations.map( (participation) =&gt; [ participation.attendance, participation.verificationMethod, ], )</code><br>**Verified outcomes:** <code>attendanceRecords</code> matched <code>[ ["ABSENT", "BOOKER"], ["ATTENDED", "AUTOMATIC"], ]</code> | Passed |
+| Slots | Committed users | Admitted user | Admission state | Queue sequence | Admission time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [8](admission.test.ts#L11) | alice, ben, cara, dana, evan, farah, grace | booker | COMMITTED | Absent | 48 hours before start | Booker lookup is supplied admission instance; all eight entries COMMITTED; available slots 0 | Booker lookup is supplied admission instance; all eight entries COMMITTED; available slots 0 |
+| [8](admission.test.ts#L51) | booker, alice, ben, cara, dana, evan, farah, grace | waiting | WAITLISTED | 1 | 48 hours before start | ID lookup and next waiter are supplied waiting instance; committed count 8; next queue sequence 2; available slots 0 | ID lookup and next waiter are supplied waiting instance; committed count 8; next queue sequence 2; available slots 0 |
 
-## Session custom price across financial operations
+### Read available slots
 
-Source: [custom-pricing.test.ts](custom-pricing.test.ts)
+**Input:** Session state, Roster, Observation time · **Oracle:** Expected Result · **Log:** Test Result
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+Execution: **1 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [join_WhenPriceExceedsEqualSplit_LocksChosenPrice](custom-pricing.test.ts#L13) | <code>session = createTestSession({ bookingShare: Money.fromCents(750) })</code><br><code>alice = createTestUser({ userId: "alice", availableFundsCents: 750, }).asParticipant()</code> | <code>admission.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matches <code>[["LOCK", 750]]</code><br><code>session.participantList .requireParticipation("p-alice").hold?.amount.toCents()</code> equals <code>750</code><br><code>session.bookingShare.toCents()</code> equals <code>750</code> | **Observation bindings:** <code>admission = alice.join(session, { participationId: "p-alice", holdId: "h-alice", now: hoursBeforeSessionStart(48), })</code><br>**Verified outcomes:** <code>admission.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matched <code>[["LOCK", 750]]</code><br><code>session.participantList .requireParticipation("p-alice").hold?.amount.toCents()</code> was <code>750</code><br><code>session.bookingShare.toCents()</code> was <code>750</code> | Passed |
-| [withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice](custom-pricing.test.ts#L39) | <code>session = createTestSession({ bookingShare: Money.fromCents(750), committedUserIds: ["alice"], })</code><br><code>alice = createTestUser({ userId: "alice", availableFundsCents: 750, }).asParticipant()</code> | <code>withdrawal.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matches <code>[["REFUND", 750]]</code><br><code>session.participantList.requireParticipation("p-alice").hold?.state</code> equals <code>"REFUNDED"</code> | **Observation bindings:** <code>withdrawal = alice.withdraw(session, { participationId: "p-alice", now: hoursBeforeSessionStart(31), })</code><br>**Verified outcomes:** <code>withdrawal.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matched <code>[["REFUND", 750]]</code><br><code>session.participantList.requireParticipation("p-alice").hold?.state</code> was <code>"REFUNDED"</code> | Passed |
-| [cancel_WhenCustomPriceWasCollected_RefundsTheFullHold](custom-pricing.test.ts#L65) | <code>booker = readyBooker()</code><br><code>session = createTestSession({ bookingShare: Money.fromCents(750), committedUserIds: ["alice"], })</code> | <code>cancellation.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matches <code>[["REFUND", 750]]</code><br><code>session.bookingShare.toCents()</code> equals <code>750</code> | **Observation bindings:** <code>cancellation = booker.cancel(session, hoursBeforeSessionStart(30))</code><br>**Verified outcomes:** <code>cancellation.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matched <code>[["REFUND", 750]]</code><br><code>session.bookingShare.toCents()</code> was <code>750</code> | Passed |
-| [preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount](custom-pricing.test.ts#L83) | <code>booker = readyBooker()</code><br><code>session = createTestSession({ bookingShare: Money.fromCents(750), committedUserIds: ["alice"], attendanceByUserId: { alice: "ATTENDED" }, status: "AWAITING_PAYOUT", })</code> | <code>payout?.lines.map(({ kind, amount }) =&gt; [kind, amount.toCents()])</code> matches <code>[["RELEASE", 750]]</code><br><code>session.status</code> equals <code>"PAYOUT_PENDING"</code><br><code>session.participantList.requireParticipation("p-alice").hold?.state</code> equals <code>"HELD"</code> | **Observation bindings:** <code>payout = booker.preparePayout(session, { payoutId: "out", idempotencyKey: "key", now: sessionEndsAt, })</code><br>**Verified outcomes:** <code>payout?.lines.map(({ kind, amount }) =&gt; [kind, amount.toCents()])</code> matched <code>[["RELEASE", 750]]</code><br><code>session.status</code> was <code>"PAYOUT_PENDING"</code><br><code>session.participantList.requireParticipation("p-alice").hold?.state</code> was <code>"HELD"</code> | Passed |
-| [completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount](custom-pricing.test.ts#L107) | <code>session = new Session( pendingPayoutDetails(["alice"], { bookingShare: Money.fromCents(750) }), )</code> | <code>completion.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matches <code>[["RELEASE", 750]]</code><br><code>session.participantList.requireParticipation("p-alice").hold?.state</code> equals <code>"RELEASED"</code> | **Observation bindings:** <code>completion = session.completeSettlement("out", sessionEndsAt)</code><br>**Verified outcomes:** <code>completion.instructions.map(({ kind, amount }) =&gt; [ kind, amount.toCents(), ])</code> matched <code>[["RELEASE", 750]]</code><br><code>session.participantList.requireParticipation("p-alice").hold?.state</code> was <code>"RELEASED"</code> | Passed |
+| Session state | Roster | Observation time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [OPEN](admission.test.ts#L83) | Empty | Start | 0 | 0 |
 
-## Session restoration and ownership invariants
+## Automatic attendance verification
 
-Source: [reconstruction.test.ts](reconstruction.test.ts)
+Source: [attendance.test.ts](attendance.test.ts).
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+### Automatically verify remaining attendance
 
+**Input:** Committed users, Existing attendance, Verification time · **Oracle:** Expected Result · **Log:** Test Result
 
-### Independent restored state
+Execution: **2 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenInputsAndGettersAreMutated_PreservesRosterAndHistory](reconstruction.test.ts#L16) | <code>committedAt = hoursBeforeSessionStart(48)</code><br><code>originalSession = createTestSession({ committedUserIds: ["alice"], })</code><br><code>participations = [ ...originalSession.participantList.participations, ]</code><br><code>payoutAttemptIds = ["earlier"]</code><br><code>payoutIdempotencyKeys = ["earlier-key"]</code><br><code>aliceParticipation = participations[0]!</code><br><code>details = sessionDetails({ participations, payoutAttemptIds, payoutIdempotencyKeys, })</code><br>**Input commands:** <code>participations.pop()</code><br><code>payoutAttemptIds.push("leak")</code><br><code>payoutIdempotencyKeys.push("leak")</code><br><code>(restoredSession.participantList.participations as Participation[]).pop()</code><br><code>(restoredSession.payoutAttemptIds as string[]).pop()</code><br><code>(restoredSession.payoutIdempotencyKeys as string[]).pop()</code><br><code>restoredSession.booking.startAt.setFullYear(2000)</code><br><code>aliceParticipation.committedAt?.setFullYear(2000)</code><br><code>aliceParticipation.hold?.createdAt.setFullYear(2000)</code> | <code>restoredSession.participantList.participations</code> length is <code>1</code><br><code>restoredSession.participantList.requireParticipation("p-alice")</code> is the same instance as <code>aliceParticipation</code><br><code>restoredSession.booking.startAt</code> matches <code>sessionStartsAt</code><br><code>aliceParticipation.committedAt</code> matches <code>committedAt</code><br><code>aliceParticipation.hold?.createdAt</code> matches <code>committedAt</code><br><code>restoredSession.payoutAttemptIds</code> matches <code>["earlier"]</code><br><code>restoredSession.payoutIdempotencyKeys</code> matches <code>["earlier-key"]</code><br><code>restoredSession.participantList.nextQueueSequence</code> equals <code>1</code> | **Observation bindings:** <code>restoredSession = new Session(details)</code><br>**Verified outcomes:** <code>restoredSession.participantList.participations</code> length was <code>1</code><br><code>restoredSession.participantList.requireParticipation("p-alice")</code> was the same instance as <code>aliceParticipation</code><br><code>restoredSession.booking.startAt</code> matched <code>sessionStartsAt</code><br><code>aliceParticipation.committedAt</code> matched <code>committedAt</code><br><code>aliceParticipation.hold?.createdAt</code> matched <code>committedAt</code><br><code>restoredSession.payoutAttemptIds</code> matched <code>["earlier"]</code><br><code>restoredSession.payoutIdempotencyKeys</code> matched <code>["earlier-key"]</code><br><code>restoredSession.participantList.nextQueueSequence</code> was <code>1</code> | Passed |
-| [pendingSettlement_WhenInputsAndOutputsAreMutated_PreservesBatchAndHistory](reconstruction.test.ts#L56) | <code>details = pendingPayoutDetails()</code><br><code>batch = details.pendingSettlement!</code><br><code>restoredSession = new Session(details)</code><br>**Input commands:** <code>batch.requestedAt.setFullYear(2000)</code><br><code>( batch.destination as { bankAccountReference: string } ).bankAccountReference = "changed"</code><br><code>(batch.lines as unknown[]).pop()</code><br><code>restoredSession.pendingSettlement?.requestedAt.setFullYear(2001)</code><br><code>( exposedBatch.destination as { bankAccountReference: string } ).bankAccountReference = "changed-again"</code><br><code>(exposedBatch.lines as unknown[]).pop()</code> | <code>preservedBatch?.requestedAt</code> matches <code>sessionEndsAt</code><br><code>preservedBatch?.destination.bankAccountReference</code> equals <code>"bank"</code><br><code>preservedBatch?.lines</code> length is <code>1</code><br><code>preservedBatch?.lines[0]?.amount.toCents()</code> equals <code>500</code><br><code>restoredSession.payoutAttemptIds</code> matches <code>["out"]</code><br><code>restoredSession.payoutIdempotencyKeys</code> matches <code>["key"]</code> | **Observation bindings:** <code>exposedBatch = restoredSession.pendingSettlement!</code><br><code>preservedBatch = restoredSession.pendingSettlement</code><br>**Verified outcomes:** <code>preservedBatch?.requestedAt</code> matched <code>sessionEndsAt</code><br><code>preservedBatch?.destination.bankAccountReference</code> was <code>"bank"</code><br><code>preservedBatch?.lines</code> length was <code>1</code><br><code>preservedBatch?.lines[0]?.amount.toCents()</code> was <code>500</code><br><code>restoredSession.payoutAttemptIds</code> matched <code>["out"]</code><br><code>restoredSession.payoutIdempotencyKeys</code> matched <code>["key"]</code> | Passed |
-| [completeSettlement_WhenPendingSessionIsRestored_SettlesIndependentlyOfSource](reconstruction.test.ts#L82) | <code>details = pendingPayoutDetails()</code><br><code>originalSession = new Session(details)</code><br><code>restoredSession = new Session(details)</code> | <code>completion.instructions.map((line) =&gt; line.kind)</code> matches <code>[ "RELEASE", ]</code><br><code>restoredSession.status</code> equals <code>"SETTLED"</code><br><code>originalSession.status</code> equals <code>"PAYOUT_PENDING"</code><br><code>originalSession.participantList .requireParticipation("p-alice").hold?.state</code> equals <code>"HELD"</code> | **Observation bindings:** <code>completion = restoredSession.completeSettlement( "out", sessionEndsAt, )</code><br>**Verified outcomes:** <code>completion.instructions.map((line) =&gt; line.kind)</code> matched <code>[ "RELEASE", ]</code><br><code>restoredSession.status</code> was <code>"SETTLED"</code><br><code>originalSession.status</code> was <code>"PAYOUT_PENDING"</code><br><code>originalSession.participantList .requireParticipation("p-alice").hold?.state</code> was <code>"HELD"</code> | Passed |
+| Committed users | Existing attendance | Verification time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice, ben](attendance.test.ts#L9) | alice ABSENT / BOOKER; ben UNVERIFIED | 72 hours after end minus 1 ms | AUTO_VERIFICATION_NOT_DUE; state unchanged | AUTO_VERIFICATION_NOT_DUE; state unchanged |
+| [alice, ben](attendance.test.ts#L28) | alice ABSENT / BOOKER; ben UNVERIFIED | 72 hours after end | alice ABSENT / BOOKER; ben ATTENDED / AUTOMATIC | alice ABSENT / BOOKER; ben ATTENDED / AUTOMATIC |
 
-### Restored lifecycle status
+## Custom price across financial operations
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenCancelledRosterHasRemovedParticipant_PreservesRemovedStatus](reconstruction.test.ts#L105) | <code>removedAlice = removedParticipation("alice", { settledAt: hoursBeforeSessionStart(48), })</code><br><code>cancelledBen = cancelledParticipation("ben", { settledAt: hoursBeforeSessionStart(24), })</code><br><code>cancelledCara = new Participation({ participationId: "p-cara", userId: "cara", status: "CANCELLED", attendance: "UNVERIFIED", waitlistedAt: hoursBeforeSessionStart(48), queueSequence: 1, })</code><br><code>details = sessionDetails({ status: "CANCELLED", participations: [removedAlice, cancelledBen, cancelledCara], nextQueueSequence: 2, })</code> | <code>restoredSession.participantList.requireParticipation("p-alice").status</code> equals <code>"REMOVED"</code> | **Observation bindings:** <code>restoredSession = new Session(details)</code><br>**Verified outcomes:** <code>restoredSession.participantList.requireParticipation("p-alice").status</code> was <code>"REMOVED"</code> | Passed |
-| [constructor_WhenSessionIsSettled_RestoresStatusAndEndTime](reconstruction.test.ts#L133) | <code>details = sessionDetails({ status: "SETTLED" })</code> | <code>restoredSession.status</code> equals <code>"SETTLED"</code><br><code>restoredSession.booking.endAt</code> matches <code>sessionEndsAt</code> | **Observation bindings:** <code>restoredSession = new Session(details)</code><br>**Verified outcomes:** <code>restoredSession.status</code> was <code>"SETTLED"</code><br><code>restoredSession.booking.endAt</code> matched <code>sessionEndsAt</code> | Passed |
-| [constructor_WhenSettledRosterStillHasHeldFunds_ThrowsDomainError](reconstruction.test.ts#L142) | <code>originalSession = createTestSession({ committedUserIds: ["alice"], })</code><br><code>roster = originalSession.participantList.participations</code><br><code>details = sessionDetails({ participations: roster, status: "SETTLED", })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+Source: [custom-pricing.test.ts](custom-pricing.test.ts).
 
-### Roster ownership and queue continuity
+### Join at chosen price
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenRosterIsDuplicated_ThrowsDomainError](reconstruction.test.ts#L157) | <code>originalSession = createTestSession({ committedUserIds: ["alice"], })</code><br><code>roster = originalSession.participantList.participations</code><br><code>details = sessionDetails({ participations: [...roster, ...roster], })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenDifferentUsersShareParticipationId_ThrowsDuplicateId](reconstruction.test.ts#L169) | <code>waitlistedAt = hoursBeforeSessionStart(48)</code><br><code>alice = Participation.createWaitlisted({ participationId: "p-shared", userId: "alice", waitlistedAt, queueSequence: 1, })</code><br><code>ben = Participation.createWaitlisted({ participationId: "p-shared", userId: "ben", waitlistedAt, queueSequence: 2, })</code><br><code>details = sessionDetails({ participations: [alice, ben], nextQueueSequence: 3, })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code DUPLICATE_ID</code> | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code> | Passed |
-| [constructor_WhenDifferentParticipationsShareUserId_ThrowsDuplicateId](reconstruction.test.ts#L193) | <code>waitlistedAt = hoursBeforeSessionStart(48)</code><br><code>firstEntry = Participation.createWaitlisted({ participationId: "p-alice-first", userId: "alice", waitlistedAt, queueSequence: 1, })</code><br><code>secondEntry = Participation.createWaitlisted({ participationId: "p-alice-second", userId: "alice", waitlistedAt, queueSequence: 2, })</code><br><code>details = sessionDetails({ participations: [firstEntry, secondEntry], nextQueueSequence: 3, })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code DUPLICATE_ID</code> | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code> | Passed |
-| [constructor_WhenDifferentParticipationsShareHoldId_ThrowsDuplicateId](reconstruction.test.ts#L217) | <code>benCommittedAt = hoursBeforeSessionStart(48)</code><br><code>originalSession = createTestSession({ committedUserIds: ["alice"], })</code><br><code>alice = originalSession.participantList.requireParticipation("p-alice")</code><br><code>ben = Participation.createCommitted({ participationId: "p-ben", userId: "ben", committedAt: benCommittedAt, hold: FundHold.create({ holdId: "h-alice", participationId: "p-ben", holdingAccountId: originalSession.holdingAccountId, walletId: "w-ben", amount: originalSession.bookingShare, createdAt: benCommittedAt, }), })</code><br><code>details = sessionDetails({ participations: [alice, ben] })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code DUPLICATE_ID</code> | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code> | Passed |
-| [constructor_WhenWaiterReusesHistoricalQueueSequence_ThrowsDuplicateId](reconstruction.test.ts#L244) | <code>waitlistedAt = hoursBeforeSessionStart(48)</code><br><code>departedAlice = new Participation({ participationId: "p-alice", userId: "alice", status: "LEFT_WAITLIST", attendance: "UNVERIFIED", waitlistedAt, queueSequence: 1, })</code><br><code>ben = Participation.createWaitlisted({ participationId: "p-ben", userId: "ben", waitlistedAt, queueSequence: 1, })</code><br><code>details = sessionDetails({ participations: [departedAlice, ben], nextQueueSequence: 2, })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code DUPLICATE_ID</code> | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code> | Passed |
-| [constructor_WhenNextSequenceDoesNotFollowQueue_ThrowsDomainError](reconstruction.test.ts#L270) | <code>queued = Participation.createWaitlisted({ participationId: "queued", userId: "queued-user", waitlistedAt: hoursBeforeSessionStart(48), queueSequence: 5, })</code><br><code>details = sessionDetails({ participations: [queued], nextQueueSequence: 5, })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenHoldUsesForeignAccount_ThrowsDomainError](reconstruction.test.ts#L285) | <code>originalSession = createTestSession({ committedUserIds: ["alice"], })</code><br><code>roster = originalSession.participantList.participations</code><br><code>details = sessionDetails({ participations: roster, holdingAccountId: "foreign", })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenNextSequenceFollowsQueue_RestoresNextWaiter](reconstruction.test.ts#L298) | <code>queued = Participation.createWaitlisted({ participationId: "queued", userId: "queued-user", waitlistedAt: hoursBeforeSessionStart(48), queueSequence: 5, })</code><br><code>details = sessionDetails({ participations: [queued], nextQueueSequence: 6, })</code> | <code>restoredSession.participantList.nextWaitlisted()?.userId</code> equals <code>"queued-user"</code> | **Observation bindings:** <code>restoredSession = new Session(details)</code><br>**Verified outcomes:** <code>restoredSession.participantList.nextWaitlisted()?.userId</code> was <code>"queued-user"</code> | Passed |
+**Input:** Joining user, Available funds (cents), Share (cents), Join time · **Oracle:** Expected Result · **Log:** Test Result
 
-### Required payout history
+Execution: **1 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenBothHistoriesAreOmittedWithoutPendingPayout_ThrowsInvalidInput](reconstruction.test.ts#L319) | <code>details = { ...sessionDetails(), payoutAttemptIds: undefined, payoutIdempotencyKeys: undefined, }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAttemptHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput](reconstruction.test.ts#L332) | <code>details = { ...sessionDetails(), payoutAttemptIds: undefined, payoutIdempotencyKeys: ["earlier-key"], }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenKeyHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput](reconstruction.test.ts#L345) | <code>details = { ...sessionDetails(), payoutAttemptIds: ["earlier"], payoutIdempotencyKeys: undefined, }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAttemptHistoryIsNotAnArray_ThrowsInvalidInput](reconstruction.test.ts#L358) | <code>details = { ...sessionDetails(), payoutAttemptIds: "earlier" }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenKeyHistoryIsNotAnArray_ThrowsInvalidInput](reconstruction.test.ts#L367) | <code>details = { ...sessionDetails(), payoutIdempotencyKeys: "earlier-key", }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenBothHistoriesAreOmittedWithPendingPayout_ThrowsInvalidInput](reconstruction.test.ts#L379) | <code>details = { ...pendingPayoutDetails(), payoutAttemptIds: undefined, payoutIdempotencyKeys: undefined, }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenAttemptHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput](reconstruction.test.ts#L392) | <code>details = { ...pendingPayoutDetails(), payoutAttemptIds: undefined, payoutIdempotencyKeys: ["earlier-key", "key"], }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenKeyHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput](reconstruction.test.ts#L405) | <code>details = { ...pendingPayoutDetails(), payoutAttemptIds: ["earlier", "out"], payoutIdempotencyKeys: undefined, }</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenFailedPayoutHistoryIsRestored_PreservesAttemptsAndKeys](reconstruction.test.ts#L418) | <code>details = { ...pendingPayoutDetails(), status: "AWAITING_PAYOUT" as const, pendingSettlement: undefined, }</code> | <code>restoredSession.status</code> equals <code>"AWAITING_PAYOUT"</code><br><code>restoredSession.pendingSettlement</code> is undefined<br><code>restoredSession.payoutAttemptIds</code> matches <code>["out"]</code><br><code>restoredSession.payoutIdempotencyKeys</code> matches <code>["key"]</code><br><code>restoredSession.participantList .requireParticipation("p-alice").hold?.state</code> equals <code>"HELD"</code> | **Observation bindings:** <code>restoredSession = new Session(details)</code><br>**Verified outcomes:** <code>restoredSession.status</code> was <code>"AWAITING_PAYOUT"</code><br><code>restoredSession.pendingSettlement</code> was undefined<br><code>restoredSession.payoutAttemptIds</code> matched <code>["out"]</code><br><code>restoredSession.payoutIdempotencyKeys</code> matched <code>["key"]</code><br><code>restoredSession.participantList .requireParticipation("p-alice").hold?.state</code> was <code>"HELD"</code> | Passed |
-| [constructor_WhenPayoutAttemptIdsAreDuplicated_ThrowsDomainError](reconstruction.test.ts#L435) | <code>details = sessionDetails({ payoutAttemptIds: ["same", "same"] })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenPayoutKeysAreDuplicated_ThrowsDomainError](reconstruction.test.ts#L441) | <code>details = sessionDetails({ payoutIdempotencyKeys: ["same", "same"], })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+| Joining user | Available funds (cents) | Share (cents) | Join time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice](custom-pricing.test.ts#L13) | 750 | 750 | 48 hours before start | One LOCK for 750 cents; alice hold 750 cents; share 750 cents | One LOCK for 750 cents; alice hold 750 cents; share 750 cents |
 
-### Pending payout batch ownership
+### Withdraw at chosen price
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenPendingPayoutHasNoBatch_ThrowsDomainError](reconstruction.test.ts#L451) | <code>details = sessionDetails({ status: "PAYOUT_PENDING" })</code><br>**Input commands:** <code>new Session(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenPendingBatchBelongsToAnotherSession_ThrowsDomainError](reconstruction.test.ts#L457) | <code>details = pendingPayoutDetails()</code><br><code>batch = details.pendingSettlement!</code><br>**Input commands:** <code>new Session({ ...details, pendingSettlement: { ...batch, sessionId: "foreign" }, })</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenPendingLineUsesForeignWallet_ThrowsDomainError](reconstruction.test.ts#L470) | <code>details = pendingPayoutDetails()</code><br><code>batch = details.pendingSettlement!</code><br>**Input commands:** <code>new Session({ ...details, pendingSettlement: { ...batch, lines: [{ ...batch.lines[0]!, walletId: "foreign" }], }, })</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenPendingAttemptIsMissingFromHistory_ThrowsDomainError](reconstruction.test.ts#L486) | <code>details = pendingPayoutDetails()</code><br>**Input commands:** <code>new Session({ ...details, payoutAttemptIds: [] })</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenPendingKeyIsMissingFromHistory_ThrowsDomainError](reconstruction.test.ts#L494) | <code>details = pendingPayoutDetails()</code><br>**Input commands:** <code>new Session({ ...details, payoutIdempotencyKeys: [] })</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+**Input:** Committed user, Available funds (cents), Share (cents), Withdrawal time · **Oracle:** Expected Result · **Log:** Test Result
 
-## Session transition recording
+Execution: **1 passed**.
 
-Source: [recording.test.ts](recording.test.ts)
+| Committed user | Available funds (cents) | Share (cents) | Withdrawal time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice](custom-pricing.test.ts#L39) | 750 | 750 | 31 hours before start | One REFUND for 750 cents; alice hold REFUNDED | One REFUND for 750 cents; alice hold REFUNDED |
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+### Cancel at chosen price
 
+**Input:** Booker, Committed user, Share (cents), Cancellation time · **Oracle:** Expected Result · **Log:** Test Result
 
-### Reserved replacement admission
+Execution: **1 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges](recording.test.ts#L21) | <code>aliceInvitedAt = hoursBeforeSessionStart(10)</code><br><code>danaTriedToJoinAt = hoursBeforeSessionStart(9)</code><br><code>aliceInvitation = withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara", })</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice", "ben"], participationOverrides: { alice: aliceInvitation }, })</code><br><code>admission = committedParticipation( bookingSession, "dana", danaTriedToJoinAt, )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission(admission, undefined, danaTriedToJoinAt)</code> | Throws <code>error code CAPACITY_EXCEEDED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code CAPACITY_EXCEEDED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges](recording.test.ts#L47) | <code>aliceInvitedAt = hoursBeforeSessionStart(10)</code><br><code>caraTriedToJoinAt = hoursBeforeSessionStart(9)</code><br><code>aliceInvitation = withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara", })</code><br><code>bookingSession = new Session( sessionDetails({ participations: [aliceInvitation] }), )</code><br><code>admission = committedParticipation( bookingSession, "cara", caraTriedToJoinAt, )</code><br><code>previousList = bookingSession.participantList</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission(admission, undefined, caraTriedToJoinAt)</code> | Throws <code>error code INVALID_STATE</code><br><code>bookingSession.participantList</code> is the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code><br><code>bookingSession.getAvailableSlots(caraTriedToJoinAt)</code> equals <code>1</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>bookingSession.participantList</code> was the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code><br><code>bookingSession.getAvailableSlots(caraTriedToJoinAt)</code> was <code>1</code> | Passed |
-| [recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges](recording.test.ts#L75) | <code>aliceInvitedAt = hoursBeforeSessionStart(10)</code><br><code>danaTriedToAcceptAt = hoursBeforeSessionStart(9)</code><br><code>aliceInvitation = withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara", })</code><br><code>bookingSession = new Session( sessionDetails({ participations: [aliceInvitation] }), )</code><br><code>candidate = committedParticipation( bookingSession, "dana", danaTriedToAcceptAt, )</code><br><code>admission = Participation.createCommitted({ participationId: candidate.participationId, userId: candidate.userId, committedAt: danaTriedToAcceptAt, hold: candidate.hold!, replacesParticipationId: aliceInvitation.participationId, })</code><br><code>refundedInvitation = withdrawnParticipation("alice", { holdState: "REFUNDED", withdrawnAt: aliceInvitedAt, settledAt: danaTriedToAcceptAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara", })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission( admission, refundedInvitation, danaTriedToAcceptAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState](recording.test.ts#L118) | <code>aliceInvitedAt = hoursBeforeSessionStart(48)</code><br><code>originalSession = createTestSession()</code><br><code>aliceInvitation = withdrawnParticipation("alice", { holdState: "REFUNDED", withdrawnAt: aliceInvitedAt, settledAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "dana", })</code><br><code>participations = [ aliceInvitation, committedParticipation(originalSession, "ben"), committedParticipation(originalSession, "cara"), ]</code><br>**Input commands:** <code>new Session(sessionDetails({ participations }))</code> | Throws <code>error code CAPACITY_EXCEEDED</code> | **Verified outcomes:** Threw <code>error code CAPACITY_EXCEEDED</code> | Passed |
-| [recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged](recording.test.ts#L139) | <code>aliceWithdrewAt = hoursBeforeSessionStart(10)</code><br><code>replacementTriedToJoinAt = hoursBeforeSessionStart(9)</code><br><code>bookingSession = new Session( sessionDetails({ participations: [ withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceWithdrewAt, replacementMode: "OPEN_SLOT", }), ], }), )</code><br><code>candidate = committedParticipation( bookingSession, "replacement", replacementTriedToJoinAt, )</code><br><code>admission = Participation.createCommitted({ participationId: candidate.participationId, userId: candidate.userId, committedAt: replacementTriedToJoinAt, hold: candidate.hold!, replacesParticipationId: "p-alice", })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission( admission, undefined, replacementTriedToJoinAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged](recording.test.ts#L177) | <code>aliceWithdrewAt = hoursBeforeSessionStart(10)</code><br><code>benWithdrewAt = hoursBeforeSessionStart(9)</code><br><code>replacementTriedToJoinAt = hoursBeforeSessionStart(8)</code><br><code>bookingSession = new Session( sessionDetails({ participations: [ withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceWithdrewAt, replacementMode: "OPEN_SLOT", }), withdrawnParticipation("ben", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: benWithdrewAt, replacementMode: "OPEN_SLOT", }), ], }), )</code><br><code>candidate = committedParticipation( bookingSession, "replacement", replacementTriedToJoinAt, )</code><br><code>admission = Participation.createCommitted({ participationId: candidate.participationId, userId: candidate.userId, committedAt: replacementTriedToJoinAt, hold: candidate.hold!, replacesParticipationId: "p-alice", })</code><br><code>benRefund = withdrawnParticipation("ben", { holdState: "REFUNDED", withdrawnAt: benWithdrewAt, settledAt: replacementTriedToJoinAt, replacementMode: "OPEN_SLOT", })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission( admission, benRefund, replacementTriedToJoinAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
+| Booker | Committed user | Share (cents) | Cancellation time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [booker](custom-pricing.test.ts#L65) | alice | 750 | 30 hours before start | One REFUND for 750 cents; share 750 cents | One REFUND for 750 cents; share 750 cents |
 
-### Seat and waitlist admission
+### Prepare payout at chosen price
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordAdmission_WhenHoldIdIsDuplicated_PreservesListAndQueries](recording.test.ts#L229) | <code>benTriedToJoinAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>previousList = bookingSession.participantList</code><br><code>alice = previousList.requireParticipation("p-alice")</code><br><code>previousState = sessionState(bookingSession)</code><br><code>invalidAdmission = Participation.createCommitted({ participationId: "p-ben", userId: "ben", committedAt: benTriedToJoinAt, hold: FundHold.create({ holdId: "h-alice", participationId: "p-ben", holdingAccountId: bookingSession.holdingAccountId, walletId: "w-ben", amount: bookingSession.bookingShare, createdAt: benTriedToJoinAt, }), })</code><br>**Input commands:** <code>bookingSession.recordAdmission( invalidAdmission, undefined, benTriedToJoinAt, )</code><br><code>previousList.requireParticipation("p-ben")</code> | Throws <code>error code DUPLICATE_ID</code><br><code>bookingSession.participantList</code> is the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code><br><code>previousList.requireParticipation("p-alice")</code> is the same instance as <code>alice</code><br><code>previousList.findByUserId("alice")</code> is the same instance as <code>alice</code><br><code>previousList.findByUserId("ben")</code> is undefined<br>Throws <code>error code NOT_FOUND</code><br><code>previousList.committedCount</code> equals <code>1</code><br><code>previousList.nextQueueSequence</code> equals <code>1</code><br><code>previousList.nextWaitlisted()</code> is undefined<br><code>previousList.oldestAwaitingReplacement()</code> is undefined | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code><br><code>bookingSession.participantList</code> was the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code><br><code>previousList.requireParticipation("p-alice")</code> was the same instance as <code>alice</code><br><code>previousList.findByUserId("alice")</code> was the same instance as <code>alice</code><br><code>previousList.findByUserId("ben")</code> was undefined<br>Threw <code>error code NOT_FOUND</code><br><code>previousList.committedCount</code> was <code>1</code><br><code>previousList.nextQueueSequence</code> was <code>1</code><br><code>previousList.nextWaitlisted()</code> was undefined<br><code>previousList.oldestAwaitingReplacement()</code> was undefined | Passed |
-| [recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList](recording.test.ts#L270) | <code>benJoinedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>previousList = bookingSession.participantList</code><br><code>alice = previousList.requireParticipation("p-alice")</code><br><code>invalidAdmission = Participation.createCommitted({ participationId: "p-ben", userId: "ben", committedAt: benJoinedAt, hold: FundHold.create({ holdId: "h-alice", participationId: "p-ben", holdingAccountId: bookingSession.holdingAccountId, walletId: "w-ben", amount: bookingSession.bookingShare, createdAt: benJoinedAt, }), })</code><br><code>validAdmission = committedParticipation(bookingSession, "ben")</code><br>**Input commands:** <code>bookingSession.recordAdmission(invalidAdmission, undefined, benJoinedAt)</code><br><code>bookingSession.recordAdmission(validAdmission, undefined, benJoinedAt)</code> | <code>currentList</code> is a different instance from <code>previousList</code><br><code>currentList.requireParticipation("p-ben")</code> is the same instance as <code>validAdmission</code><br><code>currentList.findByUserId("ben")</code> is the same instance as <code>validAdmission</code><br><code>currentList.committedCount</code> equals <code>2</code><br><code>previousList.participations</code> matches <code>[alice]</code><br><code>previousList.requireParticipation("p-alice")</code> is the same instance as <code>alice</code><br><code>previousList.findByUserId("ben")</code> is undefined<br><code>previousList.committedCount</code> equals <code>1</code><br><code>previousList.nextQueueSequence</code> equals <code>1</code> | **Observation bindings:** <code>currentList = bookingSession.participantList</code><br>**Verified outcomes:** <code>currentList</code> was a different instance from <code>previousList</code><br><code>currentList.requireParticipation("p-ben")</code> was the same instance as <code>validAdmission</code><br><code>currentList.findByUserId("ben")</code> was the same instance as <code>validAdmission</code><br><code>currentList.committedCount</code> was <code>2</code><br><code>previousList.participations</code> matched <code>[alice]</code><br><code>previousList.requireParticipation("p-alice")</code> was the same instance as <code>alice</code><br><code>previousList.findByUserId("ben")</code> was undefined<br><code>previousList.committedCount</code> was <code>1</code><br><code>previousList.nextQueueSequence</code> was <code>1</code> | Passed |
-| [recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState](recording.test.ts#L307) | <code>admissionAttemptedAt = sessionStartsAt</code><br><code>bookingSession = createTestSession()</code><br><code>admission = committedParticipation( bookingSession, "alice", admissionAttemptedAt, )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission( admission, undefined, admissionAttemptedAt, )</code> | Throws <code>error code SESSION_STARTED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code SESSION_STARTED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState](recording.test.ts#L327) | <code>bookingSession = createTestSession({ committedUserIds: ["alice", "ben"], })</code><br><code>admission = committedParticipation(bookingSession, "cara")</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission( admission, undefined, hoursBeforeSessionStart(48), )</code> | Throws <code>error code CAPACITY_EXCEEDED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code CAPACITY_EXCEEDED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState](recording.test.ts#L344) | <code>bookingSession = createTestSession({ committedUserIds: ["ben"], waitlistedUserIds: ["waiting"], })</code><br><code>admission = committedParticipation(bookingSession, "newcomer")</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission( admission, undefined, hoursBeforeSessionStart(48), )</code> | Throws <code>error code WAITLIST_NOT_HEAD</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code><br><code>bookingSession.participantList.nextWaitlisted()?.userId</code> equals <code>"waiting"</code> | **Verified outcomes:** Threw <code>error code WAITLIST_NOT_HEAD</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code><br><code>bookingSession.participantList.nextWaitlisted()?.userId</code> was <code>"waiting"</code> | Passed |
-| [recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState](recording.test.ts#L365) | <code>waitlistedAt = hoursBeforeSessionStart(48)</code><br><code>originalSession = createTestSession({ committedUserIds: ["alice", "ben"], })</code><br><code>departedWaiter = new Participation({ participationId: "p-waiting", userId: "waiting", status: "LEFT_WAITLIST", attendance: "UNVERIFIED", waitlistedAt, queueSequence: 1, })</code><br><code>bookingSession = new Session( sessionDetails({ participations: [ ...originalSession.participantList.participations, departedWaiter, ], nextQueueSequence: 2, }), )</code><br><code>admission = Participation.createWaitlisted({ participationId: "p-new-waiting", userId: "waiting", waitlistedAt, queueSequence: bookingSession.participantList.nextQueueSequence, })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAdmission(admission, undefined, waitlistedAt)</code> | Throws <code>error code DUPLICATE_ID</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
+**Input:** Session state, Attendance, Share (cents), Payout ID, Idempotency key, Request time · **Oracle:** Expected Result · **Log:** Test Result
 
-### Participation transitions
+Execution: **1 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges](recording.test.ts#L403) | <code>aliceInvitedAt = hoursBeforeSessionStart(40)</code><br><code>choiceChangeAttemptedAt = hoursBeforeSessionStart(39)</code><br><code>withdrawn = withdrawnParticipation("alice", { holdState: "REFUNDED", withdrawnAt: aliceInvitedAt, settledAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", })</code><br><code>bookingSession = new Session( sessionDetails({ participations: [withdrawn] }), )</code><br><code>changedChoice = new Participation({ participationId: withdrawn.participationId, userId: withdrawn.userId, status: "WITHDRAWN", attendance: withdrawn.attendance, committedAt: withdrawn.committedAt, withdrawnAt: withdrawn.withdrawnAt, replacementMode: "OPEN_SLOT", hold: withdrawn.hold, })</code><br><code>previousList = bookingSession.participantList</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordParticipationTransition( withdrawn, changedChoice, choiceChangeAttemptedAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>bookingSession.participantList</code> is the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>bookingSession.participantList</code> was the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges](recording.test.ts#L440) | <code>aliceOpenedSeatAt = hoursBeforeSessionStart(10)</code><br><code>choiceChangeAttemptedAt = hoursBeforeSessionStart(9)</code><br><code>withdrawn = withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceOpenedSeatAt, replacementMode: "OPEN_SLOT", })</code><br><code>bookingSession = new Session( sessionDetails({ participations: [withdrawn] }), )</code><br><code>changedChoice = new Participation({ participationId: withdrawn.participationId, userId: withdrawn.userId, status: "WITHDRAWN", attendance: withdrawn.attendance, committedAt: withdrawn.committedAt, withdrawnAt: withdrawn.withdrawnAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", hold: withdrawn.hold, })</code><br><code>previousList = bookingSession.participantList</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordParticipationTransition( withdrawn, changedChoice, choiceChangeAttemptedAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>bookingSession.participantList</code> is the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>bookingSession.participantList</code> was the same instance as <code>previousList</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState](recording.test.ts#L476) | <code>transitionAttemptedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>existing = bookingSession.participantList.requireParticipation("p-alice")</code><br><code>removal = removedParticipation("alice", { settledAt: transitionAttemptedAt, })</code><br><code>withdrawn = withdrawnParticipation("alice", { holdState: "REFUNDED", withdrawnAt: transitionAttemptedAt, settledAt: transitionAttemptedAt, })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordParticipationTransition( existing, withdrawn, transitionAttemptedAt, )</code><br><code>bookingSession.recordParticipationTransition( existing, removal, transitionAttemptedAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState](recording.test.ts#L506) | <code>removalAttemptedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>existing = bookingSession.participantList.requireParticipation("p-alice")</code><br><code>replacement = removedParticipation("other", { settledAt: removalAttemptedAt, })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordParticipationTransition( existing, replacement, removalAttemptedAt, )</code> | Throws <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState](recording.test.ts#L526) | <code>existing = Participation.createWaitlisted({ participationId: "p-waiting", userId: "waiting", waitlistedAt: hoursBeforeSessionStart(48), queueSequence: 1, })</code><br><code>departed = leftWaitlistedParticipation("waiting", 1)</code><br><code>bookingSession = new Session( sessionDetails({ status: "CANCELLED", participations: [ new Participation({ participationId: "p-waiting", userId: "waiting", status: "CANCELLED", attendance: "UNVERIFIED", waitlistedAt: hoursBeforeSessionStart(48), queueSequence: 1, }), ], nextQueueSequence: 2, }), )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordParticipationTransition(existing, departed)</code> | Throws <code>error code SESSION_CLOSED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code SESSION_CLOSED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
+| Session state | Attendance | Share (cents) | Payout ID | Idempotency key | Request time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [AWAITING_PAYOUT](custom-pricing.test.ts#L83) | alice ATTENDED / BOOKER | 750 | out | key | End | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD |
 
-### Session cancellation
+### Complete payout at chosen price
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged](recording.test.ts#L560) | <code>cancellationAttemptedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice", "ben"], })</code><br><code>cancelledAlice = cancelledParticipation("alice", { settledAt: cancellationAttemptedAt, })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordCancellation( [cancelledAlice], cancellationAttemptedAt, )</code> | Throws <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState](recording.test.ts#L579) | <code>cancellationAttemptedAt = sessionStartsAt</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>cancelled = cancelledParticipation("alice", { settledAt: cancellationAttemptedAt, })</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordCancellation([cancelled], cancellationAttemptedAt)</code> | Throws <code>error code SESSION_STARTED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code SESSION_STARTED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
+**Input:** Pending payout, Participant, Share (cents), Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-### Attendance verification
+Execution: **1 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged](recording.test.ts#L595) | <code>attendanceRecordedAt = sessionEndsAt</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>verified = attendanceCandidate( bookingSession.participantList.requireParticipation("p-alice"), attendanceRecordedAt, )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAttendance( [verified, verified], attendanceRecordedAt, )</code> | Throws <code>error code DUPLICATE_ID</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code DUPLICATE_ID</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged](recording.test.ts#L613) | <code>attendanceAttemptedAt = hoursBeforeSessionStart(48)</code><br><code>bookingSession = createTestSession({ committedUserIds: ["alice"] })</code><br><code>verified = attendanceCandidate( bookingSession.participantList.requireParticipation("p-alice"), attendanceAttemptedAt, )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAttendance([verified], attendanceAttemptedAt)</code> | Throws <code>error code SESSION_NOT_ENDED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code SESSION_NOT_ENDED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied](recording.test.ts#L628) | <code>attendanceRecordedAt = sessionEndsAt</code><br><code>alreadyVerified = verifiedParticipation("alice", "ATTENDED")</code><br><code>originalSession = createTestSession({ committedUserIds: ["ben"] })</code><br><code>bookingSession = new Session( sessionDetails({ participations: [ alreadyVerified, ...originalSession.participantList.participations, ], }), )</code><br><code>newMark = attendanceCandidate( bookingSession.participantList.requireParticipation("p-ben"), attendanceRecordedAt, )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordAttendance( [newMark, alreadyVerified], attendanceRecordedAt, )</code> | Throws <code>error code ATTENDANCE_CONFLICT</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code><br><code>bookingSession.participantList.requireParticipation("p-ben").attendance</code> equals <code>"UNVERIFIED"</code> | **Verified outcomes:** Threw <code>error code ATTENDANCE_CONFLICT</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code><br><code>bookingSession.participantList.requireParticipation("p-ben").attendance</code> was <code>"UNVERIFIED"</code> | Passed |
+| Pending payout | Participant | Share (cents) | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [out](custom-pricing.test.ts#L107) | alice | 750 | End | One RELEASE for 750 cents; alice hold RELEASED | One RELEASE for 750 cents; alice hold RELEASED |
 
-### Settlement preparation
+## Restoration and ownership invariants
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState](recording.test.ts#L660) | <code>bookingSession = createTestSession()</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordSettlementPreparation( { payoutId: "out", idempotencyKey: "key", participations: [], }, hoursBeforeSessionStart(48), )</code> | Throws <code>error code SESSION_NOT_ENDED</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code SESSION_NOT_ENDED</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged](recording.test.ts#L677) | <code>bookingSession = new Session( sessionDetails({ status: "AWAITING_PAYOUT", participations: [verifiedParticipation("alice", "ATTENDED")], }), )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordSettlementPreparation( { payoutId: "out", idempotencyKey: "key", participations: bookingSession.participantList.participations, }, sessionEndsAt, )</code> | Throws <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged](recording.test.ts#L699) | <code>details = pendingPayoutDetails(["alice", "ben"])</code><br><code>batch = details.pendingSettlement!</code><br><code>bookingSession = new Session( sessionDetails({ status: "AWAITING_PAYOUT", participations: details.participations, }), )</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.recordSettlementPreparation( { payoutId: "out", idempotencyKey: "key", participations: bookingSession.participantList.participations, batch: { ...batch, lines: batch.lines.slice(0, 1) }, }, sessionEndsAt, )</code> | Throws <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
+Source: [reconstruction.test.ts](reconstruction.test.ts).
 
-## Session replacement history restoration
+### Restore session — roster, dates and history isolation
 
-Source: [replacement-hydration.test.ts](replacement-hydration.test.ts)
+**Input:** Committed users, Payout attempts, Payout keys, Source collection edits, Returned value edits · **Oracle:** Expected Result · **Log:** Test Result
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+Execution: **1 passed**.
 
+| Committed users | Payout attempts | Payout keys | Source collection edits | Returned value edits | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alice](reconstruction.test.ts#L16) | earlier | earlier-key | Remove roster entry; append leak to both histories | Remove roster and history entries; change start, commitment and hold creation years to 2000 | One roster entry; alice retains original instance; start unchanged; alice commitment and hold creation remain 48 hours before start; attempts earlier; keys earlier-key; next queue sequence 1 | One roster entry; alice retains original instance; start unchanged; alice commitment and hold creation remain 48 hours before start; attempts earlier; keys earlier-key; next queue sequence 1 |
 
-### Replacement ownership and refund proof
+### Read pending payout — isolate nested values
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference](replacement-hydration.test.ts#L14) | <code>replacement = replacementParticipation("ben", "p-missing")</code><br><code>details = sessionDetails({ participations: [replacement] })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenDepartedWaiterClaimsInvitation_RejectsPhantomAcceptance](replacement-hydration.test.ts#L23) | <code>inviter = refundedInvitation()</code><br><code>departedWaiter = new Participation({ participationId: "p-ben", userId: "ben", status: "LEFT_WAITLIST", attendance: "UNVERIFIED", waitlistedAt: hoursBeforeSessionStart(48), queueSequence: 1, replacesParticipationId: "p-alice", })</code><br><code>details = sessionDetails({ participations: [inviter, departedWaiter], nextQueueSequence: 2, })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient](replacement-hydration.test.ts#L44) | <code>inviter = refundedInvitation()</code><br><code>wrongRecipient = replacementParticipation("cara", "p-alice")</code><br><code>details = sessionDetails({ participations: [inviter, wrongRecipient], })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenReplacedWithdrawalIsNotRefunded_RejectsUnsettledAcceptance](replacement-hydration.test.ts#L56) | <code>aliceCommittedAt = hoursBeforeSessionStart(48)</code><br><code>aliceInvitedAt = hoursBeforeSessionStart(10)</code><br><code>inviter = new Participation({ participationId: "p-alice", userId: "alice", status: "WITHDRAWN", attendance: "UNVERIFIED", committedAt: aliceCommittedAt, withdrawnAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", hold: fundHold("alice", { state: "AWAITING_REPLACEMENT" }), })</code><br><code>replacement = replacementParticipation("ben", "p-alice")</code><br><code>details = sessionDetails({ participations: [inviter, replacement] })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenTargetWasCancelledWithoutWithdrawal_RejectsUnrelatedRefund](replacement-hydration.test.ts#L78) | <code>aliceCommittedAt = hoursBeforeSessionStart(48)</code><br><code>cancelledAt = hoursBeforeSessionStart(40)</code><br><code>cancelledParticipant = new Participation({ participationId: "p-alice", userId: "alice", status: "CANCELLED", attendance: "UNVERIFIED", committedAt: aliceCommittedAt, hold: fundHold("alice", { state: "REFUNDED", settledAt: cancelledAt }), })</code><br><code>replacement = replacementParticipation("ben", "p-alice")</code><br><code>details = sessionDetails({ participations: [cancelledParticipant, replacement], })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenRemovedReplacementHasNoCommitmentHistory_RejectsPhantomAcceptance](replacement-hydration.test.ts#L99) | <code>inviter = refundedInvitation()</code><br><code>uncommittedReplacement = new Participation({ participationId: "p-ben", userId: "ben", status: "REMOVED", attendance: "UNVERIFIED", replacesParticipationId: "p-alice", })</code><br><code>details = sessionDetails({ participations: [inviter, uncommittedReplacement], })</code><br>**Input commands:** <code>new Session(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+**Input:** Pending payout, Participants, Source batch edits, Returned batch edits · **Oracle:** Expected Result · **Log:** Test Result
 
-### Consumed invitation history
+Execution: **1 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation](replacement-hydration.test.ts#L119) | <code>inviter = refundedInvitation()</code><br><code>replacement = replacementParticipation("ben", "p-alice")</code><br><code>details = sessionDetails({ participations: [inviter, replacement] })</code> | <code>restored.participantList.reservedCount</code> equals <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> is undefined<br><code>restored.participantList.committedCount</code> equals <code>1</code><br><code>restored.getAvailableSlots(hoursBeforeSessionStart(38))</code> equals <code>1</code> | **Observation bindings:** <code>restored = new Session(details)</code><br>**Verified outcomes:** <code>restored.participantList.reservedCount</code> was <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> was undefined<br><code>restored.participantList.committedCount</code> was <code>1</code><br><code>restored.getAvailableSlots(hoursBeforeSessionStart(38))</code> was <code>1</code> | Passed |
-| [constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed](replacement-hydration.test.ts#L134) | <code>benWithdrewAt = hoursBeforeSessionStart(10)</code><br><code>availabilityCheckedAt = hoursBeforeSessionStart(9)</code><br><code>inviter = refundedInvitation()</code><br><code>withdrawnReplacement = replacementParticipation("ben", "p-alice", { status: "WITHDRAWN", withdrawnAt: benWithdrewAt, replacementMode: "OPEN_SLOT", hold: fundHold("ben", { state: "AWAITING_REPLACEMENT", createdAt: hoursBeforeSessionStart(39), }), })</code><br><code>details = sessionDetails({ participations: [inviter, withdrawnReplacement], })</code> | <code>restored.participantList.reservedCount</code> equals <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> is undefined<br><code>restored.participantList .requireParticipation("p-ben").replacesParticipationId</code> equals <code>"p-alice"</code><br><code>restored.getAvailableSlots(availabilityCheckedAt)</code> equals <code>2</code> | **Observation bindings:** <code>restored = new Session(details)</code><br>**Verified outcomes:** <code>restored.participantList.reservedCount</code> was <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> was undefined<br><code>restored.participantList .requireParticipation("p-ben").replacesParticipationId</code> was <code>"p-alice"</code><br><code>restored.getAvailableSlots(availabilityCheckedAt)</code> was <code>2</code> | Passed |
-| [constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed](replacement-hydration.test.ts#L162) | <code>benRemovedAt = hoursBeforeSessionStart(38)</code><br><code>availabilityCheckedAt = hoursBeforeSessionStart(37)</code><br><code>inviter = refundedInvitation()</code><br><code>removedReplacement = replacementParticipation("ben", "p-alice", { status: "REMOVED", hold: fundHold("ben", { state: "REFUNDED", createdAt: hoursBeforeSessionStart(39), settledAt: benRemovedAt, }), })</code><br><code>details = sessionDetails({ participations: [inviter, removedReplacement], })</code> | <code>restored.participantList.reservedCount</code> equals <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> is undefined<br><code>restored.participantList .requireParticipation("p-ben").replacesParticipationId</code> equals <code>"p-alice"</code><br><code>restored.getAvailableSlots(availabilityCheckedAt)</code> equals <code>2</code> | **Observation bindings:** <code>restored = new Session(details)</code><br>**Verified outcomes:** <code>restored.participantList.reservedCount</code> was <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> was undefined<br><code>restored.participantList .requireParticipation("p-ben").replacesParticipationId</code> was <code>"p-alice"</code><br><code>restored.getAvailableSlots(availabilityCheckedAt)</code> was <code>2</code> | Passed |
-| [constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory](replacement-hydration.test.ts#L189) | <code>inviter = refundedInvitation({ status: "CANCELLED", replacementMode: undefined, replacementInviteeId: undefined, })</code><br><code>replacement = replacementParticipation("ben", "p-alice", { status: "CANCELLED", hold: fundHold("ben", { state: "REFUNDED", createdAt: hoursBeforeSessionStart(39), settledAt: hoursBeforeSessionStart(38), }), })</code><br><code>details = sessionDetails({ status: "CANCELLED", participations: [inviter, replacement], })</code> | <code>restored.status</code> equals <code>"CANCELLED"</code><br><code>restored.participantList.reservedCount</code> equals <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> is undefined<br><code>restored.participantList .requireParticipation("p-ben").replacesParticipationId</code> equals <code>"p-alice"</code><br><code>restored.participantList.requireParticipation("p-alice").hold?.state</code> equals <code>"REFUNDED"</code> | **Observation bindings:** <code>restored = new Session(details)</code><br>**Verified outcomes:** <code>restored.status</code> was <code>"CANCELLED"</code><br><code>restored.participantList.reservedCount</code> was <code>0</code><br><code>restored.participantList.personalReplacementForInvitee("ben")</code> was undefined<br><code>restored.participantList .requireParticipation("p-ben").replacesParticipationId</code> was <code>"p-alice"</code><br><code>restored.participantList.requireParticipation("p-alice").hold?.state</code> was <code>"REFUNDED"</code> | Passed |
+| Pending payout | Participants | Source batch edits | Returned batch edits | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [out / key](reconstruction.test.ts#L56) | alice | Request year 2000; bank changed; remove line | Request year 2001; bank changed-again; remove line | Request time end; bank bank; one 500-cent line; attempts out; keys key | Request time end; bank bank; one 500-cent line; attempts out; keys key |
 
-## Session payout settlement
+### Complete restored payout independently
 
-Source: [settlement.test.ts](settlement.test.ts)
+**Input:** Pending payout, Participants, Session copies, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+Execution: **1 passed**.
 
+| Pending payout | Participants | Session copies | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [out / key](reconstruction.test.ts#L82) | alice | Original and restored from the same details | End | One RELEASE; restored SETTLED; original PAYOUT_PENDING with alice hold HELD | One RELEASE; restored SETTLED; original PAYOUT_PENDING with alice hold HELD |
 
-### Payout completion and financial effects
+### Restore session lifecycle status
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [completeSettlement_WhenRestoredBatchOmitsPayableHold_LeavesAllFundsAndHistoryPending](settlement.test.ts#L21) | <code>details = pendingPayoutDetails(["alice", "ben"])</code><br><code>batch = details.pendingSettlement!</code><br><code>bookingSession = new Session({ ...details, pendingSettlement: { ...batch, lines: batch.lines.slice(0, 1) }, })</code><br><code>previousList = bookingSession.participantList</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.completeSettlement("out", sessionEndsAt)</code> | Throws <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code><br><code>bookingSession.participantList</code> is the same instance as <code>previousList</code><br><code>bookingSession.status</code> equals <code>"PAYOUT_PENDING"</code><br><code>bookingSession.payoutAttemptIds</code> matches <code>["out"]</code><br><code>bookingSession.payoutIdempotencyKeys</code> matches <code>["key"]</code><br><code>bookingSession.participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matches <code>["HELD", "HELD"]</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code><br><code>bookingSession.participantList</code> was the same instance as <code>previousList</code><br><code>bookingSession.status</code> was <code>"PAYOUT_PENDING"</code><br><code>bookingSession.payoutAttemptIds</code> matched <code>["out"]</code><br><code>bookingSession.payoutIdempotencyKeys</code> matched <code>["key"]</code><br><code>bookingSession.participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matched <code>["HELD", "HELD"]</code> | Passed |
-| [completeSettlement_WhenCallbackIsStale_RejectsWithoutChangingState](settlement.test.ts#L46) | <code>bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]))</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.completeSettlement("stale", sessionEndsAt)</code> | Throws <code>error code STALE_PAYOUT</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code STALE_PAYOUT</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [completeSettlement_WhenCompletionDateIsInvalid_LeavesAllHoldsPending](settlement.test.ts#L56) | <code>bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]))</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.completeSettlement("out", new Date(Number.NaN))</code> | Throws an error matching <code>DomainError</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [completeSettlement_WhenPayoutHasReleaseAndForfeiture_FinalizesBothHolds](settlement.test.ts#L66) | <code>withdrawalTime = hoursBeforeSessionStart(2)</code><br><code>completionTime = sessionEndsAt</code><br><code>details = pendingPayoutDetails(["alice", "ben"])</code><br><code>alice = withdrawnParticipationWithForfeitureDue( "alice", withdrawalTime, )</code><br><code>ben = verifiedParticipation("ben", "ATTENDED")</code><br><code>bookingSession = new Session({ ...details, participations: [alice, ben], pendingSettlement: { ...details.pendingSettlement!, lines: [ payoutLineFor(alice.hold!, "FORFEIT"), payoutLineFor(ben.hold!, "RELEASE"), ], }, })</code> | <code>completion.instructions.map((instruction) =&gt; instruction.kind)</code> matches <code>["FORFEIT", "RELEASE"]</code><br><code>completion.instructions.map((instruction) =&gt; instruction.payoutId)</code> matches <code>["out", "out"]</code><br><code>bookingSession.status</code> equals <code>"SETTLED"</code><br><code>bookingSession.participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matches <code>["FORFEITED", "RELEASED"]</code> | **Observation bindings:** <code>completion = bookingSession.completeSettlement("out", completionTime)</code><br>**Verified outcomes:** <code>completion.instructions.map((instruction) =&gt; instruction.kind)</code> matched <code>["FORFEIT", "RELEASE"]</code><br><code>completion.instructions.map((instruction) =&gt; instruction.payoutId)</code> matched <code>["out", "out"]</code><br><code>bookingSession.status</code> was <code>"SETTLED"</code><br><code>bookingSession.participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matched <code>["FORFEITED", "RELEASED"]</code> | Passed |
-| [reliabilityOutcome_WhenSessionSettlementForfeitsWithdrawal_ReturnsZero](settlement.test.ts#L103) | <code>withdrawalTime = hoursBeforeSessionStart(2)</code><br><code>completionTime = sessionEndsAt</code><br><code>reliabilityEvaluationTime = sessionEndsAt</code><br><code>alice = new Participation({ participationId: "p-alice", userId: "alice", status: "WITHDRAWN", attendance: "UNVERIFIED", committedAt: hoursBeforeSessionStart(48), withdrawnAt: withdrawalTime, hold: settledHold("alice", "FORFEITED", completionTime), })</code><br><code>ben = new Participation({ participationId: "p-ben", userId: "ben", status: "COMMITTED", attendance: "ATTENDED", committedAt: hoursBeforeSessionStart(48), verifiedAt: sessionEndsAt, verificationMethod: "BOOKER", hold: settledHold("ben", "RELEASED", completionTime), })</code><br><code>bookingSession = new Session( sessionDetails({ status: "SETTLED", participations: [alice, ben], payoutAttemptIds: ["out"], payoutIdempotencyKeys: ["key"], }), )</code> | <code>aliceReliability?.value</code> equals <code>0</code> | **Observation bindings:** <code>aliceReliability = bookingSession.participantList .requireParticipation("p-alice") .reliabilityOutcome(reliabilityEvaluationTime)</code><br>**Verified outcomes:** <code>aliceReliability?.value</code> was <code>0</code> | Passed |
+Cara joined the waitlist 48 hours before start with sequence 1; the cancelled roster has next queue sequence 2.
 
-### Failure recovery and attempt history
+**Input:** Session state, Roster states, Hold states · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [completeSettlement_WhenSecondHoldFails_PreservesAllHolds](settlement.test.ts#L144) | <code>bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]))</code><br><code>previousState = sessionState(bookingSession)</code><br>**Input commands:** <code>bookingSession.completeSettlement("out", sessionEndsAt)</code> | Throws <code>error code INVALID_STATE; message: Second line rejected</code><br><code>sessionState(bookingSession)</code> matches <code>previousState</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE; message: Second line rejected</code><br><code>sessionState(bookingSession)</code> matched <code>previousState</code> | Passed |
-| [completeSettlement_WhenSecondHoldFailureIsRetried_ReleasesAllHolds](settlement.test.ts#L173) | <code>completionTime = sessionEndsAt</code><br><code>bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]))</code><br>**Input commands:** <code>bookingSession.completeSettlement("out", completionTime)</code> | <code>completion.instructions</code> length is <code>2</code><br><code>bookingSession.participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matches <code>["RELEASED", "RELEASED"]</code><br><code>bookingSession.pendingSettlement</code> is undefined | **Observation bindings:** <code>completion = bookingSession.completeSettlement("out", completionTime)</code><br>**Verified outcomes:** <code>completion.instructions</code> length was <code>2</code><br><code>bookingSession.participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matched <code>["RELEASED", "RELEASED"]</code><br><code>bookingSession.pendingSettlement</code> was undefined | Passed |
-| [completeSettlement_WhenCurrentAttemptIsARetry_UsesRetryPayoutIdentity](settlement.test.ts#L205) | <code>details = pendingPayoutDetails(["alice"])</code><br><code>bookingSession = new Session({ ...details, pendingSettlement: { ...details.pendingSettlement!, payoutId: "retry", idempotencyKey: "retry-key", }, payoutAttemptIds: ["out", "retry"], payoutIdempotencyKeys: ["key", "retry-key"], })</code> | <code>completion.instructions</code> matches <code>[ expect.objectContaining({ kind: "RELEASE", participationId: "p-alice", payoutId: "retry", }), ]</code><br><code>alice.hold?.payoutId</code> equals <code>"retry"</code><br><code>alice.hold?.state</code> equals <code>"RELEASED"</code><br><code>bookingSession.status</code> equals <code>"SETTLED"</code><br><code>bookingSession.pendingSettlement</code> is undefined | **Observation bindings:** <code>completion = bookingSession.completeSettlement( "retry", sessionEndsAt, )</code><br><code>alice = bookingSession.participantList.requireParticipation("p-alice")</code><br>**Verified outcomes:** <code>completion.instructions</code> matched <code>[ expect.objectContaining({ kind: "RELEASE", participationId: "p-alice", payoutId: "retry", }), ]</code><br><code>alice.hold?.payoutId</code> was <code>"retry"</code><br><code>alice.hold?.state</code> was <code>"RELEASED"</code><br><code>bookingSession.status</code> was <code>"SETTLED"</code><br><code>bookingSession.pendingSettlement</code> was undefined | Passed |
-| [failSettlement_WhenPayoutIsPending_PreservesHoldsAndAttemptHistory](settlement.test.ts#L238) | <code>bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]))</code><br><code>previousList = bookingSession.participantList</code><br>**Input commands:** <code>bookingSession.failSettlement("out", sessionEndsAt)</code> | <code>payoutState.status</code> equals <code>"AWAITING_PAYOUT"</code><br><code>payoutState.pendingSettlement</code> is undefined<br><code>participantList</code> is the same instance as <code>previousList</code><br><code>payoutState.payoutAttemptIds</code> matches <code>["out"]</code><br><code>payoutState.payoutIdempotencyKeys</code> matches <code>["key"]</code><br><code>participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matches <code>["HELD", "HELD"]</code> | **Observation bindings:** <code>payoutState = sessionState(bookingSession)</code><br><code>participantList = bookingSession.participantList</code><br>**Verified outcomes:** <code>payoutState.status</code> was <code>"AWAITING_PAYOUT"</code><br><code>payoutState.pendingSettlement</code> was undefined<br><code>participantList</code> was the same instance as <code>previousList</code><br><code>payoutState.payoutAttemptIds</code> matched <code>["out"]</code><br><code>payoutState.payoutIdempotencyKeys</code> matched <code>["key"]</code><br><code>participantList.participations.map( (participation) =&gt; participation.hold?.state, )</code> matched <code>["HELD", "HELD"]</code> | Passed |
+Execution: **3 passed**.
 
-## Session fixture contracts
+| Session state | Roster states | Hold states | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [CANCELLED](reconstruction.test.ts#L105) | alice REMOVED; ben CANCELLED; cara CANCELLED from waitlist | alice REFUNDED 48 hours before start; ben REFUNDED 24 hours before start; cara none | alice REMOVED | alice REMOVED |
+| [SETTLED](reconstruction.test.ts#L133) | Empty | None | SETTLED; booking end unchanged | SETTLED; booking end unchanged |
+| [SETTLED](reconstruction.test.ts#L142) | alice COMMITTED | alice HELD | DomainError | DomainError |
 
-Source: [session-fixtures.test.ts](session-fixtures.test.ts)
+### Restore roster — unique ownership
 
-### Roster construction
+Entries with holds are COMMITTED; queue entries without holds are WAITLISTED unless labelled otherwise.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [createTestSession_WhenOnlyOneAttendanceMarkIsProvided_LeavesOtherUsersUnverified](session-fixtures.test.ts#L16) | <code>const session = createTestSession({ committedUserIds: ["alice", "ben"], attendanceByUserId: { alice: "ABSENT" }, });</code><br><code>const alice = session.participantList.requireParticipation("p-alice");</code><br><code>const ben = session.participantList.requireParticipation("p-ben");</code> | <code>expect(session.status).toBe("OPEN")</code><br><code>expect(alice.attendance).toBe("ABSENT")</code><br><code>expect(alice.verifiedAt).toEqual(sessionEndsAt)</code><br><code>expect(alice.verificationMethod).toBe("BOOKER")</code><br><code>expect(ben.attendance).toBe("UNVERIFIED")</code><br><code>expect(ben.verifiedAt).toBeUndefined()</code> | **Verified assertions:** <code>expect(session.status).toBe("OPEN")</code><br><code>expect(alice.attendance).toBe("ABSENT")</code><br><code>expect(alice.verifiedAt).toEqual(sessionEndsAt)</code><br><code>expect(alice.verificationMethod).toBe("BOOKER")</code><br><code>expect(ben.attendance).toBe("UNVERIFIED")</code><br><code>expect(ben.verifiedAt).toBeUndefined()</code> | Passed |
-| [createTestSession_WhenCostDoesNotDivideEvenly_HydratesRoundedShares](session-fixtures.test.ts#L33) | <code>const session = createTestSession({ totalSlots: 3, committedUserIds: ["alice", "ben"], attendanceByUserId: { ben: "ATTENDED" }, });</code><br><code>const amounts = session.participantList.participations.map( (participation) =&gt; participation.hold?.amount.toCents(), );</code> | <code>expect(session.bookingShare.toCents()).toBe(333)</code><br><code>expect(amounts).toEqual([333, 333])</code> | **Verified assertions:** <code>expect(session.bookingShare.toCents()).toBe(333)</code><br><code>expect(amounts).toEqual([333, 333])</code> | Passed |
-| [createTestSession_WhenCustomShareIsProvided_UsesItForEveryHeldShare](session-fixtures.test.ts#L48) | <code>const session = createTestSession({ bookingShare: Money.fromCents(750), committedUserIds: ["alice", "ben"], attendanceByUserId: { ben: "ATTENDED" }, });</code><br><code>const amounts = session.participantList.participations.map( (participation) =&gt; participation.hold?.amount.toCents(), );</code> | <code>expect(session.bookingShare.toCents()).toBe(750)</code><br><code>expect(amounts).toEqual([750, 750])</code> | **Verified assertions:** <code>expect(session.bookingShare.toCents()).toBe(750)</code><br><code>expect(amounts).toEqual([750, 750])</code> | Passed |
-| [createTestSession_WhenRosterEntryIsOverridden_PreservesItsPositionAndQueueMetadata](session-fixtures.test.ts#L63) | <code>const withdrawn = withdrawnParticipation("alice", { withdrawnAt: hoursBeforeSessionStart(10), replacementMode: "OPEN_SLOT", holdState: "AWAITING_REPLACEMENT", });</code><br><code>const session = createTestSession({ committedUserIds: ["alice", "ben"], waitlistedUserIds: ["cara", "dan"], participationOverrides: { alice: withdrawn }, });</code> | <code>expect(session.participantList.participations.map((entry) =&gt; entry.userId)) .toEqual(["alice", "ben", "cara", "dan"])</code><br><code>expect(session.participantList.requireParticipation("p-alice")).toBe(withdrawn)</code><br><code>expect(session.participantList.requireParticipation("p-cara").queueSequence).toBe(1)</code><br><code>expect(session.participantList.requireParticipation("p-dan").queueSequence).toBe(2)</code><br><code>expect(session.participantList.nextQueueSequence).toBe(3)</code> | **Verified assertions:** <code>expect(session.participantList.participations.map((entry) =&gt; entry.userId)) .toEqual(["alice", "ben", "cara", "dan"])</code><br><code>expect(session.participantList.requireParticipation("p-alice")).toBe(withdrawn)</code><br><code>expect(session.participantList.requireParticipation("p-cara").queueSequence).toBe(1)</code><br><code>expect(session.participantList.requireParticipation("p-dan").queueSequence).toBe(2)</code><br><code>expect(session.participantList.nextQueueSequence).toBe(3)</code> | Passed |
-| [createTestSession_WhenOverrideUserIsOutsideRoster_RejectsTheOverride](session-fixtures.test.ts#L84) | <code>const outsider = leftWaitlistedParticipation("outsider", 1);</code> | <code>expect(() =&gt; createTestSession({ committedUserIds: ["alice"], participationOverrides: { outsider }, })).toThrow("Participation override must match a roster user: outsider")</code> | **Verified assertions:** <code>expect(() =&gt; createTestSession({ committedUserIds: ["alice"], participationOverrides: { outsider }, })).toThrow("Participation override must match a roster user: outsider")</code> | Passed |
-| [createTestSession_WhenOverrideIdentityDoesNotMatchItsKey_RejectsTheOverride](session-fixtures.test.ts#L93) | <code>const ben = leftWaitlistedParticipation("ben", 1);</code> | <code>expect(() =&gt; createTestSession({ waitlistedUserIds: ["alice"], participationOverrides: { alice: ben }, })).toThrow("Participation override must match a roster user: alice")</code> | **Verified assertions:** <code>expect(() =&gt; createTestSession({ waitlistedUserIds: ["alice"], participationOverrides: { alice: ben }, })).toThrow("Participation override must match a roster user: alice")</code> | Passed |
-| [createTestSession_WhenCalledTwice_CreatesIndependentRostersAndHolds](session-fixtures.test.ts#L102) | <code>const first = createTestSession({ committedUserIds: ["alice"] });</code><br><code>const second = createTestSession({ committedUserIds: ["alice"] });</code> | <code>expect(second).not.toBe(first)</code><br><code>expect(second.participantList.requireParticipation("p-alice")) .not.toBe(first.participantList.requireParticipation("p-alice"))</code><br><code>expect(second.participantList.requireParticipation("p-alice").hold) .not.toBe(first.participantList.requireParticipation("p-alice").hold)</code> | **Verified assertions:** <code>expect(second).not.toBe(first)</code><br><code>expect(second.participantList.requireParticipation("p-alice")) .not.toBe(first.participantList.requireParticipation("p-alice"))</code><br><code>expect(second.participantList.requireParticipation("p-alice").hold) .not.toBe(first.participantList.requireParticipation("p-alice").hold)</code> | Passed |
+**Input:** Roster user IDs, Participation IDs, Hold IDs, Queue sequences, Next queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-### Existing history and payout data
+Execution: **5 passed**.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [withdrawnParticipation_WhenRefundedWithCustomTerms_PreservesHistoryAndFinancialIdentity](session-fixtures.test.ts#L116) | <code>const withdrawalTime = hoursBeforeSessionStart(40);</code><br><code>const withdrawn = withdrawnParticipation("alice", { withdrawnAt: withdrawalTime, holdState: "REFUNDED", replacesParticipationId: "previous-participation", }, { holdingAccountId: "custom-platform", bookingShare: Money.fromCents(750) });</code> | <code>expect(withdrawn.status).toBe("WITHDRAWN")</code><br><code>expect(withdrawn.replacesParticipationId).toBe("previous-participation")</code><br><code>expect(withdrawn.hold?.holdingAccountId).toBe("custom-platform")</code><br><code>expect(withdrawn.hold?.amount.toCents()).toBe(750)</code><br><code>expect(withdrawn.hold?.state).toBe("REFUNDED")</code><br><code>expect(withdrawn.hold?.settledAt).toEqual(withdrawalTime)</code> | **Verified assertions:** <code>expect(withdrawn.status).toBe("WITHDRAWN")</code><br><code>expect(withdrawn.replacesParticipationId).toBe("previous-participation")</code><br><code>expect(withdrawn.hold?.holdingAccountId).toBe("custom-platform")</code><br><code>expect(withdrawn.hold?.amount.toCents()).toBe(750)</code><br><code>expect(withdrawn.hold?.state).toBe("REFUNDED")</code><br><code>expect(withdrawn.hold?.settledAt).toEqual(withdrawalTime)</code> | Passed |
-| [withdrawnParticipation_WhenAwaitingNamedReplacement_PreservesReservationWithoutSettlement](session-fixtures.test.ts#L133) | <code>const withdrawn = withdrawnParticipation("alice", { withdrawnAt: hoursBeforeSessionStart(10), replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", holdState: "AWAITING_REPLACEMENT", });</code> | <code>expect(withdrawn.replacementMode).toBe("DIRECT_INVITE")</code><br><code>expect(withdrawn.replacementInviteeId).toBe("ben")</code><br><code>expect(withdrawn.hold?.amount.toCents()).toBe(500)</code><br><code>expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT")</code><br><code>expect(withdrawn.hold?.settledAt).toBeUndefined()</code> | **Verified assertions:** <code>expect(withdrawn.replacementMode).toBe("DIRECT_INVITE")</code><br><code>expect(withdrawn.replacementInviteeId).toBe("ben")</code><br><code>expect(withdrawn.hold?.amount.toCents()).toBe(500)</code><br><code>expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT")</code><br><code>expect(withdrawn.hold?.settledAt).toBeUndefined()</code> | Passed |
-| [removedParticipation_WhenReplacementWasRemoved_PreservesRefundTimeAndReplacementLink](session-fixtures.test.ts#L148) | <code>const refundTime = hoursBeforeSessionStart(38);</code><br><code>const removed = removedParticipation("ben", { settledAt: refundTime, replacesParticipationId: "p-alice", });</code> | <code>expect(removed.status).toBe("REMOVED")</code><br><code>expect(removed.replacesParticipationId).toBe("p-alice")</code><br><code>expect(removed.hold?.state).toBe("REFUNDED")</code><br><code>expect(removed.hold?.settledAt).toEqual(refundTime)</code> | **Verified assertions:** <code>expect(removed.status).toBe("REMOVED")</code><br><code>expect(removed.replacesParticipationId).toBe("p-alice")</code><br><code>expect(removed.hold?.state).toBe("REFUNDED")</code><br><code>expect(removed.hold?.settledAt).toEqual(refundTime)</code> | Passed |
-| [cancelledParticipation_WhenReplacementWasCancelled_PreservesRefundTimeAndReplacementLink](session-fixtures.test.ts#L162) | <code>const refundTime = hoursBeforeSessionStart(38);</code><br><code>const cancelled = cancelledParticipation("ben", { settledAt: refundTime, replacesParticipationId: "p-alice", });</code> | <code>expect(cancelled.status).toBe("CANCELLED")</code><br><code>expect(cancelled.replacesParticipationId).toBe("p-alice")</code><br><code>expect(cancelled.hold?.state).toBe("REFUNDED")</code><br><code>expect(cancelled.hold?.settledAt).toEqual(refundTime)</code> | **Verified assertions:** <code>expect(cancelled.status).toBe("CANCELLED")</code><br><code>expect(cancelled.replacesParticipationId).toBe("p-alice")</code><br><code>expect(cancelled.hold?.state).toBe("REFUNDED")</code><br><code>expect(cancelled.hold?.settledAt).toEqual(refundTime)</code> | Passed |
-| [leftWaitlistedParticipation_WhenQueueEntryIsClosed_PreservesQueueWithoutAHold](session-fixtures.test.ts#L176) | <code>const waitingTime = hoursBeforeSessionStart(42);</code><br><code>const departed = leftWaitlistedParticipation("cara", 7, waitingTime);</code> | <code>expect(departed.status).toBe("LEFT_WAITLIST")</code><br><code>expect(departed.queueSequence).toBe(7)</code><br><code>expect(departed.waitlistedAt).toEqual(waitingTime)</code><br><code>expect(departed.hold).toBeUndefined()</code> | **Verified assertions:** <code>expect(departed.status).toBe("LEFT_WAITLIST")</code><br><code>expect(departed.queueSequence).toBe(7)</code><br><code>expect(departed.waitlistedAt).toEqual(waitingTime)</code><br><code>expect(departed.hold).toBeUndefined()</code> | Passed |
-| [pendingPayoutDetails_WhenOptionsAreOmitted_PreservesExistingFixtureDefaults](session-fixtures.test.ts#L187) | <code>const details = pendingPayoutDetails();</code><br><code>const session = new Session(details);</code> | <code>expect(session.pendingSettlement?.payoutId).toBe("out")</code><br><code>expect(session.pendingSettlement?.idempotencyKey).toBe("key")</code><br><code>expect(session.pendingSettlement?.lines[0]?.amount.toCents()).toBe(500)</code><br><code>expect(session.payoutAttemptIds).toEqual(["out"])</code><br><code>expect(session.payoutIdempotencyKeys).toEqual(["key"])</code> | **Verified assertions:** <code>expect(session.pendingSettlement?.payoutId).toBe("out")</code><br><code>expect(session.pendingSettlement?.idempotencyKey).toBe("key")</code><br><code>expect(session.pendingSettlement?.lines[0]?.amount.toCents()).toBe(500)</code><br><code>expect(session.payoutAttemptIds).toEqual(["out"])</code><br><code>expect(session.payoutIdempotencyKeys).toEqual(["key"])</code> | Passed |
-| [pendingPayoutDetails_WhenTermsAndIdentityAreProvided_HydratesMatchingPayoutHistory](session-fixtures.test.ts#L199) | <code>const details = pendingPayoutDetails(["alice", "ben"], { bookingShare: Money.fromCents(750), payoutId: "original-payout", idempotencyKey: "original-key", });</code><br><code>const session = new Session(details);</code> | <code>expect(session.status).toBe("PAYOUT_PENDING")</code><br><code>expect(session.pendingSettlement?.payoutId).toBe("original-payout")</code><br><code>expect(session.pendingSettlement?.idempotencyKey).toBe("original-key")</code><br><code>expect(session.pendingSettlement?.lines.map((line) =&gt; line.amount.toCents())) .toEqual([750, 750])</code><br><code>expect(session.participantList.participations.map((entry) =&gt; entry.hold?.amount.toCents())) .toEqual([750, 750])</code><br><code>expect(session.payoutAttemptIds).toEqual(["original-payout"])</code><br><code>expect(session.payoutIdempotencyKeys).toEqual(["original-key"])</code> | **Verified assertions:** <code>expect(session.status).toBe("PAYOUT_PENDING")</code><br><code>expect(session.pendingSettlement?.payoutId).toBe("original-payout")</code><br><code>expect(session.pendingSettlement?.idempotencyKey).toBe("original-key")</code><br><code>expect(session.pendingSettlement?.lines.map((line) =&gt; line.amount.toCents())) .toEqual([750, 750])</code><br><code>expect(session.participantList.participations.map((entry) =&gt; entry.hold?.amount.toCents())) .toEqual([750, 750])</code><br><code>expect(session.payoutAttemptIds).toEqual(["original-payout"])</code><br><code>expect(session.payoutIdempotencyKeys).toEqual(["original-key"])</code> | Passed |
+| Roster user IDs | Participation IDs | Hold IDs | Queue sequences | Next queue sequence | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alice, alice](reconstruction.test.ts#L157) | p-alice, p-alice | h-alice, h-alice | Absent | 1 | DomainError | DomainError |
+| [alice, ben](reconstruction.test.ts#L169) | p-shared, p-shared | None | 1, 2 | 3 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice, alice](reconstruction.test.ts#L193) | p-alice-first, p-alice-second | None | 1, 2 | 3 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice, ben](reconstruction.test.ts#L217) | p-alice, p-ben | h-alice, h-alice | Absent | 1 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice LEFT_WAITLIST, ben WAITLISTED](reconstruction.test.ts#L244) | p-alice, p-ben | None | 1, 1 | 2 | DUPLICATE_ID | DUPLICATE_ID |
+
+### Restore queue continuity
+
+**Input:** Waitlisted user, Participation ID, Queue sequence, Next queue sequence · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Waitlisted user | Participation ID | Queue sequence | Next queue sequence | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [queued-user](reconstruction.test.ts#L270) | queued | 5 | 5 | DomainError | DomainError |
+| [queued-user](reconstruction.test.ts#L298) | queued | 5 | 6 | Next waiter queued-user | Next waiter queued-user |
+
+### Restore hold account ownership
+
+**Input:** Committed user, Session holding account, Hold holding account · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Committed user | Session holding account | Hold holding account | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice](reconstruction.test.ts#L285) | foreign | platform | DomainError | DomainError |
+
+### Restore payout history
+
+Pending and failed-payout inputs contain attended alice with a HELD share. OPEN inputs have an empty roster. History cells are ordered lists unless explicitly marked as a string or omitted.
+
+**Input:** Session state, Pending batch, Attempt history, Key history · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **11 passed**.
+
+| Session state | Pending batch | Attempt history | Key history | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [OPEN](reconstruction.test.ts#L319) | Absent | Omitted | Omitted | INVALID_INPUT | INVALID_INPUT |
+| [OPEN](reconstruction.test.ts#L332) | Absent | Omitted | earlier-key | INVALID_INPUT | INVALID_INPUT |
+| [OPEN](reconstruction.test.ts#L345) | Absent | earlier | Omitted | INVALID_INPUT | INVALID_INPUT |
+| [OPEN](reconstruction.test.ts#L358) | Absent | String earlier (not a list) | Empty list | INVALID_INPUT | INVALID_INPUT |
+| [OPEN](reconstruction.test.ts#L367) | Absent | Empty list | String earlier-key (not a list) | INVALID_INPUT | INVALID_INPUT |
+| [PAYOUT_PENDING](reconstruction.test.ts#L379) | out / key | Omitted | Omitted | INVALID_INPUT | INVALID_INPUT |
+| [PAYOUT_PENDING](reconstruction.test.ts#L392) | out / key | Omitted | earlier-key, key | INVALID_INPUT | INVALID_INPUT |
+| [PAYOUT_PENDING](reconstruction.test.ts#L405) | out / key | earlier, out | Omitted | INVALID_INPUT | INVALID_INPUT |
+| [AWAITING_PAYOUT](reconstruction.test.ts#L418) | Absent | out | key | AWAITING_PAYOUT; no pending batch; attempts out; keys key; alice hold HELD | AWAITING_PAYOUT; no pending batch; attempts out; keys key; alice hold HELD |
+| [OPEN](reconstruction.test.ts#L435) | Absent | same, same | Empty list | DomainError | DomainError |
+| [OPEN](reconstruction.test.ts#L441) | Absent | Empty list | same, same | DomainError | DomainError |
+
+### Restore pending payout ownership
+
+Session state is PAYOUT_PENDING; a present batch contains alice’s share.
+
+**Input:** Pending batch, Batch session ID, Line wallet, Attempt history, Key history · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **5 passed**.
+
+| Pending batch | Batch session ID | Line wallet | Attempt history | Key history | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Absent](reconstruction.test.ts#L451) | — | — | Empty list | Empty list | DomainError | DomainError |
+| [out / key](reconstruction.test.ts#L457) | foreign | w-alice | out | key | DomainError | DomainError |
+| [out / key](reconstruction.test.ts#L470) | s | foreign | out | key | DomainError | DomainError |
+| [out / key](reconstruction.test.ts#L486) | s | w-alice | Empty list | key | DomainError | DomainError |
+| [out / key](reconstruction.test.ts#L494) | s | w-alice | out | Empty list | DomainError | DomainError |
+
+## Transition recording
+
+Source: [recording.test.ts](recording.test.ts).
+
+### Record admission against a personal reservation
+
+Alice withdrew 10 hours before start with an AWAITING_REPLACEMENT hold and DIRECT_INVITE. All admissions are COMMITTED nine hours before start; the supplied refund, when present, settles then and retains the invitation to cara.
+
+**Input:** Committed users, Reservation owner, Invitee, Joining user, Replaced participation ID, Supplied refund · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Committed users | Reservation owner | Invitee | Joining user | Replaced participation ID | Supplied refund | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [ben](recording.test.ts#L21) | alice | cara | dana | Absent | Absent | CAPACITY_EXCEEDED; state unchanged | CAPACITY_EXCEEDED; state unchanged |
+| [None](recording.test.ts#L47) | alice | cara | cara | Absent | Absent | INVALID_STATE; same roster instance; state unchanged; available slots 1 | INVALID_STATE; same roster instance; state unchanged; available slots 1 |
+| [None](recording.test.ts#L75) | alice | cara | dana | p-alice | alice REFUNDED | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+
+### Restore capacity including reservations
+
+Alice is WITHDRAWN / REFUNDED with a DIRECT_INVITE reservation.
+
+**Input:** Slots, Committed users, Reservation owner, Invitee, Refund time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Slots | Committed users | Reservation owner | Invitee | Refund time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [2](recording.test.ts#L118) | ben, cara | alice | dana | 48 hours before start | CAPACITY_EXCEEDED | CAPACITY_EXCEEDED |
+
+### Record replacement admission with refund proof
+
+Open withdrawals have AWAITING_REPLACEMENT holds. The candidate is COMMITTED; any supplied refund settles at admission time.
+
+**Input:** Open withdrawals, Withdrawal times (hours before start), Joining user, Replaced participation ID, Supplied refund, Admission time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Open withdrawals | Withdrawal times (hours before start) | Joining user | Replaced participation ID | Supplied refund | Admission time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [alice](recording.test.ts#L139) | 10 | replacement | p-alice | Absent | 9 hours before start | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+| [alice, ben](recording.test.ts#L177) | 10, 9 | replacement | p-alice | ben REFUNDED | 8 hours before start | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+
+### Record admission — duplicate hold and retry
+
+**Input:** Committed users, Joining user, First hold ID, Retry hold ID, Admission time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Committed users | Joining user | First hold ID | Retry hold ID | Admission time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alice](recording.test.ts#L229) | ben | h-alice | No retry | 48 hours before start | DUPLICATE_ID; same roster instance; state unchanged; alice ID/user lookups retain original instance; ben user absent and ID lookup NOT_FOUND; committed count 1; next queue sequence 1; no next waiter or open replacement | DUPLICATE_ID; same roster instance; state unchanged; alice ID/user lookups retain original instance; ben user absent and ID lookup NOT_FOUND; committed count 1; next queue sequence 1; no next waiter or open replacement |
+| [alice](recording.test.ts#L270) | ben | h-alice | h-ben | 48 hours before start | First attempt DUPLICATE_ID; retry creates different roster instance; ben ID/user lookups are supplied valid instance; committed count 2; previous roster still only original alice, ben absent, committed count 1, next queue sequence 1 | First attempt DUPLICATE_ID; retry creates different roster instance; ben ID/user lookups are supplied valid instance; committed count 2; previous roster still only original alice, ben absent, committed count 1, next queue sequence 1 |
+
+### Record seat admission — lifecycle, capacity and queue guards
+
+**Input:** Committed users, Waiting user, Joining user, Admission time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Committed users | Waiting user | Joining user | Admission time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [None](recording.test.ts#L307) | None | alice | Start | SESSION_STARTED; state unchanged | SESSION_STARTED; state unchanged |
+| [alice, ben](recording.test.ts#L327) | None | cara | 48 hours before start | CAPACITY_EXCEEDED; state unchanged | CAPACITY_EXCEEDED; state unchanged |
+| [ben](recording.test.ts#L344) | waiting | newcomer | 48 hours before start | WAITLIST_NOT_HEAD; state unchanged; next waiter waiting | WAITLIST_NOT_HEAD; state unchanged; next waiter waiting |
+
+### Record waitlist admission — reject departed user reuse
+
+The prior entry is LEFT_WAITLIST. Admission and both waitlist dates are 48 hours before start; next queue sequence is 2.
+
+**Input:** Committed users, Departed user, Historical participation ID, Historical queue sequence, New participation ID, New queue sequence · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Committed users | Departed user | Historical participation ID | Historical queue sequence | New participation ID | New queue sequence | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [alice, ben](recording.test.ts#L365) | waiting | p-waiting | 1 | p-new-waiting | 2 | DUPLICATE_ID; state unchanged | DUPLICATE_ID; state unchanged |
+
+### Record participation transition — preserve withdrawal choice
+
+The session contains only withdrawn alice; the proposed participation retains all other existing values.
+
+**Input:** Existing mode, Existing invitee, Hold state, Withdrawal time, Requested mode, Requested invitee, Transition time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Existing mode | Existing invitee | Hold state | Withdrawal time | Requested mode | Requested invitee | Transition time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [DIRECT_INVITE](recording.test.ts#L403) | ben | REFUNDED | 40 hours before start | OPEN_SLOT | Absent | 39 hours before start | INVALID_STATE; same roster instance; state unchanged | INVALID_STATE; same roster instance; state unchanged |
+| [OPEN_SLOT](recording.test.ts#L440) | Absent | AWAITING_REPLACEMENT | 10 hours before start | DIRECT_INVITE | ben | 9 hours before start | INVALID_STATE; same roster instance; state unchanged | INVALID_STATE; same roster instance; state unchanged |
+
+### Record participation transition — source and identity guards
+
+The stale-source case first records alice’s withdrawal, then attempts removal with the original committed instance. In the cancelled case the entry was waitlisted 48 hours before start and next queue sequence is 2.
+
+**Input:** Session state, Current user/state, Supplied source state, Proposed user/state, Transition time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Session state | Current user/state | Supplied source state | Proposed user/state | Transition time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [OPEN](recording.test.ts#L476) | alice WITHDRAWN / REFUNDED | Earlier alice COMMITTED / HELD | alice REMOVED / REFUNDED | 48 hours before start | INVALID_STATE; state unchanged from after the preceding withdrawal | INVALID_STATE; state unchanged from after the preceding withdrawal |
+| [OPEN](recording.test.ts#L506) | alice COMMITTED / HELD | Current alice COMMITTED / HELD | other REMOVED / REFUNDED | 48 hours before start | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+| [CANCELLED](recording.test.ts#L526) | waiting CANCELLED | Earlier waiting WAITLISTED, queue 1 | waiting LEFT_WAITLIST, queue 1 | Omitted | SESSION_CLOSED; state unchanged | SESSION_CLOSED; state unchanged |
+
+### Record session cancellation
+
+Supplied cancelled participations contain refunds settled at cancellation time.
+
+**Input:** Committed users, Supplied cancelled users, Cancellation time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Committed users | Supplied cancelled users | Cancellation time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice, ben](recording.test.ts#L560) | alice | 48 hours before start | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+| [alice](recording.test.ts#L579) | alice | Start | SESSION_STARTED; state unchanged | SESSION_STARTED; state unchanged |
+
+### Record attendance
+
+All proposed marks are BOOKER-verified at the indicated time; alice’s existing mark was recorded at end.
+
+**Input:** Existing roster attendance, Submitted marks in order, Verification time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Existing roster attendance | Submitted marks in order | Verification time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice UNVERIFIED](recording.test.ts#L595) | alice ATTENDED, alice ATTENDED | End | DUPLICATE_ID; state unchanged | DUPLICATE_ID; state unchanged |
+| [alice UNVERIFIED](recording.test.ts#L613) | alice ATTENDED | 48 hours before start | SESSION_NOT_ENDED; state unchanged | SESSION_NOT_ENDED; state unchanged |
+| [alice ATTENDED / BOOKER; ben UNVERIFIED](recording.test.ts#L628) | ben ATTENDED, existing alice ATTENDED | End | ATTENDANCE_CONFLICT; state unchanged; ben UNVERIFIED | ATTENDANCE_CONFLICT; state unchanged; ben UNVERIFIED |
+
+### Record settlement preparation
+
+Submitted roster is the current roster. The incomplete batch uses the pending payout defaults but omits ben’s line.
+
+**Input:** Session state, Participants, Payout ID, Idempotency key, Supplied batch lines, Request time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Session state | Participants | Payout ID | Idempotency key | Supplied batch lines | Request time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [OPEN](recording.test.ts#L660) | None | out | key | No batch | 48 hours before start | SESSION_NOT_ENDED; state unchanged | SESSION_NOT_ENDED; state unchanged |
+| [AWAITING_PAYOUT](recording.test.ts#L677) | alice ATTENDED | out | key | No batch | End | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+| [AWAITING_PAYOUT](recording.test.ts#L699) | alice ATTENDED, ben ATTENDED | out | key | alice RELEASE only | End | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+
+## Replacement history restoration
+
+Source: [replacement-hydration.test.ts](replacement-hydration.test.ts).
+
+Defaults for this section: alice withdrew and was refunded 40 hours before start, retaining a DIRECT_INVITE to ben. A committed replacement joined 39 hours before start with a 500-cent HELD share; its replaced participation ID is p-alice. Overrides below describe deliberate invalid history and subsequent departures.
+
+### Restore replacement ownership and refund proof
+
+For the unrefunded invitation, alice withdrew 10 hours before start. The cancelled original was refunded 40 hours before start. The departed waiter joined 48 hours before start with sequence 1 and next sequence 2.
+
+**Input:** Original user/state, Original hold state, Named invitee, Replacement user/state, Replaced participation ID, Replacement commitment/hold · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **6 passed**.
+
+| Original user/state | Original hold state | Named invitee | Replacement user/state | Replaced participation ID | Replacement commitment/hold | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [Missing](replacement-hydration.test.ts#L14) | None | None | ben COMMITTED | p-missing | 39 hours before start / HELD | INVALID_INPUT | INVALID_INPUT |
+| [alice WITHDRAWN](replacement-hydration.test.ts#L23) | REFUNDED | ben | ben LEFT_WAITLIST | p-alice | None / none | INVALID_INPUT | INVALID_INPUT |
+| [alice WITHDRAWN](replacement-hydration.test.ts#L44) | REFUNDED | ben | cara COMMITTED | p-alice | 39 hours before start / HELD | INVALID_INPUT | INVALID_INPUT |
+| [alice WITHDRAWN](replacement-hydration.test.ts#L56) | AWAITING_REPLACEMENT | ben | ben COMMITTED | p-alice | 39 hours before start / HELD | INVALID_INPUT | INVALID_INPUT |
+| [alice CANCELLED](replacement-hydration.test.ts#L78) | REFUNDED | Absent | ben COMMITTED | p-alice | 39 hours before start / HELD | INVALID_INPUT | INVALID_INPUT |
+| [alice WITHDRAWN](replacement-hydration.test.ts#L99) | REFUNDED | ben | ben REMOVED | p-alice | None / none | INVALID_INPUT | INVALID_INPUT |
+
+### Restore consumed invitation history
+
+**Input:** Session state, Original participation state, Replacement state, Replacement hold, Later departure time, Availability check time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed**.
+
+| Session state | Original participation state | Replacement state | Replacement hold | Later departure time | Availability check time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [OPEN](replacement-hydration.test.ts#L119) | alice WITHDRAWN | ben COMMITTED | HELD | None | 38 hours before start | Reserved count 0; no invitation for ben; committed count 1; available slots 1 | Reserved count 0; no invitation for ben; committed count 1; available slots 1 |
+| [OPEN](replacement-hydration.test.ts#L134) | alice WITHDRAWN | ben WITHDRAWN / OPEN_SLOT | AWAITING_REPLACEMENT | 10 hours before start | 9 hours before start | Reserved count 0; no invitation for ben; ben still replaces p-alice; available slots 2 | Reserved count 0; no invitation for ben; ben still replaces p-alice; available slots 2 |
+| [OPEN](replacement-hydration.test.ts#L162) | alice WITHDRAWN | ben REMOVED | REFUNDED | 38 hours before start | 37 hours before start | Reserved count 0; no invitation for ben; ben still replaces p-alice; available slots 2 | Reserved count 0; no invitation for ben; ben still replaces p-alice; available slots 2 |
+| [CANCELLED](replacement-hydration.test.ts#L189) | alice CANCELLED; invitation metadata absent | ben CANCELLED | REFUNDED | 38 hours before start | Not checked | CANCELLED; reserved count 0; no invitation for ben; ben still replaces p-alice; alice hold REFUNDED | CANCELLED; reserved count 0; no invitation for ben; ben still replaces p-alice; alice hold REFUNDED |
+
+## Payout settlement
+
+Source: [settlement.test.ts](settlement.test.ts).
+
+### Complete payout — reject invalid callback or batch
+
+**Input:** Pending participants, Batch lines, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Pending participants | Batch lines | Callback payout ID | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice, ben](settlement.test.ts#L21) | alice RELEASE only | out | End | INVALID_INPUT; state unchanged; same roster instance; PAYOUT_PENDING; attempts out; keys key; both holds HELD | INVALID_INPUT; state unchanged; same roster instance; PAYOUT_PENDING; attempts out; keys key; both holds HELD |
+| [alice, ben](settlement.test.ts#L46) | alice RELEASE, ben RELEASE | stale | End | STALE_PAYOUT; state unchanged | STALE_PAYOUT; state unchanged |
+| [alice, ben](settlement.test.ts#L56) | alice RELEASE, ben RELEASE | out | Invalid date | DomainError; state unchanged | DomainError; state unchanged |
+
+### Complete payout — release and forfeiture
+
+Alice withdrew two hours before start; ben was BOOKER-verified at end. Both shares are 500 cents.
+
+**Input:** Participant states, Hold states, Batch line kinds, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Participant states | Hold states | Batch line kinds | Callback payout ID | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alice WITHDRAWN; ben COMMITTED / ATTENDED](settlement.test.ts#L66) | FORFEITURE_DUE, HELD | FORFEIT, RELEASE | out | End | Instructions FORFEIT, RELEASE, both payout out; SETTLED; holds FORFEITED, RELEASED | Instructions FORFEIT, RELEASE, both payout out; SETTLED; holds FORFEITED, RELEASED |
+
+### Read settled reliability outcomes
+
+Alice withdrew two hours before start; both holds settled at end with payout out. Histories are out / key.
+
+**Input:** Session state, Participant states, Hold states, Evaluation time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Session state | Participant states | Hold states | Evaluation time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [SETTLED](settlement.test.ts#L103) | alice WITHDRAWN; ben COMMITTED / ATTENDED | alice FORFEITED; ben RELEASED | End | alice reliability value 0 | alice reliability value 0 |
+
+### Complete payout — injected failure and retry
+
+**Input:** Pending participants, Callback payout ID, Injected settlement failure, Retry, Completion time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Pending participants | Callback payout ID | Injected settlement failure | Retry | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alice, ben](settlement.test.ts#L144) | out | ben: INVALID_STATE / Second line rejected | None | End | INVALID_STATE; message Second line rejected; state unchanged | INVALID_STATE; message Second line rejected; state unchanged |
+| [alice, ben](settlement.test.ts#L173) | out | ben: INVALID_STATE / Second line rejected, once | Same payout after failure removed | End | First attempt INVALID_STATE; retry returns two instructions; both holds RELEASED; pending batch absent | First attempt INVALID_STATE; retry returns two instructions; both holds RELEASED; pending batch absent |
+
+### Complete payout — use current retry identity
+
+**Input:** Pending participant, Attempt history, Key history, Current payout/key, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Pending participant | Attempt history | Key history | Current payout/key | Callback payout ID | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [alice](settlement.test.ts#L205) | out, retry | key, retry-key | retry / retry-key | retry | End | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch |
+
+### Record payout failure
+
+**Input:** Pending participants, Failed payout ID, Failure time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Pending participants | Failed payout ID | Failure time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice, ben](settlement.test.ts#L238) | out | End | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD |
+
+## Fixture contracts
+
+Source: [session-fixtures.test.ts](session-fixtures.test.ts).
+
+### Construct session with declared attendance and price
+
+**Input:** Committed users, Slots, Chosen share (cents), Attendance marks · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Committed users | Slots | Chosen share (cents) | Attendance marks | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice, ben](session-fixtures.test.ts#L16) | 2 | Omitted | alice ABSENT | OPEN; alice ABSENT, verified at end by BOOKER; ben UNVERIFIED with no verification time | OPEN; alice ABSENT, verified at end by BOOKER; ben UNVERIFIED with no verification time |
+| [alice, ben](session-fixtures.test.ts#L33) | 3 | Omitted | ben ATTENDED | Share 333 cents; holds 333, 333 cents | Share 333 cents; holds 333, 333 cents |
+| [alice, ben](session-fixtures.test.ts#L48) | 2 | 750 | ben ATTENDED | Share 750 cents; holds 750, 750 cents | Share 750 cents; holds 750, 750 cents |
+
+### Construct session with roster override
+
+**Input:** Committed users, Waitlisted users, Overridden user, Replacement participation · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Committed users | Waitlisted users | Overridden user | Replacement participation | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice, ben](session-fixtures.test.ts#L63) | cara, dan | alice | alice WITHDRAWN / AWAITING_REPLACEMENT / OPEN_SLOT, 10 hours before start | Roster alice, ben, cara, dan; alice is supplied override instance; cara queue 1; dan queue 2; next queue sequence 3 | Roster alice, ben, cara, dan; alice is supplied override instance; cara queue 1; dan queue 2; next queue sequence 3 |
+| [alice](session-fixtures.test.ts#L84) | None | outsider | outsider LEFT_WAITLIST, queue 1 | Error message contains: Participation override must match a roster user: outsider | Error message contains: Participation override must match a roster user: outsider |
+| [None](session-fixtures.test.ts#L93) | alice | alice | ben LEFT_WAITLIST, queue 1 | Error message contains: Participation override must match a roster user: alice | Error message contains: Participation override must match a roster user: alice |
+
+### Construct independent session fixtures
+
+**Input:** Committed users in each fixture, Construction count · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Committed users in each fixture | Construction count | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [alice](session-fixtures.test.ts#L102) | 2 | Different session, alice participation and hold instances | Different session, alice participation and hold instances |
+
+### Construct withdrawn participation fixture
+
+**Input:** User, Hold state, Withdrawal time, Replaced participation ID, Replacement mode/invitee, Holding account, Share (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| User | Hold state | Withdrawal time | Replaced participation ID | Replacement mode/invitee | Holding account | Share (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [alice](session-fixtures.test.ts#L116) | REFUNDED | 40 hours before start | previous-participation | Absent | custom-platform | 750 | WITHDRAWN; replaces previous-participation; custom-platform hold 750 cents, REFUNDED at withdrawal time | WITHDRAWN; replaces previous-participation; custom-platform hold 750 cents, REFUNDED at withdrawal time |
+| [alice](session-fixtures.test.ts#L133) | AWAITING_REPLACEMENT | 10 hours before start | Absent | DIRECT_INVITE / ben | platform | 500 | DIRECT_INVITE to ben; hold 500 cents, AWAITING_REPLACEMENT; no settlement date | DIRECT_INVITE to ben; hold 500 cents, AWAITING_REPLACEMENT; no settlement date |
+
+### Construct removed participation fixture
+
+**Input:** User, Replaced participation ID, Refund time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| User | Replaced participation ID | Refund time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [ben](session-fixtures.test.ts#L148) | p-alice | 38 hours before start | REMOVED; replaces p-alice; REFUNDED 38 hours before start | REMOVED; replaces p-alice; REFUNDED 38 hours before start |
+
+### Construct cancelled participation fixture
+
+**Input:** User, Replaced participation ID, Refund time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| User | Replaced participation ID | Refund time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [ben](session-fixtures.test.ts#L162) | p-alice | 38 hours before start | CANCELLED; replaces p-alice; REFUNDED 38 hours before start | CANCELLED; replaces p-alice; REFUNDED 38 hours before start |
+
+### Construct departed waitlist fixture
+
+**Input:** User, Queue sequence, Original waitlist time · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| User | Queue sequence | Original waitlist time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [cara](session-fixtures.test.ts#L176) | 7 | 42 hours before start | LEFT_WAITLIST; queue 7; waited 42 hours before start; no hold | LEFT_WAITLIST; queue 7; waited 42 hours before start; no hold |
+
+### Construct pending payout fixture
+
+**Input:** Participants, Share (cents), Payout ID option, Idempotency key option · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Participants | Share (cents) | Payout ID option | Idempotency key option | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice](session-fixtures.test.ts#L187) | Omitted (500) | Omitted (out) | Omitted (key) | Payout out; key key; first line 500 cents; attempts out; keys key | Payout out; key key; first line 500 cents; attempts out; keys key |
+| [alice, ben](session-fixtures.test.ts#L199) | 750 | original-payout | original-key | PAYOUT_PENDING; payout original-payout; key original-key; lines 750, 750 cents; holds 750, 750 cents; attempts original-payout; keys original-key | PAYOUT_PENDING; payout original-payout; key original-key; lines 750, 750 cents; holds 750, 750 cents; attempts original-payout; keys original-key |

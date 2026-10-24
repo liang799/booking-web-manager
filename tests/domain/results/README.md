@@ -35,16 +35,21 @@ match establishes only the listed fields; a tolerance check establishes an
 approximate value; a reference check establishes the same or a different
 instance. Rejection snapshots establish that the observed state is unchanged.
 
-Input lists domain data and commands, excluding spy configuration and cleanup.
-Oracle states the expected outcomes; Log records what the executed assertions
-establish. Named results, where useful, identify how observations were obtained.
-Simple public-state assertions need no intermediate binding. These table
-columns are reporting concepts, independent of comments in the test source.
+Input occupies separate domain-specific columns with concrete values and units.
+The heading identifies the operation, and shared prerequisites appear above
+the table. Oracle is the **Expected Result** column; Log is the **Test Result**
+column. These columns state concise domain outcomes, including all related
+asserted effects. Each row's first input value links to its test definition;
+test names, operation labels, and status do not occupy additional columns.
+This layout follows
+[ADR-0019](../../../docs/adr/0019-domain-result-table-layout.md) and is independent
+of comments or local variable names in the test source.
 
 Vitest's standard report records status and failures, not successful return
 values. These tables interpret the executed source assertions alongside their
-passing statuses; they are not raw runtime payload captures. Pass/fail remains
-a separate column. A failed case must report the available actual diagnostics,
+passing statuses; they are not raw runtime payload captures. Execution counts
+appear above each table, and per-case statuses remain in the JSON report.
+A failed case must report the available actual diagnostics,
 and a skipped or unexecuted case must be marked **Not run**, with no claimed
 observation. No test-body reporting hooks or custom matchers are required.
 
@@ -138,8 +143,8 @@ Suite scopes contain only `describe` and `test` declarations, so grouping adds
 no shared setup or execution-order dependencies.
 
 The coverage map records each file's grouping rationale and maps the previous
-and current execution prefixes for every case. The result tables use the same
-outer and inner behavior headings. At `ecdc64b`, all 607 full execution identities, source
+and current execution prefixes for every case. At the grouping revision, the
+result tables used the same outer and inner behavior headings. At `ecdc64b`, all 607 full execution identities, source
 links, and tested-source hashes reconciled with that JSON run, including the 591
 cases whose execution prefixes changed in this pass.
 
@@ -176,18 +181,56 @@ The preceding snapshot remains available as the
 [coverage mapping](./2026-10-23-coverage-map.json). Its historical source digest
 identifies that revision; the tables above link to the current snapshot.
 
+## Table layout and tooling
+
+The lecture-format revision retains all 624 case identities and the original
+24 October execution time. It changes documentation only: the 89 recorded
+source hashes, execution JSON, coverage mapping, and mutation evidence are
+unchanged. Operation headings and compatible input columns may subdivide the
+original behavior groups; first-input links still identify the exact cases.
+
+Layout validation reconciled 624 unique rows across 190 tables with source
+definitions and full execution identities, checked Markdown column widths and
+per-table counts, and verified all 89 hashes and the aggregate digest. A second
+source-based review checked every case's inputs and asserted outcomes. Local
+Markdown previews covered numeric, state-transition, rejection, retry, identity,
+approximation, and multi-outcome examples; `git diff --check` passed. These are
+documentation checks against the saved run, not a new execution of the tests.
+
+No reporting dependency is needed for these assertion-verified tables:
+
+- [vitest-md-reporter](https://github.com/robertozmc/vitest-md-reporter)
+  provides execution summaries, but does not extract domain inputs or successful
+  assertion values into this layout.
+- [@cronn/vitest-file-snapshots](https://github.com/cronn/file-snapshots/tree/main/packages/vitest-file-snapshots)
+  formats supplied data as Markdown snapshots, requiring additional authored
+  data and matcher calls in tests.
+- [@vitest/eslint-plugin](https://github.com/vitest-dev/eslint-plugin-vitest)
+  offers useful test-quality checks, but does not validate the reporting tables.
+  Consider it separately from this documentation correction.
+
 ## Refreshing this snapshot
 
 1. Run the domain command above against the intended sources. For a new date,
    use that date in the artifact names and table headers.
-2. Review each final case's setup, commands, and assertions to populate Input,
-   Oracle, and Log; do not parse phase comments or require reporting metadata in
-   test bodies. Record only the concrete observations established by its executed assertions, respecting reference,
-   partial-match, and tolerance semantics. Include actual failure diagnostics
-   when available; never infer an observed result from an unexecuted test.
-3. Reconcile every table's linked test name and file with the JSON report.
-   Update line anchors and reject missing or duplicate rows.
+2. Review each final case's setup, inline command arguments, and assertions.
+   Group compatible cases under an operation heading; give concrete input fields
+   their own columns and finish with Expected Result and Test Result. State
+   shared prerequisites and Input/Oracle/Log roles above the table. Do not parse
+   phase comments or require reporting metadata in test bodies. Preserve every
+   asserted effect, including reference, partial-match, and tolerance semantics.
+   Include available actual failure diagnostics; mark skipped or unexecuted
+   cases Not run without claiming an observation.
+3. Resolve each first-input link to its source test and full suite identity in
+   the JSON report. Reconcile exactly one row per case, update line anchors, and
+   reject missing or duplicate rows. Check column counts and Markdown escaping;
+   put execution counts above each table rather than in a status column.
 4. Refresh every file hash and the aggregate digest in the source manifest.
    Update this run time, command, counts, and validation results.
-5. Recheck the tables and linked sources together. Keep the historical mapping
-   for this cleanup distinct from any future changes in coverage.
+5. Preview numeric, state-transition, rejection, retry, identity, and multi-outcome
+   tables. Recheck the tables and linked assertions together. Keep the historical
+   mapping for this cleanup distinct from any future changes in coverage.
+
+For a layout-only edit, verify all recorded source hashes and reconcile the
+existing report instead of changing the run date or regenerating evidence.
+Only a new execution establishes a new execution time.

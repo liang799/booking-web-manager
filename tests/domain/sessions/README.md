@@ -1,196 +1,403 @@
-# sessions test cases
+# Sessions test cases
 
-Snapshot: **2026-10-24** · **92 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24** · **92 cases, 92 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
-Each row is one independently executable test. **Input** lists domain data and input commands; test instrumentation is omitted. **Log** shows assertion-verified outcomes from this run, not captured runtime payloads. Named results, where useful, identify how observations were obtained. Simple public-state assertions need no intermediate binding. The columns are reporting concepts independent of comments in the test source. Status is separate. Fixtures and units match the linked source. Refresh this snapshot after relevant source changes.
+Each row is one independently executable test; its first input value links to the test definition. **Test Result** contains assertion-verified observations derived from executed assertions and their recorded status, not captured runtime payloads. Expected Result is the **Oracle**; Test Result is the **Log**. A matching result reports only the stated assertions, including partial matches, identity and unchanged-state checks. Refresh the snapshot after relevant source changes.
 
 ## Booking terms and schedule
 
-Source: [booking.test.ts](booking.test.ts)
+Source: [booking.test.ts](booking.test.ts). Defaults: venue Court, region North, sport Badminton, cost 100 cents, start 2026-10-01 00:00 UTC, end 2026-10-02 00:00 UTC. Dates below are UTC.
 
+### Construct booking — required terms
 
-### Required booking terms
+**Input:** Cost (cents), Venue · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenCostIsZero_ThrowsRangeError](booking.test.ts#L15) | <code>invalidDetails = { ...details, totalCost: Money.fromCents(0) }</code><br>**Input commands:** <code>new Booking(invalidDetails)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [constructor_WhenVenueIsBlank_ThrowsRangeError](booking.test.ts#L21) | <code>invalidDetails = { ...details, venueName: " " }</code><br>**Input commands:** <code>new Booking(invalidDetails)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+Execution: **2 passed**.
 
-### Schedule boundaries and date isolation
+| Cost (cents) | Venue | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [0](booking.test.ts#L15) | Court | RangeError | RangeError |
+| [100](booking.test.ts#L21) | one space | RangeError | RangeError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenStartEqualsEnd_ThrowsRangeError](booking.test.ts#L29) | <code>invalidDetails = { ...details, startAt: details.endAt }</code><br>**Input commands:** <code>new Booking(invalidDetails)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [constructor_WhenEndDateIsInvalid_ThrowsRangeError](booking.test.ts#L35) | <code>invalidDetails = { ...details, endAt: new Date(Number.NaN) }</code><br>**Input commands:** <code>new Booking(invalidDetails)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
-| [constructor_WhenSourceAndExposedDatesAreMutated_PreservesTimes](booking.test.ts#L41) | <code>input = { ...details, startAt: new Date(details.startAt) }</code><br>**Input commands:** <code>input.startAt.setFullYear(2000)</code><br><code>booking.startAt.setFullYear(2001)</code><br><code>booking.endAt.setFullYear(2002)</code> | <code>booking.startAt</code> matches <code>details.startAt</code><br><code>booking.endAt</code> matches <code>details.endAt</code> | **Observation bindings:** <code>booking = new Booking(input)</code><br>**Verified outcomes:** <code>booking.startAt</code> matched <code>details.startAt</code><br><code>booking.endAt</code> matched <code>details.endAt</code> | Passed |
-| [hasStarted_WhenTimeEqualsStart_ReturnsTrue](booking.test.ts#L53) | <code>booking = new Booking(details)</code> | <code>hasStarted</code> equals <code>true</code> | **Observation bindings:** <code>hasStarted = booking.hasStarted(details.startAt)</code><br>**Verified outcomes:** <code>hasStarted</code> was <code>true</code> | Passed |
-| [hasEnded_WhenTimeEqualsEnd_ReturnsTrue](booking.test.ts#L61) | <code>booking = new Booking(details)</code> | <code>hasEnded</code> equals <code>true</code> | **Observation bindings:** <code>hasEnded = booking.hasEnded(details.endAt)</code><br>**Verified outcomes:** <code>hasEnded</code> was <code>true</code> | Passed |
+### Construct booking — schedule validation
 
-### Value comparison
+**Input:** Start date, End date · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [equals_WhenValuesMatch_ReturnsTrue](booking.test.ts#L71) | <code>booking = new Booking(details)</code><br><code>identicalBooking = new Booking(details)</code> | <code>equalBookings</code> equals <code>true</code> | **Observation bindings:** <code>equalBookings = booking.equals(identicalBooking)</code><br>**Verified outcomes:** <code>equalBookings</code> was <code>true</code> | Passed |
-| [equals_WhenVenueDiffers_ReturnsFalse](booking.test.ts#L80) | <code>booking = new Booking(details)</code><br><code>otherVenueBooking = new Booking({ ...details, venueName: "Other" })</code> | <code>equalBookings</code> equals <code>false</code> | **Observation bindings:** <code>equalBookings = booking.equals(otherVenueBooking)</code><br>**Verified outcomes:** <code>equalBookings</code> was <code>false</code> | Passed |
+Execution: **2 passed**.
+
+| Start date | End date | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [2026-10-02](booking.test.ts#L29) | 2026-10-02 | RangeError | RangeError |
+| [2026-10-01](booking.test.ts#L35) | Invalid date | RangeError | RangeError |
+
+### Construct booking — date isolation
+
+**Input:** Start date, End date, Source start year after construction, Returned start/end years after construction · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Start date | End date | Source start year after construction | Returned start/end years after construction | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [2026-10-01](booking.test.ts#L41) | 2026-10-02 | 2000 | 2001 / 2002 | Start 2026-10-01; end 2026-10-02 | Start 2026-10-01; end 2026-10-02 |
+
+### Check whether booking has started
+
+**Input:** Current time (UTC) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Current time (UTC) | Expected Result | Test Result |
+| --- | --- | --- |
+| [2026-10-01 00:00](booking.test.ts#L53) | true | true |
+
+### Check whether booking has ended
+
+**Input:** Current time (UTC) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Current time (UTC) | Expected Result | Test Result |
+| --- | --- | --- |
+| [2026-10-02 00:00](booking.test.ts#L61) | true | true |
+
+### Compare booking values
+
+All remaining booking values are identical.
+
+**Input:** First venue, Second venue · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| First venue | Second venue | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [Court](booking.test.ts#L71) | Court | true | true |
+| [Court](booking.test.ts#L80) | Other | false | false |
 
 ## Fund hold state and settlement metadata
 
-Source: [fund-hold.test.ts](fund-hold.test.ts)
+Source: [fund-hold.test.ts](fund-hold.test.ts). Defaults: hold hold, participation participation, holding account platform, wallet wallet, amount 500 cents, state HELD, created 2026-10-01 00:00 UTC. No settlement date or payout unless shown. Dates below are UTC.
 
+### Restore active hold — date isolation
 
-### Active hold restoration
+**Input:** Hold state, Amount (cents), Created date, Source/returned date after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenStateIsHeld_PreservesAmountAndIsolatesDate](fund-hold.test.ts#L9) | <code>input = holdDetails({ state: "HELD" })</code><br>**Input commands:** <code>input.createdAt.setTime(0)</code><br><code>hold.createdAt.setTime(0)</code> | <code>hold.state</code> equals <code>"HELD"</code><br><code>hold.amount.toCents()</code> equals <code>500</code><br><code>hold.createdAt</code> matches <code>createdAt</code> | **Observation bindings:** <code>hold = new FundHold(input)</code><br>**Verified outcomes:** <code>hold.state</code> was <code>"HELD"</code><br><code>hold.amount.toCents()</code> was <code>500</code><br><code>hold.createdAt</code> matched <code>createdAt</code> | Passed |
-| [constructor_WhenStateIsAwaitingReplacement_PreservesAmountAndIsolatesDate](fund-hold.test.ts#L21) | <code>input = holdDetails({ state: "AWAITING_REPLACEMENT" })</code><br>**Input commands:** <code>input.createdAt.setTime(0)</code><br><code>hold.createdAt.setTime(0)</code> | <code>hold.state</code> equals <code>"AWAITING_REPLACEMENT"</code><br><code>hold.amount.toCents()</code> equals <code>500</code><br><code>hold.createdAt</code> matches <code>createdAt</code> | **Observation bindings:** <code>hold = new FundHold(input)</code><br>**Verified outcomes:** <code>hold.state</code> was <code>"AWAITING_REPLACEMENT"</code><br><code>hold.amount.toCents()</code> was <code>500</code><br><code>hold.createdAt</code> matched <code>createdAt</code> | Passed |
-| [constructor_WhenStateIsForfeitureDue_PreservesAmountAndIsolatesDate](fund-hold.test.ts#L33) | <code>input = holdDetails({ state: "FORFEITURE_DUE" })</code><br>**Input commands:** <code>input.createdAt.setTime(0)</code><br><code>hold.createdAt.setTime(0)</code> | <code>hold.state</code> equals <code>"FORFEITURE_DUE"</code><br><code>hold.amount.toCents()</code> equals <code>500</code><br><code>hold.createdAt</code> matches <code>createdAt</code> | **Observation bindings:** <code>hold = new FundHold(input)</code><br>**Verified outcomes:** <code>hold.state</code> was <code>"FORFEITURE_DUE"</code><br><code>hold.amount.toCents()</code> was <code>500</code><br><code>hold.createdAt</code> matched <code>createdAt</code> | Passed |
-| [constructor_WhenActiveHoldHasSettlementDate_ThrowsDomainError](fund-hold.test.ts#L45) | <code>details = holdDetails({ settledAt })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenActiveHoldHasPayout_ThrowsDomainError](fund-hold.test.ts#L51) | <code>details = holdDetails({ payoutId: "payout" })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenAmountIsZero_ThrowsDomainError](fund-hold.test.ts#L57) | <code>details = holdDetails({ amount: Money.fromCents(0) })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenStateIsUnknown_ThrowsDomainError](fund-hold.test.ts#L63) | <code>details = holdDetails({ state: "UNKNOWN" as FundHoldDetails["state"], })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenCreationDateIsInvalid_ThrowsRangeError](fund-hold.test.ts#L71) | <code>details = holdDetails({ createdAt: new Date(NaN) })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>RangeError</code> | **Verified outcomes:** Threw an error matching <code>RangeError</code> | Passed |
+Execution: **3 passed**.
 
-### Completed settlement restoration
+| Hold state | Amount (cents) | Created date | Source/returned date after construction | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [HELD](fund-hold.test.ts#L9) | 500 | 2026-10-01 | 1970-01-01 | HELD; 500 cents; created 2026-10-01 | HELD; 500 cents; created 2026-10-01 |
+| [AWAITING_REPLACEMENT](fund-hold.test.ts#L21) | 500 | 2026-10-01 | 1970-01-01 | AWAITING_REPLACEMENT; 500 cents; created 2026-10-01 | AWAITING_REPLACEMENT; 500 cents; created 2026-10-01 |
+| [FORFEITURE_DUE](fund-hold.test.ts#L33) | 500 | 2026-10-01 | 1970-01-01 | FORFEITURE_DUE; 500 cents; created 2026-10-01 | FORFEITURE_DUE; 500 cents; created 2026-10-01 |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenStateIsRefunded_PreservesTerminalMetadata](fund-hold.test.ts#L79) | <code>inputSettledAt = new Date(settledAt)</code><br><code>input = holdDetails({ state: "REFUNDED", settledAt: inputSettledAt, payoutId: undefined, })</code><br>**Input commands:** <code>inputSettledAt.setTime(0)</code><br><code>hold.settledAt?.setTime(0)</code> | <code>hold.state</code> equals <code>"REFUNDED"</code><br><code>hold.settledAt</code> matches <code>settledAt</code><br><code>hold.payoutId</code> equals <code>undefined</code> | **Observation bindings:** <code>hold = new FundHold(input)</code><br>**Verified outcomes:** <code>hold.state</code> was <code>"REFUNDED"</code><br><code>hold.settledAt</code> matched <code>settledAt</code><br><code>hold.payoutId</code> was <code>undefined</code> | Passed |
-| [constructor_WhenStateIsReleased_PreservesTerminalMetadata](fund-hold.test.ts#L96) | <code>inputSettledAt = new Date(settledAt)</code><br><code>input = holdDetails({ state: "RELEASED", settledAt: inputSettledAt, payoutId: "payout", })</code><br>**Input commands:** <code>inputSettledAt.setTime(0)</code><br><code>hold.settledAt?.setTime(0)</code> | <code>hold.state</code> equals <code>"RELEASED"</code><br><code>hold.settledAt</code> matches <code>settledAt</code><br><code>hold.payoutId</code> equals <code>"payout"</code> | **Observation bindings:** <code>hold = new FundHold(input)</code><br>**Verified outcomes:** <code>hold.state</code> was <code>"RELEASED"</code><br><code>hold.settledAt</code> matched <code>settledAt</code><br><code>hold.payoutId</code> was <code>"payout"</code> | Passed |
-| [constructor_WhenStateIsForfeited_PreservesTerminalMetadata](fund-hold.test.ts#L113) | <code>inputSettledAt = new Date(settledAt)</code><br><code>input = holdDetails({ state: "FORFEITED", settledAt: inputSettledAt, payoutId: "payout", })</code><br>**Input commands:** <code>inputSettledAt.setTime(0)</code><br><code>hold.settledAt?.setTime(0)</code> | <code>hold.state</code> equals <code>"FORFEITED"</code><br><code>hold.settledAt</code> matches <code>settledAt</code><br><code>hold.payoutId</code> equals <code>"payout"</code> | **Observation bindings:** <code>hold = new FundHold(input)</code><br>**Verified outcomes:** <code>hold.state</code> was <code>"FORFEITED"</code><br><code>hold.settledAt</code> matched <code>settledAt</code><br><code>hold.payoutId</code> was <code>"payout"</code> | Passed |
-| [constructor_WhenReleasedMetadataIsMissing_ThrowsDomainError](fund-hold.test.ts#L130) | <code>details = holdDetails({ state: "RELEASED" })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenReleasedPayoutIsMissing_ThrowsDomainError](fund-hold.test.ts#L136) | <code>details = holdDetails({ state: "RELEASED", settledAt })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenForfeitedPayoutIsBlank_ThrowsDomainError](fund-hold.test.ts#L142) | <code>details = holdDetails({ state: "FORFEITED", settledAt, payoutId: " ", })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenRefundHasPayout_ThrowsDomainError](fund-hold.test.ts#L152) | <code>details = holdDetails({ state: "REFUNDED", settledAt, payoutId: "payout", })</code><br>**Input commands:** <code>new FundHold(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+### Restore active hold — metadata validation
 
-### Refund eligibility after settlement
+**Input:** Hold state, Amount (cents), Created date, Settled date, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [refund_WhenStateIsRefunded_ThrowsDomainError](fund-hold.test.ts#L164) | <code>hold = new FundHold( holdDetails({ state: "REFUNDED", settledAt, payoutId: undefined }), )</code><br>**Input commands:** <code>hold.refund(settledAt)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [refund_WhenStateIsReleased_ThrowsDomainError](fund-hold.test.ts#L172) | <code>hold = new FundHold( holdDetails({ state: "RELEASED", settledAt, payoutId: "payout" }), )</code><br>**Input commands:** <code>hold.refund(settledAt)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [refund_WhenStateIsForfeited_ThrowsDomainError](fund-hold.test.ts#L180) | <code>hold = new FundHold( holdDetails({ state: "FORFEITED", settledAt, payoutId: "payout" }), )</code><br>**Input commands:** <code>hold.refund(settledAt)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+Execution: **5 passed**.
+
+| Hold state | Amount (cents) | Created date | Settled date | Payout ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [HELD](fund-hold.test.ts#L45) | 500 | 2026-10-01 | 2026-10-03 | Absent | DomainError | DomainError |
+| [HELD](fund-hold.test.ts#L51) | 500 | 2026-10-01 | Absent | payout | DomainError | DomainError |
+| [HELD](fund-hold.test.ts#L57) | 0 | 2026-10-01 | Absent | Absent | DomainError | DomainError |
+| [UNKNOWN](fund-hold.test.ts#L63) | 500 | 2026-10-01 | Absent | Absent | DomainError | DomainError |
+| [HELD](fund-hold.test.ts#L71) | 500 | Invalid date | Absent | Absent | RangeError | RangeError |
+
+### Restore completed hold — settlement date isolation
+
+**Input:** Hold state, Settled date, Payout ID, Source/returned settled date after construction · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Hold state | Settled date | Payout ID | Source/returned settled date after construction | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [REFUNDED](fund-hold.test.ts#L79) | 2026-10-03 | Absent | 1970-01-01 | REFUNDED; settled 2026-10-03; payout absent | REFUNDED; settled 2026-10-03; payout absent |
+| [RELEASED](fund-hold.test.ts#L96) | 2026-10-03 | payout | 1970-01-01 | RELEASED; settled 2026-10-03; payout payout | RELEASED; settled 2026-10-03; payout payout |
+| [FORFEITED](fund-hold.test.ts#L113) | 2026-10-03 | payout | 1970-01-01 | FORFEITED; settled 2026-10-03; payout payout | FORFEITED; settled 2026-10-03; payout payout |
+
+### Restore completed hold — metadata validation
+
+**Input:** Hold state, Settled date, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed**.
+
+| Hold state | Settled date | Payout ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [RELEASED](fund-hold.test.ts#L130) | Absent | Absent | DomainError | DomainError |
+| [RELEASED](fund-hold.test.ts#L136) | 2026-10-03 | Absent | DomainError | DomainError |
+| [FORFEITED](fund-hold.test.ts#L142) | 2026-10-03 | one space | DomainError | DomainError |
+| [REFUNDED](fund-hold.test.ts#L152) | 2026-10-03 | payout | DomainError | DomainError |
+
+### Refund an already settled hold
+
+All holds were settled on 2026-10-03.
+
+**Input:** Hold state, Payout ID, Refund date · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Hold state | Payout ID | Refund date | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [REFUNDED](fund-hold.test.ts#L164) | Absent | 2026-10-03 | DomainError | DomainError |
+| [RELEASED](fund-hold.test.ts#L172) | payout | 2026-10-03 | DomainError | DomainError |
+| [FORFEITED](fund-hold.test.ts#L180) | payout | 2026-10-03 | DomainError | DomainError |
 
 ## Participant roster isolation and queue ordering
 
-Source: [participant-list.test.ts](participant-list.test.ts)
+Source: [participant-list.test.ts](participant-list.test.ts). Session defaults: session s, booker booker, two slots, total cost 1,000 cents, share 500 cents, holding account platform, start 2026-10-10 10:00 UTC and end two hours later. Participant IDs are p- followed by the user ID; committed holds are 500 cents, created 48 hours before start. Waiters joined 48 hours before start. Times below are hours before start.
 
-Shared session defaults: session `s`, booker `booker`, two slots, total cost 1,000 cents, share 500 cents, and an empty roster. Session start is `2026-10-10T10:00:00Z`; end is two hours later. Time helpers are relative to these anchors. `createTestUser` starts active with 10,000 cents unless overridden; `readyBooker` has completed payout setup. `pendingPayoutDetails` starts a pending payout `out` / key `key`, with attended participants and 500-cent RELEASE lines. `attendanceByUserId` supplies Booker marks at session end; `participationOverrides` replaces entries in roster order. Verified, withdrawn, removed, and cancelled fixtures default to 500-cent platform holds committed 48 hours before start; `committedParticipation` uses supplied session terms. Withdrawal state is explicit, with refunded withdrawals settled at `withdrawnAt` unless overridden; removed/cancelled entries require `settledAt`. Closed waitlist entries retain their queue sequence and original waiting time. Scenario overrides below take precedence.
+### Read participations and look up participants
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [participations_WhenInputAndReturnedArraysAreMutated_PreservesEntriesAndLookups](participant-list.test.ts#L11) | <code>originalSession = createTestSession({ committedUserIds: ["alice", "ben"], })</code><br><code>alice = originalSession.participantList.requireParticipation("p-alice")</code><br><code>ben = originalSession.participantList.requireParticipation("p-ben")</code><br><code>participations = [alice, ben]</code><br><code>list = new Session(sessionDetails({ participations })) .participantList</code><br>**Input commands:** <code>participations.reverse()</code><br><code>participations.pop()</code><br><code>(list.participations as Participation[]).pop()</code><br><code>(list.participations as Participation[]).reverse()</code> | <code>list.participations</code> matches <code>[alice, ben]</code><br><code>list.requireParticipation("p-alice")</code> is the same instance as <code>alice</code><br><code>list.findByUserId("alice")</code> is the same instance as <code>alice</code><br><code>list.requireParticipation("p-ben")</code> is the same instance as <code>ben</code><br><code>list.findByUserId("ben")</code> is the same instance as <code>ben</code><br><code>list.committedCount</code> equals <code>2</code><br><code>list.nextQueueSequence</code> equals <code>1</code> | **Verified outcomes:** <code>list.participations</code> matched <code>[alice, ben]</code><br><code>list.requireParticipation("p-alice")</code> was the same instance as <code>alice</code><br><code>list.findByUserId("alice")</code> was the same instance as <code>alice</code><br><code>list.requireParticipation("p-ben")</code> was the same instance as <code>ben</code><br><code>list.findByUserId("ben")</code> was the same instance as <code>ben</code><br><code>list.committedCount</code> was <code>2</code><br><code>list.nextQueueSequence</code> was <code>1</code> | Passed |
-| [nextWaitlisted_WhenHydrationOrderDiffersFromQueue_SelectsLowestSequence](participant-list.test.ts#L36) | <code>waitlistedAt = hoursBeforeSessionStart(48)</code><br><code>alice = Participation.createWaitlisted({ participationId: "p-alice", userId: "alice", waitlistedAt, queueSequence: 3, })</code><br><code>ben = Participation.createWaitlisted({ participationId: "p-ben", userId: "ben", waitlistedAt, queueSequence: 1, })</code><br><code>cara = Participation.createWaitlisted({ participationId: "p-cara", userId: "cara", waitlistedAt, queueSequence: 2, })</code><br><code>list = new Session( sessionDetails({ participations: [alice, ben, cara], nextQueueSequence: 4, }), ).participantList</code> | <code>nextWaiter</code> is the same instance as <code>ben</code><br><code>list.participations</code> matches <code>[alice, ben, cara]</code><br><code>list.findByUserId("ben")</code> equals <code>nextWaiter</code><br><code>list.committedCount</code> equals <code>0</code><br><code>list.nextQueueSequence</code> equals <code>4</code> | **Observation bindings:** <code>nextWaiter = list.nextWaitlisted()</code><br>**Verified outcomes:** <code>nextWaiter</code> was the same instance as <code>ben</code><br><code>list.participations</code> matched <code>[alice, ben, cara]</code><br><code>list.findByUserId("ben")</code> was <code>nextWaiter</code><br><code>list.committedCount</code> was <code>0</code><br><code>list.nextQueueSequence</code> was <code>4</code> | Passed |
-| [oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder](participant-list.test.ts#L72) | <code>caraWithdrewAt = hoursBeforeSessionStart(48)</code><br><code>tiedWithdrawalAt = hoursBeforeSessionStart(10)</code><br><code>refundedCara = withdrawnParticipation("cara", { holdState: "REFUNDED", withdrawnAt: caraWithdrewAt, settledAt: caraWithdrewAt, })</code><br><code>withdrawnAlice = withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: tiedWithdrawalAt, replacementMode: "OPEN_SLOT", })</code><br><code>withdrawnBen = withdrawnParticipation("ben", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: tiedWithdrawalAt, replacementMode: "OPEN_SLOT", })</code><br><code>list = new Session( sessionDetails({ participations: [refundedCara, withdrawnBen, withdrawnAlice], }), ).participantList</code> | <code>oldestReplacement</code> is the same instance as <code>withdrawnBen</code><br><code>list.participations</code> matches <code>[ refundedCara, withdrawnBen, withdrawnAlice, ]</code><br><code>list.findByUserId("ben")</code> equals <code>oldestReplacement</code><br><code>list.committedCount</code> equals <code>0</code><br><code>list.nextWaitlisted()</code> is undefined | **Observation bindings:** <code>oldestReplacement = list.oldestAwaitingReplacement()</code><br>**Verified outcomes:** <code>oldestReplacement</code> was the same instance as <code>withdrawnBen</code><br><code>list.participations</code> matched <code>[ refundedCara, withdrawnBen, withdrawnAlice, ]</code><br><code>list.findByUserId("ben")</code> was <code>oldestReplacement</code><br><code>list.committedCount</code> was <code>0</code><br><code>list.nextWaitlisted()</code> was undefined | Passed |
-| [oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal](participant-list.test.ts#L109) | <code>aliceInvitedAt = hoursBeforeSessionStart(10)</code><br><code>benOpenedSeatAt = hoursBeforeSessionStart(9)</code><br><code>aliceInvitation = withdrawnParticipation("alice", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: aliceInvitedAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara", })</code><br><code>benOpenWithdrawal = withdrawnParticipation("ben", { holdState: "AWAITING_REPLACEMENT", withdrawnAt: benOpenedSeatAt, replacementMode: "OPEN_SLOT", })</code><br><code>list = new Session( sessionDetails({ participations: [aliceInvitation, benOpenWithdrawal] }), ).participantList</code> | <code>oldestReplacement</code> is the same instance as <code>benOpenWithdrawal</code><br><code>list.reservedCount</code> equals <code>1</code><br><code>list.personalReplacementForInvitee("cara")</code> is the same instance as <code>aliceInvitation</code> | **Observation bindings:** <code>oldestReplacement = list.oldestAwaitingReplacement()</code><br>**Verified outcomes:** <code>oldestReplacement</code> was the same instance as <code>benOpenWithdrawal</code><br><code>list.reservedCount</code> was <code>1</code><br><code>list.personalReplacementForInvitee("cara")</code> was the same instance as <code>aliceInvitation</code> | Passed |
+**Input:** Committed users in roster order, Source array edits, Returned array edits · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Committed users in roster order | Source array edits | Returned array edits | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice, ben](participant-list.test.ts#L11) | Reverse, remove last | Remove last, reverse | Roster alice, ben; ID and user lookups retain each original instance; committed count 2; next queue sequence 1 | Roster alice, ben; ID and user lookups retain each original instance; committed count 2; next queue sequence 1 |
+
+### Find next waitlisted participant
+
+**Input:** Roster order, Queue sequences (same order), Next queue sequence · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Roster order | Queue sequences (same order) | Next queue sequence | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice, ben, cara](participant-list.test.ts#L36) | 3, 1, 2 | 4 | ben, same instance as roster and user lookup; roster order unchanged; committed count 0; next queue sequence 4 | ben, same instance as roster and user lookup; roster order unchanged; committed count 0; next queue sequence 4 |
+
+### Find oldest open replacement and named reservations
+
+**Input:** Roster order, Hold states (same order), Withdrawal times (hours before start), Replacement modes (same order), Named invitee · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Roster order | Hold states (same order) | Withdrawal times (hours before start) | Replacement modes (same order) | Named invitee | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [cara, ben, alice](participant-list.test.ts#L72) | REFUNDED, AWAITING_REPLACEMENT, AWAITING_REPLACEMENT | 48, 10, 10 | None, OPEN_SLOT, OPEN_SLOT | None | ben, original instance and same user lookup; roster cara, ben, alice; committed count 0; no next waiter | ben, original instance and same user lookup; roster cara, ben, alice; committed count 0; no next waiter |
+| [alice, ben](participant-list.test.ts#L109) | AWAITING_REPLACEMENT, AWAITING_REPLACEMENT | 10, 9 | DIRECT_INVITE, OPEN_SLOT | alice invites cara | ben, original instance; reserved count 1; cara reservation is original alice instance | ben, original instance; reserved count 1; cara reservation is original alice instance |
 
 ## Participation state and fund lifecycle
 
-Source: [participation.test.ts](participation.test.ts)
+Source: [participation.test.ts](participation.test.ts). Defaults: participation participation, user user, status COMMITTED, attendance UNVERIFIED, committed 2026-10-01 00:00 UTC; hold hold belongs to participation, uses platform/wallet, holds 500 cents and was created at commitment. Unspecified metadata is absent. Dates below are UTC; transition date is 2026-10-03 unless shown.
 
+### Restore participation — date and hold identity
 
-### Commitment and queue state
+**Input:** Committed date, Source/returned committed date after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenDatesAreMutated_PreservesTimestampAndImmutableHold](participation.test.ts#L16) | <code>input = participationDetails()</code><br>**Input commands:** <code>input.committedAt?.setTime(0)</code><br><code>participation.committedAt?.setTime(0)</code> | <code>participation.committedAt</code> matches <code>createdAt</code><br><code>participation.hold</code> equals <code>input.hold</code> | **Observation bindings:** <code>participation = new Participation(input)</code><br>**Verified outcomes:** <code>participation.committedAt</code> matched <code>createdAt</code><br><code>participation.hold</code> was <code>input.hold</code> | Passed |
-| [constructor_WhenHoldBelongsToAnotherParticipation_ThrowsDomainError](participation.test.ts#L27) | <code>details = participationDetails({ hold: new FundHold(holdDetails({ participationId: "foreign" })), })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenCommittedHoldIsMissing_ThrowsDomainError](participation.test.ts#L35) | <code>details = participationDetails({ hold: undefined })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenCommitmentDateIsMissing_ThrowsDomainError](participation.test.ts#L41) | <code>details = participationDetails({ committedAt: undefined })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenWaitlistMetadataIsMissing_ThrowsDomainError](participation.test.ts#L47) | <code>details = participationDetails({ status: "WAITLISTED", hold: undefined, })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenWaitlistedParticipationHasHold_ThrowsDomainError](participation.test.ts#L56) | <code>details = participationDetails({ status: "WAITLISTED", waitlistedAt: createdAt, queueSequence: 1, })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenQueueSequenceIsZero_ThrowsDomainError](participation.test.ts#L66) | <code>details = participationDetails({ queueSequence: 0 })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [commit_WhenPromotedAsReplacement_PreservesQueueEntryAndReplacementIdentity](participation.test.ts#L72) | <code>queued = Participation.createWaitlisted({ participationId: "participation", userId: "user", waitlistedAt: createdAt, queueSequence: 1, })</code> | <code>committed.replacesParticipationId</code> equals <code>"previous"</code><br><code>queued.status</code> equals <code>"WAITLISTED"</code><br><code>queued.hold</code> is undefined | **Observation bindings:** <code>committed = queued.commit( new FundHold(holdDetails()), createdAt, "previous", )</code><br>**Verified outcomes:** <code>committed.replacesParticipationId</code> was <code>"previous"</code><br><code>queued.status</code> was <code>"WAITLISTED"</code><br><code>queued.hold</code> was undefined | Passed |
+Execution: **1 passed**.
 
-### Withdrawal and replacement reservations
+| Committed date | Source/returned committed date after construction | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [2026-10-01](participation.test.ts#L16) | 1970-01-01 | Committed date 2026-10-01; hold is the original input instance | Committed date 2026-10-01; hold is the original input instance |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError](participation.test.ts#L109) | <code>details = participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenParticipationReplacesItself_ThrowsDomainError](participation.test.ts#L118) | <code>details = participationDetails({ replacesParticipationId: "participation", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError](participation.test.ts#L126) | <code>details = participationDetails({ replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation](participation.test.ts#L135) | <code>details = participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), replacementMode: "DIRECT_INVITE", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation](participation.test.ts#L148) | <code>details = participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), replacementMode: "DIRECT_INVITE", replacementInviteeId: " ", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement](participation.test.ts#L162) | <code>details = participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), replacementMode: "DIRECT_INVITE", replacementInviteeId: "user", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata](participation.test.ts#L176) | <code>details = participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), replacementMode: "OPEN_SLOT", replacementInviteeId: "ben", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata](participation.test.ts#L190) | <code>details = participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), replacementInviteeId: "ben", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund](participation.test.ts#L203) | <code>committed = new Participation(participationDetails())</code><br><code>refundedHold = new FundHold( holdDetails({ state: "REFUNDED", settledAt }), )</code> | <code>withdrawn.status</code> equals <code>"WITHDRAWN"</code><br><code>withdrawn.hold?.state</code> equals <code>"REFUNDED"</code><br><code>withdrawn.replacementMode</code> equals <code>"DIRECT_INVITE"</code><br><code>withdrawn.replacementInviteeId</code> equals <code>"ben"</code><br><code>committed.status</code> equals <code>"COMMITTED"</code><br><code>committed.replacementInviteeId</code> is undefined | **Observation bindings:** <code>withdrawn = committed.withdraw( refundedHold, settledAt, "DIRECT_INVITE", "ben", )</code><br>**Verified outcomes:** <code>withdrawn.status</code> was <code>"WITHDRAWN"</code><br><code>withdrawn.hold?.state</code> was <code>"REFUNDED"</code><br><code>withdrawn.replacementMode</code> was <code>"DIRECT_INVITE"</code><br><code>withdrawn.replacementInviteeId</code> was <code>"ben"</code><br><code>committed.status</code> was <code>"COMMITTED"</code><br><code>committed.replacementInviteeId</code> was undefined | Passed |
-| [withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement](participation.test.ts#L224) | <code>committed = new Participation(participationDetails())</code><br><code>awaitingHold = new FundHold( holdDetails({ state: "AWAITING_REPLACEMENT" }), )</code> | <code>withdrawn.status</code> equals <code>"WITHDRAWN"</code><br><code>withdrawn.hold?.state</code> equals <code>"AWAITING_REPLACEMENT"</code><br><code>withdrawn.replacementInviteeId</code> equals <code>"ben"</code><br><code>committed.hold?.state</code> equals <code>"HELD"</code> | **Observation bindings:** <code>withdrawn = committed.withdraw( awaitingHold, settledAt, "DIRECT_INVITE", "ben", )</code><br>**Verified outcomes:** <code>withdrawn.status</code> was <code>"WITHDRAWN"</code><br><code>withdrawn.hold?.state</code> was <code>"AWAITING_REPLACEMENT"</code><br><code>withdrawn.replacementInviteeId</code> was <code>"ben"</code><br><code>committed.hold?.state</code> was <code>"HELD"</code> | Passed |
-| [withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace](participation.test.ts#L243) | <code>withdrawn = new Participation( participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", hold: new FundHold(holdDetails({ state: "REFUNDED", settledAt })), }), )</code><br>**Input commands:** <code>withdrawn.withdraw(withdrawn.hold!, settledAt, "OPEN_SLOT")</code> | Throws <code>error code INVALID_STATE</code><br><code>withdrawn.replacementMode</code> equals <code>"DIRECT_INVITE"</code><br><code>withdrawn.replacementInviteeId</code> equals <code>"ben"</code><br><code>withdrawn.hold?.state</code> equals <code>"REFUNDED"</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>withdrawn.replacementMode</code> was <code>"DIRECT_INVITE"</code><br><code>withdrawn.replacementInviteeId</code> was <code>"ben"</code><br><code>withdrawn.hold?.state</code> was <code>"REFUNDED"</code> | Passed |
-| [withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation](participation.test.ts#L262) | <code>withdrawn = new Participation( participationDetails({ status: "WITHDRAWN", withdrawnAt: settledAt, replacementMode: "OPEN_SLOT", hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), }), )</code><br>**Input commands:** <code>withdrawn.withdraw(withdrawn.hold!, settledAt, "DIRECT_INVITE", "ben")</code> | Throws <code>error code INVALID_STATE</code><br><code>withdrawn.replacementMode</code> equals <code>"OPEN_SLOT"</code><br><code>withdrawn.replacementInviteeId</code> is undefined<br><code>withdrawn.hold?.state</code> equals <code>"AWAITING_REPLACEMENT"</code> | **Verified outcomes:** Threw <code>error code INVALID_STATE</code><br><code>withdrawn.replacementMode</code> was <code>"OPEN_SLOT"</code><br><code>withdrawn.replacementInviteeId</code> was undefined<br><code>withdrawn.hold?.state</code> was <code>"AWAITING_REPLACEMENT"</code> | Passed |
-| [refundReplacement_WhenReplacementIsFound_ReturnsNewChild](participation.test.ts#L280) | <code>committed = new Participation(participationDetails())</code><br><code>withdrawn = committed.withdraw( committed.hold!.awaitReplacement(), createdAt, "DIRECT_INVITE", "ben", )</code> | <code>committed.status</code> equals <code>"COMMITTED"</code><br><code>committed.hold?.state</code> equals <code>"HELD"</code><br><code>withdrawn.hold?.state</code> equals <code>"AWAITING_REPLACEMENT"</code><br><code>finalized.hold?.state</code> equals <code>"REFUNDED"</code><br><code>finalized.replacementInviteeId</code> equals <code>"ben"</code> | **Observation bindings:** <code>finalized = withdrawn.refundReplacement(settledAt)</code><br>**Verified outcomes:** <code>committed.status</code> was <code>"COMMITTED"</code><br><code>committed.hold?.state</code> was <code>"HELD"</code><br><code>withdrawn.hold?.state</code> was <code>"AWAITING_REPLACEMENT"</code><br><code>finalized.hold?.state</code> was <code>"REFUNDED"</code><br><code>finalized.replacementInviteeId</code> was <code>"ben"</code> | Passed |
-| [withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory](participation.test.ts#L93) | <code>const replacement = new Participation( participationDetails({ replacesParticipationId: "original-participation" }), );</code><br><code>const awaitingHold = new FundHold( holdDetails({ state: "AWAITING_REPLACEMENT" }), );</code><br><code>const withdrawn = replacement.withdraw(awaitingHold, settledAt, "OPEN_SLOT");</code> | <code>expect(withdrawn.status).toBe("WITHDRAWN")</code><br><code>expect(withdrawn.replacesParticipationId).toBe("original-participation")</code><br><code>expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT")</code><br><code>expect(replacement.status).toBe("COMMITTED")</code> | **Verified assertions:** <code>expect(withdrawn.status).toBe("WITHDRAWN")</code><br><code>expect(withdrawn.replacesParticipationId).toBe("original-participation")</code><br><code>expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT")</code><br><code>expect(replacement.status).toBe("COMMITTED")</code> | Passed |
+### Restore participation — commitment and queue validation
 
-### Cancellation and removal
+**Input:** Participation state, Hold owner, Committed date, Waitlisted date, Queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError](participation.test.ts#L332) | <code>details = participationDetails({ status: "CANCELLED" })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenRemovedParticipationHasHold_ThrowsDomainError](participation.test.ts#L338) | <code>details = participationDetails({ status: "REMOVED" })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata](participation.test.ts#L344) | <code>withdrawn = new Participation( participationDetails({ status: "WITHDRAWN", withdrawnAt: createdAt, replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), }), )</code><br><code>refundedHold = new FundHold( holdDetails({ state: "REFUNDED", settledAt }), )</code> | <code>cancelled.status</code> equals <code>"CANCELLED"</code><br><code>cancelled.replacementMode</code> is undefined<br><code>cancelled.replacementInviteeId</code> is undefined<br><code>withdrawn.replacementInviteeId</code> equals <code>"ben"</code> | **Observation bindings:** <code>cancelled = withdrawn.cancel(refundedHold)</code><br>**Verified outcomes:** <code>cancelled.status</code> was <code>"CANCELLED"</code><br><code>cancelled.replacementMode</code> was undefined<br><code>cancelled.replacementInviteeId</code> was undefined<br><code>withdrawn.replacementInviteeId</code> was <code>"ben"</code> | Passed |
-| [remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory](participation.test.ts#L300) | <code>const replacement = new Participation( participationDetails({ replacesParticipationId: "original-participation" }), );</code><br><code>const refundedHold = new FundHold( holdDetails({ state: "REFUNDED", settledAt }), );</code><br><code>const removed = replacement.remove(refundedHold);</code> | <code>expect(removed.status).toBe("REMOVED")</code><br><code>expect(removed.replacesParticipationId).toBe("original-participation")</code><br><code>expect(removed.hold?.state).toBe("REFUNDED")</code><br><code>expect(replacement.status).toBe("COMMITTED")</code> | **Verified assertions:** <code>expect(removed.status).toBe("REMOVED")</code><br><code>expect(removed.replacesParticipationId).toBe("original-participation")</code><br><code>expect(removed.hold?.state).toBe("REFUNDED")</code><br><code>expect(replacement.status).toBe("COMMITTED")</code> | Passed |
-| [cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory](participation.test.ts#L316) | <code>const replacement = new Participation( participationDetails({ replacesParticipationId: "original-participation" }), );</code><br><code>const refundedHold = new FundHold( holdDetails({ state: "REFUNDED", settledAt }), );</code><br><code>const cancelled = replacement.cancel(refundedHold);</code> | <code>expect(cancelled.status).toBe("CANCELLED")</code><br><code>expect(cancelled.replacesParticipationId).toBe("original-participation")</code><br><code>expect(cancelled.hold?.state).toBe("REFUNDED")</code><br><code>expect(replacement.status).toBe("COMMITTED")</code> | **Verified assertions:** <code>expect(cancelled.status).toBe("CANCELLED")</code><br><code>expect(cancelled.replacesParticipationId).toBe("original-participation")</code><br><code>expect(cancelled.hold?.state).toBe("REFUNDED")</code><br><code>expect(replacement.status).toBe("COMMITTED")</code> | Passed |
+Execution: **6 passed**.
 
-### Attendance verification and settlement
+| Participation state | Hold owner | Committed date | Waitlisted date | Queue sequence | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [COMMITTED](participation.test.ts#L27) | foreign | 2026-10-01 | Absent | Absent | DomainError | DomainError |
+| [COMMITTED](participation.test.ts#L35) | No hold | 2026-10-01 | Absent | Absent | DomainError | DomainError |
+| [COMMITTED](participation.test.ts#L41) | participation | Absent | Absent | Absent | DomainError | DomainError |
+| [WAITLISTED](participation.test.ts#L47) | No hold | 2026-10-01 | Absent | Absent | DomainError | DomainError |
+| [WAITLISTED](participation.test.ts#L56) | participation | 2026-10-01 | 2026-10-01 | 1 | DomainError | DomainError |
+| [COMMITTED](participation.test.ts#L66) | participation | 2026-10-01 | Absent | 0 | DomainError | DomainError |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [constructor_WhenAttendanceHasNoVerification_ThrowsDomainError](participation.test.ts#L368) | <code>details = participationDetails({ attendance: "ATTENDED" })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError](participation.test.ts#L374) | <code>details = participationDetails({ verifiedAt: settledAt, verificationMethod: "BOOKER", })</code><br>**Input commands:** <code>new Participation(details)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [settleHold_WhenAttendanceIsUnverified_RejectsRelease](participation.test.ts#L383) | <code>committed = new Participation(participationDetails())</code><br>**Input commands:** <code>committed.settleHold("RELEASE", "payout", settledAt)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
-| [settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy](participation.test.ts#L391) | <code>attended = new Participation( participationDetails({ attendance: "ATTENDED", verificationMethod: "BOOKER", verifiedAt: settledAt, }), )</code> | <code>settled.hold?.state</code> equals <code>"RELEASED"</code><br><code>attended.hold?.state</code> equals <code>"HELD"</code> | **Observation bindings:** <code>settled = attended.settleHold("RELEASE", "payout", settledAt)</code><br>**Verified outcomes:** <code>settled.hold?.state</code> was <code>"RELEASED"</code><br><code>attended.hold?.state</code> was <code>"HELD"</code> | Passed |
-| [settleHold_WhenParticipantAttended_RejectsForfeiture](participation.test.ts#L406) | <code>attended = new Participation( participationDetails({ attendance: "ATTENDED", verificationMethod: "BOOKER", verifiedAt: settledAt, }), )</code><br>**Input commands:** <code>attended.settleHold("FORFEIT", "payout", settledAt)</code> | Throws an error matching <code>DomainError</code> | **Verified outcomes:** Threw an error matching <code>DomainError</code> | Passed |
+### Commit queued replacement
 
-### Replacement expiry and forfeiture
+The original entry was waitlisted on 2026-10-01.
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy](participation.test.ts#L422) | <code>withdrawn = new Participation( participationDetails({ status: "WITHDRAWN", withdrawnAt: createdAt, hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })), replacementMode: "DIRECT_INVITE", replacementInviteeId: "ben", }), )</code> | <code>expired</code> is a different instance from <code>withdrawn</code><br><code>expired.hold?.state</code> equals <code>"FORFEITURE_DUE"</code><br><code>expired.replacementInviteeId</code> equals <code>"ben"</code><br><code>withdrawn.hold?.state</code> equals <code>"AWAITING_REPLACEMENT"</code> | **Observation bindings:** <code>expired = withdrawn.expireReplacement(settledAt)</code><br>**Verified outcomes:** <code>expired</code> was a different instance from <code>withdrawn</code><br><code>expired.hold?.state</code> was <code>"FORFEITURE_DUE"</code><br><code>expired.replacementInviteeId</code> was <code>"ben"</code><br><code>withdrawn.hold?.state</code> was <code>"AWAITING_REPLACEMENT"</code> | Passed |
-| [settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy](participation.test.ts#L441) | <code>withdrawn = new Participation( participationDetails({ status: "WITHDRAWN", withdrawnAt: createdAt, hold: new FundHold(holdDetails({ state: "FORFEITURE_DUE" })), }), )</code> | <code>finalized</code> is a different instance from <code>withdrawn</code><br><code>withdrawn.hold?.state</code> equals <code>"FORFEITURE_DUE"</code><br><code>finalized.hold?.state</code> equals <code>"FORFEITED"</code><br><code>finalized.hold?.payoutId</code> equals <code>"payout"</code> | **Observation bindings:** <code>finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt)</code><br>**Verified outcomes:** <code>finalized</code> was a different instance from <code>withdrawn</code><br><code>withdrawn.hold?.state</code> was <code>"FORFEITURE_DUE"</code><br><code>finalized.hold?.state</code> was <code>"FORFEITED"</code><br><code>finalized.hold?.payoutId</code> was <code>"payout"</code> | Passed |
-| [reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero](participation.test.ts#L458) | <code>finalized = new Participation( participationDetails({ status: "WITHDRAWN", withdrawnAt: createdAt, hold: new FundHold( holdDetails({ state: "FORFEITED", payoutId: "payout", settledAt }), ), }), )</code> | <code>reliabilityValue</code> equals <code>0</code> | **Observation bindings:** <code>reliabilityValue = finalized.reliabilityOutcome(settledAt)?.value</code><br>**Verified outcomes:** <code>reliabilityValue</code> was <code>0</code> | Passed |
+**Input:** Participation state, Queue sequence, Commit date, Hold (cents), Replaced participation ID · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Participation state | Queue sequence | Commit date | Hold (cents) | Replaced participation ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [WAITLISTED](participation.test.ts#L72) | 1 | 2026-10-01 | 500 | previous | Returned participation replaces previous; original remains WAITLISTED with no hold | Returned participation replaces previous; original remains WAITLISTED with no hold |
+
+### Restore participation — withdrawal and replacement metadata
+
+**Input:** Participation state, Hold state, Withdrawn date, Replaced participation ID, Replacement mode, Invitee · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **8 passed**.
+
+| Participation state | Hold state | Withdrawn date | Replaced participation ID | Replacement mode | Invitee | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [WITHDRAWN](participation.test.ts#L109) | HELD | 2026-10-03 | Absent | Absent | Absent | DomainError | DomainError |
+| [COMMITTED](participation.test.ts#L118) | HELD | Absent | participation | Absent | Absent | DomainError | DomainError |
+| [COMMITTED](participation.test.ts#L126) | HELD | Absent | Absent | DIRECT_INVITE | ben | DomainError | DomainError |
+| [WITHDRAWN](participation.test.ts#L135) | AWAITING_REPLACEMENT | 2026-10-03 | Absent | DIRECT_INVITE | Absent | INVALID_INPUT | INVALID_INPUT |
+| [WITHDRAWN](participation.test.ts#L148) | AWAITING_REPLACEMENT | 2026-10-03 | Absent | DIRECT_INVITE | one space | INVALID_INPUT | INVALID_INPUT |
+| [WITHDRAWN](participation.test.ts#L162) | AWAITING_REPLACEMENT | 2026-10-03 | Absent | DIRECT_INVITE | user | INVALID_INPUT | INVALID_INPUT |
+| [WITHDRAWN](participation.test.ts#L176) | AWAITING_REPLACEMENT | 2026-10-03 | Absent | OPEN_SLOT | ben | INVALID_INPUT | INVALID_INPUT |
+| [WITHDRAWN](participation.test.ts#L190) | AWAITING_REPLACEMENT | 2026-10-03 | Absent | Absent | ben | INVALID_INPUT | INVALID_INPUT |
+
+### Withdraw committed participation
+
+**Input:** Participation state, Replaced participation ID, New hold state, Replacement mode, Invitee · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **3 passed**.
+
+| Participation state | Replaced participation ID | New hold state | Replacement mode | Invitee | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [COMMITTED](participation.test.ts#L203) | Absent | REFUNDED | DIRECT_INVITE | ben | WITHDRAWN; REFUNDED; DIRECT_INVITE to ben; original COMMITTED with no invitee | WITHDRAWN; REFUNDED; DIRECT_INVITE to ben; original COMMITTED with no invitee |
+| [COMMITTED](participation.test.ts#L224) | Absent | AWAITING_REPLACEMENT | DIRECT_INVITE | ben | WITHDRAWN; AWAITING_REPLACEMENT; invitee ben; original hold HELD | WITHDRAWN; AWAITING_REPLACEMENT; invitee ben; original hold HELD |
+| [COMMITTED](participation.test.ts#L93) | original-participation | AWAITING_REPLACEMENT | OPEN_SLOT | Absent | WITHDRAWN; replaces original-participation; AWAITING_REPLACEMENT; original COMMITTED | WITHDRAWN; replaces original-participation; AWAITING_REPLACEMENT; original COMMITTED |
+
+### Withdraw again — reject changing departure choice
+
+Both inputs are already WITHDRAWN on 2026-10-03; the existing hold is supplied again.
+
+**Input:** Existing replacement mode, Existing invitee, Existing hold state, Requested replacement mode, Requested invitee · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Existing replacement mode | Existing invitee | Existing hold state | Requested replacement mode | Requested invitee | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [DIRECT_INVITE](participation.test.ts#L243) | ben | REFUNDED | OPEN_SLOT | Absent | INVALID_STATE; DIRECT_INVITE to ben and REFUNDED unchanged | INVALID_STATE; DIRECT_INVITE to ben and REFUNDED unchanged |
+| [OPEN_SLOT](participation.test.ts#L262) | Absent | AWAITING_REPLACEMENT | DIRECT_INVITE | ben | INVALID_STATE; OPEN_SLOT, no invitee and AWAITING_REPLACEMENT unchanged | INVALID_STATE; OPEN_SLOT, no invitee and AWAITING_REPLACEMENT unchanged |
+
+### Refund a found replacement
+
+**Input:** Withdrawal date, Replacement mode, Invitee, Refund date · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Withdrawal date | Replacement mode | Invitee | Refund date | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [2026-10-01](participation.test.ts#L280) | DIRECT_INVITE | ben | 2026-10-03 | Original COMMITTED / HELD; withdrawn hold AWAITING_REPLACEMENT; finalized hold REFUNDED with invitee ben | Original COMMITTED / HELD; withdrawn hold AWAITING_REPLACEMENT; finalized hold REFUNDED with invitee ben |
+
+### Restore cancelled or removed participation
+
+**Input:** Participation state, Hold state · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Participation state | Hold state | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [CANCELLED](participation.test.ts#L332) | HELD | DomainError | DomainError |
+| [REMOVED](participation.test.ts#L338) | HELD | DomainError | DomainError |
+
+### Cancel a participation
+
+The withdrawn input has an AWAITING_REPLACEMENT hold and withdrawal date 2026-10-01. Supplied refunds settled on 2026-10-03.
+
+**Input:** Participation state, Replaced participation ID, Existing replacement mode, Invitee, New hold state · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Participation state | Replaced participation ID | Existing replacement mode | Invitee | New hold state | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [WITHDRAWN](participation.test.ts#L344) | Absent | DIRECT_INVITE | ben | REFUNDED | CANCELLED; replacement mode and invitee absent; original invitee ben | CANCELLED; replacement mode and invitee absent; original invitee ben |
+| [COMMITTED](participation.test.ts#L316) | original-participation | Absent | Absent | REFUNDED | CANCELLED; replaces original-participation; REFUNDED; original COMMITTED | CANCELLED; replaces original-participation; REFUNDED; original COMMITTED |
+
+### Remove an accepted replacement
+
+The supplied refund settled on 2026-10-03.
+
+**Input:** Participation state, Replaced participation ID, New hold state · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Participation state | Replaced participation ID | New hold state | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [COMMITTED](participation.test.ts#L300) | original-participation | REFUNDED | REMOVED; replaces original-participation; REFUNDED; original COMMITTED | REMOVED; replaces original-participation; REFUNDED; original COMMITTED |
+
+### Restore participation — attendance verification metadata
+
+**Input:** Attendance, Verification method, Verified date · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **2 passed**.
+
+| Attendance | Verification method | Verified date | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [ATTENDED](participation.test.ts#L368) | Absent | Absent | DomainError | DomainError |
+| [UNVERIFIED](participation.test.ts#L374) | BOOKER | 2026-10-03 | DomainError | DomainError |
+
+### Settle a participation hold
+
+ATTENDED inputs were verified by BOOKER on 2026-10-03; withdrawn input left on 2026-10-01. Settlement is requested on 2026-10-03.
+
+**Input:** Participation state, Attendance, Hold state, Settlement kind, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed**.
+
+| Participation state | Attendance | Hold state | Settlement kind | Payout ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [COMMITTED](participation.test.ts#L383) | UNVERIFIED | HELD | RELEASE | payout | DomainError | DomainError |
+| [COMMITTED](participation.test.ts#L391) | ATTENDED | HELD | RELEASE | payout | New hold RELEASED; original hold HELD | New hold RELEASED; original hold HELD |
+| [COMMITTED](participation.test.ts#L406) | ATTENDED | HELD | FORFEIT | payout | DomainError | DomainError |
+| [WITHDRAWN](participation.test.ts#L441) | UNVERIFIED | FORFEITURE_DUE | FORFEIT | payout | Different participation instance; original hold FORFEITURE_DUE; finalized hold FORFEITED with payout payout | Different participation instance; original hold FORFEITURE_DUE; finalized hold FORFEITED with payout payout |
+
+### Expire an awaited replacement
+
+**Input:** Hold state, Withdrawn date, Replacement mode, Invitee, Expiry date · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Hold state | Withdrawn date | Replacement mode | Invitee | Expiry date | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [AWAITING_REPLACEMENT](participation.test.ts#L422) | 2026-10-01 | DIRECT_INVITE | ben | 2026-10-03 | Different participation instance; new hold FORFEITURE_DUE; invitee ben; original hold AWAITING_REPLACEMENT | Different participation instance; new hold FORFEITURE_DUE; invitee ben; original hold AWAITING_REPLACEMENT |
+
+### Read reliability outcome
+
+Withdrawal was on 2026-10-01.
+
+**Input:** Participation state, Hold state, Payout ID, Settled date, Observation date · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed**.
+
+| Participation state | Hold state | Payout ID | Settled date | Observation date | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [WITHDRAWN](participation.test.ts#L458) | FORFEITED | payout | 2026-10-03 | 2026-10-03 | 0 | 0 |
 
 ## Session pricing
 
-Source: [pricing.test.ts](pricing.test.ts)
+Source: [pricing.test.ts](pricing.test.ts). All prices and costs are integer cents. Successful price-bound results give suggested / minimum / maximum and also verify maximum × slots ≤ 9,007,199,254,740,991 cents.
 
+### Calculate price bounds
 
-### Price bounds from booking cost
+**Input:** Booking cost (cents), Slots · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [sessionPricing_WhenCostLeavesOneCentRemainder_ReturnsExactBounds](pricing.test.ts#L7) | <code>costCents = 1001</code><br><code>slots = 3</code> | <code>pricing</code> matches <code>{ suggestedCents: 333, minimumCents: 167, maximumCents: 666, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 333, minimumCents: 167, maximumCents: 666, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenEightSlotsShareSixThousandCents_ReturnsExactBounds](pricing.test.ts#L23) | <code>costCents = 6000</code><br><code>slots = 8</code> | <code>pricing</code> matches <code>{ suggestedCents: 750, minimumCents: 375, maximumCents: 1500, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 750, minimumCents: 375, maximumCents: 1500, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenEachSlotCostsOneCent_ReturnsExactBounds](pricing.test.ts#L39) | <code>costCents = 2</code><br><code>slots = 2</code> | <code>pricing</code> matches <code>{ suggestedCents: 1, minimumCents: 1, maximumCents: 2, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 1, minimumCents: 1, maximumCents: 2, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenMaximumSafeCostHasTwoSlots_ReturnsExactBounds](pricing.test.ts#L55) | <code>costCents = Number.MAX_SAFE_INTEGER</code><br><code>slots = 2</code> | <code>pricing</code> matches <code>{ suggestedCents: 4503599627370495, minimumCents: 2251799813685248, maximumCents: 4503599627370495, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 4503599627370495, minimumCents: 2251799813685248, maximumCents: 4503599627370495, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenMaximumSafeCostHasEightSlots_ReturnsExactBounds](pricing.test.ts#L71) | <code>costCents = Number.MAX_SAFE_INTEGER</code><br><code>slots = 8</code> | <code>pricing</code> matches <code>{ suggestedCents: 1125899906842623, minimumCents: 562949953421312, maximumCents: 1125899906842623, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 1125899906842623, minimumCents: 562949953421312, maximumCents: 1125899906842623, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenCapacityIsThirtySlots_ReturnsExactBounds](pricing.test.ts#L87) | <code>costCents = 30000</code><br><code>slots = 30</code> | <code>pricing</code> matches <code>{ suggestedCents: 1000, minimumCents: 500, maximumCents: 2000, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 1000, minimumCents: 500, maximumCents: 2000, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenMaximumSafeCostHasThirtySlots_ReturnsExactBounds](pricing.test.ts#L103) | <code>costCents = Number.MAX_SAFE_INTEGER</code><br><code>slots = 30</code> | <code>pricing</code> matches <code>{ suggestedCents: 300239975158033, minimumCents: 150119987579017, maximumCents: 300239975158033, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | **Observation bindings:** <code>pricing = sessionPricing(costCents, slots)</code><br>**Verified outcomes:** <code>pricing</code> matched <code>{ suggestedCents: 300239975158033, minimumCents: 150119987579017, maximumCents: 300239975158033, }</code><br><code>BigInt(pricing.maximumCents) * BigInt(slots)</code> ≤ <code>BigInt(Number.MAX_SAFE_INTEGER)</code> | Passed |
-| [sessionPricing_WhenCostIsZero_RejectsUnsafeOrZeroShare](pricing.test.ts#L119) | <code>costCents = 0</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCostCannotFundOneCentPerSlot_RejectsUnsafeOrZeroShare](pricing.test.ts#L128) | <code>costCents = 1</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCostIsNegative_RejectsUnsafeOrZeroShare](pricing.test.ts#L137) | <code>costCents = -1</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCostContainsFractionalCents_RejectsUnsafeOrZeroShare](pricing.test.ts#L146) | <code>costCents = 1.5</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCostIsNotANumber_RejectsUnsafeOrZeroShare](pricing.test.ts#L155) | <code>costCents = NaN</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCostIsInfinite_RejectsUnsafeOrZeroShare](pricing.test.ts#L164) | <code>costCents = Infinity</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCostExceedsSafeInteger_RejectsUnsafeOrZeroShare](pricing.test.ts#L173) | <code>costCents = Number.MAX_SAFE_INTEGER + 1</code><br><code>slots = 2</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+Execution: **19 passed**.
 
-### Capacity limits
+| Booking cost (cents) | Slots | Expected Result | Test Result |
+| --- | --- | --- | --- |
+| [1001](pricing.test.ts#L7) | 3 | 333 / 167 / 666; maximum total safely bounded | 333 / 167 / 666; maximum total safely bounded |
+| [6000](pricing.test.ts#L23) | 8 | 750 / 375 / 1500; maximum total safely bounded | 750 / 375 / 1500; maximum total safely bounded |
+| [2](pricing.test.ts#L39) | 2 | 1 / 1 / 2; maximum total safely bounded | 1 / 1 / 2; maximum total safely bounded |
+| [9007199254740991](pricing.test.ts#L55) | 2 | 4503599627370495 / 2251799813685248 / 4503599627370495; maximum total safely bounded | 4503599627370495 / 2251799813685248 / 4503599627370495; maximum total safely bounded |
+| [9007199254740991](pricing.test.ts#L71) | 8 | 1125899906842623 / 562949953421312 / 1125899906842623; maximum total safely bounded | 1125899906842623 / 562949953421312 / 1125899906842623; maximum total safely bounded |
+| [30000](pricing.test.ts#L87) | 30 | 1000 / 500 / 2000; maximum total safely bounded | 1000 / 500 / 2000; maximum total safely bounded |
+| [9007199254740991](pricing.test.ts#L103) | 30 | 300239975158033 / 150119987579017 / 300239975158033; maximum total safely bounded | 300239975158033 / 150119987579017 / 300239975158033; maximum total safely bounded |
+| [0](pricing.test.ts#L119) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [1](pricing.test.ts#L128) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [-1](pricing.test.ts#L137) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [1.5](pricing.test.ts#L146) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [NaN](pricing.test.ts#L155) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [Infinity](pricing.test.ts#L164) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [9007199254740992](pricing.test.ts#L173) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L184) | 0 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L193) | 1 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L202) | 31 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L211) | 2.5 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L220) | NaN | INVALID_INPUT | INVALID_INPUT |
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [sessionPricing_WhenCapacityIsZero_RejectsInvalidCapacity](pricing.test.ts#L184) | <code>costCents = 1000</code><br><code>slots = 0</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCapacityIsOne_RejectsInvalidCapacity](pricing.test.ts#L193) | <code>costCents = 1000</code><br><code>slots = 1</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCapacityExceedsThirty_RejectsInvalidCapacity](pricing.test.ts#L202) | <code>costCents = 1000</code><br><code>slots = 31</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCapacityIsFractional_RejectsInvalidCapacity](pricing.test.ts#L211) | <code>costCents = 1000</code><br><code>slots = 2.5</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [sessionPricing_WhenCapacityIsNotANumber_RejectsInvalidCapacity](pricing.test.ts#L220) | <code>costCents = 1000</code><br><code>slots = NaN</code><br>**Input commands:** <code>sessionPricing(costCents, slots)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+### Resolve participant share
 
-### Participant price selection
+**Input:** Booking cost (cents), Slots, Chosen share (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-| Name and location | Input | Oracle — expected result | Log — actual result (assertion-verified) | Status |
-|---|---|---|---|---|
-| [resolveBookingShare_WhenPriceIsOmitted_PreservesEqualSplit](pricing.test.ts#L231) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code> | <code>share.toCents()</code> equals <code>333</code> | **Observation bindings:** <code>share = resolveBookingShare(cost, slots)</code><br>**Verified outcomes:** <code>share.toCents()</code> was <code>333</code> | Passed |
-| [resolveBookingShare_WhenPriceEqualsMinimum_AcceptsBoundedAdjustment](pricing.test.ts#L240) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code><br><code>chosenPrice = Money.fromCents(167)</code> | <code>share.toCents()</code> equals <code>167</code> | **Observation bindings:** <code>share = resolveBookingShare(cost, slots, chosenPrice)</code><br>**Verified outcomes:** <code>share.toCents()</code> was <code>167</code> | Passed |
-| [resolveBookingShare_WhenPriceExceedsEqualSplitByOneCent_AcceptsBoundedAdjustment](pricing.test.ts#L250) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code><br><code>chosenPrice = Money.fromCents(334)</code> | <code>share.toCents()</code> equals <code>334</code> | **Observation bindings:** <code>share = resolveBookingShare(cost, slots, chosenPrice)</code><br>**Verified outcomes:** <code>share.toCents()</code> was <code>334</code> | Passed |
-| [resolveBookingShare_WhenPriceEqualsMaximum_AcceptsBoundedAdjustment](pricing.test.ts#L260) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code><br><code>chosenPrice = Money.fromCents(666)</code> | <code>share.toCents()</code> equals <code>666</code> | **Observation bindings:** <code>share = resolveBookingShare(cost, slots, chosenPrice)</code><br>**Verified outcomes:** <code>share.toCents()</code> was <code>666</code> | Passed |
-| [resolveBookingShare_WhenPriceIsZero_RejectsOutsideBounds](pricing.test.ts#L270) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code><br><code>chosenPrice = Money.fromCents(0)</code><br>**Input commands:** <code>resolveBookingShare(cost, slots, chosenPrice)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [resolveBookingShare_WhenPriceIsOneCentBelowMinimum_RejectsOutsideBounds](pricing.test.ts#L280) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code><br><code>chosenPrice = Money.fromCents(166)</code><br>**Input commands:** <code>resolveBookingShare(cost, slots, chosenPrice)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
-| [resolveBookingShare_WhenPriceIsOneCentAboveMaximum_RejectsOutsideBounds](pricing.test.ts#L290) | <code>cost = Money.fromCents(1001)</code><br><code>slots = 3</code><br><code>chosenPrice = Money.fromCents(667)</code><br>**Input commands:** <code>resolveBookingShare(cost, slots, chosenPrice)</code> | Throws <code>error code INVALID_INPUT</code> | **Verified outcomes:** Threw <code>error code INVALID_INPUT</code> | Passed |
+Execution: **7 passed**.
+
+| Booking cost (cents) | Slots | Chosen share (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [1001](pricing.test.ts#L231) | 3 | Omitted | 333 | 333 |
+| [1001](pricing.test.ts#L240) | 3 | 167 | 167 | 167 |
+| [1001](pricing.test.ts#L250) | 3 | 334 | 334 | 334 |
+| [1001](pricing.test.ts#L260) | 3 | 666 | 666 | 666 |
+| [1001](pricing.test.ts#L270) | 3 | 0 | INVALID_INPUT | INVALID_INPUT |
+| [1001](pricing.test.ts#L280) | 3 | 166 | INVALID_INPUT | INVALID_INPUT |
+| [1001](pricing.test.ts#L290) | 3 | 667 | INVALID_INPUT | INVALID_INPUT |

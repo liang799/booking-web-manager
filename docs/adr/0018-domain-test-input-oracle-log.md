@@ -2,6 +2,9 @@
 
 - Status: Accepted
 - Date: 2026-10-23
+- Table layout superseded by
+  [ADR-0019](./0019-domain-result-table-layout.md). Test readability and
+  assertion-verified evidence remain accepted.
 - Supersedes: the Arrange/Act/Assert comment requirement in
   [ADR-0005](./0005-domain-unit-test-structure.md). Its suite organization,
   public-behavior testing, and coverage-preservation decisions remain accepted.
