@@ -208,7 +208,7 @@ test("UC1-01 a failed sign-up keeps every step of the draft", async ({ page }) =
 
   expect(response.ok()).toBe(true);
   await expect(page.getByText("We couldn't create your account. Please try again.", { exact: true })).toBeVisible();
-  await expect(userId).toHaveValue("@Jamie_Tan");
+  await expect(userId).toHaveValue("Jamie_Tan");
   await expect(page.getByRole("button", { name: "Create account", exact: true })).toBeEnabled();
 
   await page.getByRole("button", { name: "Back to your profile", exact: true }).click();

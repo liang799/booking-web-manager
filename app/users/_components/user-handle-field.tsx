@@ -91,7 +91,8 @@ export function UserHandleField({
           name={name}
           value={value}
           onChange={(event) => {
-            setValue(event.target.value);
+            // The "@" is already shown in front of the field.
+            setValue(event.target.value.replace(/^\s*@+/u, ""));
             setEditedAfter(errors);
           }}
           autoComplete="username"

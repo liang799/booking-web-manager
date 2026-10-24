@@ -53,6 +53,10 @@ shown as `@name`.
   ID, as `{ userId, handle, displayName }`, through the signed-in
   `GET /api/users/by-handle/{handle}` route. There is no partial-match or list
   search, so the directory cannot be browsed.
+- **Finding a player (Groups page):** a "Find a player" box at the top of Groups
+  runs the same lookup for the signed-in player and shows the found player's
+  name, `@id` and reliability score (the same history-based score as Settings,
+  or "unavailable"). The internal user UUID is not sent to the browser.
 - **Availability check:** `CheckUserHandle` answers AVAILABLE, TAKEN or INVALID.
   The server action that calls it is public, because people check before their
   account exists. It reveals only whether an ID is taken, as Telegram does.
@@ -65,12 +69,14 @@ above.
 ## Consequences
 
 - A user ID is public by design. Anyone signed in who knows it can see that
-  player's name; anyone can learn whether an ID is taken.
+  player's name and reliability score; anyone can learn whether an ID is taken.
+  The reliability score was already visible to session participants; search
+  makes it visible to anyone who knows the exact ID.
 - Telegram-style rules keep IDs readable and safe in URLs without escaping.
 - People whose ID was generated may not know it until they open Settings. A
   generated ID can look like someone else's name, but it reveals nothing beyond
   the display name the account already shows to session participants.
 - IDs can change, so other features must store the user UUID, never the ID.
-- The search box or invite flow that calls the lookup belongs to the feature
-  that needs it (for example replacement invitations); this decision provides
-  the capability and its API contract.
+- Invite flows (for example replacement invitations or adding someone to a
+  group) can reuse the same lookup; this decision provides the capability, the
+  Groups search and the API contract.
