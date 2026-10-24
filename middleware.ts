@@ -12,9 +12,9 @@ import { isAuthenticationConfigured } from "@/lib/supabase/is-configured";
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const invitation = isSessionInvitationPath(pathname);
-  const publicSessionPage = pathname === "/discover" || invitation;
+  const publicInvitationPage = invitation;
   const next = safeRedirectPath(request.nextUrl.searchParams.get("next"));
-  const sensitivePage = invitation || isAuthPage(pathname) || pathname === AUTH_CALLBACK_PATH || pathname === "/profile/email"
+  const sensitivePage = pathname === "/discover" || invitation || isAuthPage(pathname) || pathname === AUTH_CALLBACK_PATH || pathname === "/profile/email"
     || isSessionInvitationPath(next.split(/[?#]/, 1)[0] ?? "");
   const protectResponse = (result: NextResponse): NextResponse => {
     if (sensitivePage) {
@@ -31,7 +31,12 @@ export async function middleware(request: NextRequest) {
   // The callback establishes its own session, including when there is no login cookie yet.
   if (pathname === AUTH_CALLBACK_PATH) return response;
   if (pathname === "/storybook" || pathname.startsWith("/storybook/") || pathname.startsWith("/fonts/")) return response;
-  if ((pathname === "/" || publicSessionPage) && !isAuthenticationConfigured()) return response;
+  if ((pathname === "/" || publicInvitationPage) && !isAuthenticationConfigured()) return response;
+  if (pathname === "/discover" && !isAuthenticationConfigured()) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", `${pathname}${search}`);
+    return redirectKeepingCookies(loginUrl, response);
+  }
 
   let supabase;
   let user;
@@ -56,11 +61,11 @@ export async function middleware(request: NextRequest) {
     // getUser() checks the login with Supabase and refreshes an expiring cookie.
     ({ data: { user } } = await supabase.auth.getUser());
   } catch (error) {
-    if (publicSessionPage) return response;
+    if (publicInvitationPage) return response;
     throw error;
   }
   // Previewing an invitation never grants admission or depends on account access.
-  if (publicSessionPage) return response;
+  if (publicInvitationPage) return response;
   if (user === null) {
     // Unknown routes outside protected sections must reach the public not-found page.
     if (isPublicPath(pathname) || !isProtectedPath(pathname)) return response;

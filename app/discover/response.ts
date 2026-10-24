@@ -3,7 +3,7 @@ import { isRequestFailure } from "@/app/http/request-failure";
 import { DISCOVERY_API_UNAVAILABLE_MESSAGE, DiscoveryApiUnavailableError } from "./discovery-api-unavailable";
 import { discoveryErrorDiagnostics } from "./error-diagnostics";
 
-export type DiscoveryFailureStage = "initialization" | "validation" | "query" | "serialization";
+export type DiscoveryFailureStage = "initialization" | "authentication" | "validation" | "query" | "serialization";
 
 const databaseMessages = {
   DATABASE_UNAVAILABLE: "The sessions database could not be reached or is temporarily unavailable. Retry shortly; if this persists, check database connectivity.",
@@ -33,6 +33,7 @@ const databaseReasons = new Map<string, keyof typeof databaseMessages>([
 
 const stageMessages: Record<DiscoveryFailureStage, string> = {
   initialization: "Session discovery could not initialize. Check the deployment configuration and server logs using the request ID.",
+  authentication: "Session discovery could not verify authentication. Retry shortly; if this persists, check server logs using the request ID.",
   validation: "Session discovery could not process the request. Check server logs using the request ID.",
   query: "Session discovery could not load sessions. Retry shortly; if this persists, check server logs using the request ID.",
   serialization: "Session discovery could not prepare the response. Check server logs using the request ID.",
