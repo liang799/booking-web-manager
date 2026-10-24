@@ -1,6 +1,6 @@
 # groups test cases
 
-Snapshot: **2026-10-24** · **35 cases, 35 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24, payout refactor** · **35 cases, 35 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one independently executable test; its first input value links to the test definition. **Oracle** is the expected result. **Log** contains assertion-verified observations from the recorded run, not captured runtime payloads. A result states only what that case's assertions establish; partial matches, approximate values, and identity checks retain their narrower meaning. Refresh this snapshot after relevant source changes.
 

@@ -1,6 +1,6 @@
 # Sessions test cases
 
-Snapshot: **2026-10-24** · **85 cases, 85 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24, payout refactor** · **85 cases, 85 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one independently executable test; its first input value links to the test definition. **Test Result** contains assertion-verified observations derived from executed assertions and their recorded status, not captured runtime payloads. Expected Result is the **Oracle**; Test Result is the **Log**. A matching result reports only the stated assertions, including partial matches, identity and unchanged-state checks. Refresh the snapshot after relevant source changes.
 

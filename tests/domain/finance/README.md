@@ -1,6 +1,6 @@
 # Finance test cases
 
-Snapshot: **2026-10-24** · **55 cases, 55 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24, payout refactor** · **55 cases, 55 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
@@ -62,7 +62,7 @@ Execution: **1 passed / 1 cases**.
 
 ## PayoutAttempt constructor — provider outcome metadata
 
-The common batch is payout `payout`, session `session`, key `key`, requested at **2026-10-10 12:00 UTC**. It totals 100 cents and has one RELEASE line: hold `hold`, participation `participation`, holding account `platform`, wallet `wallet`, 100 cents. Destination: payout account `account`, user `booker`, provider account `provider`, bank `bank`. Unless specified, state is REQUESTED and completion/failure metadata is absent. Dates labelled request time mean the timestamp above.
+The common batch is payout `payout`, session `session`, requested at **2026-10-10 12:00 UTC**. It totals 100 cents and has one RELEASE line: hold `hold`, participation `participation`, holding account `platform`, wallet `wallet`, 100 cents. Destination: payout account `account`, user `booker`, provider account `provider`, bank `bank`. Unless specified, state is REQUESTED and completion/failure metadata is absent. Dates labelled request time mean the timestamp above.
 
 **Input:** Payout status, Completed at, Provider reference, Failed at, Failure reason · **Oracle:** Expected Result · **Log:** Test Result
 
@@ -126,7 +126,7 @@ Execution: **1 passed / 1 cases**.
 
 | Payout ID | Total amount (cents) | Payout status | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [payout](payout-attempt.test.ts#L131) | 100 | REQUESTED | Contains kind PAYOUT_REQUESTED and payout ID payout (partial match); amount 100 cents | Contains kind PAYOUT_REQUESTED and payout ID payout (partial match); amount 100 cents |
+| [payout](payout-attempt.test.ts#L131) | 100 | REQUESTED | Exact request fields: kind PAYOUT_REQUESTED, payout payout, session session, common destination and request time; no request key; amount 100 cents | Exact request fields: kind PAYOUT_REQUESTED, payout payout, session session, common destination and request time; no request key; amount 100 cents |
 
 ## PayoutAttempt.complete — provider callbacks
 
@@ -138,11 +138,11 @@ Execution: **5 passed / 5 cases**.
 
 | Initial status | Stored provider reference | Stored failure reason | Callback provider reference | Callback count | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [FAILED](payout-attempt.test.ts#L145) | Absent | failure | provider | 1 | Throws error with code STALE_PAYOUT | Throws error with code STALE_PAYOUT |
-| [REQUESTED](payout-attempt.test.ts#L158) | Absent | Absent | provider-result | 2 | Returns true, then false; status COMPLETED; provider reference provider-result | Returns true, then false; status COMPLETED; provider reference provider-result |
-| [COMPLETED](payout-attempt.test.ts#L173) | provider-result | Absent | other-result | 1 | Throws error with code PAYOUT_CONFLICT | Throws error with code PAYOUT_CONFLICT |
-| [COMPLETED](payout-attempt.test.ts#L185) | provider-result | Absent | provider-result | 1 | Returns false; status COMPLETED; amount 100 cents; provider reference provider-result | Returns false; status COMPLETED; amount 100 cents; provider reference provider-result |
-| [FAILED](payout-attempt.test.ts#L206) | Absent | timeout | late | 1 | Throws error with code STALE_PAYOUT | Throws error with code STALE_PAYOUT |
+| [FAILED](payout-attempt.test.ts#L154) | Absent | failure | provider | 1 | Throws error with code STALE_PAYOUT | Throws error with code STALE_PAYOUT |
+| [REQUESTED](payout-attempt.test.ts#L167) | Absent | Absent | provider-result | 2 | Returns true, then false; status COMPLETED; provider reference provider-result | Returns true, then false; status COMPLETED; provider reference provider-result |
+| [COMPLETED](payout-attempt.test.ts#L182) | provider-result | Absent | other-result | 1 | Throws error with code PAYOUT_CONFLICT | Throws error with code PAYOUT_CONFLICT |
+| [COMPLETED](payout-attempt.test.ts#L194) | provider-result | Absent | provider-result | 1 | Returns false; status COMPLETED; amount 100 cents; provider reference provider-result | Returns false; status COMPLETED; amount 100 cents; provider reference provider-result |
+| [FAILED](payout-attempt.test.ts#L215) | Absent | timeout | late | 1 | Throws error with code STALE_PAYOUT | Throws error with code STALE_PAYOUT |
 
 ## PayoutAttempt.fail — failure callbacks
 
@@ -154,8 +154,8 @@ Execution: **2 passed / 2 cases**.
 
 | Initial status | Stored failure reason | Callback failure reason | Callback count | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [FAILED](payout-attempt.test.ts#L220) | failure | failure | 1 | Returns false; status FAILED; failure reason failure | Returns false; status FAILED; failure reason failure |
-| [REQUESTED](payout-attempt.test.ts#L235) | Absent | timeout | 2 | Returns true, then false; status FAILED; failure reason timeout | Returns true, then false; status FAILED; failure reason timeout |
+| [FAILED](payout-attempt.test.ts#L229) | failure | failure | 1 | Returns false; status FAILED; failure reason failure | Returns false; status FAILED; failure reason failure |
+| [REQUESTED](payout-attempt.test.ts#L244) | Absent | timeout | 2 | Returns true, then false; status FAILED; failure reason timeout | Returns true, then false; status FAILED; failure reason timeout |
 
 ## Wallet constructor — identity
 

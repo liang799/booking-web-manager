@@ -212,8 +212,9 @@ do not establish that a command can produce or preserve that state.
 Shared fixture behavior has maintained contract tests in
 [session-fixtures.test.ts](./sessions/session/session-fixtures.test.ts), including
 attendance, financial terms, roster order, invalid overrides, and payout identity.
-When a payout ID or idempotency key defines the scenario, supply it through
-`pendingPayoutDetails` options instead of relying on its default.
+When a payout ID defines the scenario, supply it through `pendingPayoutDetails`
+options instead of relying on its default. Client request keys belong to the
+payout application and persistence tests, not domain fixtures.
 
 ```ts
 const alice = createTestUser({ userId: "alice", availableFundsCents: 500 });
@@ -362,7 +363,7 @@ The table vocabulary follows *Lecture 16: Testing Introduction*, slides 15–18.
 Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
-The **2026-10-24** snapshot covers **623 passing cases across 44 files**. Each
+The **2026-10-24 payout-refactor** snapshot covers **614 passing cases across 44 files**. Each
 row is one test case. Group cases by operation and compatible input fields, put
 the operation in the heading, and give the inputs separate domain-specific
 columns with units. End each table with **Expected Result** and **Test Result**.
@@ -395,14 +396,14 @@ Execution: **1 passed / 1 illustrative case** (also included in the Money table)
 | Area | Cases | Tables |
 |---|---:|---|
 | Accounts | 95 | [Account cases](./accounts/README.md) |
-| Booker | 56 | [Booker cases](./accounts/booker/README.md) |
+| Booker | 54 | [Booker cases](./accounts/booker/README.md) |
 | Participant | 77 | [Participant cases](./accounts/participant/README.md) |
 | Finance | 55 | [Finance cases](./finance/README.md) |
 | Money | 82 | [Money cases](./finance/money/README.md) |
 | Groups | 35 | [Group cases](./groups/README.md) |
 | Reliability | 33 | [Reliability cases](./reliability/README.md) |
 | Sessions | 85 | [Session value and pricing cases](./sessions/README.md) |
-| Session lifecycle and fixtures | 105 | [Session lifecycle cases](./sessions/session/README.md) |
+| Session lifecycle and fixtures | 98 | [Session lifecycle cases](./sessions/session/README.md) |
 
 The [execution evidence and refresh procedure](./results/README.md) retain the
 JSON report, source hashes, and baseline-to-final scenario mapping. Log values

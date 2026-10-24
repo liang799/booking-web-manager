@@ -1,12 +1,12 @@
 # Session test cases
 
-Snapshot: **2026-10-24** · **105 cases, 105 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24, payout refactor** · **98 cases, 98 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one independently executable test; its first input value links to the test definition. **Test Result** contains assertion-verified observations derived from executed assertions and their recorded status, not captured runtime payloads. Expected Result is the **Oracle**; Test Result is the **Log**. A matching result reports only the stated assertions, including partial matches, identity and unchanged-state checks. Refresh the snapshot after relevant source changes.
 
-Shared defaults: session s, booker booker, Court / North / Badminton, PUBLIC and OPEN, two slots, minimum headcount two, total cost 1,000 cents, share 500 cents (an omitted price uses the cost divided by slots, rounded down), holding account platform, room token room, empty roster and payout histories, next queue sequence 1. **Start** is 2026-10-10 10:00 UTC; **end** is 2026-10-10 12:00 UTC. Relative times name these anchors. Participants use IDs p-user, holds h-user and wallets w-user, with the actual user ID replacing user; commitments and waitlist entries begin 48 hours before start. Unspecified attendance is UNVERIFIED. Booker marks are recorded at end. Users are active with 10,000 cents unless overridden; booker has completed payout setup.
+Shared defaults: session s, booker booker, Court / North / Badminton, PUBLIC and OPEN, two slots, minimum headcount two, total cost 1,000 cents, share 500 cents (an omitted price uses the cost divided by slots, rounded down), holding account platform, room token room, empty roster and payout history, next queue sequence 1. **Start** is 2026-10-10 10:00 UTC; **end** is 2026-10-10 12:00 UTC. Relative times name these anchors. Participants use IDs p-user, holds h-user and wallets w-user, with the actual user ID replacing user; commitments and waitlist entries begin 48 hours before start. Unspecified attendance is UNVERIFIED. Booker marks are recorded at end. Users are active with 10,000 cents unless overridden; booker has completed payout setup.
 
-A **pending payout** has status PAYOUT_PENDING, payout out, key key, request time end, destination account pa / user booker / provider provider / bank bank, and a 500-cent RELEASE line for each attended participant. Its histories contain out and key; holds remain HELD. Withdrawn, removed and cancelled fixtures default to 500-cent holds committed 48 hours before start; refunded withdrawals settle at withdrawal unless a later time is stated. Scenario values below override these defaults. **State unchanged** refers to the source test’s complete public-state comparison, including roster, financial metadata, queue and payout histories.
+A **pending payout** has status PAYOUT_PENDING, payout out, request time end, destination account pa / user booker / provider provider / bank bank, and a 500-cent RELEASE line for each attended participant. Its payout history contains out; holds remain HELD. Withdrawn, removed and cancelled fixtures default to 500-cent holds committed 48 hours before start; refunded withdrawals settle at withdrawal unless a later time is stated. Scenario values below override these defaults. **State unchanged** refers to the source test’s complete public-state comparison, including roster, financial metadata, queue and payout history.
 
 ## Admission and availability
 
@@ -102,13 +102,13 @@ Execution: **1 passed / 1 cases**.
 
 ### Prepare payout at chosen price
 
-**Input:** Session state, Attendance, Share (cents), Payout ID, Idempotency key, Request time · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Session state, Attendance, Share (cents), Payout ID, Request time · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **1 passed / 1 cases**.
 
-| Session state | Attendance | Share (cents) | Payout ID | Idempotency key | Request time | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| [AWAITING_PAYOUT](custom-pricing.test.ts#L172) | alice ATTENDED / BOOKER | 750 | out | key | End | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD |
+| Session state | Attendance | Share (cents) | Payout ID | Request time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [AWAITING_PAYOUT](custom-pricing.test.ts#L172) | alice ATTENDED / BOOKER | 750 | out | End | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD |
 
 ### Complete payout at chosen price
 
@@ -118,7 +118,7 @@ Execution: **1 passed / 1 cases**.
 
 | Pending payout | Participant | Share (cents) | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [out](custom-pricing.test.ts#L196) | alice | 750 | End | One RELEASE for 750 cents; alice hold RELEASED | One RELEASE for 750 cents; alice hold RELEASED |
+| [out](custom-pricing.test.ts#L195) | alice | 750 | End | One RELEASE for 750 cents; alice hold RELEASED | One RELEASE for 750 cents; alice hold RELEASED |
 
 ## Restoration and ownership invariants
 
@@ -126,13 +126,13 @@ Source: [reconstruction.test.ts](reconstruction.test.ts).
 
 ### Restore session — roster, dates and history isolation
 
-**Input:** Committed users, Payout attempts, Payout keys, Source collection edits, Returned value edits · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Committed users, Payout attempts, Source collection edits, Returned value edits · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **1 passed / 1 cases**.
 
-| Committed users | Payout attempts | Payout keys | Source collection edits | Returned value edits | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- | --- |
-| [alice](reconstruction.test.ts#L16) | earlier | earlier-key | Remove roster entry; append leak to both histories | Remove roster and history entries; change start, commitment and hold creation years to 2000 | One roster entry; alice retains original instance; start unchanged; alice commitment and hold creation remain 48 hours before start; attempts earlier; keys earlier-key; next queue sequence 1 | One roster entry; alice retains original instance; start unchanged; alice commitment and hold creation remain 48 hours before start; attempts earlier; keys earlier-key; next queue sequence 1 |
+| Committed users | Payout attempts | Source collection edits | Returned value edits | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [alice](reconstruction.test.ts#L16) | earlier | Remove roster entry; append leak to payout history | Remove roster and history entries; change start, commitment and hold creation years to 2000 | One roster entry; alice retains original instance; start unchanged; alice commitment and hold creation remain 48 hours before start; attempts earlier; next queue sequence 1 | One roster entry; alice retains original instance; start unchanged; alice commitment and hold creation remain 48 hours before start; attempts earlier; next queue sequence 1 |
 
 ### Read pending payout — isolate nested values
 
@@ -142,7 +142,7 @@ Execution: **1 passed / 1 cases**.
 
 | Pending payout | Participants | Source batch edits | Returned batch edits | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [out / key](reconstruction.test.ts#L56) | alice | Request year 2000; bank changed; remove line | Request year 2001; bank changed-again; remove line | Request time end; bank bank; one 500-cent line; attempts out; keys key | Request time end; bank bank; one 500-cent line; attempts out; keys key |
+| [out](reconstruction.test.ts#L51) | alice | Request year 2000; bank changed; remove line | Request year 2001; bank changed-again; remove line | Request time end; bank bank; one 500-cent line; attempts out | Request time end; bank bank; one 500-cent line; attempts out |
 
 ### Complete restored payout independently
 
@@ -152,7 +152,7 @@ Execution: **1 passed / 1 cases**.
 
 | Pending payout | Participants | Session copies | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [out / key](reconstruction.test.ts#L82) | alice | Original and restored from the same details | End | One RELEASE; restored SETTLED; original PAYOUT_PENDING with alice hold HELD | One RELEASE; restored SETTLED; original PAYOUT_PENDING with alice hold HELD |
+| [out](reconstruction.test.ts#L76) | alice | Original and restored from the same details | End | One RELEASE; restored SETTLED; original PAYOUT_PENDING with alice hold HELD | One RELEASE; restored SETTLED; original PAYOUT_PENDING with alice hold HELD |
 
 ### Restore session lifecycle status
 
@@ -164,9 +164,9 @@ Execution: **3 passed / 3 cases**.
 
 | Session state | Roster states | Hold states | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [CANCELLED](reconstruction.test.ts#L105) | alice REMOVED; ben CANCELLED; cara CANCELLED from waitlist | alice REFUNDED 48 hours before start; ben REFUNDED 24 hours before start; cara none | alice REMOVED | alice REMOVED |
-| [SETTLED](reconstruction.test.ts#L133) | Empty | None | SETTLED; booking end unchanged | SETTLED; booking end unchanged |
-| [SETTLED](reconstruction.test.ts#L142) | alice COMMITTED | alice HELD | DomainError | DomainError |
+| [CANCELLED](reconstruction.test.ts#L99) | alice REMOVED; ben CANCELLED; cara CANCELLED from waitlist | alice REFUNDED 48 hours before start; ben REFUNDED 24 hours before start; cara none | alice REMOVED | alice REMOVED |
+| [SETTLED](reconstruction.test.ts#L127) | Empty | None | SETTLED; booking end unchanged | SETTLED; booking end unchanged |
+| [SETTLED](reconstruction.test.ts#L136) | alice COMMITTED | alice HELD | DomainError | DomainError |
 
 ### Restore roster — unique ownership
 
@@ -178,11 +178,11 @@ Execution: **5 passed / 5 cases**.
 
 | Roster user IDs | Participation IDs | Hold IDs | Queue sequences | Next queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [alice, alice](reconstruction.test.ts#L157) | p-alice, p-alice | h-alice, h-alice | Absent | 1 | DomainError | DomainError |
-| [alice, ben](reconstruction.test.ts#L169) | p-shared, p-shared | None | 1, 2 | 3 | DUPLICATE_ID | DUPLICATE_ID |
-| [alice, alice](reconstruction.test.ts#L193) | p-alice-first, p-alice-second | None | 1, 2 | 3 | DUPLICATE_ID | DUPLICATE_ID |
-| [alice, ben](reconstruction.test.ts#L217) | p-alice, p-ben | h-alice, h-alice | Absent | 1 | DUPLICATE_ID | DUPLICATE_ID |
-| [alice LEFT_WAITLIST, ben WAITLISTED](reconstruction.test.ts#L244) | p-alice, p-ben | None | 1, 1 | 2 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice, alice](reconstruction.test.ts#L151) | p-alice, p-alice | h-alice, h-alice | Absent | 1 | DomainError | DomainError |
+| [alice, ben](reconstruction.test.ts#L163) | p-shared, p-shared | None | 1, 2 | 3 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice, alice](reconstruction.test.ts#L187) | p-alice-first, p-alice-second | None | 1, 2 | 3 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice, ben](reconstruction.test.ts#L211) | p-alice, p-ben | h-alice, h-alice | Absent | 1 | DUPLICATE_ID | DUPLICATE_ID |
+| [alice LEFT_WAITLIST, ben WAITLISTED](reconstruction.test.ts#L238) | p-alice, p-ben | None | 1, 1 | 2 | DUPLICATE_ID | DUPLICATE_ID |
 
 ### Restore queue continuity
 
@@ -192,8 +192,8 @@ Execution: **2 passed / 2 cases**.
 
 | Waitlisted user | Participation ID | Queue sequence | Next queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [queued-user](reconstruction.test.ts#L270) | queued | 5 | 5 | DomainError | DomainError |
-| [queued-user](reconstruction.test.ts#L298) | queued | 5 | 6 | Next waiter queued-user | Next waiter queued-user |
+| [queued-user](reconstruction.test.ts#L264) | queued | 5 | 5 | DomainError | DomainError |
+| [queued-user](reconstruction.test.ts#L292) | queued | 5 | 6 | Next waiter queued-user | Next waiter queued-user |
 
 ### Restore hold account ownership
 
@@ -203,45 +203,38 @@ Execution: **1 passed / 1 cases**.
 
 | Committed user | Session holding account | Hold holding account | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [alice](reconstruction.test.ts#L285) | foreign | platform | DomainError | DomainError |
+| [alice](reconstruction.test.ts#L279) | foreign | platform | DomainError | DomainError |
 
 ### Restore payout history
 
 Pending and failed-payout inputs contain attended alice with a HELD share. OPEN inputs have an empty roster. History cells are ordered lists unless explicitly marked as a string or omitted.
 
-**Input:** Session state, Pending batch, Attempt history, Key history · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Session state, Pending batch, Attempt history · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **11 passed / 11 cases**.
+Execution: **5 passed / 5 cases**.
 
-| Session state | Pending batch | Attempt history | Key history | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- |
-| [OPEN](reconstruction.test.ts#L319) | Absent | Omitted | Omitted | INVALID_INPUT | INVALID_INPUT |
-| [OPEN](reconstruction.test.ts#L332) | Absent | Omitted | earlier-key | INVALID_INPUT | INVALID_INPUT |
-| [OPEN](reconstruction.test.ts#L345) | Absent | earlier | Omitted | INVALID_INPUT | INVALID_INPUT |
-| [OPEN](reconstruction.test.ts#L358) | Absent | String earlier (not a list) | Empty list | INVALID_INPUT | INVALID_INPUT |
-| [OPEN](reconstruction.test.ts#L367) | Absent | Empty list | String earlier-key (not a list) | INVALID_INPUT | INVALID_INPUT |
-| [PAYOUT_PENDING](reconstruction.test.ts#L379) | out / key | Omitted | Omitted | INVALID_INPUT | INVALID_INPUT |
-| [PAYOUT_PENDING](reconstruction.test.ts#L392) | out / key | Omitted | earlier-key, key | INVALID_INPUT | INVALID_INPUT |
-| [PAYOUT_PENDING](reconstruction.test.ts#L405) | out / key | earlier, out | Omitted | INVALID_INPUT | INVALID_INPUT |
-| [AWAITING_PAYOUT](reconstruction.test.ts#L418) | Absent | out | key | AWAITING_PAYOUT; no pending batch; attempts out; keys key; alice hold HELD | AWAITING_PAYOUT; no pending batch; attempts out; keys key; alice hold HELD |
-| [OPEN](reconstruction.test.ts#L435) | Absent | same, same | Empty list | DomainError | DomainError |
-| [OPEN](reconstruction.test.ts#L441) | Absent | Empty list | same, same | DomainError | DomainError |
+| Session state | Pending batch | Attempt history | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [OPEN](reconstruction.test.ts#L313) | Absent | Omitted | INVALID_INPUT | INVALID_INPUT |
+| [OPEN](reconstruction.test.ts#L325) | Absent | String earlier (not a list) | INVALID_INPUT | INVALID_INPUT |
+| [PAYOUT_PENDING](reconstruction.test.ts#L334) | out | Omitted | INVALID_INPUT | INVALID_INPUT |
+| [AWAITING_PAYOUT](reconstruction.test.ts#L346) | Absent | out | AWAITING_PAYOUT; no pending batch; attempts out; alice hold HELD | AWAITING_PAYOUT; no pending batch; attempts out; alice hold HELD |
+| [OPEN](reconstruction.test.ts#L362) | Absent | same, same | DomainError | DomainError |
 
 ### Restore pending payout ownership
 
 Session state is PAYOUT_PENDING; a present batch contains alice’s share.
 
-**Input:** Pending batch, Batch session ID, Line wallet, Attempt history, Key history · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Pending batch, Batch session ID, Line wallet, Attempt history · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **5 passed / 5 cases**.
+Execution: **4 passed / 4 cases**.
 
-| Pending batch | Batch session ID | Line wallet | Attempt history | Key history | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- | --- |
-| [Absent](reconstruction.test.ts#L451) | — | — | Empty list | Empty list | DomainError | DomainError |
-| [out / key](reconstruction.test.ts#L457) | foreign | w-alice | out | key | DomainError | DomainError |
-| [out / key](reconstruction.test.ts#L470) | s | foreign | out | key | DomainError | DomainError |
-| [out / key](reconstruction.test.ts#L486) | s | w-alice | Empty list | key | DomainError | DomainError |
-| [out / key](reconstruction.test.ts#L494) | s | w-alice | out | Empty list | DomainError | DomainError |
+| Pending batch | Batch session ID | Line wallet | Attempt history | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [Absent](reconstruction.test.ts#L370) | — | — | Empty list | DomainError | DomainError |
+| [out](reconstruction.test.ts#L376) | foreign | w-alice | out | DomainError | DomainError |
+| [out](reconstruction.test.ts#L389) | s | foreign | out | DomainError | DomainError |
+| [out](reconstruction.test.ts#L405) | s | w-alice | Empty list | DomainError | DomainError |
 
 ## Transition recording
 
@@ -379,15 +372,15 @@ Execution: **3 passed / 3 cases**.
 
 Submitted roster is the current roster. The incomplete batch uses the pending payout defaults but omits ben’s line.
 
-**Input:** Session state, Participants, Payout ID, Idempotency key, Supplied batch lines, Request time · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Session state, Participants, Payout ID, Supplied batch lines, Request time · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **3 passed / 3 cases**.
 
-| Session state | Participants | Payout ID | Idempotency key | Supplied batch lines | Request time | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| [OPEN](recording.test.ts#L660) | None | out | key | No batch | 48 hours before start | SESSION_NOT_ENDED; state unchanged | SESSION_NOT_ENDED; state unchanged |
-| [AWAITING_PAYOUT](recording.test.ts#L677) | alice ATTENDED | out | key | No batch | End | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
-| [AWAITING_PAYOUT](recording.test.ts#L699) | alice ATTENDED, ben ATTENDED | out | key | alice RELEASE only | End | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+| Session state | Participants | Payout ID | Supplied batch lines | Request time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [OPEN](recording.test.ts#L660) | None | out | No batch | 48 hours before start | SESSION_NOT_ENDED; state unchanged | SESSION_NOT_ENDED; state unchanged |
+| [AWAITING_PAYOUT](recording.test.ts#L676) | alice ATTENDED | out | No batch | End | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+| [AWAITING_PAYOUT](recording.test.ts#L697) | alice ATTENDED, ben ATTENDED | out | alice RELEASE only | End | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
 
 ## Replacement history restoration
 
@@ -437,9 +430,9 @@ Execution: **3 passed / 3 cases**.
 
 | Pending participants | Batch lines | Callback payout ID | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [alice, ben](settlement.test.ts#L21) | alice RELEASE only | out | End | INVALID_INPUT; state unchanged; same roster instance; PAYOUT_PENDING; attempts out; keys key; both holds HELD | INVALID_INPUT; state unchanged; same roster instance; PAYOUT_PENDING; attempts out; keys key; both holds HELD |
-| [alice, ben](settlement.test.ts#L46) | alice RELEASE, ben RELEASE | stale | End | STALE_PAYOUT; state unchanged | STALE_PAYOUT; state unchanged |
-| [alice, ben](settlement.test.ts#L56) | alice RELEASE, ben RELEASE | out | Invalid date | DomainError; state unchanged | DomainError; state unchanged |
+| [alice, ben](settlement.test.ts#L21) | alice RELEASE only | out | End | INVALID_INPUT; state unchanged; same roster instance; PAYOUT_PENDING; attempts out; both holds HELD | INVALID_INPUT; state unchanged; same roster instance; PAYOUT_PENDING; attempts out; both holds HELD |
+| [alice, ben](settlement.test.ts#L45) | alice RELEASE, ben RELEASE | stale | End | STALE_PAYOUT; state unchanged | STALE_PAYOUT; state unchanged |
+| [alice, ben](settlement.test.ts#L55) | alice RELEASE, ben RELEASE | out | Invalid date | DomainError; state unchanged | DomainError; state unchanged |
 
 ### Complete payout — release and forfeiture
 
@@ -451,11 +444,11 @@ Execution: **1 passed / 1 cases**.
 
 | Participant states | Hold states | Batch line kinds | Callback payout ID | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [alice WITHDRAWN; ben COMMITTED / ATTENDED](settlement.test.ts#L66) | FORFEITURE_DUE, HELD | FORFEIT, RELEASE | out | End | Instructions FORFEIT, RELEASE, both payout out; SETTLED; holds FORFEITED, RELEASED | Instructions FORFEIT, RELEASE, both payout out; SETTLED; holds FORFEITED, RELEASED |
+| [alice WITHDRAWN; ben COMMITTED / ATTENDED](settlement.test.ts#L65) | FORFEITURE_DUE, HELD | FORFEIT, RELEASE | out | End | Instructions FORFEIT, RELEASE, both payout out; SETTLED; holds FORFEITED, RELEASED | Instructions FORFEIT, RELEASE, both payout out; SETTLED; holds FORFEITED, RELEASED |
 
 ### Read settled reliability outcomes
 
-Alice withdrew two hours before start; both holds settled at end with payout out. Histories are out / key.
+Alice withdrew two hours before start; both holds settled at end with payout out. Payout history is out.
 
 **Input:** Session state, Participant states, Hold states, Evaluation time · **Oracle:** Expected Result · **Log:** Test Result
 
@@ -463,7 +456,7 @@ Execution: **1 passed / 1 cases**.
 
 | Session state | Participant states | Hold states | Evaluation time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [SETTLED](settlement.test.ts#L103) | alice WITHDRAWN; ben COMMITTED / ATTENDED | alice FORFEITED; ben RELEASED | End | alice reliability value 0 | alice reliability value 0 |
+| [SETTLED](settlement.test.ts#L102) | alice WITHDRAWN; ben COMMITTED / ATTENDED | alice FORFEITED; ben RELEASED | End | alice reliability value 0 | alice reliability value 0 |
 
 ### Complete payout — injected failure and retry
 
@@ -473,18 +466,18 @@ Execution: **2 passed / 2 cases**.
 
 | Pending participants | Callback payout ID | Injected settlement failure | Retry | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [alice, ben](settlement.test.ts#L144) | out | ben: INVALID_STATE / Second line rejected | None | End | INVALID_STATE; message Second line rejected; state unchanged | INVALID_STATE; message Second line rejected; state unchanged |
-| [alice, ben](settlement.test.ts#L175) | out | ben: INVALID_STATE / Second line rejected, once | Same payout after failure removed | End | First attempt INVALID_STATE / Second line rejected; retry returns two instructions; both holds RELEASED; pending batch absent | First attempt INVALID_STATE / Second line rejected; retry returns two instructions; both holds RELEASED; pending batch absent |
+| [alice, ben](settlement.test.ts#L142) | out | ben: INVALID_STATE / Second line rejected | None | End | INVALID_STATE; message Second line rejected; state unchanged | INVALID_STATE; message Second line rejected; state unchanged |
+| [alice, ben](settlement.test.ts#L173) | out | ben: INVALID_STATE / Second line rejected, once | Same payout after failure removed | End | First attempt INVALID_STATE / Second line rejected; retry returns two instructions; both holds RELEASED; pending batch absent | First attempt INVALID_STATE / Second line rejected; retry returns two instructions; both holds RELEASED; pending batch absent |
 
 ### Complete payout — use current retry identity
 
-**Input:** Pending participant, Attempt history, Key history, Current payout/key, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Pending participant, Attempt history, Current payout, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **1 passed / 1 cases**.
 
-| Pending participant | Attempt history | Key history | Current payout/key | Callback payout ID | Completion time | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| [alice](settlement.test.ts#L217) | out, retry | key, retry-key | retry / retry-key | retry | End | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch |
+| Pending participant | Attempt history | Current payout | Callback payout ID | Completion time | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| [alice](settlement.test.ts#L215) | out, retry | retry | retry | End | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch |
 
 ### Record payout failure
 
@@ -494,7 +487,7 @@ Execution: **1 passed / 1 cases**.
 
 | Pending participants | Failed payout ID | Failure time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [alice, ben](settlement.test.ts#L250) | out | End | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD |
+| [alice, ben](settlement.test.ts#L246) | out | End | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; both holds HELD | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; both holds HELD |
 
 ## Fixture contracts
 
@@ -577,11 +570,11 @@ Execution: **1 passed / 1 cases**.
 
 ### Construct pending payout fixture
 
-**Input:** Participants, Share (cents), Payout ID option, Idempotency key option · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Participants, Share (cents), Payout ID option · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **2 passed / 2 cases**.
 
-| Participants | Share (cents) | Payout ID option | Idempotency key option | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- |
-| [alice](session-fixtures.test.ts#L187) | Omitted (500) | Omitted (out) | Omitted (key) | Payout out; key key; first line 500 cents; attempts out; keys key | Payout out; key key; first line 500 cents; attempts out; keys key |
-| [alice, ben](session-fixtures.test.ts#L199) | 750 | original-payout | original-key | PAYOUT_PENDING; payout original-payout; key original-key; lines 750, 750 cents; holds 750, 750 cents; attempts original-payout; keys original-key | PAYOUT_PENDING; payout original-payout; key original-key; lines 750, 750 cents; holds 750, 750 cents; attempts original-payout; keys original-key |
+| Participants | Share (cents) | Payout ID option | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [alice](session-fixtures.test.ts#L187) | Omitted (500) | Omitted (out) | Payout out; first line 500 cents; attempts out; pending batch has no request key; Session has no request-key history | Payout out; first line 500 cents; attempts out; pending batch has no request key; Session has no request-key history |
+| [alice, ben](session-fixtures.test.ts#L199) | 750 | original-payout | PAYOUT_PENDING; payout original-payout; lines 750, 750 cents; holds 750, 750 cents; attempts original-payout; pending batch has no request key; Session has no request-key history | PAYOUT_PENDING; payout original-payout; lines 750, 750 cents; holds 750, 750 cents; attempts original-payout; pending batch has no request key; Session has no request-key history |

@@ -1,6 +1,74 @@
 # Domain test execution evidence
 
-Snapshot run: **24 October 2026, 14:02:13 SGT**
+## Current payout-refactor snapshot
+
+Snapshot run: **24 October 2026, 15:43:35 SGT**
+(`2026-10-24T07:43:35.982Z`). All **614 tests in 44 files passed**.
+
+```sh
+rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-24-payout-vitest.json
+```
+
+- [Payout execution report](./2026-10-24-payout-vitest.json): exact executed case
+  identities, statuses, timings, and failure diagnostics.
+- [Payout tested-source manifest](./2026-10-24-payout-sources.json): 89 exact-byte
+  SHA-256 hashes and aggregate digest
+  `7559019cfb17871bc9181232362e3ae91403a88facb2af1d1efd05adf179c0dd`.
+- [Payout coverage mapping](./2026-10-24-payout-coverage-map.json): maps all 623
+  PR121 cases to the payout contract. It retains 614 cases, including one renamed
+  case, consolidates two now-identical missing-payout-ID-history cases, and moves
+  seven request-key policy cases to application/persistence coverage. No prior
+  business guard, replacement-history, primitive amount, or fixture contract
+  coverage is retired.
+- [Current table index](../README.md#result-snapshots): **614 unique rows in 188
+  tables** across nine directories, with one source link per executed case.
+
+This PR is stacked on domain-test PR121 at `849bcb3`. Its historical execution,
+source manifest, coverage mapping, and mutation experiments remain unchanged.
+The new mapping records before/after assertions for the 31 changed callbacks;
+other retained callbacks are unchanged after whitespace normalization. A source
+review also checks setup, timing, and key-free payout inputs. Counts and syntax
+comparison support that review rather than proving equivalent behavior alone.
+
+Payout request-key validation and replay now belong to the application and
+persistence adapters under [ADR-0020](../../../docs/adr/0020-payout-request-idempotency.md).
+The two combined missing-ID-and-key-history cases consolidate into the existing
+missing-payout-ID-history cases. Removed key-history validation and duplicate-key
+cases link to their adapter/application replacements in the mapping. The domain
+still covers payout-ID reuse, pending-attempt guards, frozen financial data,
+stale/conflicting callbacks, and unchanged state after rejection. Returned
+batches, requested intents, and fixtures now verify the key-free contract.
+
+The manifest follows PR121's 89-file inventory: domain implementation, domain
+tests and fixtures, package manifests, and Vitest/TypeScript configuration. The
+aggregate hashes UTF-8 `JSON.stringify(files)` in manifest insertion order;
+each entry hashes exact file bytes. Documentation and evidence artifacts are
+excluded to prevent a circular digest. External coverage links identify
+replacement tests; their execution is established by the unit/integration runs
+below, not by this domain-only report.
+
+| Check | Result |
+|---|---|
+| Domain suite | 614 passed across 44 files |
+| Shuffled domain suite, seed `2006` | 614 passed across 44 files |
+| Full `rtk npm test` | 2,853 passed; 3 failed; 42 skipped; 1 todo |
+| `rtk npm run test:integration` | 102 passed across 13 files |
+| `rtk npm run typecheck` | Same 25 independently reproduced baseline errors in the profile page and app shell |
+| `rtk npm run lint` | Same baseline unused `MobileNavigation` import in the app shell |
+
+The three unit failures are the unchanged `PageHeader is not defined` failures
+in `tests/app/profile/settings-links.test.ts`. Baseline failures remain separate
+from payout validation. The source anchors, execution identities, column widths,
+per-table counts, 614 unique rows, 89 file hashes, and aggregate digest were
+reconciled for this snapshot. Table logs contain only assertion-verified facts.
+
+## Historical PR121 snapshot (`849bcb3`)
+
+The material below records PR121's cleanup and review evidence. References to
+its current/final sources and counts describe that historical revision, not the
+payout sources above. Its JSON artifacts are retained without modification.
+
+PR121 snapshot run: **24 October 2026, 14:02:13 SGT**
 (`2026-10-24T06:02:13.259Z`). All **623 tests in 44 files passed**.
 
 ```sh
@@ -20,8 +88,9 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
   three replacement-history transitions, fourteen shared-fixture contracts, and
   partial attendance verification.
   Includes before/after assertion expressions for changed explicit scenarios.
-- [Table index](../README.md#result-snapshots): nine directories, 623 rows,
-  exactly one row per final case. Each row links to its test definition.
+- The PR121 table snapshot had nine directories and 623 rows, one per case.
+  The [current table index](../README.md#result-snapshots) now describes the
+  payout snapshot above; use revision `849bcb3` for the historical tables.
 
 Base revision: `00f6c88462e16ffce8f91dd78b72aa649918e9f7`. The run includes the
 test cleanup; the source manifest identifies the actual tested
