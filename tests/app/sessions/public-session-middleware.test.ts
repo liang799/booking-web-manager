@@ -86,9 +86,9 @@ describe("public resources and protected discovery through middleware", () => {
     expect(getUser).toHaveBeenCalledOnce();
   });
 
-  test("permits an active account with an unverified email after checking the profile", async () => {
+  test("permits an active account without a verified email after checking the profile", async () => {
     const supabase = fakeSupabase({
-      user: { id: "viewer", email: "viewer@example.com" },
+      user: { id: "viewer" },
       profile: activeProfile,
     });
     vi.mocked(createServerClient).mockReturnValue(supabase as never);
