@@ -1,42 +1,47 @@
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
+  withdrawnParticipation,
   createTestUser,
   createTestSession,
   sessionState,
 } from "../../sessions/session/session-fixtures";
 
-describe("Participant", () => {
+describe("Participant waitlist entry and departure", () => {
   test("leaveWaitlist_WhenEmailIsMissing_StillLeavesAnExistingEntry", () => {
-    // Arrange
     const bookingSession = createTestSession({ waitlistedUserIds: ["alice"] });
-    const participant = createTestUser({ userId: "alice", email: null, emailVerified: false }).asParticipant();
+    const alice = createTestUser({
+      userId: "alice",
+      email: null,
+      emailVerified: false,
+    }).asParticipant();
 
-    // Act
-    participant.leaveWaitlist(bookingSession, {
-      participationId: "p-alice", now: hoursBeforeSessionStart(48),
+    alice.leaveWaitlist(bookingSession, {
+      participationId: "p-alice",
+      now: hoursBeforeSessionStart(48),
     });
 
-    // Assert
-    expect(bookingSession.participantList.requireParticipation("p-alice").status).toBe("LEFT_WAITLIST");
+    expect(
+      bookingSession.participantList.requireParticipation("p-alice").status,
+    ).toBe("LEFT_WAITLIST");
     expect(bookingSession.participantList.nextWaitlisted()).toBeUndefined();
   });
 
   test("join_WhenOnlyAvailableSeatIsReserved_JoinsOrdinaryWaitlistWithoutTakingReservation", () => {
-    // Arrange
     const withdrawalTime = hoursBeforeSessionStart(10);
     const joinTime = hoursBeforeSessionStart(9);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
-    });
-    createTestUser({ userId: "ben" }).asParticipant().withdraw(bookingSession, {
-      participationId: "p-ben",
-      now: withdrawalTime,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "cara",
+      participationOverrides: {
+        ben: withdrawnParticipation("ben", {
+          withdrawnAt: withdrawalTime,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "cara",
+          holdState: "AWAITING_REPLACEMENT",
+        }),
+      },
     });
 
-    // Act
     const admission = createTestUser({ userId: "dana" })
       .asParticipant()
       .join(bookingSession, {
@@ -45,7 +50,6 @@ describe("Participant", () => {
         now: joinTime,
       });
 
-    // Assert
     expect(admission).toEqual({
       kind: "WAITLISTED",
       participationId: "p-dana",
@@ -62,7 +66,6 @@ describe("Participant", () => {
   });
 
   test("leaveWaitlist_WhenParticipantOwnsWaitingEntry_LeavesWithoutChangingCommitments", () => {
-    // Arrange
     const waitlistDepartureTime = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
@@ -70,18 +73,20 @@ describe("Participant", () => {
     });
     const participant = createTestUser({ userId: "waiting" }).asParticipant();
 
-    // Act
     participant.leaveWaitlist(bookingSession, {
       participationId: "p-waiting",
       now: waitlistDepartureTime,
     });
-
-    // Assert
-    expect(
+    const participationStatuses =
       bookingSession.participantList.participations.map(
         (entry) => entry.status,
-      ),
-    ).toEqual(["COMMITTED", "COMMITTED", "LEFT_WAITLIST"]);
+      );
+
+    expect(participationStatuses).toEqual([
+      "COMMITTED",
+      "COMMITTED",
+      "LEFT_WAITLIST",
+    ]);
     expect(
       bookingSession.participantList.nextWaitlisted()?.userId,
     ).toBeUndefined();
@@ -89,7 +94,6 @@ describe("Participant", () => {
   });
 
   test("leaveWaitlist_WhenEntryBelongsToAnotherParticipant_RejectsWithoutChangingState", () => {
-    // Arrange
     const bookingSession = createTestSession({
       committedUserIds: ["alice", "ben"],
       waitlistedUserIds: ["waiting"],
@@ -97,30 +101,29 @@ describe("Participant", () => {
     const participant = createTestUser({ userId: "other" }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
     expect(() =>
       participant.leaveWaitlist(bookingSession, {
         participationId: "p-waiting",
         now: hoursBeforeSessionStart(48),
       }),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
+
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
   test("leaveWaitlist_WhenParticipantIsCommitted_RejectsWithoutChangingState", () => {
-    // Arrange
     const bookingSession = createTestSession({ committedUserIds: ["alice"] });
 
-    const participant = createTestUser({ userId: "alice" }).asParticipant();
+    const alice = createTestUser({ userId: "alice" }).asParticipant();
     const previousState = sessionState(bookingSession);
 
-    // Act & Assert
     expect(() =>
-      participant.leaveWaitlist(bookingSession, {
+      alice.leaveWaitlist(bookingSession, {
         participationId: "p-alice",
         now: hoursBeforeSessionStart(48),
       }),
     ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
+
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 });

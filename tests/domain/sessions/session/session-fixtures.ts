@@ -5,6 +5,7 @@ import {
   Participation,
   Session,
   type BookerSessionCreation,
+  type ParticipationDetails,
   type SessionDetails,
 } from "@/domain";
 import { readyBookerUser } from "../../accounts/user-fixtures";
@@ -55,27 +56,62 @@ export function readyBooker(userId = "booker") {
 
 interface TestSessionOptions {
   readonly totalSlots?: number;
+  readonly bookingShare?: Money;
+  readonly status?: SessionDetails["status"];
+  readonly visibility?: SessionDetails["visibility"];
+  readonly invitedGroupId?: SessionDetails["invitedGroupId"];
+  readonly minimumReliability?: SessionDetails["minimumReliability"];
   readonly committedUserIds?: readonly string[];
   readonly waitlistedUserIds?: readonly string[];
+  readonly attendanceByUserId?: Readonly<Record<string, "ATTENDED" | "ABSENT">>;
+  readonly participationOverrides?: Readonly<Record<string, Participation>>;
 }
 
-/** Constructs the declared starting roster; admission workflows stay in the test. */
+/** Constructs starting state without running the commands exercised by tests. */
 export function createTestSession({
   totalSlots = 2,
+  bookingShare,
+  status = "OPEN",
+  visibility = "PUBLIC",
+  invitedGroupId,
+  minimumReliability,
   committedUserIds = [],
   waitlistedUserIds = [],
+  attendanceByUserId = {},
+  participationOverrides = {},
 }: TestSessionOptions = {}): Session {
-  const details = sessionDetails({ totalSlots });
+  const details = sessionDetails({
+    totalSlots,
+    bookingShare,
+    status,
+    visibility,
+    invitedGroupId,
+    minimumReliability,
+  });
   const terms = {
     holdingAccountId: details.holdingAccountId,
-    bookingShare: details.booking.totalCost.divideFloor(totalSlots),
+    bookingShare:
+      bookingShare ?? details.booking.totalCost.divideFloor(totalSlots),
   };
+  const attendanceMarks = new Map(Object.entries(attendanceByUserId));
+  const rosterOverrides = new Map(Object.entries(participationOverrides));
+  const rosterUserIds = new Set([...committedUserIds, ...waitlistedUserIds]);
+  for (const [userId, participation] of rosterOverrides) {
+    if (!rosterUserIds.has(userId) || participation.userId !== userId) {
+      throw new Error(
+        `Participation override must match a roster user: ${userId}`,
+      );
+    }
+  }
   return new Session({
     ...details,
     participations: [
-      ...committedUserIds.map((userId) =>
-        committedParticipation(terms, userId),
-      ),
+      ...committedUserIds.map((userId) => {
+        const attendance = attendanceMarks.get(userId);
+        return attendance === undefined
+          ? committedParticipation(terms, userId)
+          : verifiedParticipation(userId, attendance, sessionEndsAt, terms);
+      }),
       ...waitlistedUserIds.map((userId, index) =>
         Participation.createWaitlisted({
           participationId: `p-${userId}`,
@@ -84,8 +120,138 @@ export function createTestSession({
           queueSequence: index + 1,
         }),
       ),
-    ],
+    ].map(
+      (participation) =>
+        rosterOverrides.get(participation.userId) ?? participation,
+    ),
     nextQueueSequence: waitlistedUserIds.length + 1,
+  });
+}
+
+interface WithdrawnParticipationOptions {
+  readonly withdrawnAt: Date;
+  readonly replacementMode?: ParticipationDetails["replacementMode"];
+  readonly replacementInviteeId?: string;
+  readonly holdState: "REFUNDED" | "AWAITING_REPLACEMENT" | "FORFEITURE_DUE";
+  readonly settledAt?: Date;
+  readonly committedAt?: Date;
+  readonly replacesParticipationId?: string;
+}
+
+/** The caller states the financial outcome; this fixture does not apply withdrawal rules. */
+export function withdrawnParticipation(
+  userId: string,
+  {
+    withdrawnAt,
+    replacementMode,
+    replacementInviteeId,
+    holdState,
+    settledAt,
+    committedAt = hoursBeforeSessionStart(48),
+    replacesParticipationId,
+  }: WithdrawnParticipationOptions,
+  terms: Pick<Session, "holdingAccountId" | "bookingShare"> = {
+    holdingAccountId: "platform",
+    bookingShare: Money.fromCents(500),
+  },
+): Participation {
+  return new Participation({
+    participationId: `p-${userId}`,
+    userId,
+    status: "WITHDRAWN",
+    attendance: "UNVERIFIED",
+    committedAt,
+    withdrawnAt,
+    replacementMode,
+    replacementInviteeId,
+    replacesParticipationId,
+    hold: new FundHold({
+      holdId: `h-${userId}`,
+      participationId: `p-${userId}`,
+      holdingAccountId: terms.holdingAccountId,
+      walletId: `w-${userId}`,
+      amount: terms.bookingShare,
+      state: holdState,
+      createdAt: committedAt,
+      settledAt:
+        settledAt ?? (holdState === "REFUNDED" ? withdrawnAt : undefined),
+    }),
+  });
+}
+
+interface ClosedParticipationOptions {
+  readonly settledAt: Date;
+  readonly committedAt?: Date;
+  readonly withdrawnAt?: Date;
+  readonly replacesParticipationId?: string;
+}
+
+function closedParticipation(
+  userId: string,
+  status: "REMOVED" | "CANCELLED",
+  {
+    settledAt,
+    committedAt = hoursBeforeSessionStart(48),
+    withdrawnAt,
+    replacesParticipationId,
+  }: ClosedParticipationOptions,
+  terms: Pick<Session, "holdingAccountId" | "bookingShare">,
+): Participation {
+  return new Participation({
+    participationId: `p-${userId}`,
+    userId,
+    status,
+    attendance: "UNVERIFIED",
+    committedAt,
+    withdrawnAt,
+    replacesParticipationId,
+    hold: new FundHold({
+      holdId: `h-${userId}`,
+      participationId: `p-${userId}`,
+      holdingAccountId: terms.holdingAccountId,
+      walletId: `w-${userId}`,
+      amount: terms.bookingShare,
+      state: "REFUNDED",
+      createdAt: committedAt,
+      settledAt,
+    }),
+  });
+}
+
+export function removedParticipation(
+  userId: string,
+  options: ClosedParticipationOptions,
+  terms: Pick<Session, "holdingAccountId" | "bookingShare"> = {
+    holdingAccountId: "platform",
+    bookingShare: Money.fromCents(500),
+  },
+): Participation {
+  return closedParticipation(userId, "REMOVED", options, terms);
+}
+
+export function cancelledParticipation(
+  userId: string,
+  options: ClosedParticipationOptions,
+  terms: Pick<Session, "holdingAccountId" | "bookingShare"> = {
+    holdingAccountId: "platform",
+    bookingShare: Money.fromCents(500),
+  },
+): Participation {
+  return closedParticipation(userId, "CANCELLED", options, terms);
+}
+
+export function leftWaitlistedParticipation(
+  userId: string,
+  queueSequence: number,
+  waitlistedAt = hoursBeforeSessionStart(48),
+): Participation {
+  return new Participation({
+    participationId: `p-${userId}`,
+    userId,
+    status: "LEFT_WAITLIST",
+    attendance: "UNVERIFIED",
+    waitlistedAt,
+    queueSequence,
   });
 }
 
@@ -113,6 +279,10 @@ export function verifiedParticipation(
   userId: string,
   attendance: "ATTENDED" | "ABSENT",
   verifiedAt = sessionEndsAt,
+  terms: Pick<Session, "holdingAccountId" | "bookingShare"> = {
+    holdingAccountId: "platform",
+    bookingShare: Money.fromCents(500),
+  },
 ): Participation {
   return new Participation({
     participationId: `p-${userId}`,
@@ -125,9 +295,9 @@ export function verifiedParticipation(
     hold: new FundHold({
       holdId: `h-${userId}`,
       participationId: `p-${userId}`,
-      holdingAccountId: "platform",
+      holdingAccountId: terms.holdingAccountId,
       walletId: `w-${userId}`,
-      amount: Money.fromCents(500),
+      amount: terms.bookingShare,
       state: "HELD",
       createdAt: hoursBeforeSessionStart(48),
     }),
@@ -137,16 +307,30 @@ export function verifiedParticipation(
 /** A fixed release-only payout state; tests declare other outcomes explicitly. */
 export function pendingPayoutDetails(
   userIds: readonly string[] = ["alice"],
+  {
+    bookingShare,
+    payoutId = "out",
+    idempotencyKey = "key",
+  }: {
+    readonly bookingShare?: Money;
+    readonly payoutId?: string;
+    readonly idempotencyKey?: string;
+  } = {},
 ): SessionDetails {
+  const share = bookingShare ?? Money.fromCents(500);
   return sessionDetails({
+    ...(bookingShare === undefined ? {} : { bookingShare }),
     status: "PAYOUT_PENDING",
     participations: userIds.map((userId) =>
-      verifiedParticipation(userId, "ATTENDED"),
+      verifiedParticipation(userId, "ATTENDED", sessionEndsAt, {
+        holdingAccountId: "platform",
+        bookingShare: share,
+      }),
     ),
     pendingSettlement: {
-      payoutId: "out",
+      payoutId,
       sessionId: "s",
-      idempotencyKey: "key",
+      idempotencyKey,
       requestedAt: new Date(sessionEndsAt),
       destination: { ...destination },
       lines: userIds.map((userId) => ({
@@ -154,12 +338,12 @@ export function pendingPayoutDetails(
         participationId: `p-${userId}`,
         holdingAccountId: "platform",
         walletId: `w-${userId}`,
-        amount: Money.fromCents(500),
+        amount: share,
         kind: "RELEASE",
       })),
     },
-    payoutAttemptIds: ["out"],
-    payoutIdempotencyKeys: ["key"],
+    payoutAttemptIds: [payoutId],
+    payoutIdempotencyKeys: [idempotencyKey],
   });
 }
 

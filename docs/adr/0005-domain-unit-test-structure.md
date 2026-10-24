@@ -2,6 +2,9 @@
 
 - Status: Accepted
 - Date: 2026-09-24
+- The phase-comment requirement is superseded by
+  [ADR-0018: Readable domain tests and execution evidence](./0018-domain-test-input-oracle-log.md).
+  The suite organization and coverage-preservation decisions remain accepted.
 
 ## Context
 

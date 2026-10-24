@@ -20,7 +20,7 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0003: Aggregate roots and boundaries](./adr/0003-aggregate-roots-and-boundaries.md) — current role routing is defined by ADR-0009; members leaving a group is defined by ADR-0017.
 - [ADR-0004: Participant join and session admission](./adr/0004-participant-join-and-session-admission.md) — admission routing updated by ADR-0007 and ADR-0009.
 - [ADR-0004: Append-only double-entry ledger](./adr/0004-append-only-double-entry-ledger.md) — independently recorded with the same historical number; the filename distinguishes this storage decision from participant admission.
-- [ADR-0005: Domain unit-test structure](./adr/0005-domain-unit-test-structure.md).
+- [ADR-0005: Domain unit-test structure](./adr/0005-domain-unit-test-structure.md) — phase-comment requirement superseded by ADR-0018.
 - [ADR-0006: Named personal replacements and the session waitlist](./adr/0006-personal-replacement-reservations.md) — confirmed on 27 September 2026: directly invite one user who must explicitly accept, or open the place to the groups/public waitlist, with no switching after withdrawal.
 - [ADR-0007: Participant behavior and the Session roster](./adr/0007-participant-behavior-and-session-roster.md) — callback routing superseded by ADR-0009.
 - [ADR-0008: Booker behavior and the Session lifecycle](./adr/0008-booker-behavior-and-session-lifecycle.md) — callback routing superseded by ADR-0009.
@@ -34,6 +34,8 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0016: Deep workflows and dependency assembly](./adr/0016-deep-workflows-and-dependency-assembly.md) — complete application results, construction-only configuration, app serialization, and technical endpoint boundaries.
 - [ADR-0017: Members leave regular groups through RegularGroup](./adr/0017-members-leave-regular-groups.md) — a member may leave on their own; the owner cannot leave and archives the group instead.
 - [ADR-0018: Request-bound HTTP session-creation retries](./adr/0018-request-bound-session-creation-retries.md) — adoption proposed pending session-owner and ledger review; strict HTTP payload comparison, legacy replay compatibility and coordinated deployment cutover.
+- [ADR-0018: Readable domain tests and execution evidence](./adr/0018-domain-test-input-oracle-log.md) — supported public contracts, observable outcomes, and readable behavior groups, plus dated assertion-verified evidence; table layout superseded by ADR-0019.
+- [ADR-0019: Domain result tables follow the lecture format](./adr/0019-domain-result-table-layout.md) — individual input columns, Expected Result and Test Result, with source links on the first input value and execution counts above each table.
 
 Product decisions and remaining discussion:
 

@@ -2,28 +2,28 @@ import { Participation, Session } from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   hoursBeforeSessionStart,
-  committedParticipation,
+  withdrawnParticipation,
   createTestSession,
   sessionDetails,
 } from "./session/session-fixtures";
 
-describe("ParticipantList", () => {
+describe("Participant roster isolation and queue ordering", () => {
   test("participations_WhenInputAndReturnedArraysAreMutated_PreservesEntriesAndLookups", () => {
-    // Arrange
-    const source = createTestSession({ committedUserIds: ["alice", "ben"] });
-    const alice = source.participantList.requireParticipation("p-alice");
-    const ben = source.participantList.requireParticipation("p-ben");
+    const originalSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+    });
+    const alice =
+      originalSession.participantList.requireParticipation("p-alice");
+    const ben = originalSession.participantList.requireParticipation("p-ben");
     const participations = [alice, ben];
     const list = new Session(sessionDetails({ participations }))
       .participantList;
 
-    // Act
     participations.reverse();
     participations.pop();
     (list.participations as Participation[]).pop();
     (list.participations as Participation[]).reverse();
 
-    // Assert
     expect(list.participations).toEqual([alice, ben]);
     expect(list.requireParticipation("p-alice")).toBe(alice);
     expect(list.findByUserId("alice")).toBe(alice);
@@ -34,7 +34,6 @@ describe("ParticipantList", () => {
   });
 
   test("nextWaitlisted_WhenHydrationOrderDiffersFromQueue_SelectsLowestSequence", () => {
-    // Arrange
     const waitlistedAt = hoursBeforeSessionStart(48);
     const alice = Participation.createWaitlisted({
       participationId: "p-alice",
@@ -61,10 +60,8 @@ describe("ParticipantList", () => {
       }),
     ).participantList;
 
-    // Act
     const nextWaiter = list.nextWaitlisted();
 
-    // Assert
     expect(nextWaiter).toBe(ben);
     expect(list.participations).toEqual([alice, ben, cara]);
     expect(list.findByUserId("ben")).toBe(nextWaiter);
@@ -73,37 +70,31 @@ describe("ParticipantList", () => {
   });
 
   test("oldestAwaitingReplacement_WhenWithdrawalTimesTie_PreservesHydrationOrder", () => {
-    // Arrange
     const caraWithdrewAt = hoursBeforeSessionStart(48);
     const tiedWithdrawalAt = hoursBeforeSessionStart(10);
-    const source = createTestSession();
-    const alice = committedParticipation(source, "alice");
-    const ben = committedParticipation(source, "ben");
-    const cara = committedParticipation(source, "cara");
-    const refundedCara = cara.withdraw(
-      cara.hold!.refund(caraWithdrewAt),
-      caraWithdrewAt,
-    );
-    const withdrawnAlice = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      tiedWithdrawalAt,
-      "OPEN_SLOT",
-    );
-    const withdrawnBen = ben.withdraw(
-      ben.hold!.awaitReplacement(),
-      tiedWithdrawalAt,
-      "OPEN_SLOT",
-    );
+    const refundedCara = withdrawnParticipation("cara", {
+      holdState: "REFUNDED",
+      withdrawnAt: caraWithdrewAt,
+      settledAt: caraWithdrewAt,
+    });
+    const withdrawnAlice = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: tiedWithdrawalAt,
+      replacementMode: "OPEN_SLOT",
+    });
+    const withdrawnBen = withdrawnParticipation("ben", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: tiedWithdrawalAt,
+      replacementMode: "OPEN_SLOT",
+    });
     const list = new Session(
       sessionDetails({
         participations: [refundedCara, withdrawnBen, withdrawnAlice],
       }),
     ).participantList;
 
-    // Act
     const oldestReplacement = list.oldestAwaitingReplacement();
 
-    // Assert
     expect(oldestReplacement).toBe(withdrawnBen);
     expect(list.participations).toEqual([
       refundedCara,
@@ -116,33 +107,27 @@ describe("ParticipantList", () => {
   });
 
   test("oldestAwaitingReplacement_WhenOlderWithdrawalReservesNamedSeat_SelectsOpenWithdrawal", () => {
-    // Arrange
     const aliceInvitedAt = hoursBeforeSessionStart(10);
     const benOpenedSeatAt = hoursBeforeSessionStart(9);
-    const source = createTestSession();
-    const alice = committedParticipation(source, "alice");
-    const ben = committedParticipation(source, "ben");
-    const personal = alice.withdraw(
-      alice.hold!.awaitReplacement(),
-      aliceInvitedAt,
-      "DIRECT_INVITE",
-      "cara",
-    );
-    const open = ben.withdraw(
-      ben.hold!.awaitReplacement(),
-      benOpenedSeatAt,
-      "OPEN_SLOT",
-    );
+    const aliceInvitation = withdrawnParticipation("alice", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: aliceInvitedAt,
+      replacementMode: "DIRECT_INVITE",
+      replacementInviteeId: "cara",
+    });
+    const benOpenWithdrawal = withdrawnParticipation("ben", {
+      holdState: "AWAITING_REPLACEMENT",
+      withdrawnAt: benOpenedSeatAt,
+      replacementMode: "OPEN_SLOT",
+    });
     const list = new Session(
-      sessionDetails({ participations: [personal, open] }),
+      sessionDetails({ participations: [aliceInvitation, benOpenWithdrawal] }),
     ).participantList;
 
-    // Act
-    const replacement = list.oldestAwaitingReplacement();
+    const oldestReplacement = list.oldestAwaitingReplacement();
 
-    // Assert
-    expect(replacement).toBe(open);
+    expect(oldestReplacement).toBe(benOpenWithdrawal);
     expect(list.reservedCount).toBe(1);
-    expect(list.personalReplacementForInvitee("cara")).toBe(personal);
+    expect(list.personalReplacementForInvitee("cara")).toBe(aliceInvitation);
   });
 });
