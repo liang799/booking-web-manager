@@ -257,12 +257,13 @@
   .pastCount { flex-basis: 30px; font-size: 12px; }
 }
 @media (min-width: 768px) {
-  /* One featured slot is shared continuously by neighboring rows. Its total
-     height never changes with scroll progress, and no timed layout tween runs. */
-  .timeline { --feature-extra: 0px; --feature-height: 550px; --reading-top: 173px; padding-bottom: max(24px, calc(100dvh - var(--reading-top) - var(--feature-height) - 40px)); }
+  /* A single progress value shares one featured slot during a finite glide.
+     At rest exactly one row owns it; native page scrolling never resizes cards. */
+  .timeline { --feature-extra: 0px; --feature-height: 550px; --reading-top: 173px; padding-bottom: var(--timeline-tail, 24px); }
   .timelineRow { height: calc(112px + var(--feature-extra) * var(--expansion)); }
   .timelineCard { position: relative; height: 100%; overflow: clip; }
   .timelineFeature { position: absolute; top: 0; left: 0; right: 0; }
+  .timelineFeature .hero { height: var(--timeline-photo-height); min-height: 0; }
   .timelineFeature .hero { opacity: clamp(0, calc(var(--expansion) * 4), 1); }
   .timelineFeature[inert] { pointer-events: none; }
   .timelineCard > .collapsedCard { position: absolute; top: 0; left: 0; opacity: clamp(0, calc(1 - var(--expansion) * 4), 1); }
