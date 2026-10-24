@@ -78,7 +78,8 @@ export function RegisterForm({ next }: { readonly next?: string }) {
         title={step === "account" ? "Register" : "Your profile"}
         description={step === "account" ? "Create your account to get started." : "A few details to help you find your next game."}
       />
-      <form onSubmit={handleSubmit} noValidate className={styles.form}>
+      {/* POST keeps the password out of the URL if the form is submitted before JavaScript loads. */}
+      <form method="post" onSubmit={handleSubmit} noValidate className={styles.form}>
         <input type="hidden" name="next" value={destination} />
         {accountErrors !== undefined && <ErrorMessage>Please fix the highlighted fields.</ErrorMessage>}
         {state.status === "error" && state.message !== undefined && (step === "profile" || state.fieldErrors === undefined) && (

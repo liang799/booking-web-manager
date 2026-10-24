@@ -29,7 +29,7 @@ Defects found:
 
 | ID | Case | Defect | Status |
 | --- | --- | --- | --- |
-| D1 | UC1-02 | Pressing Log in before the page's JavaScript has loaded submits a plain GET, putting the email and password in the URL. The login and registration forms set no `method`. | Open |
+| D1 | UC1-02 | Pressing Log in before the page's JavaScript has loaded submits a plain GET, putting the email and password in the URL. The login and registration forms set no `method`. | Fixed: both forms now use `method="post"` |
 | D2 | L05 | `/payouts` redirects to `/login` without `next`. | Fixed in PR #98 |
 | D3 | M07 | Help does not link to Payouts. | Fixed in PR #98 |
 | D4 | M01 | Settings shows no email address and has no Email or Payouts link. | Open |

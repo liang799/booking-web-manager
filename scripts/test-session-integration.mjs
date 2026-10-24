@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { randomUUID, createHash } from "node:crypto";
 import {
   cpSync,
@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { prepareSessionRealtime } from "./session-realtime-readiness.mjs";
 
 const mode = process.argv[2] ?? "db";
 if (!["db", "http", "discovery", "all"].includes(mode))
@@ -53,7 +54,7 @@ enabled = false
 [studio]
 enabled = false
 [realtime]
-enabled = false
+enabled = true
 [storage]
 enabled = false
 [analytics]
@@ -73,6 +74,7 @@ enable_confirmations = false
 );
 
 let exitCode = 1;
+let disposeRealtime;
 try {
   console.log(
     "Starting disposable session-test Supabase on ports 55321/55322...",
@@ -85,7 +87,7 @@ try {
         "--workdir",
         directory,
         "--exclude",
-        "studio,postgres-meta,mailpit,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor",
+        "studio,postgres-meta,mailpit,imgproxy,storage-api,edge-runtime,logflare,vector,supavisor",
       ],
       { stdio: "pipe", maxBuffer: 8 * 1024 * 1024 },
     );
@@ -116,6 +118,8 @@ try {
     ONEMAP_API_PASSWORD: "",
     ONEMAP_API_TOKEN: "",
   };
+  console.log("Waiting for disposable database broadcasts to reach an anonymous client...");
+  disposeRealtime = await prepareSessionRealtime(environment);
   const commands = mode === "all" ? ["db", "http"] : [mode];
   exitCode = 0;
   for (const command of commands) {
@@ -133,17 +137,25 @@ try {
     if (command === "discovery") {
       args.push("--", "tests/e2e/discovery-api.spec.ts");
     }
-    const result = spawnSync("npm", args, {
-      env: environment,
-      stdio: "inherit",
+    // Keep the readiness subscription's WebSocket heartbeat running while the
+    // child builds/tests; spawnSync would block the parent's event loop.
+    const status = await new Promise((resolve, reject) => {
+      const child = spawn("npm", args, { env: environment, stdio: "inherit" });
+      child.once("error", reject);
+      child.once("close", (code) => resolve(code ?? 1));
     });
-    if (result.error) throw result.error;
-    if (result.status !== 0) {
-      exitCode = result.status ?? 1;
+    if (status !== 0) {
+      exitCode = status;
       break;
     }
   }
 } finally {
+  try {
+    await disposeRealtime?.();
+  } catch {
+    console.error("Could not close the disposable Realtime probe; continuing stack removal.");
+    exitCode = 1;
+  }
   console.log("Removing the disposable session-test stack...");
   const stopped = spawnSync(
     "supabase",

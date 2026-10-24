@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import DiscoveryPage from "@/app/discover/page";
 import { DiscoveryApiUnavailableError } from "@/app/discover/discovery-api-unavailable";
 import { getDiscoveryDependencies } from "@/app/discover/server-dependencies";
@@ -17,6 +17,8 @@ vi.mock("next/navigation", () => ({
 
 const searchPublic = vi.fn<DiscoverSessions["searchPublic"]>();
 
+afterEach(() => vi.useRealTimers());
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getCurrentUser).mockResolvedValue({
@@ -32,6 +34,31 @@ function renderPage(params: Record<string, string | string[]> = {}) {
 }
 
 describe("public discovery server page", () => {
+  test("samples expiry timing after the server read and only for the displayed page", async () => {
+    vi.useFakeTimers(); vi.setSystemTime(0);
+    const sessions = Array.from({ length: 21 }, (_, index) => ({
+      sessionId: `10000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      venueName: "Sports hall", sport: "Badminton", region: "West",
+      startAt: new Date(index < 20 ? 1_000 : 5_000),
+      endAt: new Date(10_000), totalSlots: 6, bookingShareCents: 750,
+    }));
+    searchPublic.mockImplementation(async () => {
+      vi.advanceTimersByTime(500);
+      return sessions;
+    });
+    const cursor = encodeDiscoveryCursor({ startAt: sessions[19]!.startAt, sessionId: sessions[19]!.sessionId });
+    const result = await renderPage({ cursor });
+    expect(result.props.expiry).toEqual({ startsAt: 5_000, serverNow: 500 });
+    expect(result.props.outcome.page.items).toHaveLength(1);
+  });
+
+  test("does not schedule expiry for empty, invalid or failed results", async () => {
+    expect((await renderPage()).props.expiry).toBeNull();
+    expect((await renderPage({ sport: "invalid" })).props.expiry).toBeNull();
+    searchPublic.mockRejectedValue(new Error("Read failed"));
+    expect((await renderPage()).props.expiry).toBeNull();
+  });
+
   test("renders anonymous results without consulting authentication", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null);
     const result = await renderPage();
