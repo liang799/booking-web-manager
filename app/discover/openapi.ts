@@ -102,7 +102,13 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
     responses: {
       200: {
         description: "A page of public session listings, or an empty result. All responses use Cache-Control: no-store.",
-        headers: { "Cache-Control": { schema: { type: "string", enum: ["no-store"] } } },
+        headers: {
+          "Cache-Control": { schema: { type: "string", enum: ["no-store"] } },
+          "X-Server-Time": {
+            description: "Server Unix time in milliseconds when the successful response is constructed. Clients can schedule listing expiry without trusting the device wall clock.",
+            schema: { type: "string", pattern: "^[0-9]+$" },
+          },
+        },
         content: {
           "application/json": {
             schema: discoveryResultSchema,

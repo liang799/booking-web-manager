@@ -28,6 +28,22 @@ async function scenario() {
 const request = (query = "") => new Request(`http://localhost/api/sessions?${query}`, { headers: { authorization: "Bearer token" } });
 
 describe("GET /api/sessions", () => {
+  test("adds response-time clock metadata without changing the successful JSON projection", async () => {
+    const { GET, searchPublic } = await scenario();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
+    searchPublic.mockImplementation(async () => {
+      clock.mockReturnValue(1_800_000_000_250);
+      return [];
+    });
+
+    const response = await GET(new Request("http://localhost/api/sessions"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-server-time")).toBe("1800000000250");
+    expect(await response.json()).toEqual({ items: [], nextCursor: null });
+  });
+
   test("returns the underlying TLS error without requiring access to server logs", async () => {
     const { GET, searchPublic } = await scenario();
     const cause = Object.assign(new Error("self-signed certificate in certificate chain"), {
@@ -40,6 +56,7 @@ describe("GET /api/sessions", () => {
 
     expect(response.status).toBe(500);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-server-time")).toBeNull();
     expect(body.error.diagnostics).toEqual([
       { message: "Route dependencies could not be loaded" },
       { code: "SELF_SIGNED_CERT_IN_CHAIN", message: "self-signed certificate in certificate chain" },
@@ -268,6 +285,7 @@ describe("GET /api/sessions", () => {
     const response = await GET(request(query));
     expect(response.status).toBe(400);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-server-time")).toBeNull();
     expect(await response.json()).toEqual({ error: { code: "INVALID_REQUEST", message: "Invalid session discovery query" } });
     expect(searchPublic).not.toHaveBeenCalled();
     expect(console.error).not.toHaveBeenCalled();
@@ -278,6 +296,7 @@ describe("GET /api/sessions", () => {
     searchPublic.mockRejectedValue(new DiscoveryApiUnavailableError());
     const response = await GET(request());
     expect(response.status).toBe(503);
+    expect(response.headers.get("x-server-time")).toBeNull();
     expect(await response.json()).toEqual({ error: { code: "DISCOVERY_API_UNAVAILABLE", message: "Session discovery is not available yet" } });
     expect(console.error).not.toHaveBeenCalled();
   });
