@@ -122,7 +122,7 @@ use cases coordinate domain behavior, and infrastructure adapters live in `/lib`
 | Capability | Responsibility |
 | --- | --- |
 | `authenticate(request)` | Verify a Supabase bearer token, current active status and a present email address for every request, including replay. |
-| `createForSubmission(submission)` | Construct a fresh `CreateSessions` and PostgreSQL transaction capturing this submission's retry key. |
+| `createForSubmission(submission)` | Accept a `RequestBoundSessionCreationSubmission` and construct a fresh `CreateSessions` and PostgreSQL transaction capturing its retry key and parsed input. |
 
 The route declares its parser and a `run` callback that constructs the
 submission-scoped use case and invokes `forBooker(bookerId, booking, config)`.
@@ -132,6 +132,9 @@ dependencies and never returns an HTTP handler. See
 [ADR-0015](../docs/adr/0015-declarative-session-http-actions.md).
 The verified token supplies the booker identity; body identities are ignored.
 No cookie session or mutable request identity is shared between calls.
+The app parser attaches `{ idempotencyKey, request: input }` after validation;
+configuration forwards that metadata to the adapter without hashing it or
+implementing replay. The core use case receives only the business input.
 
 `getSessionDependencies()` shares pending and successful assembly within a runtime.
 Failed setup clears its promise for retry. PostgreSQL connections are pooled lazily
@@ -159,6 +162,14 @@ without `SESSION_TEST_PREREQUISITE_SQL`. See the
 [migration inventory](../supabase/README.md#current-sequence). Rishi coordinates
 numbering and merge order; Neoh owns the session schema and wiring.
 
+The request-bound retry policy in
+[ADR-0018](../docs/adr/0018-request-bound-session-creation-retries.md) remains
+proposed pending session-owner and ledger review.
+[PR #112](https://github.com/rbrishi15/booking-web-manager/pull/112) remains open;
+its dependency fixes must reach reviewed `main` before integration. Update from
+that `main` rather than importing its feature source. No schema migration is
+introduced by request binding.
+
 Migration 0006 creates payout accounts, sessions, participations and fund holds.
 It consumes the existing group tables and attaches PR #34's
 `sessions_lock_invited_group` trigger. The trigger locks an existing invited group
@@ -184,10 +195,25 @@ account and payout rows are locked during creation.
 
 The creation adapter uses the existing ledger unit of work and idempotency store.
 Its key is `JSON.stringify(["UC2-02", bookerId, submission.idempotencyKey])`.
-The fingerprint includes only this stable identity, so changed valid booking
-input still replays the first result. The transaction locks and reads current
-account status and email presence before every idempotency claim, including
-whole-transaction retries; a stored response cannot bypass these checks. Session and response are committed together,
+New HTTP submissions also fingerprint the parsed actor, booking and configuration.
+An identical normalized retry replays the first result; changed valid input for
+a payload-bound key returns HTTP 409 `IDEMPOTENCY_CONFLICT`. Equivalent timestamp
+offsets and object-property ordering are normalized; omitted choices and explicit
+defaults are not automatically equivalent. The adapter snapshots this metadata
+and rejects an actor mismatch before opening a transaction.
+
+Successful legacy records contain only the old key fingerprint. A bound request
+may replay them through a replay-only legacy probe, including after valid input
+changes; the probe cannot create another session. Key-only non-HTTP callers keep
+their own legacy replay behavior but cannot replay payload-bound records. The
+cutover retires all old creation writers before bound submissions are accepted;
+there is no staged flag. A rollback after bound records exist must retain this
+compatible adapter and HTTP parser. Do not delete legacy records or backfill
+guessed payload fingerprints.
+
+The transaction locks and reads current account status and email presence before
+every idempotency claim, including the legacy probe and whole-transaction retries;
+a stored response cannot bypass these checks. Session and response are committed together,
 rolled back together, and competing claims serialize. Serialization failures and
 deadlocks retry the whole transaction up to three attempts. A replay does not
 rerun creation-specific payout or booking-time eligibility; a new creation needs
@@ -212,10 +238,18 @@ subscriptions. Use the migration inventory for the current sequence.
 - `npm run test:e2e`: public Swagger/OpenAPI and unconfigured 503 HTTP coverage;
   the test server explicitly clears session settings.
 - `npm run test:integration`: real database creation, complete hydration beyond
-  200 entries, rollback, concurrent replay and group archive concurrency.
+  200 entries, rollback, concurrent replay and group archive concurrency; request-bound
+  acceptance adds changed-payload conflicts, concurrent mismatched retries and legacy compatibility.
 - `npm run test:e2e:integration`: real authenticated HTTP creation and replay,
-  rejection after deactivation, identity spoofing prevention and response mapping.
+  rejection after deactivation, identity spoofing prevention and response mapping;
+  request-bound acceptance adds changed-input 409s, normalized replay and legacy recovery.
 - `npm run test:sessions:integration`: both service-backed suites on one stack.
+
+General route tests retain their key-only fake and verify metadata forwarding
+and response policy; the service-backed suites establish bound replay and
+mismatch behavior. See [ADR-0018's dated validation record](../docs/adr/0018-request-bound-session-creation-retries.md#local-validation-2026-10-23)
+for executed checks and inherited repository-wide failures. Production-build
+integration remains pending PR #112.
 
 The service-backed commands require Docker and the Supabase CLI on PATH. They
 create a separate disposable stack on ports **55321/55322**, use its local keys

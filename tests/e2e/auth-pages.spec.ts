@@ -188,3 +188,32 @@ test("UC1-02 login retains account deletion and email-link recovery notices", as
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /^log in$/i })).toBeEnabled();
 });
+
+// Defect D1: a submission before hydration used the browser default (GET), copying the password into the URL.
+for (const { route, useCase, submit } of [
+  { route: "login", useCase: "UC1-02", submit: /^log in$/i },
+  { route: "register", useCase: "UC1-01", submit: /^sign up$/i },
+] as const) {
+  test.describe(`${route} before JavaScript loads`, () => {
+    test.use({ javaScriptEnabled: false });
+
+    test(`${useCase} ${route} posts the form and keeps the password out of the URL`, async ({ page }) => {
+      const password = "A-draft-password";
+      await page.goto(`/${route}?next=%2Fgroups`);
+      await page.getByLabel("Email", { exact: true }).fill("jamie@example.test");
+      await page.getByLabel("Password", { exact: true }).fill(password);
+
+      const submission = page.waitForRequest((request) => request.isNavigationRequest() && request.frame() === page.mainFrame());
+      await page.getByRole("button", { name: submit }).click();
+      const request = await submission;
+
+      expect(request.method()).toBe("POST");
+      expect(request.url()).not.toContain(password);
+      await page.waitForLoadState();
+      expect(page.url()).not.toContain(password);
+      expect(page.url()).not.toContain("password=");
+      await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
+      await expect(page.locator('input[type="hidden"][name="next"]')).toHaveValue("/groups");
+    });
+  });
+}

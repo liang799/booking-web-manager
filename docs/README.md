@@ -33,6 +33,7 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0015: Declarative session HTTP actions](./adr/0015-declarative-session-http-actions.md).
 - [ADR-0016: Deep workflows and dependency assembly](./adr/0016-deep-workflows-and-dependency-assembly.md) — complete application results, construction-only configuration, app serialization, and technical endpoint boundaries.
 - [ADR-0017: Members leave regular groups through RegularGroup](./adr/0017-members-leave-regular-groups.md) — a member may leave on their own; the owner cannot leave and archives the group instead.
+- [ADR-0018: Request-bound HTTP session-creation retries](./adr/0018-request-bound-session-creation-retries.md) — adoption proposed pending session-owner and ledger review; strict HTTP payload comparison, legacy replay compatibility and coordinated deployment cutover.
 - [ADR-0018: Readable domain tests and execution evidence](./adr/0018-domain-test-input-oracle-log.md) — supported public contracts, observable outcomes, and readable behavior groups, plus dated assertion-verified evidence; table layout superseded by ADR-0019.
 - [ADR-0019: Domain result tables follow the lecture format](./adr/0019-domain-result-table-layout.md) — individual input columns, Expected Result and Test Result, with source links on the first input value and execution counts above each table.
 

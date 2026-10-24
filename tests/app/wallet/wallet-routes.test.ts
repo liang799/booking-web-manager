@@ -167,6 +167,17 @@ describe("GET /api/wallet", () => {
 });
 
 describe("GET /api/wallet/transactions", () => {
+  test("authenticates before validating malformed query parameters", async () => {
+    mocks.authenticate.mockResolvedValue(null);
+
+    const response = await listTransactionsRoute(
+      new Request("http://localhost/api/wallet/transactions?limit=-5"),
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.listTransactions).not.toHaveBeenCalled();
+  });
+
   test("returns transactions with default query params", async () => {
     const request = new Request("http://localhost/api/wallet/transactions", {
       headers: { authorization: "Bearer valid-token" },
@@ -224,6 +235,20 @@ describe("GET /api/wallet/transactions", () => {
 });
 
 describe("POST /api/wallet/top-up", () => {
+  test("rejects signed-out requests before reading malformed JSON", async () => {
+    mocks.authenticate.mockResolvedValue(null);
+    const request = new Request("http://localhost/api/wallet/top-up", {
+      method: "POST", body: "{",
+    });
+    const readBody = vi.spyOn(request, "json");
+
+    const response = await topUpRoute(request);
+
+    expect(response.status).toBe(401);
+    expect(readBody).not.toHaveBeenCalled();
+    expect(mocks.createTopUpIntent).not.toHaveBeenCalled();
+  });
+
   test("creates a top-up intent successfully with 201 status", async () => {
     const request = new Request("http://localhost/api/wallet/top-up", {
       method: "POST",

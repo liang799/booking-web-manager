@@ -14,6 +14,23 @@ const bookerId = "11111111-1111-4111-8111-111111111111";
 const sessionId = "22222222-2222-4222-8222-222222222222";
 
 describe("UC1-08 payout routes", () => {
+  test("rejects signed-out requests before reading malformed JSON or invoking withdrawals", async () => {
+    const forBooker = vi.fn();
+    mocks.dependencies.mockResolvedValue(dependencies({
+      authenticate: async () => null,
+      withdrawals: { forBooker },
+    }));
+    const request = new Request("https://app.test/api/payouts/withdraw", { method: "POST", body: "{" });
+    const readBody = vi.spyOn(request, "json");
+
+    const response = await withdraw(request);
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(readBody).not.toHaveBeenCalled();
+    expect(forBooker).not.toHaveBeenCalled();
+  });
+
   test("POST /api/payouts/withdraw takes the booker from authentication and the amount from the server", async () => {
     // Arrange
     const forBooker = vi.fn(async () => ({

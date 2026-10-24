@@ -59,7 +59,9 @@ function failureDetails(error: unknown, stage: DiscoveryFailureStage) {
 
 /** Prevent caching for every discovery result, including failures. */
 export function discoveryJson(body: unknown, status = 200): Response {
-  return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+  const headers = new Headers({ "Cache-Control": "no-store" });
+  if (status >= 200 && status < 300) headers.set("X-Server-Time", String(Date.now()));
+  return Response.json(body, { status, headers });
 }
 
 /** Preserve the ordinary request/unavailable error contract. */
