@@ -3,6 +3,17 @@ import { expect, test, type Page } from "@playwright/test";
 import { PLATFORM_HOLDING_ACCOUNT_ID } from "../../lib/money/constants";
 import { sessionTestContext, type SessionTestContext } from "../support/session-test-context";
 
+async function login(page: Page, identity: { email: string; password: string }, destination: string) {
+  await page.goto(`/login?next=${encodeURIComponent(destination)}`);
+  await page.getByLabel("Email", { exact: true }).fill(identity.email);
+  await page.getByLabel("Password", { exact: true }).fill(identity.password);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+  await expect.poll(() => {
+    const url = new URL(page.url());
+    return `${url.pathname}${url.search}`;
+  }).toBe(destination);
+}
+
 function card(page: Page, venue: string) {
   return page.getByRole("listitem").filter({ hasText: venue });
 }
@@ -19,13 +30,13 @@ async function insertSession(context: SessionTestContext, bookerId: string, venu
   return sessionId;
 }
 
-test("anonymous discovery receives publish and hide within three seconds without losing drafts", async ({ page, request }) => {
+test("authenticated discovery receives publish and hide within three seconds without losing drafts", async ({ page, request }) => {
   const context = sessionTestContext();
   try {
     const booker = await context.identity(false);
     const venue = `Anonymous-realtime-${randomUUID().slice(0, 8)}`;
     const sessionId = await insertSession(context, booker.userId, venue, "PRIVATE");
-    await page.goto(`/discover?q=${venue}`, { waitUntil: "domcontentloaded" });
+    await login(page, booker, `/discover?q=${venue}`);
     await expect(page.getByText("No sessions found", { exact: true })).toBeVisible();
     const search = page.getByRole("searchbox");
     await search.fill("An unsubmitted draft");
@@ -51,7 +62,7 @@ test("anonymous discovery receives publish and hide within three seconds without
 });
 
 for (const offset of [-60_000, 60_000]) {
-  test(`anonymous discovery expires sessions with the browser clock ${offset < 0 ? "behind" : "ahead"}`, async ({ page }) => {
+  test(`authenticated discovery expires sessions with the browser clock ${offset < 0 ? "behind" : "ahead"}`, async ({ page }) => {
     const context = sessionTestContext();
     try {
       const booker = await context.identity(false);
@@ -81,7 +92,7 @@ for (const offset of [-60_000, 60_000]) {
           backgroundRouteRefreshes += 1;
         }
       });
-      await page.goto(`/discover?q=${venue}`, { waitUntil: "domcontentloaded" });
+      await login(page, booker, `/discover?q=${venue}`);
       await expect(card(page, venue)).toBeVisible();
       await expect(card(page, venue)).toHaveCount(0, { timeout: Math.max(1, startsAt + 3_000 - Date.now()) });
       expect(Date.now()).toBeGreaterThanOrEqual(startsAt);

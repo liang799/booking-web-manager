@@ -55,11 +55,11 @@ test("preserves Storybook deep links and renders its manager, iframe, and local 
 });
 
 
-test("public discovery renders its unavailable state without authentication settings", async ({ page }) => {
+test("landing signup works and discovery redirects signed-out visitors to login", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Browse sessions", exact: true }).click();
-  await expect(page).toHaveURL(/\/discover$/);
-  await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Retry", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Sign up", exact: true }).click();
+  await expect(page).toHaveURL(/\/register\?next=%2Fdiscover$/);
+  await page.goto("/discover?sport=Tennis");
+  await expect(page).toHaveURL(/\/login\?/);
+  expect(new URL(page.url()).searchParams.get("next")).toBe("/discover?sport=Tennis");
 });

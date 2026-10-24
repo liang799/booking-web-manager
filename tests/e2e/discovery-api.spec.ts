@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { PLATFORM_HOLDING_ACCOUNT_ID } from "../../lib/money/constants";
 import { sessionTestContext } from "../support/session-test-context";
 
@@ -15,27 +15,34 @@ interface DiscoveryItem {
 }
 interface DiscoveryPage { items: DiscoveryItem[]; nextCursor: string | null }
 
-test("public discovery smoke requires HTTP 200 for anonymous listings and empty results", async ({ request }) => {
-  const response = await request.get("/api/sessions");
-  expect(response.status()).toBe(200);
-  expect(response.headers()["content-type"]).toContain("application/json");
-  expect(response.headers()["cache-control"]).toBe("no-store");
-  const body: DiscoveryPage = await response.json();
-  expect(Array.isArray(body.items)).toBe(true);
-  expect(body.items.length).toBeLessThanOrEqual(20);
-  expect(body.nextCursor === null || typeof body.nextCursor === "string").toBe(true);
+function getAuthenticated(
+  request: APIRequestContext,
+  token: string,
+  url: string,
+  options?: Parameters<APIRequestContext["get"]>[1],
+) {
+  return request.get(url, {
+    ...options,
+    headers: { Authorization: `Bearer ${token}`, ...options?.headers },
+  });
+}
 
-  const empty = await request.get("/api/sessions", { params: { q: randomUUID() } });
-  expect(empty.status()).toBe(200);
-  expect(empty.headers()["cache-control"]).toBe("no-store");
-  expect(await empty.json()).toEqual({ items: [], nextCursor: null });
+test("anonymous discovery API rejects listing requests before validation", async ({ request }) => {
+  for (const path of ["/api/sessions", "/api/sessions?cursor=invalid"]) {
+    const response = await request.get(path);
+    expect(response.status()).toBe(401);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+    expect(await response.json()).toEqual({ error: { code: "UNAUTHENTICATED", message: "Authentication is required" } });
+  }
 });
 
-test("public discovery filters real stored sessions and protects private details for every viewer", async ({ request }) => {
+test("authenticated discovery filters real stored sessions and protects private details for every viewer", async ({ request }) => {
   const context = sessionTestContext();
   try {
     const booker = await context.identity();
     const viewer = await context.identity(false); // Reading listings does not require payout setup.
+    const get = (url: string, options?: Parameters<APIRequestContext["get"]>[1]) =>
+      getAuthenticated(request, viewer.token, url, options);
     async function createSession(startAt: string, config: { visibility?: string; sport?: string; region?: string; venueName?: string } = {}) {
       const response = await request.post("/api/sessions", {
         headers: { Authorization: `Bearer ${booker.token}` },
@@ -62,7 +69,7 @@ test("public discovery filters real stored sessions and protects private details
 
     const headers = { Authorization: `Bearer ${viewer.token}` };
     const params = { date: "2041-07-02", sport: "Badminton", region: "West" };
-    const response = await request.get("/api/sessions", { params });
+    const response = await get("/api/sessions", { params });
     expect(response.status()).toBe(200);
     expect(response.headers()["cache-control"]).toBe("no-store");
     const body: DiscoveryPage = await response.json();
@@ -76,33 +83,33 @@ test("public discovery filters real stored sessions and protects private details
     }
     expect(JSON.stringify(body)).not.toContain(privateSession.sessionId);
     expect(JSON.stringify(body)).not.toContain(first.roomToken);
-    const narrowed = await request.get("/api/sessions", {
+    const narrowed = await get("/api/sessions", {
       params: { date: "2041-07-02", sport: "Badminton", region: "West", timeFrom: "18:00", timeTo: "19:00" },
     });
     expect((await narrowed.json()).items.map((item: DiscoveryItem) => item.sessionId)).toEqual([later.sessionId]);
-    const empty = await request.get("/api/sessions", { params: { date: "2041-07-02", sport: "Volleyball" } });
+    const empty = await get("/api/sessions", { params: { date: "2041-07-02", sport: "Volleyball" } });
     expect(await empty.json()).toEqual({ items: [], nextCursor: null });
-    const searched = await request.get("/api/sessions", {
+    const searched = await get("/api/sessions", {
       params: { q: "  o'BRIEN\\court  ", date: "2041-07-02", sport: "Badminton", region: "West" },
     });
     expect(searched.status()).toBe(200);
     expect((await searched.json()).items.map((item: DiscoveryItem) => item.sessionId)).toEqual([later.sessionId]);
-    const literal = await request.get("/api/sessions", { params: { q: "100%_", date: "2041-07-02" } });
+    const literal = await get("/api/sessions", { params: { q: "100%_", date: "2041-07-02" } });
     expect((await literal.json()).items.map((item: DiscoveryItem) => item.sessionId)).toEqual([later.sessionId]);
-    const sportSearch = await request.get("/api/sessions", {
+    const sportSearch = await get("/api/sessions", {
       params: { q: "badmin", date: "2041-07-02", sport: "Badminton", region: "West" },
     });
     expect((await sportSearch.json()).items.map((item: DiscoveryItem) => item.sessionId)).toEqual([first.sessionId, later.sessionId]);
 
-    const authenticated = await request.get("/api/sessions", { headers, params });
+    const authenticated = await get("/api/sessions", { headers, params });
     expect(authenticated.status()).toBe(200);
     expect(await authenticated.json()).toEqual(body);
-    expect((await request.get("/api/sessions?cursor=invalid")).status()).toBe(400);
+    expect((await get("/api/sessions?cursor=invalid")).status()).toBe(400);
     await context.pool.query("update profiles set account_status = 'INACTIVE' where user_id = $1", [viewer.userId]);
-    const invalidForInactive = await request.get("/api/sessions?cursor=invalid", { headers });
+    const invalidForInactive = await get("/api/sessions?cursor=invalid", { headers });
     expect(invalidForInactive.status()).toBe(400);
     expect(await invalidForInactive.json()).toEqual({ error: { code: "INVALID_REQUEST", message: "Invalid session discovery query" } });
-    const inactive = await request.get("/api/sessions", { headers, params });
+    const inactive = await get("/api/sessions", { headers, params });
     expect(inactive.status()).toBe(200);
     expect(await inactive.json()).toEqual(body);
   } finally {
@@ -110,10 +117,12 @@ test("public discovery filters real stored sessions and protects private details
   }
 });
 
-test("public discovery works without a participant profile, wallet, or confirmed email", async ({ request }) => {
+test("authenticated discovery works without a participant profile, wallet, or confirmed email", async ({ request }) => {
   const context = sessionTestContext();
   try {
     const owner = await context.identity(false);
+    const get = (url: string, options?: Parameters<APIRequestContext["get"]>[1]) =>
+      getAuthenticated(request, owner.token, url, options);
     const sessionId = randomUUID();
     const venueName = `Public hydration fixture ${randomUUID()}`;
     await context.pool.query(
@@ -123,14 +132,14 @@ test("public discovery works without a participant profile, wallet, or confirmed
       [sessionId, owner.userId, venueName, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );
     const params = { q: venueName };
-    const anonymous = await request.get("/api/sessions", { params });
+    const anonymous = await get("/api/sessions", { params });
     expect(anonymous.status()).toBe(200);
     const body: DiscoveryPage = await anonymous.json();
     expect(body.items.map((item) => item.sessionId)).toEqual([sessionId]);
 
     const missing = await context.identity(false);
     await context.pool.query("delete from profiles where user_id = $1", [missing.userId]);
-    const missingResponse = await request.get("/api/sessions", {
+    const missingResponse = await get("/api/sessions", {
       headers: { Authorization: `Bearer ${missing.token}` }, params,
     });
     expect(missingResponse.status()).toBe(200);
@@ -140,14 +149,14 @@ test("public discovery works without a participant profile, wallet, or confirmed
     await context.pool.query("delete from wallet_balances where wallet_id = $1", [incomplete.walletId]);
     await context.pool.query("delete from wallets where wallet_id = $1", [incomplete.walletId]);
     const headers = { Authorization: `Bearer ${incomplete.token}` };
-    const invalid = await request.get("/api/sessions?cursor=invalid", { headers });
+    const invalid = await get("/api/sessions?cursor=invalid", { headers });
     expect(invalid.status()).toBe(400);
-    const incompleteResponse = await request.get("/api/sessions", { headers, params });
+    const incompleteResponse = await get("/api/sessions", { headers, params });
     expect(incompleteResponse.status()).toBe(200);
     expect(await incompleteResponse.json()).toEqual(body);
 
     await context.pool.query("update auth.users set email = null, email_confirmed_at = null where id = $1", [incomplete.userId]);
-    const unconfirmed = await request.get("/api/sessions", { headers, params });
+    const unconfirmed = await get("/api/sessions", { headers, params });
     expect(unconfirmed.status()).toBe(200);
     expect(await unconfirmed.json()).toEqual(body);
   } finally {
@@ -159,12 +168,14 @@ test("rejects invalid discovery queries and pages tied start times without repea
   const context = sessionTestContext();
   try {
     const viewer = await context.identity(false);
+    const get = (url: string, options?: Parameters<APIRequestContext["get"]>[1]) =>
+      getAuthenticated(request, viewer.token, url, options);
     for (const query of [
       "q=tennis&q=badminton", `q=${"a".repeat(101)}`,
       "sport=Badminton&sport=Tennis", "region=West&region=", "date=2041-02-29", "timeFrom=18%3A00",
       "date=2041-07-03&timeFrom=20%3A00&timeTo=18%3A00", "cursor=invalid",
     ]) {
-      const response = await request.get(`/api/sessions?${query}`);
+      const response = await get(`/api/sessions?${query}`);
       expect(response.status()).toBe(400);
       expect(response.headers()["cache-control"]).toBe("no-store");
       expect(await response.json()).toEqual({ error: { code: "INVALID_REQUEST", message: "Invalid session discovery query" } });
@@ -179,13 +190,13 @@ test("rejects invalid discovery queries and pages tied start times without repea
       );
     }
     // Keep this window separate from the preceding test's next-day boundary fixture.
-    const firstResponse = await request.get("/api/sessions", { params: { q: "PAGED", date: "2041-07-10", sport: "", unknown: "ignored" } });
+    const firstResponse = await get("/api/sessions", { params: { q: "PAGED", date: "2041-07-10", sport: "", unknown: "ignored" } });
     expect(firstResponse.status()).toBe(200);
     const first: DiscoveryPage = await firstResponse.json();
     expect(first.items.map((item) => item.sessionId)).toEqual(ids.slice(0, 20));
     expect(first.nextCursor).not.toBeNull();
     if (first.nextCursor === null) throw new Error("Missing next page cursor");
-    const secondResponse = await request.get("/api/sessions", { params: { q: "PAGED", date: "2041-07-10", cursor: first.nextCursor } });
+    const secondResponse = await get("/api/sessions", { params: { q: "PAGED", date: "2041-07-10", cursor: first.nextCursor } });
     expect(secondResponse.status()).toBe(200);
     const second: DiscoveryPage = await secondResponse.json();
     expect(second.items.map((item) => item.sessionId)).toEqual(ids.slice(20));
