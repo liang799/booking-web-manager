@@ -45,6 +45,12 @@ export function createAuthenticatedActions<Dependencies extends AuthenticatedDep
         const params = await readParams(context);
         const input = await readInput(request, userId, params);
         const result = await action.run(dependencies, input);
+        if (action.successStatus === 204) {
+          return new Response(null, {
+            status: 204,
+            headers: policy.successHeaders ?? { "Cache-Control": "no-store" },
+          });
+        }
         return Response.json(action.serialize ? action.serialize(result) : result, {
           status: action.successStatus ?? 200,
           headers: policy.successHeaders ?? { "Cache-Control": "no-store" },

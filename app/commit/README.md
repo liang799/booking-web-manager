@@ -239,7 +239,10 @@ export const POST = commitmentAction({
 ```
 
 [`commitmentAction`](./commitment-action.ts) owns the shared HTTP policy
-through [`handleAuthenticatedJson`](./http.ts). All routes take the acting user from authentication and require an
+through [`createAuthenticatedActions`](../http/authenticated-action.ts).
+The [HTTP boundary guide](../http/README.md) describes enforced authentication
+and the separate application authorization responsibilities. All routes take
+the acting user from authentication and require an
 idempotency key; Zod strips any other field, so a body cannot name another user
 or supply an amount. Known domain errors map to 4xx responses with their code
 (403 for access and authorization, 404 for missing records, 409 for state
