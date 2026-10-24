@@ -1,6 +1,6 @@
 # accounts/booker test cases
 
-Snapshot: **2026-10-24** · **55 cases, 55 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24** · **56 cases, 56 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one executed test. Columns before **Expected Result** are inputs; **Expected Result** is the oracle and **Test Result** is the log. Test results are assertion-verified outcomes from the dated passing run, not captured runtime payloads. The first input value links to the test definition. Only checked fields are reported; matching fields do not imply equality of an entire returned object.
 
@@ -87,14 +87,15 @@ Every listed participant is committed before the command.
 
 **Input:** Booker, Account, Existing attendance, Marks in order, Time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **5 passed / 5 cases**.
+Execution: **6 passed / 6 cases**.
 
 | Booker | Account | Existing attendance | Marks in order | Time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
 | [booker](attendance.test.ts#L12) | INACTIVE | alice UNVERIFIED | p-alice: ATTENDED | Session end | alice attendance `ATTENDED`; session `AWAITING_PAYOUT`. | alice attendance `ATTENDED`; session `AWAITING_PAYOUT`. |
 | [booker](attendance.test.ts#L31) | ACTIVE | alice, ben UNVERIFIED | p-alice: ATTENDED | 1 h before end | Error code `SESSION_NOT_ENDED`; session unchanged. | Error code `SESSION_NOT_ENDED`; session unchanged. |
 | [booker](attendance.test.ts#L49) | ACTIVE | alice ATTENDED; ben UNVERIFIED | p-ben: ATTENDED; p-alice: ABSENT | Session end | Error code `ATTENDANCE_CONFLICT`; session unchanged. | Error code `ATTENDANCE_CONFLICT`; session unchanged. |
-| [booker](attendance.test.ts#L70) | ACTIVE | alice ATTENDED; ben UNVERIFIED | p-ben: ABSENT | Session end | Session `AWAITING_PAYOUT`. | Session `AWAITING_PAYOUT`. |
+| [booker](attendance.test.ts#L70) | ACTIVE | alice, ben UNVERIFIED | p-alice: ATTENDED | Session end | alice attendance `ATTENDED`; ben attendance `UNVERIFIED`; session `OPEN`. | alice attendance `ATTENDED`; ben attendance `UNVERIFIED`; session `OPEN`. |
+| [booker](attendance.test.ts#L90) | ACTIVE | alice ATTENDED; ben UNVERIFIED | p-ben: ABSENT | Session end | Session `AWAITING_PAYOUT`. | Session `AWAITING_PAYOUT`. |
 | [other](authorization.test.ts#L39) | ACTIVE | alice UNVERIFIED | p-alice: ATTENDED | Session end | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
 
 ## createSession — account eligibility

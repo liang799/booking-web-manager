@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "digest": "9a5e773935f5d41f71224cb2a6f2945be71fd92c6aac19fd0b85e1cc875ad7a9",
+  "digest": "9d072764b3ade600bd758eb2e7293e3b8668851e1ba544790477874fff204ac8",
   "files": {
     "domain/accounts/booker.ts": "5ff925e4fdcab3cc1ca3c90f5bd77ebd740e90ec806bee88e75d8f29aec6145f",
     "domain/accounts/booking-account-eligibility.ts": "9cbf127166a8c3f3ee602915b45459b211b937261f058466d6a797b5c68d9075",
@@ -44,7 +44,7 @@
     "package-lock.json": "40a50eae1884fbb786ef547ff00658901504b01dc0feeb771c973869fe95f989",
     "package.json": "a44202f348c47d55c0780403250eabb150066c7b0e7646b3694e98d716790c04",
     "tests/domain/accounts/booker/administration.test.ts": "8c510b879de29e5a6a463a16894f52671e0064c56526274af3dc6fa71382f39c",
-    "tests/domain/accounts/booker/attendance.test.ts": "313eb5dbb693fcaf3db661e2f00039b83e3f13b9e826bc5a23d98558604918af",
+    "tests/domain/accounts/booker/attendance.test.ts": "35b86b8c3c2dca7002d3f55a215f589ec9cab997629080bfa77bbe96ddbd366e",
     "tests/domain/accounts/booker/authorization.test.ts": "d03c7a1252a2c9a223bc12f5b189ed89e328a9a50e2606d194cfa9aab518b73a",
     "tests/domain/accounts/booker/cancellation-history.test.ts": "bf0fcdb9fbd2e930b6230101f56cbe8511e209f7d989efc0765c24aad44c92b5",
     "tests/domain/accounts/booker/creation.test.ts": "2949192e38889ca0da477ec8997931725bc12d4c81c6dad6896312d043d92c12",
@@ -59,7 +59,7 @@
     "tests/domain/accounts/payout-account.test.ts": "2767f635eed0204e5808771c4fd44e893a68cd3edf994c4523d310094421066a",
     "tests/domain/accounts/user-fixtures.ts": "9a56b9295e7c74953833720cc12a621427a4ddb26c2bfa2b5aeed91f84ac86d8",
     "tests/domain/accounts/user-related-data.test.ts": "69c58192283a687b058a0a8a7514344e163411c42fc5d4331c9a4fa0727fd0bb",
-    "tests/domain/accounts/user.test.ts": "55847436ddaa6f1c4e525b63d9a33fa0dcf2a00078437293f5669020f8bc39f7",
+    "tests/domain/accounts/user.test.ts": "4c1f673d06804a046b483b3172256bcc723b2f024ff3b4ce0641b98db0cdc6a5",
     "tests/domain/finance/holding-account.test.ts": "04d903489a0c80983521c2052075316d47a3e010c2b673322ec3e4b76834eb31",
     "tests/domain/finance/ledger-transaction.test.ts": "2c2ce3cef315130b89acf83e95865fbe6c4b92c6c73f6ceeaa43917b6a54c232",
     "tests/domain/finance/money/money-arithmetic.test.ts": "61ed48d43a416021f697f5a43f592a2d67ecb131b969d0b4d5d309417b6d8467",

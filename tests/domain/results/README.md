@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **24 October 2026, 13:13:37 SGT**
-(`2026-10-24T05:13:37.321Z`). All **622 tests in 44 files passed**.
+Snapshot run: **24 October 2026, 14:02:13 SGT**
+(`2026-10-24T06:02:13.259Z`). All **623 tests in 44 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-24-vitest.json
@@ -12,14 +12,15 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-24-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `9a5e773935f5d41f71224cb2a6f2945be71fd92c6aac19fd0b85e1cc875ad7a9`.
+  `9d072764b3ade600bd758eb2e7293e3b8668851e1ba544790477874fff204ac8`.
 - [Coverage mapping](./2026-10-24-coverage-map.json): the 598 release-baseline cases
   map to 600 retained scenarios and two explicitly retired implementation-only
-  cases, plus 22 focused additions: visibility,
+  cases, plus 23 focused additions: visibility,
   creation settings, two payout-setup failure cases, invitation revocation,
-  three replacement-history transitions, and fourteen shared-fixture contracts.
+  three replacement-history transitions, fourteen shared-fixture contracts, and
+  partial attendance verification.
   Includes before/after assertion expressions for changed explicit scenarios.
-- [Table index](../README.md#result-snapshots): nine directories, 622 rows,
+- [Table index](../README.md#result-snapshots): nine directories, 623 rows,
   exactly one row per final case. Each row links to its test definition.
 
 Base revision: `00f6c88462e16ffce8f91dd78b72aa649918e9f7`. The run includes the
@@ -161,8 +162,8 @@ The review-fix revision had **624 cases and 1,311 assertions across 44 files**.
 
 ## Public-contract cleanup
 
-The current suite has **622 cases and 1,301 assertions across 44 files**. This
-pass starts at `009460ee` and follows the supported-API and state-testing guidance
+The public-contract revision had **622 cases and 1,301 assertions across 44 files**.
+That pass starts at `009460ee` and follows the supported-API and state-testing guidance
 in [Google's unit-testing chapter](https://abseil.io/resources/swe-book/html/ch12.html).
 
 - Seven price-selection examples now construct Session and read its public
@@ -192,18 +193,55 @@ operations passes all 82 Money tests. Deliberately incorrect addition, relaxed
 price bounds, lost replacement links, and premature cancellation status each
 fail the intended tests. These copies do not modify production sources.
 
-The new execution report reconciles all **622 unique rows in 188 tables**,
+That revision reconciled all **622 unique rows in 188 tables**,
 full execution identities, definition links, coverage destinations, and
 **89 exact-byte source hashes**. Logs contain only facts established by the
 executed assertions; the lecture table layout remains unchanged.
+
+## Follow-up coverage repairs
+
+The current suite has **623 cases and 1,308 assertions across 44 files**. A
+second comparison with the release baseline exposed two lost command behaviors
+that fixture equivalence and assertion counts had not established:
+
+- Partial manual attendance now has a focused case: marking only Alice leaves
+  Alice `ATTENDED`, Ben `UNVERIFIED`, and the session `OPEN`. The final-mark
+  scenario continues to use an already-marked fixture.
+- Starting payout setup checks the supplied provider account reference.
+  Completing setup checks payout account, owner, and provider identity as well
+  as the original account's pending state, the completed copy, and its bank.
+  The pending account is captured before the command, preserving observation
+  timing and the original identity comparison.
+
+All 622 previous case identities remain. Two existing callbacks gain four
+assertions; the new attendance case adds three. The other 620 callback syntax
+trees are unchanged. Top-level coverage mapping locations resolve to the
+current source; earlier pass records retain their historical locations/counts.
+
+[Differential mutation evidence](./2026-10-24-review-repair-mutations.json)
+records the exact patches, commands, source hashes, failed case identities, and
+assertion diagnostics from isolated copies. At `ea09171`, each defect passed all
+622 tests. After these repairs, each fails one intended case:
+
+| Deliberate defect | Before repair | After repair |
+|---|---|---|
+| A partial attendance update prematurely enters AWAITING_PAYOUT | 622 passed | Partial-attendance case fails: expected OPEN |
+| Beginning payout setup stores another provider reference | 622 passed | Setup case fails: expected provider |
+| Completing payout setup changes the provider reference | 622 passed | Completion case fails: expected provider |
+| Completing payout setup changes the account owner | 622 passed | Completion case fails: expected owner |
+
+The unchanged repaired control passes all 623 cases. The refreshed execution
+report, **623 unique rows in 188 tables**, source links, coverage destinations,
+and **89 exact-byte hashes** reconcile. Tables contain only assertion-verified
+observations; no production source or shared fixture interface changed.
 
 ## Other validation
 
 | Check | Result |
 |---|---|
-| Domain suite | 622 passed across 44 files |
-| Shuffled domain suite, seed `2006` | 622 passed across 44 files |
-| Full `rtk npm test` | 2,813 passed; 3 failed; 42 skipped; 1 todo |
+| Domain suite | 623 passed across 44 files |
+| Shuffled domain suite, seed `2006` | 623 passed across 44 files |
+| Full `rtk npm test` | 2,814 passed; 3 failed; 42 skipped; 1 todo |
 | `rtk npm run typecheck` | Failed on 25 existing errors in the profile page and app shell |
 | `rtk npx eslint tests/domain` | Passed |
 | `rtk npm run lint` | Failed on an existing unused `MobileNavigation` import in the app shell |

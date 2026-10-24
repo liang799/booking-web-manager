@@ -253,7 +253,7 @@ describe("User account lifecycle", () => {
 
   describe("Starting payout setup", () => {
     test("beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount", () => {
-      const user = createUser();
+      const user = createUser({ userId: "owner" });
 
       user.beginPayoutSetup({
         payoutAccountId: "account",
@@ -264,6 +264,7 @@ describe("User account lifecycle", () => {
       expect(pendingAccount?.setupStatus).toBe("PENDING");
       expect(pendingAccount?.payoutAccountId).toBe("account");
       expect(pendingAccount?.userId).toBe("owner");
+      expect(pendingAccount?.providerAccountReference).toBe("provider");
     });
 
     test("beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState", () => {
@@ -312,7 +313,15 @@ describe("User account lifecycle", () => {
 
   describe("Payout setup confirmation and failure", () => {
     test("completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy", () => {
-      const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
+      const user = createUser({
+        userId: "owner",
+        payoutAccount: new PayoutAccount({
+          payoutAccountId: "account",
+          userId: "owner",
+          providerAccountReference: "provider",
+          setupStatus: "PENDING",
+        }),
+      });
       const pendingAccount = user.payoutAccount;
 
       user.completePayoutSetup("bank");
@@ -322,6 +331,9 @@ describe("User account lifecycle", () => {
       expect(completedAccount).not.toBe(pendingAccount);
       expect(completedAccount?.setupStatus).toBe("COMPLETE");
       expect(completedAccount?.bankAccountReference).toBe("bank");
+      expect(completedAccount?.payoutAccountId).toBe("account");
+      expect(completedAccount?.userId).toBe("owner");
+      expect(completedAccount?.providerAccountReference).toBe("provider");
     });
 
     test("completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {

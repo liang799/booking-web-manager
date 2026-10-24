@@ -285,9 +285,9 @@ Execution: **3 passed / 3 cases**.
 
 | Existing payout status | New payout account ID | New provider account reference | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [Absent](user.test.ts#L255) | account | provider | Payout status PENDING; account ID account; user ID owner | Payout status PENDING; account ID account; user ID owner |
-| [PENDING](user.test.ts#L269) | replacement | other-provider | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
-| [COMPLETE](user.test.ts#L282) | replacement | other-provider | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+| [Absent](user.test.ts#L255) | account | provider | Payout status PENDING; account ID account; user ID owner; provider reference provider | Payout status PENDING; account ID account; user ID owner; provider reference provider |
+| [PENDING](user.test.ts#L270) | replacement | other-provider | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+| [COMPLETE](user.test.ts#L283) | replacement | other-provider | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
 
 ## User.beginPayoutSetup then completePayoutSetup — replacing failed setup
 
@@ -298,7 +298,7 @@ Execution: **1 passed / 1 cases**.
 
 | Existing payout status | New payout account ID | New provider reference | Confirmation bank reference | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [FAILED](user.test.ts#L297) | replacement | other-provider | replacement-bank | Payout status COMPLETE; destination account replacement; destination bank replacement-bank | Payout status COMPLETE; destination account replacement; destination bank replacement-bank |
+| [FAILED](user.test.ts#L298) | replacement | other-provider | replacement-bank | Payout status COMPLETE; destination account replacement; destination bank replacement-bank | Payout status COMPLETE; destination account replacement; destination bank replacement-bank |
 
 ## User.completePayoutSetup — confirmation
 
@@ -309,10 +309,10 @@ Execution: **4 passed / 4 cases**.
 
 | Existing payout status | Stored bank reference | Confirmation bank reference | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [PENDING](user.test.ts#L314) | Absent | bank | New payout-account instance: COMPLETE, bank bank; original account stays PENDING | New payout-account instance: COMPLETE, bank bank; original account stays PENDING |
-| [Absent](user.test.ts#L327) | Absent | bank | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
-| [PENDING](user.test.ts#L335) | Absent | `" "` | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [COMPLETE](user.test.ts#L345) | bank | different-bank | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+| [PENDING](user.test.ts#L315) | Absent | bank | New payout-account instance: COMPLETE, bank bank; account ID account, user ID owner, provider reference provider preserved; original account stays PENDING | New payout-account instance: COMPLETE, bank bank; account ID account, user ID owner, provider reference provider preserved; original account stays PENDING |
+| [Absent](user.test.ts#L339) | Absent | bank | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [PENDING](user.test.ts#L347) | Absent | `" "` | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [COMPLETE](user.test.ts#L357) | bank | different-bank | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
 
 ## User.failPayoutSetup — failure
 
@@ -323,9 +323,9 @@ Execution: **3 passed / 3 cases**.
 
 | Existing payout status | Stored bank reference | Expected Result | Test Result |
 | --- | --- | --- | --- |
-| [PENDING](user.test.ts#L357) | Absent | New payout-account instance: FAILED, bank reference absent; original account stays PENDING | New payout-account instance: FAILED, bank reference absent; original account stays PENDING |
-| [Absent](user.test.ts#L370) | Absent | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
-| [COMPLETE](user.test.ts#L378) | bank | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
+| [PENDING](user.test.ts#L369) | Absent | New payout-account instance: FAILED, bank reference absent; original account stays PENDING | New payout-account instance: FAILED, bank reference absent; original account stays PENDING |
+| [Absent](user.test.ts#L382) | Absent | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [COMPLETE](user.test.ts#L390) | bank | Throws error with code INVALID_STATE; account state unchanged | Throws error with code INVALID_STATE; account state unchanged |
 
 ## User.payoutDestination — usable destination
 
@@ -337,9 +337,9 @@ Execution: **3 passed / 3 cases**.
 
 | Account status | Payout status | Bank reference | Attempted bank reference | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [ACTIVE](user.test.ts#L392) | Absent | Absent | Not attempted | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
-| [ACTIVE](user.test.ts#L400) | COMPLETE | bank | another-bank | Initial destination and account destination after attempted change: account account; user owner; provider provider; bank bank | Initial destination and account destination after attempted change: account account; user owner; provider provider; bank bank |
-| [INACTIVE](user.test.ts#L423) | COMPLETE | bank | Not attempted | Throws error with code INACTIVE_ACCOUNT | Throws error with code INACTIVE_ACCOUNT |
+| [ACTIVE](user.test.ts#L404) | Absent | Absent | Not attempted | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [ACTIVE](user.test.ts#L412) | COMPLETE | bank | another-bank | Initial destination and account destination after attempted change: account account; user owner; provider provider; bank bank | Initial destination and account destination after attempted change: account account; user owner; provider provider; bank bank |
+| [INACTIVE](user.test.ts#L435) | COMPLETE | bank | Not attempted | Throws error with code INACTIVE_ACCOUNT | Throws error with code INACTIVE_ACCOUNT |
 
 ## User.deactivate — outstanding obligations
 
@@ -351,20 +351,20 @@ Execution: **14 passed / 14 cases**.
 
 | Available balance (cents) | Held balance (cents) | Active commitments | Unsettled owned sessions | Pending payouts | Active owned groups | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [1](user.test.ts#L437) | 0 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L451) | 1 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L465) | 0 | 1 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L479) | 0 | -1 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L493) | 0 | 0.5 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L507) | 0 | 0 | 1 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L521) | 0 | 0 | -1 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L535) | 0 | 0 | 0.5 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L549) | 0 | 0 | 0 | 1 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L560) | 0 | 0 | 0 | -1 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L571) | 0 | 0 | 0 | 0.5 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L585) | 0 | 0 | 0 | 0 | 1 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L599) | 0 | 0 | 0 | 0 | -1 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L613) | 0 | 0 | 0 | 0 | 0.5 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [1](user.test.ts#L449) | 0 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L463) | 1 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L477) | 0 | 1 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L491) | 0 | -1 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L505) | 0 | 0.5 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L519) | 0 | 0 | 1 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L533) | 0 | 0 | -1 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L547) | 0 | 0 | 0.5 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L561) | 0 | 0 | 0 | 1 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L572) | 0 | 0 | 0 | -1 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L583) | 0 | 0 | 0 | 0.5 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L597) | 0 | 0 | 0 | 0 | 1 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L611) | 0 | 0 | 0 | 0 | -1 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L625) | 0 | 0 | 0 | 0 | 0.5 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
 
 ## User.deactivate — anonymisation and repeated requests
 
@@ -376,6 +376,6 @@ Execution: **3 passed / 3 cases**.
 
 | Initial account status | Preferred sports | Preferred regions | Payout status | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [ACTIVE](user.test.ts#L627) | Tennis | West | Absent | Status INACTIVE; null email; sports and regions both empty | Status INACTIVE; null email; sports and regions both empty |
-| [ACTIVE](user.test.ts#L641) | Empty | Empty | COMPLETE | User ID owner; same wallet instance; same payout-account instance; bank bank | User ID owner; same wallet instance; same payout-account instance; bank bank |
-| [INACTIVE (already deactivated)](user.test.ts#L656) | Empty | Empty | Absent | Account state unchanged | Account state unchanged |
+| [ACTIVE](user.test.ts#L639) | Tennis | West | Absent | Status INACTIVE; null email; sports and regions both empty | Status INACTIVE; null email; sports and regions both empty |
+| [ACTIVE](user.test.ts#L653) | Empty | Empty | COMPLETE | User ID owner; same wallet instance; same payout-account instance; bank bank | User ID owner; same wallet instance; same payout-account instance; bank bank |
+| [INACTIVE (already deactivated)](user.test.ts#L668) | Empty | Empty | Absent | Account state unchanged | Account state unchanged |

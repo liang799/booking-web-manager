@@ -1,10 +1,10 @@
 {
   "baselineRevision": "00f6c88462e16ffce8f91dd78b72aa649918e9f7",
   "baselineTests": 598,
-  "finalTests": 622,
+  "finalTests": 623,
   "baselineFiles": 45,
   "finalFiles": 44,
-  "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The earlier cleanup retained the original 593-case baseline along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values. Additions are listed separately from retained baseline coverage. Public-contract cleanup intentionally retires the Money freezing and Email method-replacement cases; its mapping records changed requirements and retained observable behavior.",
+  "note": "Scenario mapping plus exact assertion expressions for changed explicit cases. The earlier cleanup retained the original 593-case baseline along with five group-leaving cases added on main before release. Differences include formatting and local variable renaming. Pricing rows were checked against their original inputs and all expected values. Additions are listed separately from retained baseline coverage. Public-contract cleanup intentionally retires the Money freezing and Email method-replacement cases; its mapping records changed requirements and retained observable behavior. The follow-up review restores partial attendance and payout setup identity transition coverage. Top-level mapping/addition locations point to the latest source; historical pass locations describe their recorded revisions.",
   "mappings": [
     {
       "before": {
@@ -1069,7 +1069,8 @@
       "assertionsAfter": [
         "expect(pendingAccount?.setupStatus).toBe(\"PENDING\")",
         "expect(pendingAccount?.payoutAccountId).toBe(\"account\")",
-        "expect(pendingAccount?.userId).toBe(\"owner\")"
+        "expect(pendingAccount?.userId).toBe(\"owner\")",
+        "expect(pendingAccount?.providerAccountReference).toBe(\"provider\")"
       ]
     },
     {
@@ -1081,7 +1082,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState",
-          "line": 269
+          "line": 270
         }
       ],
       "reason": "Preserved"
@@ -1095,7 +1096,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 282
+          "line": 283
         }
       ],
       "reason": "Preserved"
@@ -1109,7 +1110,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete",
-          "line": 297
+          "line": 298
         }
       ],
       "reason": "Preserved"
@@ -1123,7 +1124,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
-          "line": 314
+          "line": 315
         }
       ],
       "reason": "Preserved"
@@ -1137,7 +1138,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 327
+          "line": 339
         }
       ],
       "reason": "Preserved"
@@ -1151,7 +1152,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput",
-          "line": 335
+          "line": 347
         }
       ],
       "reason": "Preserved"
@@ -1165,7 +1166,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState",
-          "line": 345
+          "line": 357
         }
       ],
       "reason": "Preserved"
@@ -1179,7 +1180,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 370
+          "line": 382
         }
       ],
       "reason": "Preserved"
@@ -1193,7 +1194,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState",
-          "line": 378
+          "line": 390
         }
       ],
       "reason": "Preserved"
@@ -1207,7 +1208,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady",
-          "line": 392
+          "line": 404
         }
       ],
       "reason": "Preserved"
@@ -1221,7 +1222,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenReturnedDataMutationIsAttempted_PreservesAccountDestination",
-          "line": 400
+          "line": 412
         }
       ],
       "reason": "Preserved Public-contract pass: Replace freezing assertion with attempted bankAccountReference mutation through Reflect.set, verifying explicit destination fields before mutation and unchanged destination subsequently observed through the account API. Ignore Reflect.set result to permit either frozen data or defensive copies."
@@ -1235,7 +1236,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount",
-          "line": 423
+          "line": 435
         }
       ],
       "reason": "Preserved"
@@ -1249,7 +1250,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations",
-          "line": 437
+          "line": 449
         }
       ],
       "reason": "Preserved"
@@ -1263,7 +1264,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations",
-          "line": 451
+          "line": 463
         }
       ],
       "reason": "Preserved"
@@ -1277,7 +1278,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations",
-          "line": 465
+          "line": 477
         }
       ],
       "reason": "Preserved"
@@ -1291,7 +1292,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput",
-          "line": 479
+          "line": 491
         }
       ],
       "reason": "Preserved"
@@ -1305,7 +1306,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput",
-          "line": 493
+          "line": 505
         }
       ],
       "reason": "Preserved"
@@ -1319,7 +1320,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations",
-          "line": 507
+          "line": 519
         }
       ],
       "reason": "Preserved"
@@ -1333,7 +1334,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput",
-          "line": 521
+          "line": 533
         }
       ],
       "reason": "Preserved"
@@ -1347,7 +1348,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput",
-          "line": 535
+          "line": 547
         }
       ],
       "reason": "Preserved"
@@ -1361,7 +1362,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations",
-          "line": 549
+          "line": 561
         }
       ],
       "reason": "Preserved"
@@ -1375,7 +1376,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput",
-          "line": 560
+          "line": 572
         }
       ],
       "reason": "Preserved"
@@ -1389,7 +1390,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput",
-          "line": 571
+          "line": 583
         }
       ],
       "reason": "Preserved"
@@ -1403,7 +1404,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations",
-          "line": 585
+          "line": 597
         }
       ],
       "reason": "Preserved"
@@ -1417,7 +1418,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput",
-          "line": 599
+          "line": 611
         }
       ],
       "reason": "Preserved"
@@ -1431,7 +1432,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput",
-          "line": 613
+          "line": 625
         }
       ],
       "reason": "Preserved"
@@ -1445,7 +1446,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenNoObligationsRemain_AnonymisesProfile",
-          "line": 627
+          "line": 639
         }
       ],
       "reason": "Preserved"
@@ -1459,7 +1460,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity",
-          "line": 641
+          "line": 653
         }
       ],
       "reason": "Preserved"
@@ -1473,7 +1474,7 @@
         {
           "file": "tests/domain/accounts/user.test.ts",
           "name": "deactivate_WhenAlreadyInactive_LeavesStateUnchanged",
-          "line": 656
+          "line": 668
         }
       ],
       "reason": "Preserved"
@@ -5003,7 +5004,7 @@
         {
           "file": "tests/domain/accounts/booker/attendance.test.ts",
           "name": "verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout",
-          "line": 70
+          "line": 90
         }
       ],
       "reason": "Preserved"
@@ -9635,7 +9636,7 @@
     {
       "file": "tests/domain/accounts/user.test.ts",
       "name": "failPayoutSetup_WhenSetupIsPending_ReplacesAccountWithFailedCopy",
-      "line": 357,
+      "line": 369,
       "reason": "Preserves the successful account failure transition previously exercised only before replacement setup; checks child identity and failed status.",
       "assertions": [
         "expect(pendingAccount.setupStatus).toBe(\"PENDING\")",
@@ -9730,7 +9731,7 @@
       "line": 63,
       "reason": "Maintained contract test for shared fixture construction",
       "assertions": [
-        "expect(session.participantList.participations.map((entry) => entry.userId))\n        .toEqual([\"alice\", \"ben\", \"cara\", \"dan\"])",
+        "expect(session.participantList.participations.map((entry) => entry.userId)) .toEqual([\"alice\", \"ben\", \"cara\", \"dan\"])",
         "expect(session.participantList.requireParticipation(\"p-alice\")).toBe(withdrawn)",
         "expect(session.participantList.requireParticipation(\"p-cara\").queueSequence).toBe(1)",
         "expect(session.participantList.requireParticipation(\"p-dan\").queueSequence).toBe(2)",
@@ -9743,7 +9744,7 @@
       "line": 84,
       "reason": "Maintained contract test for shared fixture construction",
       "assertions": [
-        "expect(() => createTestSession({\n        committedUserIds: [\"alice\"],\n        participationOverrides: { outsider },\n      })).toThrow(\"Participation override must match a roster user: outsider\")"
+        "expect(() => createTestSession({ committedUserIds: [\"alice\"], participationOverrides: { outsider }, })).toThrow(\"Participation override must match a roster user: outsider\")"
       ]
     },
     {
@@ -9752,7 +9753,7 @@
       "line": 93,
       "reason": "Maintained contract test for shared fixture construction",
       "assertions": [
-        "expect(() => createTestSession({\n        waitlistedUserIds: [\"alice\"],\n        participationOverrides: { alice: ben },\n      })).toThrow(\"Participation override must match a roster user: alice\")"
+        "expect(() => createTestSession({ waitlistedUserIds: [\"alice\"], participationOverrides: { alice: ben }, })).toThrow(\"Participation override must match a roster user: alice\")"
       ]
     },
     {
@@ -9762,8 +9763,8 @@
       "reason": "Maintained contract test for shared fixture construction",
       "assertions": [
         "expect(second).not.toBe(first)",
-        "expect(second.participantList.requireParticipation(\"p-alice\"))\n        .not.toBe(first.participantList.requireParticipation(\"p-alice\"))",
-        "expect(second.participantList.requireParticipation(\"p-alice\").hold)\n        .not.toBe(first.participantList.requireParticipation(\"p-alice\").hold)"
+        "expect(second.participantList.requireParticipation(\"p-alice\")) .not.toBe(first.participantList.requireParticipation(\"p-alice\"))",
+        "expect(second.participantList.requireParticipation(\"p-alice\").hold) .not.toBe(first.participantList.requireParticipation(\"p-alice\").hold)"
       ]
     },
     {
@@ -9851,10 +9852,21 @@
         "expect(session.status).toBe(\"PAYOUT_PENDING\")",
         "expect(session.pendingSettlement?.payoutId).toBe(\"original-payout\")",
         "expect(session.pendingSettlement?.idempotencyKey).toBe(\"original-key\")",
-        "expect(session.pendingSettlement?.lines.map((line) => line.amount.toCents()))\n        .toEqual([750, 750])",
-        "expect(session.participantList.participations.map((entry) => entry.hold?.amount.toCents()))\n        .toEqual([750, 750])",
+        "expect(session.pendingSettlement?.lines.map((line) => line.amount.toCents())) .toEqual([750, 750])",
+        "expect(session.participantList.participations.map((entry) => entry.hold?.amount.toCents())) .toEqual([750, 750])",
         "expect(session.payoutAttemptIds).toEqual([\"original-payout\"])",
         "expect(session.payoutIdempotencyKeys).toEqual([\"original-key\"])"
+      ]
+    },
+    {
+      "file": "tests/domain/accounts/booker/attendance.test.ts",
+      "name": "verifyAttendance_WhenOtherParticipantIsUnverified_RemainsOpen",
+      "line": 70,
+      "reason": "Restore successful partial attendance transition coverage lost when prerequisite verification moved into hydrated fixture state; mark only Alice and assert Alice ATTENDED, Ben UNVERIFIED, session OPEN.",
+      "assertions": [
+        "expect( bookingSession.participantList.requireParticipation(\"p-alice\").attendance, ).toBe(\"ATTENDED\")",
+        "expect( bookingSession.participantList.requireParticipation(\"p-ben\").attendance, ).toBe(\"UNVERIFIED\")",
+        "expect(bookingSession.status).toBe(\"OPEN\")"
       ]
     }
   ],
@@ -24053,5 +24065,88 @@
         "reason": "Callback syntax tree preserved; source location and suite labels updated where needed."
       }
     ]
+  },
+  "followUpReviewFixPass": {
+    "baselineRevision": "ea09171f0915f8d665bcf1ef1f003f63afc0b7b5",
+    "baselineTests": 622,
+    "finalTests": 623,
+    "baselineAssertions": 1301,
+    "finalAssertions": 1308,
+    "unchangedCallbackSyntaxTrees": 620,
+    "retainedCaseIdentities": 622,
+    "changedScenarios": [
+      {
+        "before": {
+          "file": "tests/domain/accounts/user.test.ts",
+          "name": "beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
+          "fullName": "User account lifecycle Starting payout setup beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
+          "line": 255
+        },
+        "after": {
+          "file": "tests/domain/accounts/user.test.ts",
+          "name": "beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
+          "fullName": "User account lifecycle Starting payout setup beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount",
+          "line": 255
+        },
+        "beforeAssertions": [
+          "expect(pendingAccount?.setupStatus).toBe(\"PENDING\")",
+          "expect(pendingAccount?.payoutAccountId).toBe(\"account\")",
+          "expect(pendingAccount?.userId).toBe(\"owner\")"
+        ],
+        "afterAssertions": [
+          "expect(pendingAccount?.setupStatus).toBe(\"PENDING\")",
+          "expect(pendingAccount?.payoutAccountId).toBe(\"account\")",
+          "expect(pendingAccount?.userId).toBe(\"owner\")",
+          "expect(pendingAccount?.providerAccountReference).toBe(\"provider\")"
+        ],
+        "reason": "Retain all existing outcomes and explicitly check that the command stores its supplied provider account reference."
+      },
+      {
+        "before": {
+          "file": "tests/domain/accounts/user.test.ts",
+          "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
+          "fullName": "User account lifecycle Payout setup confirmation and failure completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
+          "line": 314
+        },
+        "after": {
+          "file": "tests/domain/accounts/user.test.ts",
+          "name": "completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
+          "fullName": "User account lifecycle Payout setup confirmation and failure completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy",
+          "line": 315
+        },
+        "beforeAssertions": [
+          "expect(pendingAccount?.setupStatus).toBe(\"PENDING\")",
+          "expect(completedAccount).not.toBe(pendingAccount)",
+          "expect(completedAccount?.setupStatus).toBe(\"COMPLETE\")",
+          "expect(completedAccount?.bankAccountReference).toBe(\"bank\")"
+        ],
+        "afterAssertions": [
+          "expect(pendingAccount?.setupStatus).toBe(\"PENDING\")",
+          "expect(completedAccount).not.toBe(pendingAccount)",
+          "expect(completedAccount?.setupStatus).toBe(\"COMPLETE\")",
+          "expect(completedAccount?.bankAccountReference).toBe(\"bank\")",
+          "expect(completedAccount?.payoutAccountId).toBe(\"account\")",
+          "expect(completedAccount?.userId).toBe(\"owner\")",
+          "expect(completedAccount?.providerAccountReference).toBe(\"provider\")"
+        ],
+        "reason": "Retain the account captured before the command and all existing copy/status/bank assertions; explicitly check payout account, owner and provider identity after completion."
+      }
+    ],
+    "addedScenarios": [
+      {
+        "file": "tests/domain/accounts/booker/attendance.test.ts",
+        "name": "verifyAttendance_WhenOtherParticipantIsUnverified_RemainsOpen",
+        "fullName": "Booker attendance verification verifyAttendance_WhenOtherParticipantIsUnverified_RemainsOpen",
+        "line": 70,
+        "assertions": [
+          "expect( bookingSession.participantList.requireParticipation(\"p-alice\").attendance, ).toBe(\"ATTENDED\")",
+          "expect( bookingSession.participantList.requireParticipation(\"p-ben\").attendance, ).toBe(\"UNVERIFIED\")",
+          "expect(bookingSession.status).toBe(\"OPEN\")"
+        ],
+        "reason": "Restore successful partial attendance transition coverage lost when prerequisite verification moved into hydrated fixture state; mark only Alice and assert Alice ATTENDED, Ben UNVERIFIED, session OPEN."
+      }
+    ],
+    "mutationEvidence": "2026-10-24-review-repair-mutations.json",
+    "review": "The focused partial attendance command and setup/completion identity checks replace lost transition coverage while keeping prerequisite fixtures. No production, fixture interface, or unrelated scenario changes."
   }
 }

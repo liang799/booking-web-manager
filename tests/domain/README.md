@@ -206,6 +206,9 @@ inside those fixtures. Keep scenario-defining amounts, dates, identities, invali
 fields, and the transition being tested visible. Preserve exported
 fixture defaults because use-case and other suites consume them. Keep local
 helpers below the tests; avoid setup hooks or builders that hide the scenario.
+When replacing a prerequisite workflow with a fixture, keep a focused test for
+the transition that workflow previously exercised. Constructor-state assertions
+do not establish that a command can produce or preserve that state.
 Shared fixture behavior has maintained contract tests in
 [session-fixtures.test.ts](./sessions/session/session-fixtures.test.ts), including
 attendance, financial terms, roster order, invalid overrides, and payout identity.
@@ -359,7 +362,7 @@ The table vocabulary follows *Lecture 16: Testing Introduction*, slides 15–18.
 Input means data or commands, Oracle means the expected result, and Log means
 the observed result. These are reporting concepts, not mandatory code comments.
 
-The **2026-10-24** snapshot covers **624 passing cases across 44 files**. Each
+The **2026-10-24** snapshot covers **623 passing cases across 44 files**. Each
 row is one test case. Group cases by operation and compatible input fields, put
 the operation in the heading, and give the inputs separate domain-specific
 columns with units. End each table with **Expected Result** and **Test Result**.
@@ -392,7 +395,7 @@ Execution: **1 passed / 1 illustrative case** (also included in the Money table)
 | Area | Cases | Tables |
 |---|---:|---|
 | Accounts | 95 | [Account cases](./accounts/README.md) |
-| Booker | 55 | [Booker cases](./accounts/booker/README.md) |
+| Booker | 56 | [Booker cases](./accounts/booker/README.md) |
 | Participant | 77 | [Participant cases](./accounts/participant/README.md) |
 | Finance | 55 | [Finance cases](./finance/README.md) |
 | Money | 82 | [Money cases](./finance/money/README.md) |

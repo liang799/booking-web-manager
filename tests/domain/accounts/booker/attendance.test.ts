@@ -67,6 +67,26 @@ describe("Booker attendance verification", () => {
     expect(sessionState(bookingSession)).toEqual(previousState);
   });
 
+  test("verifyAttendance_WhenOtherParticipantIsUnverified_RemainsOpen", () => {
+    const attendanceVerificationTime = sessionEndsAt;
+    const bookingSession = createTestSession({
+      committedUserIds: ["alice", "ben"],
+    });
+
+    readyBooker().verifyAttendance(bookingSession, {
+      marks: [{ participationId: "p-alice", attendance: "ATTENDED" }],
+      now: attendanceVerificationTime,
+    });
+
+    expect(
+      bookingSession.participantList.requireParticipation("p-alice").attendance,
+    ).toBe("ATTENDED");
+    expect(
+      bookingSession.participantList.requireParticipation("p-ben").attendance,
+    ).toBe("UNVERIFIED");
+    expect(bookingSession.status).toBe("OPEN");
+  });
+
   test("verifyAttendance_WhenFinalParticipantIsMarked_AwaitsPayout", () => {
     const attendanceVerificationTime = sessionEndsAt;
     const bookingSession = createTestSession({
