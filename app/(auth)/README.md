@@ -25,6 +25,13 @@ preferred-sport step. **Create account** submits all five fields and the validat
 return destination to the server action. Both steps remain mounted so Back and validation errors preserve
 the draft. Terms and privacy links appear before the final submission.
 
+Both forms set `method="post"`. After hydration the client handler submits them,
+but a submission before JavaScript loads uses the browser default. Without a
+method that default is GET, which put the email and password in the URL, browser
+history and server logs (defect D1 in the
+[account testing report](../../docs/testing/account-testing/README.md)). With
+POST the page reloads with an empty form and the server ignores the body.
+
 The email control accepts a complete address or an address with a selected
 ending. Complete addresses with other or multi-label domains remain editable in
 full. The form submits one complete `email` value; the server remains responsible
