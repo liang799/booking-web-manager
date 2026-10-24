@@ -14,6 +14,11 @@ complete workflows and Session records prepared children. Creation ownership,
 aggregate boundaries, and business behavior remain accepted; this record
 preserves the earlier routing as decision history.
 
+Payout client request-key ownership only is superseded by
+[ADR-0020](./0020-payout-request-idempotency.md). Keys are application/adapter
+metadata; payout-ID history, aggregate ownership and business guards remain.
+The earlier key-bearing contracts below are retained as decision history.
+
 ## Context
 
 After moving participant decisions into `Participant`, `Booker` still forwarded

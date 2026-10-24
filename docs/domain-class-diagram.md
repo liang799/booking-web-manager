@@ -93,7 +93,10 @@ abbreviated.
 - `PayoutAttempt` owns frozen payout lines and a destination copy; it does not own
   live holds. `Booker.preparePayout` prepares the batch; Session validates and
   records it through `recordSettlementPreparation`, retaining its own pending
-  copy. Failed attempts remain recorded, and each retry has a new payout ID.
+  copy. Failed attempts remain recorded; a new submission after failure has a
+  new payout ID, while retries of the original submission replay its result.
+  Client request keys and terminal receipts belong to application transactions
+  ([ADR-0020](./adr/0020-payout-request-idempotency.md)).
   Frozen account references may
   outlive the user's current payout-setup child.
 - ID attributes also express references where drawing another edge would add

@@ -1,6 +1,6 @@
 # accounts/booker test cases
 
-Snapshot: **2026-10-24** · **56 cases, 56 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24, payout refactor** · **54 cases, 54 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one executed test. Columns before **Expected Result** are inputs; **Expected Result** is the oracle and **Test Result** is the log. Test results are assertion-verified outcomes from the dated passing run, not captured runtime payloads. The first input value links to the test definition. Only checked fields are reported; matching fields do not imply equality of an entire returned object.
 
@@ -134,8 +134,8 @@ Execution: **2 passed / 2 cases**.
 
 | Visibility | Invited group | Minimum reliability | Booking share (cents) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [Omitted](creation.test.ts#L104) | None | None | Default: 500 | Owner `booker`; visibility `PRIVATE`; status `OPEN`; participations and payout ID/key histories empty; next queue sequence 1; pending settlement absent. | Owner `booker`; visibility `PRIVATE`; status `OPEN`; participations and payout ID/key histories empty; next queue sequence 1; pending settlement absent. |
-| [PUBLIC](creation.test.ts#L123) | group | 80 | 750 | Visibility `PUBLIC`; invited group `group`; minimum reliability 80; booking share 750 cents. | Visibility `PUBLIC`; invited group `group`; minimum reliability 80; booking share 750 cents. |
+| [Omitted](creation.test.ts#L104) | None | None | Default: 500 | Owner `booker`; visibility `PRIVATE`; status `OPEN`; participations and payout ID history empty; next queue sequence 1; pending settlement absent. | Owner `booker`; visibility `PRIVATE`; status `OPEN`; participations and payout ID history empty; next queue sequence 1; pending settlement absent. |
+| [PUBLIC](creation.test.ts#L122) | group | 80 | 750 | Visibility `PUBLIC`; invited group `group`; minimum reliability 80; booking share 750 cents. | Visibility `PUBLIC`; invited group `group`; minimum reliability 80; booking share 750 cents. |
 
 ## createSession — booking and capacity
 
@@ -147,47 +147,46 @@ Execution: **6 passed / 6 cases**.
 
 | Total cost (cents) | Slots | Minimum headcount | Creation time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [1,000](creation.test.ts#L143) | 1,001 | 2 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
-| [1,000](creation.test.ts#L151) | 1 | 2 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
-| [1,000](creation.test.ts#L159) | 2 | 1 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
-| [1,000](creation.test.ts#L167) | 3 | 4 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
-| [1,000](creation.test.ts#L175) | 3 | 3 | 48 h before start | Minimum headcount 3. | Minimum headcount 3. |
-| [1,000](creation.test.ts#L186) | 2 | 2 | Session end | Error code `SESSION_STARTED`. | Error code `SESSION_STARTED`. |
+| [1,000](creation.test.ts#L142) | 1,001 | 2 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
+| [1,000](creation.test.ts#L150) | 1 | 2 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
+| [1,000](creation.test.ts#L158) | 2 | 1 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
+| [1,000](creation.test.ts#L166) | 3 | 4 | 48 h before start | Error code `INVALID_INPUT`. | Error code `INVALID_INPUT`. |
+| [1,000](creation.test.ts#L174) | 3 | 3 | 48 h before start | Minimum headcount 3. | Minimum headcount 3. |
+| [1,000](creation.test.ts#L185) | 2 | 2 | Session end | Error code `SESSION_STARTED`. | Error code `SESSION_STARTED`. |
 
 ## preparePayout — eligibility and settlement
 
 Commands run at session end. Destination fields are payout account ID / user ID / provider account reference / bank account reference. Listed attended participants are committed with held funds unless described as withdrawn.
 
-**Input:** Booker / account, Session status, Participants / attendance, Payout ID, Idempotency key · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Booker / account, Session status, Participants / attendance, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **5 passed / 5 cases**.
 
-| Booker / account | Session status | Participants / attendance | Payout ID | Idempotency key | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- | --- |
-| [booker; INACTIVE after role creation](settlement.test.ts#L18) | OPEN | None | out | key | Error code `INACTIVE_ACCOUNT`; session unchanged. | Error code `INACTIVE_ACCOUNT`; session unchanged. |
-| [booker; ACTIVE](settlement.test.ts#L48) | OPEN | alice ATTENDED; ben UNVERIFIED | out | key | Error code `ATTENDANCE_INCOMPLETE`; session unchanged. | Error code `ATTENDANCE_INCOMPLETE`; session unchanged. |
-| [booker; ACTIVE](settlement.test.ts#L67) | AWAITING_PAYOUT | alice withdrawn at −2 h, OPEN_SLOT, AWAITING_REPLACEMENT; ben ATTENDED | out | key | Session `PAYOUT_PENDING`; destination exactly pa/booker/provider/bank; line kinds `[FORFEIT, RELEASE]`; alice/ben hold states `[FORFEITURE_DUE, HELD]`. | Session `PAYOUT_PENDING`; destination exactly pa/booker/provider/bank; line kinds `[FORFEIT, RELEASE]`; alice/ben hold states `[FORFEITURE_DUE, HELD]`. |
-| [booker; ACTIVE](settlement.test.ts#L102) | OPEN | None | unused | unused | No payout returned; session `SETTLED`. | No payout returned; session `SETTLED`. |
-| [other; ACTIVE](authorization.test.ts#L54) | AWAITING_PAYOUT | alice ATTENDED | out | key | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
+| Booker / account | Session status | Participants / attendance | Payout ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [booker; INACTIVE after role creation](settlement.test.ts#L18) | OPEN | None | out | Error code `INACTIVE_ACCOUNT`; session unchanged. | Error code `INACTIVE_ACCOUNT`; session unchanged. |
+| [booker; ACTIVE](settlement.test.ts#L47) | OPEN | alice ATTENDED; ben UNVERIFIED | out | Error code `ATTENDANCE_INCOMPLETE`; session unchanged. | Error code `ATTENDANCE_INCOMPLETE`; session unchanged. |
+| [booker; ACTIVE](settlement.test.ts#L65) | AWAITING_PAYOUT | alice withdrawn at −2 h, OPEN_SLOT, AWAITING_REPLACEMENT; ben ATTENDED | out | Session `PAYOUT_PENDING`; returned and pending batches have no request key; destination exactly pa/booker/provider/bank; line kinds `[FORFEIT, RELEASE]`; alice/ben hold states `[FORFEITURE_DUE, HELD]`. | Session `PAYOUT_PENDING`; returned and pending batches have no request key; destination exactly pa/booker/provider/bank; line kinds `[FORFEIT, RELEASE]`; alice/ben hold states `[FORFEITURE_DUE, HELD]`. |
+| [booker; ACTIVE](settlement.test.ts#L101) | OPEN | None | unused | No payout returned; session `SETTLED`; payout history empty; pending settlement absent. | No payout returned; session `SETTLED`; payout history empty; pending settlement absent. |
+| [other; ACTIVE](authorization.test.ts#L54) | AWAITING_PAYOUT | alice ATTENDED | out | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
 
 ## preparePayout — pending payouts and retries
 
 Owner retries at session end. Release-only participants are marked `ATTENDED`; the forfeiture case has alice withdrawn at −2 h using `OPEN_SLOT`, and ben attended. Failure history remains recorded after settlement failure.
 
-**Input:** Previous payout, Existing hold states, Requested payout ID, Requested key · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Previous payout, Existing hold states, Requested payout ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **4 passed / 4 cases**.
+Execution: **3 passed / 3 cases**.
 
-| Previous payout | Existing hold states | Requested payout ID | Requested key | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- |
-| [out / key; PAYOUT_PENDING](settlement.test.ts#L118) | alice FORFEITURE_DUE; ben HELD | another | key2 | Error code `PAYOUT_IN_PROGRESS`; session unchanged. | Error code `PAYOUT_IN_PROGRESS`; session unchanged. |
-| [out / key; failed at session end](settlement.test.ts#L134) | alice FORFEITURE_DUE; ben HELD | out | new | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
-| [original-payout / original-key; failed at session end](settlement.test.ts#L151) | alice, ben HELD | retry | original-key | Error code `DUPLICATE_ID`, message “A payout idempotency key can only be used once for this session”; session unchanged. | Error code `DUPLICATE_ID`, message “A payout idempotency key can only be used once for this session”; session unchanged. |
-| [out / key; failed at session end](settlement.test.ts#L179) | alice, ben HELD | retry | retry-key | Returned payout `retry`, key `retry-key`; session `PAYOUT_PENDING`, pending payout `retry`; histories `[out, retry]` / `[key, retry-key]`; both hold objects retain identity and stay `HELD`. | Returned payout `retry`, key `retry-key`; session `PAYOUT_PENDING`, pending payout `retry`; histories `[out, retry]` / `[key, retry-key]`; both hold objects retain identity and stay `HELD`. |
+| Previous payout | Existing hold states | Requested payout ID | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [out; PAYOUT_PENDING](settlement.test.ts#L118) | alice FORFEITURE_DUE; ben HELD | another | Error code `PAYOUT_IN_PROGRESS`; session unchanged. | Error code `PAYOUT_IN_PROGRESS`; session unchanged. |
+| [out; failed at session end](settlement.test.ts#L133) | alice FORFEITURE_DUE; ben HELD | out | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
+| [out; failed at session end](settlement.test.ts#L149) | alice, ben HELD | retry | Returned payout `retry`; session `PAYOUT_PENDING`, pending payout `retry`; payout history `[out, retry]`; both hold objects retain identity and stay `HELD`. | Returned payout `retry`; session `PAYOUT_PENDING`, pending payout `retry`; payout history `[out, retry]`; both hold objects retain identity and stay `HELD`. |
 
 ## preparePayout — expire replacement holds
 
-All attempts use payout ID `out`, key `key`, and session-end time; ben, when present, is committed.
+All attempts use payout ID `out` and session-end time; ben, when present, is committed.
 
 **Input:** Booker attempts, Ben attendance, Session status, Outstanding withdrawal · **Oracle:** Expected Result · **Log:** Test Result
 
@@ -195,21 +194,20 @@ Execution: **4 passed / 4 cases**.
 
 | Booker attempts | Ben attendance | Session status | Outstanding withdrawal | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [booker](settlement.test.ts#L222) | No ben participant | OPEN | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | alice hold `FORFEITURE_DUE`; exactly one payout line with kind `FORFEIT` (other fields unconstrained). | alice hold `FORFEITURE_DUE`; exactly one payout line with kind `FORFEIT` (other fields unconstrained). |
-| [booker](settlement.test.ts#L249) | UNVERIFIED | OPEN | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | Error code `ATTENDANCE_INCOMPLETE`; session unchanged; alice hold remains `AWAITING_REPLACEMENT`. | Error code `ATTENDANCE_INCOMPLETE`; session unchanged; alice hold remains `AWAITING_REPLACEMENT`. |
-| [foreign](settlement.test.ts#L280) | ATTENDED | AWAITING_PAYOUT | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | Error code `UNAUTHORIZED`; session unchanged; payout ID and key histories empty. | Error code `UNAUTHORIZED`; session unchanged; payout ID and key histories empty. |
-| [foreign, then booker](settlement.test.ts#L311) | ATTENDED | AWAITING_PAYOUT | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | Foreign attempt error code `UNAUTHORIZED`; owner receives line kinds `[FORFEIT, RELEASE]`; alice hold `FORFEITURE_DUE`; histories `[out]` / `[key]`. | Foreign attempt error code `UNAUTHORIZED`; owner receives line kinds `[FORFEIT, RELEASE]`; alice hold `FORFEITURE_DUE`; histories `[out]` / `[key]`. |
+| [booker](settlement.test.ts#L186) | No ben participant | OPEN | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | alice hold `FORFEITURE_DUE`; exactly one payout line with kind `FORFEIT` (other fields unconstrained). | alice hold `FORFEITURE_DUE`; exactly one payout line with kind `FORFEIT` (other fields unconstrained). |
+| [booker](settlement.test.ts#L212) | UNVERIFIED | OPEN | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | Error code `ATTENDANCE_INCOMPLETE`; session unchanged; alice hold remains `AWAITING_REPLACEMENT`. | Error code `ATTENDANCE_INCOMPLETE`; session unchanged; alice hold remains `AWAITING_REPLACEMENT`. |
+| [foreign](settlement.test.ts#L242) | ATTENDED | AWAITING_PAYOUT | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | Error code `UNAUTHORIZED`; session unchanged; payout ID history empty. | Error code `UNAUTHORIZED`; session unchanged; payout ID history empty. |
+| [foreign, then booker](settlement.test.ts#L271) | ATTENDED | AWAITING_PAYOUT | alice: −2 h, OPEN_SLOT, AWAITING_REPLACEMENT | Foreign attempt error code `UNAUTHORIZED`; owner receives line kinds `[FORFEIT, RELEASE]`; alice hold `FORFEITURE_DUE`; payout history `[out]`. | Foreign attempt error code `UNAUTHORIZED`; owner receives line kinds `[FORFEIT, RELEASE]`; alice hold `FORFEITURE_DUE`; payout history `[out]`. |
 
 ## preparePayout — restore failed payout history
 
 Restored sessions are `AWAITING_PAYOUT`, have no pending settlement, and contain alice marked `ATTENDED` with a 500-cent held share. Owner prepares the payout at session end.
 
-**Input:** Restored history, Requested payout ID, Requested key, Session copies · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Restored history, Requested payout ID, Session copies · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed / 3 cases**.
+Execution: **2 passed / 2 cases**.
 
-| Restored history | Requested payout ID | Requested key | Session copies | Expected Result | Test Result |
-| --- | --- | --- | --- | --- | --- |
-| [out / key](settlement.test.ts#L353) | out | retry-key | One | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
-| [out / key](settlement.test.ts#L374) | retry | key | One | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
-| [out / key](settlement.test.ts#L395) | retry | retry-key | Original and independently restored | Returned payout `retry`, key `retry-key`; restored session `PAYOUT_PENDING`, pending payout `retry`; histories `[out, retry]` / `[key, retry-key]`; original session unchanged. | Returned payout `retry`, key `retry-key`; restored session `PAYOUT_PENDING`, pending payout `retry`; histories `[out, retry]` / `[key, retry-key]`; original session unchanged. |
+| Restored history | Requested payout ID | Session copies | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [out](settlement.test.ts#L311) | out | One | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
+| [out](settlement.test.ts#L331) | retry | Original and independently restored | Returned payout `retry`; restored session `PAYOUT_PENDING`, pending payout `retry`; payout history `[out, retry]`; original session unchanged. | Returned payout `retry`; restored session `PAYOUT_PENDING`, pending payout `retry`; payout history `[out, retry]`; original session unchanged. |

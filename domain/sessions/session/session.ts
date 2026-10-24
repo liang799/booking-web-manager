@@ -44,13 +44,11 @@ export interface SessionDetails {
   readonly nextQueueSequence: number;
   readonly pendingSettlement?: PayoutBatch;
   readonly payoutAttemptIds: readonly UUID[];
-  readonly payoutIdempotencyKeys: readonly string[];
 }
 
 /** Prepared settlement values recorded together; this is not an actor command. */
 export interface SessionSettlementPreparation {
   readonly payoutId: UUID;
-  readonly idempotencyKey: string;
   readonly participations: readonly Participation[];
   readonly batch?: PayoutBatch;
 }
@@ -63,7 +61,6 @@ interface PreparedSessionState {
   readonly status: SessionStatus;
   readonly pendingSettlement?: PayoutBatch;
   readonly payoutAttemptIds?: ReadonlySet<UUID>;
-  readonly payoutIdempotencyKeys?: ReadonlySet<string>;
 }
 
 /**
@@ -91,7 +88,6 @@ export class Session {
   #participantList: ParticipantList;
   #pendingSettlement?: PayoutPending;
   #payoutAttemptIds: Set<UUID>;
-  #payoutIdempotencyKeys: Set<string>;
 
   constructor(details: SessionDetails) {
     validateSessionDetails(details);
@@ -112,7 +108,6 @@ export class Session {
         ? undefined
         : { batch: cloneBatch(details.pendingSettlement) };
     this.#payoutAttemptIds = new Set(details.payoutAttemptIds);
-    this.#payoutIdempotencyKeys = new Set(details.payoutIdempotencyKeys);
     validateSessionConfiguration({
       status: this.#status,
       visibility: this.#visibility,
@@ -229,11 +224,6 @@ export class Session {
     now: Date,
   ): void {
     requireId(preparation.payoutId, "payoutId");
-    DomainError.require(
-      preparation.idempotencyKey.trim() !== "",
-      "INVALID_INPUT",
-      "idempotencyKey is required",
-    );
     assertSettlementOpen(this.#status, this.#booking, now);
     const next = this.#participantList.withSettlementPreparation(
       preparation.participations,
@@ -248,9 +238,7 @@ export class Session {
     validatePayoutAttempt(
       this.#pendingSettlement?.batch,
       [...this.#payoutAttemptIds],
-      [...this.#payoutIdempotencyKeys],
       preparation.payoutId,
-      preparation.idempotencyKey,
     );
     const batch = preparation.batch;
     if (batch === undefined) {
@@ -263,18 +251,13 @@ export class Session {
     const attemptIds = new Set(this.#payoutAttemptIds).add(
       preparation.payoutId,
     );
-    const idempotencyKeys = new Set(this.#payoutIdempotencyKeys).add(
-      preparation.idempotencyKey,
-    );
     this.validateState(next, {
       status: "PAYOUT_PENDING",
       pendingSettlement: pending.batch,
       payoutAttemptIds: attemptIds,
-      payoutIdempotencyKeys: idempotencyKeys,
     });
     this.#participantList = next;
     this.#payoutAttemptIds = attemptIds;
-    this.#payoutIdempotencyKeys = idempotencyKeys;
     this.#pendingSettlement = pending;
     this.#status = "PAYOUT_PENDING";
   }
@@ -363,9 +346,6 @@ export class Session {
   get payoutAttemptIds(): readonly UUID[] {
     return [...this.#payoutAttemptIds];
   }
-  get payoutIdempotencyKeys(): readonly string[] {
-    return [...this.#payoutIdempotencyKeys];
-  }
   get pendingSettlement(): PayoutBatch | undefined {
     return this.#pendingSettlement === undefined
       ? undefined
@@ -405,8 +385,6 @@ export class Session {
       participantList,
       pendingSettlement: state.pendingSettlement,
       payoutAttemptIds: state.payoutAttemptIds ?? this.#payoutAttemptIds,
-      payoutIdempotencyKeys:
-        state.payoutIdempotencyKeys ?? this.#payoutIdempotencyKeys,
       sessionId: this.#sessionId,
     });
   }

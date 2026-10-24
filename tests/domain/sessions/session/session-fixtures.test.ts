@@ -190,30 +190,29 @@ describe("Session fixture contracts", () => {
       const session = new Session(details);
 
       expect(session.pendingSettlement?.payoutId).toBe("out");
-      expect(session.pendingSettlement?.idempotencyKey).toBe("key");
+      expect(session.pendingSettlement).not.toHaveProperty("idempotencyKey");
       expect(session.pendingSettlement?.lines[0]?.amount.toCents()).toBe(500);
       expect(session.payoutAttemptIds).toEqual(["out"]);
-      expect(session.payoutIdempotencyKeys).toEqual(["key"]);
+      expect(session).not.toHaveProperty("payoutIdempotencyKeys");
     });
 
     test("pendingPayoutDetails_WhenTermsAndIdentityAreProvided_HydratesMatchingPayoutHistory", () => {
       const details = pendingPayoutDetails(["alice", "ben"], {
         bookingShare: Money.fromCents(750),
         payoutId: "original-payout",
-        idempotencyKey: "original-key",
       });
 
       const session = new Session(details);
 
       expect(session.status).toBe("PAYOUT_PENDING");
       expect(session.pendingSettlement?.payoutId).toBe("original-payout");
-      expect(session.pendingSettlement?.idempotencyKey).toBe("original-key");
+      expect(session.pendingSettlement).not.toHaveProperty("idempotencyKey");
       expect(session.pendingSettlement?.lines.map((line) => line.amount.toCents()))
         .toEqual([750, 750]);
       expect(session.participantList.participations.map((entry) => entry.hold?.amount.toCents()))
         .toEqual([750, 750]);
       expect(session.payoutAttemptIds).toEqual(["original-payout"]);
-      expect(session.payoutIdempotencyKeys).toEqual(["original-key"]);
+      expect(session).not.toHaveProperty("payoutIdempotencyKeys");
     });
   });
 });

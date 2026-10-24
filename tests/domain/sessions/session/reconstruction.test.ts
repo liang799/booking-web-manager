@@ -22,21 +22,17 @@ describe("Session restoration and ownership invariants", () => {
         ...originalSession.participantList.participations,
       ];
       const payoutAttemptIds = ["earlier"];
-      const payoutIdempotencyKeys = ["earlier-key"];
       const aliceParticipation = participations[0]!;
       const details = sessionDetails({
         participations,
         payoutAttemptIds,
-        payoutIdempotencyKeys,
       });
 
       const restoredSession = new Session(details);
       participations.pop();
       payoutAttemptIds.push("leak");
-      payoutIdempotencyKeys.push("leak");
       (restoredSession.participantList.participations as Participation[]).pop();
       (restoredSession.payoutAttemptIds as string[]).pop();
-      (restoredSession.payoutIdempotencyKeys as string[]).pop();
       restoredSession.booking.startAt.setFullYear(2000);
       aliceParticipation.committedAt?.setFullYear(2000);
       aliceParticipation.hold?.createdAt.setFullYear(2000);
@@ -49,7 +45,6 @@ describe("Session restoration and ownership invariants", () => {
       expect(aliceParticipation.committedAt).toEqual(committedAt);
       expect(aliceParticipation.hold?.createdAt).toEqual(committedAt);
       expect(restoredSession.payoutAttemptIds).toEqual(["earlier"]);
-      expect(restoredSession.payoutIdempotencyKeys).toEqual(["earlier-key"]);
       expect(restoredSession.participantList.nextQueueSequence).toBe(1);
     });
 
@@ -76,7 +71,6 @@ describe("Session restoration and ownership invariants", () => {
       expect(preservedBatch?.lines).toHaveLength(1);
       expect(preservedBatch?.lines[0]?.amount.toCents()).toBe(500);
       expect(restoredSession.payoutAttemptIds).toEqual(["out"]);
-      expect(restoredSession.payoutIdempotencyKeys).toEqual(["key"]);
     });
 
     test("completeSettlement_WhenPendingSessionIsRestored_SettlesIndependentlyOfSource", () => {
@@ -316,41 +310,14 @@ describe("Session restoration and ownership invariants", () => {
   });
 
   describe("Required payout history", () => {
-    test("constructor_WhenBothHistoriesAreOmittedWithoutPendingPayout_ThrowsInvalidInput", () => {
-      const details = {
-        ...sessionDetails(),
-        payoutAttemptIds: undefined,
-        payoutIdempotencyKeys: undefined,
-      };
-
-      expect(() => {
-        // @ts-expect-error Verify omitted histories fail at the runtime construction boundary.
-        return new Session(details);
-      }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
     test("constructor_WhenAttemptHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput", () => {
       const details = {
         ...sessionDetails(),
         payoutAttemptIds: undefined,
-        payoutIdempotencyKeys: ["earlier-key"],
       };
 
       expect(() => {
         // @ts-expect-error Verify omitted attempt history fails at the runtime construction boundary.
-        return new Session(details);
-      }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
-    test("constructor_WhenKeyHistoryIsOmittedWithoutPendingPayout_ThrowsInvalidInput", () => {
-      const details = {
-        ...sessionDetails(),
-        payoutAttemptIds: ["earlier"],
-        payoutIdempotencyKeys: undefined,
-      };
-
-      expect(() => {
-        // @ts-expect-error Verify omitted key history fails at the runtime construction boundary.
         return new Session(details);
       }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     });
@@ -364,36 +331,10 @@ describe("Session restoration and ownership invariants", () => {
       }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     });
 
-    test("constructor_WhenKeyHistoryIsNotAnArray_ThrowsInvalidInput", () => {
-      const details = {
-        ...sessionDetails(),
-        payoutIdempotencyKeys: "earlier-key",
-      };
-
-      expect(() => {
-        // @ts-expect-error Verify the required history collection is rejected before Set conversion.
-        return new Session(details);
-      }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
-    test("constructor_WhenBothHistoriesAreOmittedWithPendingPayout_ThrowsInvalidInput", () => {
-      const details = {
-        ...pendingPayoutDetails(),
-        payoutAttemptIds: undefined,
-        payoutIdempotencyKeys: undefined,
-      };
-
-      expect(() => {
-        // @ts-expect-error A pending batch must not fill omitted histories at runtime.
-        return new Session(details);
-      }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
     test("constructor_WhenAttemptHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput", () => {
       const details = {
         ...pendingPayoutDetails(),
         payoutAttemptIds: undefined,
-        payoutIdempotencyKeys: ["earlier-key", "key"],
       };
 
       expect(() => {
@@ -402,20 +343,7 @@ describe("Session restoration and ownership invariants", () => {
       }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     });
 
-    test("constructor_WhenKeyHistoryIsOmittedWithPendingPayout_ThrowsInvalidInput", () => {
-      const details = {
-        ...pendingPayoutDetails(),
-        payoutAttemptIds: ["earlier", "out"],
-        payoutIdempotencyKeys: undefined,
-      };
-
-      expect(() => {
-        // @ts-expect-error A pending batch must not fill omitted key history at runtime.
-        return new Session(details);
-      }).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
-    test("constructor_WhenFailedPayoutHistoryIsRestored_PreservesAttemptsAndKeys", () => {
+    test("constructor_WhenFailedPayoutHistoryIsRestored_PreservesAttempts", () => {
       const details = {
         ...pendingPayoutDetails(),
         status: "AWAITING_PAYOUT" as const,
@@ -427,21 +355,12 @@ describe("Session restoration and ownership invariants", () => {
       expect(restoredSession.status).toBe("AWAITING_PAYOUT");
       expect(restoredSession.pendingSettlement).toBeUndefined();
       expect(restoredSession.payoutAttemptIds).toEqual(["out"]);
-      expect(restoredSession.payoutIdempotencyKeys).toEqual(["key"]);
       expect(restoredSession.participantList
         .requireParticipation("p-alice").hold?.state).toBe("HELD");
     });
 
     test("constructor_WhenPayoutAttemptIdsAreDuplicated_ThrowsDomainError", () => {
       const details = sessionDetails({ payoutAttemptIds: ["same", "same"] });
-
-      expect(() => new Session(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenPayoutKeysAreDuplicated_ThrowsDomainError", () => {
-      const details = sessionDetails({
-        payoutIdempotencyKeys: ["same", "same"],
-      });
 
       expect(() => new Session(details)).toThrow(DomainError);
     });
@@ -489,14 +408,6 @@ describe("Session restoration and ownership invariants", () => {
       expect(() => new Session({ ...details, payoutAttemptIds: [] })).toThrow(
         DomainError,
       );
-    });
-
-    test("constructor_WhenPendingKeyIsMissingFromHistory_ThrowsDomainError", () => {
-      const details = pendingPayoutDetails();
-
-      expect(
-        () => new Session({ ...details, payoutIdempotencyKeys: [] }),
-      ).toThrow(DomainError);
     });
   });
 });

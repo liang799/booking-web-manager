@@ -1,6 +1,6 @@
 # Reliability test cases
 
-Snapshot: **2026-10-24** · **33 cases, 33 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24, payout refactor** · **33 cases, 33 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 

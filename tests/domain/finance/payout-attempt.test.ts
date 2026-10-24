@@ -133,11 +133,20 @@ describe("Payout request and provider outcome handling", () => {
 
       const intent = payout.requestedIntent();
 
-      expect(intent).toMatchObject({
+      const { amount, ...requestDetails } = intent;
+      expect(requestDetails).toEqual({
         kind: "PAYOUT_REQUESTED",
         payoutId: "payout",
+        sessionId: "session",
+        destination: {
+          payoutAccountId: "account",
+          userId: "booker",
+          providerAccountReference: "provider",
+          bankAccountReference: "bank",
+        },
+        requestedAt,
       });
-      expect(intent.amount.toCents()).toBe(100);
+      expect(amount.toCents()).toBe(100);
     });
   });
 
@@ -262,7 +271,6 @@ function batch(): PayoutBatch {
   return {
     payoutId: "payout",
     sessionId: "session",
-    idempotencyKey: "key",
     requestedAt: new Date(requestedAt),
     destination: {
       payoutAccountId: "account",

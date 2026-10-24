@@ -477,7 +477,6 @@ export function validatePayoutBatchPreparation(
     batch.sessionId === sessionId &&
       batch.destination.userId === bookerId &&
       batch.payoutId === preparation.payoutId &&
-      batch.idempotencyKey === preparation.idempotencyKey &&
       sameDate(batch.requestedAt, now),
     "INVALID_INPUT",
     "Settlement batch must match this session, destination, and payout attempt",

@@ -35,7 +35,6 @@ describe("Session payout settlement", () => {
       expect(bookingSession.participantList).toBe(previousList);
       expect(bookingSession.status).toBe("PAYOUT_PENDING");
       expect(bookingSession.payoutAttemptIds).toEqual(["out"]);
-      expect(bookingSession.payoutIdempotencyKeys).toEqual(["key"]);
       expect(
         bookingSession.participantList.participations.map(
           (participation) => participation.hold?.state,
@@ -128,7 +127,6 @@ describe("Session payout settlement", () => {
           status: "SETTLED",
           participations: [alice, ben],
           payoutAttemptIds: ["out"],
-          payoutIdempotencyKeys: ["key"],
         }),
       );
 
@@ -221,10 +219,8 @@ describe("Session payout settlement", () => {
         pendingSettlement: {
           ...details.pendingSettlement!,
           payoutId: "retry",
-          idempotencyKey: "retry-key",
         },
         payoutAttemptIds: ["out", "retry"],
-        payoutIdempotencyKeys: ["key", "retry-key"],
       });
 
       const completion = bookingSession.completeSettlement(
@@ -259,7 +255,6 @@ describe("Session payout settlement", () => {
       expect(payoutState.pendingSettlement).toBeUndefined();
       expect(participantList).toBe(previousList);
       expect(payoutState.payoutAttemptIds).toEqual(["out"]);
-      expect(payoutState.payoutIdempotencyKeys).toEqual(["key"]);
       expect(
         participantList.participations.map(
           (participation) => participation.hold?.state,

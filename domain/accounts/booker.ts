@@ -64,7 +64,6 @@ export interface VerifyAttendanceCommand {
 
 export interface PreparePayoutCommand {
   readonly payoutId: UUID;
-  readonly idempotencyKey: string;
   readonly now: Date;
 }
 
@@ -129,7 +128,6 @@ export class Booker {
       participations: [],
       nextQueueSequence: 1,
       payoutAttemptIds: [],
-      payoutIdempotencyKeys: [],
     });
     DomainError.require(
       !session.booking.hasStarted(now),
@@ -241,11 +239,6 @@ export class Booker {
   ): PayoutBatch | undefined {
     const destination = this.payoutDestination();
     requireId(command.payoutId, "payoutId");
-    DomainError.require(
-      command.idempotencyKey.trim() !== "",
-      "INVALID_INPUT",
-      "idempotencyKey is required",
-    );
     validatePayoutDestination(destination);
     this.assertOwnsSession(session.bookerId);
     assertSettlementOpen(session.status, session.booking, command.now);
@@ -258,9 +251,7 @@ export class Booker {
     validatePayoutAttempt(
       session.pendingSettlement,
       session.payoutAttemptIds,
-      session.payoutIdempotencyKeys,
       command.payoutId,
-      command.idempotencyKey,
     );
     const batch = buildPayoutBatch(
       session.sessionId,
@@ -272,7 +263,6 @@ export class Booker {
     session.recordSettlementPreparation(
       {
         payoutId: command.payoutId,
-        idempotencyKey: command.idempotencyKey,
         participations: next,
         batch,
       },

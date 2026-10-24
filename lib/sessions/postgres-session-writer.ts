@@ -17,8 +17,7 @@ export class PostgresSessionWriter {
       session.participantList.participations.length !== 0 ||
       session.participantList.nextQueueSequence !== 1 ||
       session.pendingSettlement !== undefined ||
-      session.payoutAttemptIds.length !== 0 ||
-      session.payoutIdempotencyKeys.length !== 0
+      session.payoutAttemptIds.length !== 0
     ) {
       throw new SessionPersistenceError(
         "Creation can only insert a new session for its booker",

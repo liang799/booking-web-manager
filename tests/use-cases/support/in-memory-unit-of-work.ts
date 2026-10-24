@@ -164,7 +164,6 @@ function cloneSession(session: Session): Session {
     nextQueueSequence: session.participantList.nextQueueSequence,
     pendingSettlement: session.pendingSettlement,
     payoutAttemptIds: session.payoutAttemptIds,
-    payoutIdempotencyKeys: session.payoutIdempotencyKeys,
   });
 }
 
