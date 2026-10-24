@@ -57,6 +57,9 @@ shown as `@name`.
   runs the same lookup for the signed-in player and shows the found player's
   name, `@id` and reliability score (the same history-based score as Settings,
   or "unavailable"). The internal user UUID is not sent to the browser.
+- **Seeing IDs (Groups):** a group's member list shows each active member's
+  `@id` beside their join date, so members can learn each other's IDs inside
+  the app. Deleted members show as "Deleted user" with no ID.
 - **Availability check:** `CheckUserHandle` answers AVAILABLE, TAKEN or INVALID.
   The server action that calls it is public, because people check before their
   account exists. It reveals only whether an ID is taken, as Telegram does.
@@ -69,7 +72,8 @@ above.
 ## Consequences
 
 - A user ID is public by design. Anyone signed in who knows it can see that
-  player's name and reliability score; anyone can learn whether an ID is taken.
+  player's name and reliability score; anyone can learn whether an ID is taken;
+  fellow group members see it in the member list.
   The reliability score was already visible to session participants; search
   makes it visible to anyone who knows the exact ID.
 - Telegram-style rules keep IDs readable and safe in URLs without escaping.
