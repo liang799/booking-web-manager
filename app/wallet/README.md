@@ -36,7 +36,9 @@ This module adheres strictly to the non-negotiable rules defined in `CLAUDE.md`:
    turns the typed amount into integer cents by pattern, not `parseFloat`, and
    calls `POST /api/wallet/top-up`.
 2. [`StripeWalletTopUps.createIntent`](./stripe-top-up-intents.ts) creates a PayNow
-   PaymentIntent with metadata `purpose: "wallet_top_up"`, `wallet_id`, `user_id`.
+   PaymentIntent with a PayNow payment method already attached
+   (`payment_method_data: { type: "paynow" }`) and metadata
+   `purpose: "wallet_top_up"`, `wallet_id`, `user_id`.
 3. Stripe.js `confirmPayNowPayment` shows the PayNow QR code until the payment ends.
    The browser credits nothing.
 4. Stripe's `payment_intent.succeeded` webhook
@@ -138,7 +140,8 @@ lazily via [`server-dependencies.ts`](./server-dependencies.ts):
   [`serialize-wallet.ts`](./serialize-wallet.ts) converts application result
   dates to HTTP strings.
 - **Top-up intents**: [`StripeWalletTopUps.createIntent`](./stripe-top-up-intents.ts) creates a
-  Stripe PaymentIntent for PayNow (`payment_method_types: ['paynow']`, `currency: 'sgd'`).
+  Stripe PaymentIntent for PayNow (`payment_method_types: ['paynow']`, `payment_method_data: { type: 'paynow' }`, `currency: 'sgd'`).
+  `confirmPayNowPayment(clientSecret)` does not create a payment method, so one must be attached here.
   Without a test-mode `STRIPE_SECRET_KEY`, top-up answers `503 TOP_UP_UNAVAILABLE`
   while wallet reads keep working; it no longer returns a simulated intent, whose
   client secret could never be paid.
