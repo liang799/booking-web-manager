@@ -100,7 +100,7 @@ const routes: Route[] = [
   { path: "/api/openapi", handlers: openapi },
 ];
 const nonUserRoutes = new Set([
-  "GET /api/sessions", "GET /api/openapi",
+  "GET /api/openapi",
   "GET /api/cron/commitments", "POST /api/webhooks/stripe",
 ]);
 const exportedMethods = routes.flatMap(({ path, handlers }) => methods.flatMap((method) => {
@@ -117,6 +117,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   getUser.mockResolvedValue({ data: { user: null }, error: new AuthApiError("Rejected token", 401, undefined) });
   loginCookie.mockResolvedValue(null);
+  mocks.discoveryDependencies.mockResolvedValue({ authenticate, discoverSessions: { searchPublic: mocks.businessAccess } });
   mocks.protectedDependencies.mockResolvedValue(new Proxy({ authenticate }, {
     get(target, key) {
       if (key === "authenticate") return target.authenticate;
@@ -171,18 +172,6 @@ describe("API authentication inventory", () => {
 });
 
 describe("explicit exceptions to user authentication", () => {
-  test("discovery remains available without a user identity", async () => {
-    const searchPublic = vi.fn().mockResolvedValue([]);
-    mocks.discoveryDependencies.mockResolvedValue({ discoverSessions: { searchPublic } });
-
-    const response = await sessions.GET(new Request("https://app.test/api/sessions"));
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ items: [], nextCursor: null });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({});
-    expect(authenticate).not.toHaveBeenCalled();
-  });
-
   test("OpenAPI remains public", async () => {
     const response = openapi.GET();
 

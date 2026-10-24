@@ -7,7 +7,7 @@ import { getDiscoveryDependencies } from "./server-dependencies";
 
 export type PageSearchParams = Record<string, string | string[] | undefined>;
 
-/** Public listing queries do not depend on viewer identity. */
+/** Queries are reached through authenticated pages but do not filter by viewer identity. */
 export async function loadDiscoveryScreen(searchParams: PageSearchParams) {
   const params = new URLSearchParams();
   for (const [name, value] of Object.entries(searchParams)) {

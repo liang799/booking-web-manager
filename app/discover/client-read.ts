@@ -26,7 +26,7 @@ const failed = (kind: "unavailable" | "unexpected"): DiscoveryRead => ({
   outcome: { status: "error", kind }, expiry: null,
 });
 
-/** Reads the public projection directly; cancellation belongs to the current page owner. */
+/** Reads the authenticated listing projection with the same-origin session cookie. */
 export async function readDiscovery(query: string, signal: AbortSignal): Promise<DiscoveryRead | null> {
   if (signal.aborted) return null;
   const request = new AbortController();

@@ -4,10 +4,11 @@ import { DiscoveryApiUnavailableError } from "@/app/discover/discovery-api-unava
 
 const driver = vi.hoisted(() => ({
   query: vi.fn<(statement: string, values?: unknown[]) => Promise<{ rows: unknown[] }>>(),
-  connect: vi.fn(), release: vi.fn(), getPool: vi.fn(), createPoolProvider: vi.fn(), createAuthenticator: vi.fn(),
+  connect: vi.fn(), release: vi.fn(), getPool: vi.fn(), createPoolProvider: vi.fn(), createAuthenticator: vi.fn(), createCookieAuthenticator: vi.fn(),
 }));
 vi.mock("@/lib/database/postgres-pool", () => ({ createPostgresPoolProvider: driver.createPoolProvider }));
 vi.mock("@/lib/supabase/bearer-auth", () => ({ createSupabaseIdentityAuthenticator: driver.createAuthenticator }));
+vi.mock("@/lib/supabase/cookie-auth", () => ({ createSupabaseCookieIdentityAuthenticator: driver.createCookieAuthenticator }));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -15,13 +16,15 @@ beforeEach(() => {
   driver.connect.mockResolvedValue({ query: driver.query, release: driver.release });
   driver.getPool.mockReturnValue({ connect: driver.connect });
   driver.createPoolProvider.mockReturnValue(driver.getPool);
+  driver.createAuthenticator.mockReturnValue(async () => "10000000-0000-4000-8000-000000000001");
+  driver.createCookieAuthenticator.mockReturnValue(async () => "10000000-0000-4000-8000-000000000001");
   vi.stubEnv("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:55322/postgres");
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54321");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
 });
 afterEach(() => vi.unstubAllEnvs());
 
-test("public discovery needs only database settings and never hydrates an account", async () => {
+test("discovery requires auth configuration and assembles both bearer and cookie verification", async () => {
   const dependencies = createDiscoveryDependencies();
   expect(driver.getPool).not.toHaveBeenCalled();
   expect(await dependencies.discoverSessions.searchPublic()).toEqual([]);
@@ -30,7 +33,9 @@ test("public discovery needs only database settings and never hydrates an accoun
     [expect.stringContaining("from sessions"), [expect.any(Date)]],
     ["commit"],
   ]);
-  expect(driver.createAuthenticator).not.toHaveBeenCalled();
+  expect(driver.createAuthenticator).toHaveBeenCalledOnce();
+  expect(driver.createCookieAuthenticator).toHaveBeenCalledOnce();
+  await expect(dependencies.authenticate(new Request("https://app.test/api/sessions"))).resolves.toBe("10000000-0000-4000-8000-000000000001");
   expect(driver.release).toHaveBeenCalledExactlyOnceWith(false);
 });
 test("rolls back listing failures and releases the connection", async () => {
@@ -47,6 +52,14 @@ test("missing database configuration returns unavailable without opening infrast
   await expect(createDiscoveryDependencies().discoverSessions.searchPublic()).rejects.toBeInstanceOf(DiscoveryApiUnavailableError);
   expect(driver.createPoolProvider).not.toHaveBeenCalled();
 });
+test("missing Supabase settings prevents listing without opening infrastructure", async () => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+  const dependencies = createDiscoveryDependencies();
+  await expect(dependencies.authenticate(new Request("https://app.test/api/sessions"))).rejects.toBeInstanceOf(DiscoveryApiUnavailableError);
+  await expect(dependencies.discoverSessions.searchPublic()).rejects.toBeInstanceOf(DiscoveryApiUnavailableError);
+  expect(driver.createPoolProvider).not.toHaveBeenCalled();
+});
+
 test("invalid database settings fail setup instead of returning unavailable", () => {
   vi.stubEnv("DATABASE_URL", "postgresql://unsafe-remote.example/postgres");
   expect(createDiscoveryDependencies).toThrow();

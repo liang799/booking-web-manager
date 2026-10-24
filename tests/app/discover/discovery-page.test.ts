@@ -26,14 +26,14 @@ beforeEach(() => {
     preferredSports: ["Tennis"], preferredRegions: ["East"], reliabilityScore: 100,
   });
   searchPublic.mockResolvedValue([]);
-  vi.mocked(getDiscoveryDependencies).mockResolvedValue({ discoverSessions: { searchPublic } });
+  vi.mocked(getDiscoveryDependencies).mockResolvedValue({ authenticate: async () => null, discoverSessions: { searchPublic } });
 });
 
 function renderPage(params: Record<string, string | string[]> = {}) {
   return DiscoveryPage({ searchParams: Promise.resolve(params) });
 }
 
-describe("public discovery server page", () => {
+describe("authenticated discovery server page", () => {
   test("samples expiry timing after the server read and only for the displayed page", async () => {
     vi.useFakeTimers(); vi.setSystemTime(0);
     const sessions = Array.from({ length: 21 }, (_, index) => ({
@@ -59,11 +59,20 @@ describe("public discovery server page", () => {
     expect((await renderPage()).props.expiry).toBeNull();
   });
 
-  test("renders anonymous results without consulting authentication", async () => {
+  test("redirects anonymous visitors before querying session data", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null);
-    const result = await renderPage();
-    expect(result.props.outcome).toEqual({ status: "ready", page: { items: [], nextCursor: null } });
-    expect(getCurrentUser).not.toHaveBeenCalled();
+    await expect(renderPage()).rejects.toThrow("redirect:/login?next=%2Fdiscover");
+    expect(getCurrentUser).toHaveBeenCalledOnce();
+    expect(getDiscoveryDependencies).not.toHaveBeenCalled();
+    expect(searchPublic).not.toHaveBeenCalled();
+  });
+
+  test("rejects inactive accounts before querying session data", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      id: "viewer", accountStatus: "INACTIVE",
+    } as never);
+    await expect(renderPage()).rejects.toThrow("redirect:/login?next=%2Fdiscover");
+    expect(searchPublic).not.toHaveBeenCalled();
   });
 
   test("shows an opaque error on a database failure", async () => {

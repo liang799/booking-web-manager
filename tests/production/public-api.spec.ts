@@ -28,12 +28,33 @@ test("production serves its OpenAPI contract", async ({ request }) => {
   expect(document.paths?.["/api/sessions"]?.get).toBeDefined();
 });
 
-test("live GET /api/sessions returns HTTP 200 for anonymous visitors", async ({ request }) => {
-  const response = await request.get("/api/sessions");
-  expect(response.status(), "Live session discovery must be healthy; a 503 is a production failure").toBe(200);
+test("live GET /api/sessions matches the authentication contract of its deployed version", async ({ request }) => {
+  // Production may still run the prior deployment while this PR is in review.
+  // Read the *deployed* OpenAPI contract rather than assuming the PR has shipped.
+  const specification = await request.get("/api/openapi");
+  expect(specification.status()).toBe(200);
+  const document = await specification.json();
+  const security = document.paths?.["/api/sessions"]?.get?.security;
+  expect(Array.isArray(security)).toBe(true);
+  const requiresAuthentication = security.length > 0;
+
+  const anonymous = await request.get("/api/sessions");
+  expect(anonymous.status()).toBe(requiresAuthentication ? 401 : 200);
+  expect(anonymous.headers()["cache-control"]).toBe("no-store");
+  if (requiresAuthentication) {
+    expect(await anonymous.json()).toEqual({ error: { code: "UNAUTHENTICATED", message: "Authentication is required" } });
+  } else {
+    const parsed = discoveryPageSchema.safeParse(await anonymous.json());
+    expect(parsed.success, parsed.success ? undefined : parsed.error.message).toBe(true);
+  }
+
+  // The optional bearer token permits a live authenticated health check.
+  const token = process.env.PRODUCTION_TEST_BEARER_TOKEN;
+  if (!token) return;
+  const response = await request.get("/api/sessions", { headers: { Authorization: `Bearer ${token}` } });
+  expect(response.status(), "Authenticated discovery must be healthy; 503 is a production failure").toBe(200);
   expect(response.headers()["content-type"]).toContain("application/json");
   expect(response.headers()["cache-control"]).toBe("no-store");
-
   const parsed = discoveryPageSchema.safeParse(await response.json());
   expect(parsed.success, parsed.success ? undefined : parsed.error.message).toBe(true);
 });
