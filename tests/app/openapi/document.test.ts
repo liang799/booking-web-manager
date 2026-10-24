@@ -72,7 +72,7 @@ describe("application OpenAPI document", () => {
     });
     expect(document.security).toBeUndefined();
     expect(document.paths["/api/notices"]?.get?.security).toBeUndefined();
-    expect(document.paths["/api/sessions"]?.get?.security).toEqual([]);
+    expect(document.paths["/api/sessions"]?.get?.security).toEqual([{ bearerAuth: [] }, { loginCookie: [] }]);
     expect(document.paths["/api/sessions"]?.post?.security).toEqual([{ bearerAuth: [] }]);
     await expect(SwaggerParser.validate(await Response.json(document).json())).resolves.toBeDefined();
   });
