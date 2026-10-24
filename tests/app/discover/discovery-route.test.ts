@@ -18,7 +18,10 @@ afterEach(() => {
 
 async function scenario() {
   const searchPublic = vi.fn<DiscoveryDependencies["discoverSessions"]["searchPublic"]>().mockResolvedValue([]);
-  configuration.createDiscoveryDependencies.mockReturnValue({ discoverSessions: { searchPublic } });
+  configuration.createDiscoveryDependencies.mockReturnValue({
+    authenticate: vi.fn().mockResolvedValue(userId),
+    discoverSessions: { searchPublic },
+  });
   const { GET } = await import("@/app/api/sessions/route");
   const { DomainError } = await import("@/domain");
   const { DiscoveryApiUnavailableError } = await import("@/app/discover/discovery-api-unavailable");

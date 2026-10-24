@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   // The callback establishes its own session, including when there is no login cookie yet.
   if (pathname === AUTH_CALLBACK_PATH) return response;
   if (pathname === "/storybook" || pathname.startsWith("/storybook/") || pathname.startsWith("/fonts/")) return response;
-  if ((pathname === "/" || publicInvitationPage) && !isAuthenticationConfigured()) return response;
+  if ((pathname === "/" || publicInvitationPage || isAuthPage(pathname)) && !isAuthenticationConfigured()) return response;
   if (pathname === "/discover" && !isAuthenticationConfigured()) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${search}`);
