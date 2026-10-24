@@ -34,7 +34,11 @@ eligibility: the default destination is a debit card whose
 
 Every Stripe call happens outside a database transaction (rule #4). Account
 creation uses the idempotency key `["UC1-07", userId, "first" | failedAccount]`,
-so a double-click cannot create two Stripe accounts.
+so a double-click cannot create two Stripe accounts. Stripe stores a refusal
+under its key for 24 hours, even after the cause (for example a Dashboard
+setting) is fixed. A *replayed* client error created no account, so the adapter
+continues under `[key, "after", originalRequestId]`; concurrent requests derive
+the same key. Replayed server errors, whose outcome is unknown, are not retried.
 
 | Layer | File |
 | --- | --- |
