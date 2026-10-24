@@ -10,7 +10,7 @@ import { SettingsRow } from "./settings-row";
 interface SettingsViewProps {
   readonly user: {
     readonly displayName: string;
-    readonly reliabilityScore: number;
+    readonly reliabilityScore: number | null;
     readonly preferredSports: readonly string[];
     readonly preferredRegions: readonly string[];
   };
@@ -68,7 +68,11 @@ export function SettingsView({ user, notifications }: SettingsViewProps) {
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="break-words text-base font-bold tracking-tight md:text-2xl">{user.displayName}</h2>
-          <ReliabilityBadge score={user.reliabilityScore} variant="profile" className="mt-1" />
+          {user.reliabilityScore === null ? (
+            <p className="mt-1 text-sm text-muted-foreground">Reliability score unavailable right now.</p>
+          ) : (
+            <ReliabilityBadge score={user.reliabilityScore} variant="profile" className="mt-1" />
+          )}
           {/* The profile read model has no activity totals yet. Do not display fictional counts. */}
           <dl className="mt-2 grid max-w-md grid-cols-2 divide-x md:mt-5">
             <div className="relative grid min-w-0 grid-rows-[auto_1fr] pr-2 min-[390px]:pl-5 md:pl-9 md:pr-6">

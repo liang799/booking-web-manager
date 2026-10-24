@@ -157,6 +157,7 @@ export const DesktopJoined: Story = {
     await expect(within(overview).getByText(/My sessions/)).toBeVisible();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
+    await expect(canvas.getByRole("link", { name: "Manage my places" })).toHaveAttribute("href", "/sessions/joined");
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
     await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
     await expect(canvas.getByRole("heading", { name: "Earlier this month" })).toBeInTheDocument();
@@ -339,6 +340,7 @@ export const DesktopHosting: Story = {
     const past = canvas.getByRole("region", { name: "Past (6)" });
     await expect(within(past).getAllByRole("button", { name: /^View / })).toHaveLength(6);
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: "Manage my places" })).not.toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-timeline-marker]")).toBeNull();
     await userEvent.click(within(upcoming).getByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" }));
     await expect(args.onOpenSession).toHaveBeenCalledWith(hostedSessions[0]);
@@ -354,6 +356,9 @@ export const MobileJoined: Story = {
     await expect(navigation.getByRole("link", { name: /^Sessions$/ })).toHaveAttribute("aria-current", "page");
     const list = within(canvas.getByRole("list", { name: "Joined sessions" }));
     await expect(list.getAllByRole("listitem")).toHaveLength(10);
+    const manage = canvas.getByRole("link", { name: "Manage my places" });
+    await expect(manage).toHaveAttribute("href", "/sessions/joined");
+    await expect(manage.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     const first = list.getByRole("button", { name: "View Tennis Court Booking at Bukit Timah Community Club, 21 Oct 2026" });
     await expect(first.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await expect(first).toHaveTextContent("7:00 PM – 8:00 PM");
@@ -401,6 +406,8 @@ export const EmptyJoined: Story = {
   args: { sessions: [], upcomingCount: 0, pastCount: 0 },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
+    // A replacement invitation can exist before the player has joined anything.
+    await expect(canvas.getByRole("link", { name: "Manage my places" })).toHaveAttribute("href", "/sessions/joined");
     await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
     await expect(canvas.getByRole("link", { name: "Create a session" })).toHaveAttribute("href", "/sessions/create");
     await expect(canvas.getByRole("heading", { name: "Ideas to get started", level: 2 })).toBeVisible();

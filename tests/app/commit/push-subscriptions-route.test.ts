@@ -41,6 +41,8 @@ describe("POST /api/push/subscriptions", () => {
     const response = await POST(request("POST", { ...subscription, userId: "forged" }));
 
     expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+    expect(response.headers.get("content-type")).toBeNull();
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(mocks.register).toHaveBeenCalledExactlyOnceWith(userId, {
       endpoint: subscription.endpoint,
@@ -130,6 +132,8 @@ describe("DELETE /api/push/subscriptions", () => {
     const response = await DELETE(request("DELETE", { endpoint: subscription.endpoint }));
 
     expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+    expect(response.headers.get("content-type")).toBeNull();
     expect(mocks.unregister).toHaveBeenCalledExactlyOnceWith(userId, subscription.endpoint);
   });
 

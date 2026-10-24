@@ -50,8 +50,14 @@ export function SessionsView(props: SessionsViewProps) {
         <button type="button" aria-current={tab === "hosting" ? "page" : undefined} onClick={() => onTabChange("hosting")}>Hosting</button>
         <Link href="/groups" className={styles.mobileGroups}>Groups</Link>
       </nav>
-      {creation && <Link href={creation.href} className={styles.primaryButton} aria-label="New session"><Plus size={20} strokeWidth={1.4} aria-hidden /><span>New session</span></Link>}
+      <div className={styles.headerActions}>
+        {/* Desktop keeps this in the sticky header, because the timeline scrolls to the next session. */}
+        {tab === "joined" && <Link href="/sessions/joined" className={styles.manageLink}>Manage my places<ArrowRight size={18} strokeWidth={1.5} aria-hidden /></Link>}
+        {creation && <Link href={creation.href} className={styles.primaryButton} aria-label="New session"><Plus size={20} strokeWidth={1.4} aria-hidden /><span>New session</span></Link>}
+      </div>
     </header>
+    {/* Mobile has no room in the header. Shown even with no joined sessions: a player invited as a replacement has not joined anything yet. */}
+    {tab === "joined" && <p className={styles.manage}>Withdraw, leave a waitlist or accept a replacement place. <Link href="/sessions/joined">Manage my places<ArrowRight size={16} strokeWidth={1.5} aria-hidden /></Link></p>}
     {email && <p className={styles.notice}>Add an email address to host a session. <Link href={email.href}>Add email</Link></p>}
     {loading ? <SessionsSkeleton tab={tab} />
       : error && sessions.length === 0 ? <div className={styles.empty}><p role="alert">{error}</p><button className={styles.secondaryButton} onClick={onRetry}>Try again</button></div>

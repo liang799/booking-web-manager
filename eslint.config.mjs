@@ -3,6 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import inwardDependencies from "./scripts/eslint/core-dependencies.mjs";
 import configPersistence from "./scripts/eslint/config-persistence.mjs";
+import apiAuthentication from "./scripts/eslint/api-authentication.mjs";
 
 export default tseslint.config(
   {
@@ -45,6 +46,11 @@ export default tseslint.config(
     files: ["use-case-config/**/*.{ts,tsx,mts,cts}"],
     plugins: { architecture: { rules: { "no-config-persistence": configPersistence } } },
     rules: { "architecture/no-config-persistence": "error" },
+  },
+  {
+    files: ["app/**/route.{ts,tsx,js,jsx,mjs,cjs,mts,cts}"],
+    plugins: { architecture: { rules: { "api-authentication": apiAuthentication } } },
+    rules: { "architecture/api-authentication": "error" },
   },
   {
     files: ["**/*.test.ts"],

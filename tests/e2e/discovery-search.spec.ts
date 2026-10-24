@@ -169,9 +169,13 @@ test("search pagination preserves the query and return destination while sport c
     await page.getByLabel("Date", { exact: true }).fill("2043-04-02");
     await page.getByLabel("Region", { exact: true }).selectOption("West");
     const applyButton = page.getByRole("button", { name: "Apply filters", exact: true });
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2043-04-02");
+    await expect(page.getByLabel("Region", { exact: true })).toHaveValue("West");
     await expect(applyButton).toBeEnabled();
     await applyButton.click();
-    await expect(page).toHaveURL(/region=West/);
+    // CI can spend several seconds fetching a full filtered page from the disposable database.
+    // Still require the committed URL, not merely the draft controls, to reflect the new filters.
+    await expect(page).toHaveURL(/region=West/, { timeout: 15_000 });
     await expect(filterButton).toHaveAttribute("aria-expanded", "false");
     await expect(results).toHaveAttribute("aria-busy", "false");
     await expect(page.locator('[aria-label="Applied filters"]')).toContainText("West");

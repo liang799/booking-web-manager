@@ -189,6 +189,10 @@
 .emptyStarterCopy h3 { font-size: 15px; font-weight: 600; line-height: 1.4; letter-spacing: -.2px; }
 .emptyStarterCopy > span { display: block; margin-top: 5px; color: var(--session-muted); font-size: 14px; line-height: 1.6; }
 .emptyStarterCard > svg { flex-shrink: 0; margin-left: auto; color: var(--session-muted); }
+.headerActions { display: flex; align-items: center; gap: 20px; }
+.manageLink { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
+.manage { display: none; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 14px; color: var(--session-muted); font-size: 14px; line-height: 1.4; }
+.manage a { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: hsl(var(--foreground)); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 .notice { margin-top: 20px; padding: 16px; font-size: 14px; border: 1px solid var(--session-line); border-radius: 6px; }
 .notice a { text-decoration: underline; }
 .dialogContent { --session-muted: #717175; --session-line: #e4e4e6; --session-paper: #faf9f7; max-height: 90dvh; overflow-y: auto; }
@@ -297,6 +301,8 @@
   .tabs > [aria-current]::after { bottom: 0; }
   .desktop { display: none; }
   .mobileList { display: grid; }
+  .headerActions .manageLink { display: none; }
+  .manage { display: flex; }
   .mobileCard { display: flex; align-items: stretch; width: 100%; text-align: left; min-height: 112px; padding: 20px 0; border-bottom: 1px solid var(--session-line); }
   .mobileCard > .date { flex: 0 0 60px; align-items: flex-start; }
   .mobileCard .date > span:first-child { display: none; }
