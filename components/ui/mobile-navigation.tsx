@@ -23,8 +23,9 @@ function selectedIndex(pathname: string) {
 
 interface SelectionSnapshot {
   readonly index: number;
-  readonly width: number;
-  readonly pill: Keyframe;
+  readonly navigationWidth: number;
+  readonly trackInset: number;
+  readonly pill: { readonly left: string; readonly width: string };
   readonly links: readonly { readonly item: Keyframe; readonly label: Keyframe; readonly divider: Keyframe }[];
 }
 
@@ -42,10 +43,13 @@ function navigationElements(track: HTMLDivElement) {
 /** Read the rendered frame, including any interrupted Web Animations. */
 function snapshot(track: HTMLDivElement, index: number): SelectionSnapshot {
   const elements = navigationElements(track);
+  const navigationBounds = track.parentElement!.getBoundingClientRect();
+  const pill = getComputedStyle(elements.pill);
   return {
     index,
-    width: track.getBoundingClientRect().width,
-    pill: { left: getComputedStyle(elements.pill).left },
+    navigationWidth: navigationBounds.width,
+    trackInset: track.getBoundingClientRect().left - navigationBounds.left,
+    pill: { left: pill.left, width: pill.width },
     links: elements.links.map(({ item, label, divider }) => {
       const text = getComputedStyle(label);
       return {
@@ -81,6 +85,7 @@ export function MobileNavigation({ pathname, enabled = true, compact = false }: 
 
   useLayoutEffect(() => {
     const track = trackRef.current!;
+    const navigation = track.parentElement!;
     const origin = selection.current;
     const viewport = window.matchMedia("(max-width: 767px)");
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -92,7 +97,7 @@ export function MobileNavigation({ pathname, enabled = true, compact = false }: 
       selection.current = visible() ? snapshot(track, activeIndex) : null;
     };
 
-    if (visible() && origin && origin.index >= 0 && Math.abs(origin.width - target.width) < 1 && !motion.matches) {
+    if (visible() && origin && origin.index >= 0 && Math.abs(origin.navigationWidth - target.navigationWidth) < 1 && !motion.matches) {
       const elements = navigationElements(track);
       const animate = (element: HTMLElement, from: Keyframe, to: Keyframe) => {
         if (Object.keys(to).every((key) => from[key] === to[key])) return;
@@ -101,7 +106,12 @@ export function MobileNavigation({ pathname, enabled = true, compact = false }: 
           easing: "cubic-bezier(0.22, 1, 0.36, 1)",
         }));
       };
-      animate(elements.pill, origin.pill, target.pill);
+      // Compact Wallet padding changes the track, not the viewport. Keep the pill's
+      // rendered position and width continuous in the new track's coordinate space.
+      animate(elements.pill, {
+        ...origin.pill,
+        left: `${Number.parseFloat(origin.pill.left) + origin.trackInset - target.trackInset}px`,
+      }, target.pill);
       elements.links.forEach(({ item, label, divider }, index) => {
         const from = origin.links[index]!;
         const to = target.links[index]!;
@@ -113,9 +123,9 @@ export function MobileNavigation({ pathname, enabled = true, compact = false }: 
 
     // A resize invalidates pixel geometry; the responsive CSS remains authoritative.
     const resize = new ResizeObserver(() => {
-      if (Math.abs(track.getBoundingClientRect().width - target.width) >= 1) finish();
+      if (Math.abs(navigation.getBoundingClientRect().width - target.navigationWidth) >= 1) finish();
     });
-    resize.observe(track);
+    resize.observe(navigation);
     motion.addEventListener("change", finish);
     viewport.addEventListener("change", finish);
     return () => {
@@ -126,7 +136,7 @@ export function MobileNavigation({ pathname, enabled = true, compact = false }: 
       motion.removeEventListener("change", finish);
       viewport.removeEventListener("change", finish);
     };
-  }, [activeIndex, enabled, selection]);
+  }, [activeIndex, compact, enabled, selection]);
 
   return (
     <nav className={cn(styles.navigation, compact && styles.compact)} aria-label="Main">
