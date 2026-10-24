@@ -1,7 +1,7 @@
 # Domain test execution evidence
 
-Snapshot run: **24 October 2026, 01:17:29 SGT**
-(`2026-10-23T17:17:29.248Z`). All **624 tests in 44 files passed**.
+Snapshot run: **24 October 2026, 13:13:37 SGT**
+(`2026-10-24T05:13:37.321Z`). All **622 tests in 44 files passed**.
 
 ```sh
 rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.json=tests/domain/results/2026-10-24-vitest.json
@@ -12,13 +12,14 @@ rtk npm test -- tests/domain --reporter=default --reporter=json --outputFile.jso
 - [Tested-source manifest](./2026-10-24-sources.json): SHA-256 hashes of domain
   implementation, domain tests and fixtures, Vitest/TypeScript configuration,
   and package manifests. Aggregate digest:
-  `6c095de7e925d56547b003a81c69a1d7b5c9f0bc60b91e4ae679c8d47b118164`.
-- [Coverage mapping](./2026-10-24-coverage-map.json): all 598 release-baseline cases
-  mapped to 602 retained scenarios, plus 22 focused additions: visibility,
+  `9a5e773935f5d41f71224cb2a6f2945be71fd92c6aac19fd0b85e1cc875ad7a9`.
+- [Coverage mapping](./2026-10-24-coverage-map.json): the 598 release-baseline cases
+  map to 600 retained scenarios and two explicitly retired implementation-only
+  cases, plus 22 focused additions: visibility,
   creation settings, two payout-setup failure cases, invitation revocation,
   three replacement-history transitions, and fourteen shared-fixture contracts.
   Includes before/after assertion expressions for changed explicit scenarios.
-- [Table index](../README.md#result-snapshots): nine directories, 624 rows,
+- [Table index](../README.md#result-snapshots): nine directories, 622 rows,
   exactly one row per final case. Each row links to its test definition.
 
 Base revision: `00f6c88462e16ffce8f91dd78b72aa649918e9f7`. The run includes the
@@ -57,7 +58,9 @@ observation. No test-body reporting hooks or custom matchers are required.
 
 The original baseline was **593 passing tests in 45 files**. Before release,
 main added five group-leaving cases, and its updated baseline passed **598 tests
-in 45 files**. This cleanup preserves both sets of cases and assertions:
+in 45 files**. The earlier cleanup passes preserved those cases and assertions
+as described below. The later public-contract pass explicitly retires two
+implementation-only cases and maps each changed assertion separately.
 
 - Five standalone role cases moved into the existing Booker administration
   and Participant admission/withdrawal suites. The two empty source files were
@@ -152,17 +155,55 @@ cases whose execution prefixes changed in this pass.
 
 Three focused Participation tests now verify that withdrawal, removal, and cancellation preserve accepted replacement history. Fourteen fixture contract tests cover attendance hydration, rounded/custom shares, roster order, override rejection, fresh instances, historical states, and payout defaults/identity overrides. The duplicate-key test declares its original key explicitly. The payout-intent test reads `amount.toCents()`; matching a Money object cannot verify its private cents field.
 
-The current suite has **624 cases and 1,311 assertions across 44 files**.
+The review-fix revision had **624 cases and 1,311 assertions across 44 files**.
 
-[Mutation checks](./2026-10-24-mutation-checks.json) deliberately drop replacement links and return the wrong payout amount in isolated copies. All 607 previous tests passed those defects; the repaired suite rejects them in the four intended tests. Production code is unchanged. Current execution, hashes, mapping locations, and all 624 table rows were reconciled after these fixes. Earlier pass counts above describe their historical revisions.
+[Mutation checks](./2026-10-24-mutation-checks.json) deliberately drop replacement links and return the wrong payout amount in isolated copies. All 607 previous tests passed those defects; the repaired suite rejects them in the four intended tests. Production code is unchanged. At that revision, execution, hashes, mapping locations, and all 624 table rows were reconciled after these fixes. Earlier pass counts above describe their historical revisions.
+
+## Public-contract cleanup
+
+The current suite has **622 cases and 1,301 assertions across 44 files**. This
+pass starts at `009460ee` and follows the supported-API and state-testing guidance
+in [Google's unit-testing chapter](https://abseil.io/resources/swe-book/html/ch12.html).
+
+- Seven price-selection examples now construct Session and read its public
+  booking share, preserving the 1,001-cent cost, three slots, accepted prices,
+  and rejected boundary values. The supported pricing calculation remains
+  directly tested through the domain entry point.
+- Money operations assert exact results and unchanged operands without
+  requiring new allocation. Value equality no longer asserts distinct instances.
+  Freezing assertions are removed; the standalone Money freezing and Email
+  method-replacement cases are explicitly retired as implementation requirements.
+  Existing value preservation, copy isolation, entity identity, and replacement
+  history coverage remains. Payout destination checks now attempt a change to
+  returned bank data and observe the account destination again.
+- Six child-method injections remain for atomicity and retry coverage. Distinctive
+  error codes/messages establish the injected failure without exact invocation
+  counts. Public-state comparisons and guaranteed cleanup remain.
+- The coverage map identifies all 624 previous cases, their final locations or
+  retirement rationale, and before/after assertions for 33 reviewed scenarios.
+  A syntax-tree comparison confirms 592 callbacks unchanged, including the
+  previous transition-history and fixture-contract fixes. Counts reconcile
+  coverage; they are not its sole evidence.
+
+[Isolated public-contract experiments](./2026-10-24-public-contract-mutations.json)
+record source hashes, exact patches, commands, test identities, and diagnostics.
+The clean control passes all 622 tests. Reusing Money instances for zero/one
+operations passes all 82 Money tests. Deliberately incorrect addition, relaxed
+price bounds, lost replacement links, and premature cancellation status each
+fail the intended tests. These copies do not modify production sources.
+
+The new execution report reconciles all **622 unique rows in 188 tables**,
+full execution identities, definition links, coverage destinations, and
+**89 exact-byte source hashes**. Logs contain only facts established by the
+executed assertions; the lecture table layout remains unchanged.
 
 ## Other validation
 
 | Check | Result |
 |---|---|
-| Domain suite | 624 passed across 44 files |
-| Shuffled domain suite, seed `2006` | 624 passed across 44 files |
-| Full `rtk npm test` | 2,815 passed; 3 failed; 42 skipped; 1 todo |
+| Domain suite | 622 passed across 44 files |
+| Shuffled domain suite, seed `2006` | 622 passed across 44 files |
+| Full `rtk npm test` | 2,813 passed; 3 failed; 42 skipped; 1 todo |
 | `rtk npm run typecheck` | Failed on 25 existing errors in the profile page and app shell |
 | `rtk npx eslint tests/domain` | Passed |
 | `rtk npm run lint` | Failed on an existing unused `MobileNavigation` import in the app shell |
@@ -183,13 +224,13 @@ identifies that revision; the tables above link to the current snapshot.
 
 ## Table layout and tooling
 
-The lecture-format revision retains all 624 case identities and the original
-24 October execution time. It changes documentation only: the 89 recorded
-source hashes, execution JSON, coverage mapping, and mutation evidence are
-unchanged. Operation headings and compatible input columns may subdivide the
+The earlier lecture-format revision retained all 624 case identities and its
+original 24 October execution time. That revision changed documentation only:
+the 89 recorded source hashes, execution JSON, coverage mapping, and mutation
+evidence remained unchanged. Operation headings and compatible input columns may subdivide the
 original behavior groups; first-input links still identify the exact cases.
 
-Layout validation reconciled 624 unique rows across 190 tables with source
+At the lecture-format revision, layout validation reconciled 624 unique rows across 190 tables with source
 definitions and full execution identities, checked Markdown column widths and
 per-table counts, and verified all 89 hashes and the aggregate digest. A second
 source-based review checked every case's inputs and asserted outcomes. Local

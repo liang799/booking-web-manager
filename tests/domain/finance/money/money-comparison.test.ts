@@ -2,13 +2,12 @@ import { Money } from "@/domain";
 import { describe, expect, test } from "vitest";
 
 describe("Money equality and ordering", () => {
-  test("equals_WhenSeparateInstancesHaveEqualValues_ReturnsTrue", () => {
+  test("equals_WhenValuesAreEqual_ReturnsTrue", () => {
     const first = Money.fromCents(500);
     const equal = Money.fromCents(500);
 
     const equalByValue = first.equals(equal);
 
-    expect(first).not.toBe(equal);
     expect(equalByValue).toBe(true);
   });
 

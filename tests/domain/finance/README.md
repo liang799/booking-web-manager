@@ -1,6 +1,6 @@
 # Finance test cases
 
-Snapshot: **2026-10-24** · **55 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24** · **55 cases, 55 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
@@ -54,7 +54,7 @@ Construct the default transaction above, then set both its supplied date and ret
 
 **Input:** Original occurred-at date, Replacement timestamp (ms) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Original occurred-at date | Replacement timestamp (ms) | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -98,7 +98,7 @@ Start with the common batch in COMPLETED state, completed at request time with p
 
 **Input:** Completed at, Bank reference, Release amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Completed at | Bank reference | Release amount (cents) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -110,7 +110,7 @@ Create the common batch, then set both supplied and returned request dates to ep
 
 **Input:** Requested at, Release amount (cents), Replacement timestamp (ms) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Requested at | Release amount (cents) | Replacement timestamp (ms) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ Read the intent of the common REQUESTED batch.
 
 **Input:** Payout ID, Total amount (cents), Payout status · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Payout ID | Total amount (cents) | Payout status | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -177,7 +177,7 @@ Wallet `wallet` belongs to `owner`. The history initially contains transaction/k
 
 **Input:** Original top-up (cents), Returned-array extra top-up (cents), Replacement credit amount (cents), Replacement timestamp (ms) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Original top-up (cents) | Returned-array extra top-up (cents) | Replacement credit amount (cents) | Replacement timestamp (ms) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -238,7 +238,7 @@ Transactions occur in this order: top-up, refunded lock/refund, released lock/re
 
 **Input:** Top-up (cents), Refunded hold (cents), Released hold (cents), Forfeited hold (cents), Payout (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Top-up (cents) | Refunded hold (cents) | Released hold (cents) | Forfeited hold (cents) | Payout (cents) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -250,7 +250,7 @@ Compare the listed history with a separate wallet containing the same transactio
 
 **Input:** First top-up (cents), Second top-up (cents), Payout (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | First top-up (cents) | Second top-up (cents) | Payout (cents) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |

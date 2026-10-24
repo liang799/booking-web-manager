@@ -1,6 +1,6 @@
 # Session test cases
 
-Snapshot: **2026-10-24** · **98 cases, 98 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24** · **105 cases, 105 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one independently executable test; its first input value links to the test definition. **Test Result** contains assertion-verified observations derived from executed assertions and their recorded status, not captured runtime payloads. Expected Result is the **Oracle**; Test Result is the **Log**. A matching result reports only the stated assertions, including partial matches, identity and unchanged-state checks. Refresh the snapshot after relevant source changes.
 
@@ -16,7 +16,7 @@ Source: [admission.test.ts](admission.test.ts).
 
 **Input:** Slots, Committed users, Admitted user, Admission state, Queue sequence, Admission time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Slots | Committed users | Admitted user | Admission state | Queue sequence | Admission time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ Execution: **2 passed**.
 
 **Input:** Session state, Roster, Observation time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Session state | Roster | Observation time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -41,66 +41,84 @@ Source: [attendance.test.ts](attendance.test.ts).
 
 **Input:** Committed users, Existing attendance, Verification time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Committed users | Existing attendance | Verification time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
 | [alice, ben](attendance.test.ts#L9) | alice ABSENT / BOOKER; ben UNVERIFIED | 72 hours after end minus 1 ms | AUTO_VERIFICATION_NOT_DUE; state unchanged | AUTO_VERIFICATION_NOT_DUE; state unchanged |
 | [alice, ben](attendance.test.ts#L28) | alice ABSENT / BOOKER; ben UNVERIFIED | 72 hours after end | alice ABSENT / BOOKER; ben ATTENDED / AUTOMATIC | alice ABSENT / BOOKER; ben ATTENDED / AUTOMATIC |
 
-## Custom price across financial operations
+## Session participant pricing
 
 Source: [custom-pricing.test.ts](custom-pricing.test.ts).
+
+### Construct Session with chosen participant price
+
+An OPEN, PUBLIC session uses the shared booking details; the total booking cost and capacity below replace their defaults. Session construction resolves or rejects the booking share.
+
+**Input:** Booking cost (cents), Slots, Chosen share (cents) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **7 passed / 7 cases**.
+
+| Booking cost (cents) | Slots | Chosen share (cents) | Expected Result | Test Result |
+| --- | --- | --- | --- | --- |
+| [1001](custom-pricing.test.ts#L16) | 3 | Omitted | 333 | 333 |
+| [1001](custom-pricing.test.ts#L27) | 3 | 167 | 167 | 167 |
+| [1001](custom-pricing.test.ts#L39) | 3 | 334 | 334 | 334 |
+| [1001](custom-pricing.test.ts#L51) | 3 | 666 | 666 | 666 |
+| [1001](custom-pricing.test.ts#L63) | 3 | 0 | INVALID_INPUT | INVALID_INPUT |
+| [1001](custom-pricing.test.ts#L75) | 3 | 166 | INVALID_INPUT | INVALID_INPUT |
+| [1001](custom-pricing.test.ts#L87) | 3 | 667 | INVALID_INPUT | INVALID_INPUT |
 
 ### Join at chosen price
 
 **Input:** Joining user, Available funds (cents), Share (cents), Join time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Joining user | Available funds (cents) | Share (cents) | Join time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [alice](custom-pricing.test.ts#L13) | 750 | 750 | 48 hours before start | One LOCK for 750 cents; alice hold 750 cents; share 750 cents | One LOCK for 750 cents; alice hold 750 cents; share 750 cents |
+| [alice](custom-pricing.test.ts#L101) | 750 | 750 | 48 hours before start | One LOCK for 750 cents; alice hold 750 cents; share 750 cents | One LOCK for 750 cents; alice hold 750 cents; share 750 cents |
 
 ### Withdraw at chosen price
 
 **Input:** Committed user, Available funds (cents), Share (cents), Withdrawal time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed user | Available funds (cents) | Share (cents) | Withdrawal time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [alice](custom-pricing.test.ts#L39) | 750 | 750 | 31 hours before start | One REFUND for 750 cents; alice hold REFUNDED | One REFUND for 750 cents; alice hold REFUNDED |
+| [alice](custom-pricing.test.ts#L128) | 750 | 750 | 31 hours before start | One REFUND for 750 cents; alice hold REFUNDED | One REFUND for 750 cents; alice hold REFUNDED |
 
 ### Cancel at chosen price
 
 **Input:** Booker, Committed user, Share (cents), Cancellation time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Booker | Committed user | Share (cents) | Cancellation time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [booker](custom-pricing.test.ts#L65) | alice | 750 | 30 hours before start | One REFUND for 750 cents; share 750 cents | One REFUND for 750 cents; share 750 cents |
+| [booker](custom-pricing.test.ts#L154) | alice | 750 | 30 hours before start | One REFUND for 750 cents; share 750 cents | One REFUND for 750 cents; share 750 cents |
 
 ### Prepare payout at chosen price
 
 **Input:** Session state, Attendance, Share (cents), Payout ID, Idempotency key, Request time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Session state | Attendance | Share (cents) | Payout ID | Idempotency key | Request time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [AWAITING_PAYOUT](custom-pricing.test.ts#L83) | alice ATTENDED / BOOKER | 750 | out | key | End | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD |
+| [AWAITING_PAYOUT](custom-pricing.test.ts#L172) | alice ATTENDED / BOOKER | 750 | out | key | End | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD | One RELEASE line for 750 cents; PAYOUT_PENDING; alice hold HELD |
 
 ### Complete payout at chosen price
 
 **Input:** Pending payout, Participant, Share (cents), Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Pending payout | Participant | Share (cents) | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [out](custom-pricing.test.ts#L107) | alice | 750 | End | One RELEASE for 750 cents; alice hold RELEASED | One RELEASE for 750 cents; alice hold RELEASED |
+| [out](custom-pricing.test.ts#L196) | alice | 750 | End | One RELEASE for 750 cents; alice hold RELEASED | One RELEASE for 750 cents; alice hold RELEASED |
 
 ## Restoration and ownership invariants
 
@@ -110,7 +128,7 @@ Source: [reconstruction.test.ts](reconstruction.test.ts).
 
 **Input:** Committed users, Payout attempts, Payout keys, Source collection edits, Returned value edits · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed users | Payout attempts | Payout keys | Source collection edits | Returned value edits | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -120,7 +138,7 @@ Execution: **1 passed**.
 
 **Input:** Pending payout, Participants, Source batch edits, Returned batch edits · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Pending payout | Participants | Source batch edits | Returned batch edits | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -130,7 +148,7 @@ Execution: **1 passed**.
 
 **Input:** Pending payout, Participants, Session copies, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Pending payout | Participants | Session copies | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -142,7 +160,7 @@ Cara joined the waitlist 48 hours before start with sequence 1; the cancelled ro
 
 **Input:** Session state, Roster states, Hold states · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Session state | Roster states | Hold states | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -156,7 +174,7 @@ Entries with holds are COMMITTED; queue entries without holds are WAITLISTED unl
 
 **Input:** Roster user IDs, Participation IDs, Hold IDs, Queue sequences, Next queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **5 passed**.
+Execution: **5 passed / 5 cases**.
 
 | Roster user IDs | Participation IDs | Hold IDs | Queue sequences | Next queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -170,7 +188,7 @@ Execution: **5 passed**.
 
 **Input:** Waitlisted user, Participation ID, Queue sequence, Next queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Waitlisted user | Participation ID | Queue sequence | Next queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -181,7 +199,7 @@ Execution: **2 passed**.
 
 **Input:** Committed user, Session holding account, Hold holding account · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed user | Session holding account | Hold holding account | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -193,7 +211,7 @@ Pending and failed-payout inputs contain attended alice with a HELD share. OPEN 
 
 **Input:** Session state, Pending batch, Attempt history, Key history · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **11 passed**.
+Execution: **11 passed / 11 cases**.
 
 | Session state | Pending batch | Attempt history | Key history | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -215,7 +233,7 @@ Session state is PAYOUT_PENDING; a present batch contains alice’s share.
 
 **Input:** Pending batch, Batch session ID, Line wallet, Attempt history, Key history · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **5 passed**.
+Execution: **5 passed / 5 cases**.
 
 | Pending batch | Batch session ID | Line wallet | Attempt history | Key history | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -235,7 +253,7 @@ Alice withdrew 10 hours before start with an AWAITING_REPLACEMENT hold and DIREC
 
 **Input:** Committed users, Reservation owner, Invitee, Joining user, Replaced participation ID, Supplied refund · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Committed users | Reservation owner | Invitee | Joining user | Replaced participation ID | Supplied refund | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -249,7 +267,7 @@ Alice is WITHDRAWN / REFUNDED with a DIRECT_INVITE reservation.
 
 **Input:** Slots, Committed users, Reservation owner, Invitee, Refund time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Slots | Committed users | Reservation owner | Invitee | Refund time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -261,7 +279,7 @@ Open withdrawals have AWAITING_REPLACEMENT holds. The candidate is COMMITTED; an
 
 **Input:** Open withdrawals, Withdrawal times (hours before start), Joining user, Replaced participation ID, Supplied refund, Admission time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Open withdrawals | Withdrawal times (hours before start) | Joining user | Replaced participation ID | Supplied refund | Admission time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -272,7 +290,7 @@ Execution: **2 passed**.
 
 **Input:** Committed users, Joining user, First hold ID, Retry hold ID, Admission time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Committed users | Joining user | First hold ID | Retry hold ID | Admission time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -283,7 +301,7 @@ Execution: **2 passed**.
 
 **Input:** Committed users, Waiting user, Joining user, Admission time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Committed users | Waiting user | Joining user | Admission time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -297,7 +315,7 @@ The prior entry is LEFT_WAITLIST. Admission and both waitlist dates are 48 hours
 
 **Input:** Committed users, Departed user, Historical participation ID, Historical queue sequence, New participation ID, New queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed users | Departed user | Historical participation ID | Historical queue sequence | New participation ID | New queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -309,7 +327,7 @@ The session contains only withdrawn alice; the proposed participation retains al
 
 **Input:** Existing mode, Existing invitee, Hold state, Withdrawal time, Requested mode, Requested invitee, Transition time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Existing mode | Existing invitee | Hold state | Withdrawal time | Requested mode | Requested invitee | Transition time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -322,7 +340,7 @@ The stale-source case first records alice’s withdrawal, then attempts removal 
 
 **Input:** Session state, Current user/state, Supplied source state, Proposed user/state, Transition time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Session state | Current user/state | Supplied source state | Proposed user/state | Transition time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -336,7 +354,7 @@ Supplied cancelled participations contain refunds settled at cancellation time.
 
 **Input:** Committed users, Supplied cancelled users, Cancellation time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Committed users | Supplied cancelled users | Cancellation time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -349,7 +367,7 @@ All proposed marks are BOOKER-verified at the indicated time; alice’s existing
 
 **Input:** Existing roster attendance, Submitted marks in order, Verification time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Existing roster attendance | Submitted marks in order | Verification time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -363,7 +381,7 @@ Submitted roster is the current roster. The incomplete batch uses the pending pa
 
 **Input:** Session state, Participants, Payout ID, Idempotency key, Supplied batch lines, Request time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Session state | Participants | Payout ID | Idempotency key | Supplied batch lines | Request time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -383,7 +401,7 @@ For the unrefunded invitation, alice withdrew 10 hours before start. The cancell
 
 **Input:** Original user/state, Original hold state, Named invitee, Replacement user/state, Replaced participation ID, Replacement commitment/hold · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **6 passed**.
+Execution: **6 passed / 6 cases**.
 
 | Original user/state | Original hold state | Named invitee | Replacement user/state | Replaced participation ID | Replacement commitment/hold | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -398,7 +416,7 @@ Execution: **6 passed**.
 
 **Input:** Session state, Original participation state, Replacement state, Replacement hold, Later departure time, Availability check time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **4 passed**.
+Execution: **4 passed / 4 cases**.
 
 | Session state | Original participation state | Replacement state | Replacement hold | Later departure time | Availability check time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -415,7 +433,7 @@ Source: [settlement.test.ts](settlement.test.ts).
 
 **Input:** Pending participants, Batch lines, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Pending participants | Batch lines | Callback payout ID | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -429,7 +447,7 @@ Alice withdrew two hours before start; ben was BOOKER-verified at end. Both shar
 
 **Input:** Participant states, Hold states, Batch line kinds, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Participant states | Hold states | Batch line kinds | Callback payout ID | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -441,7 +459,7 @@ Alice withdrew two hours before start; both holds settled at end with payout out
 
 **Input:** Session state, Participant states, Hold states, Evaluation time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Session state | Participant states | Hold states | Evaluation time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -451,32 +469,32 @@ Execution: **1 passed**.
 
 **Input:** Pending participants, Callback payout ID, Injected settlement failure, Retry, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Pending participants | Callback payout ID | Injected settlement failure | Retry | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
 | [alice, ben](settlement.test.ts#L144) | out | ben: INVALID_STATE / Second line rejected | None | End | INVALID_STATE; message Second line rejected; state unchanged | INVALID_STATE; message Second line rejected; state unchanged |
-| [alice, ben](settlement.test.ts#L173) | out | ben: INVALID_STATE / Second line rejected, once | Same payout after failure removed | End | First attempt INVALID_STATE; retry returns two instructions; both holds RELEASED; pending batch absent | First attempt INVALID_STATE; retry returns two instructions; both holds RELEASED; pending batch absent |
+| [alice, ben](settlement.test.ts#L175) | out | ben: INVALID_STATE / Second line rejected, once | Same payout after failure removed | End | First attempt INVALID_STATE / Second line rejected; retry returns two instructions; both holds RELEASED; pending batch absent | First attempt INVALID_STATE / Second line rejected; retry returns two instructions; both holds RELEASED; pending batch absent |
 
 ### Complete payout — use current retry identity
 
 **Input:** Pending participant, Attempt history, Key history, Current payout/key, Callback payout ID, Completion time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Pending participant | Attempt history | Key history | Current payout/key | Callback payout ID | Completion time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [alice](settlement.test.ts#L205) | out, retry | key, retry-key | retry / retry-key | retry | End | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch |
+| [alice](settlement.test.ts#L217) | out, retry | key, retry-key | retry / retry-key | retry | End | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch | One instruction partially matching RELEASE / p-alice / payout retry; alice hold RELEASED with payout retry; SETTLED; no pending batch |
 
 ### Record payout failure
 
 **Input:** Pending participants, Failed payout ID, Failure time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Pending participants | Failed payout ID | Failure time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [alice, ben](settlement.test.ts#L238) | out | End | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD |
+| [alice, ben](settlement.test.ts#L250) | out | End | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD | AWAITING_PAYOUT; no pending batch; same roster instance; attempts out; keys key; both holds HELD |
 
 ## Fixture contracts
 
@@ -486,7 +504,7 @@ Source: [session-fixtures.test.ts](session-fixtures.test.ts).
 
 **Input:** Committed users, Slots, Chosen share (cents), Attendance marks · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Committed users | Slots | Chosen share (cents) | Attendance marks | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -498,7 +516,7 @@ Execution: **3 passed**.
 
 **Input:** Committed users, Waitlisted users, Overridden user, Replacement participation · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Committed users | Waitlisted users | Overridden user | Replacement participation | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -510,7 +528,7 @@ Execution: **3 passed**.
 
 **Input:** Committed users in each fixture, Construction count · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed users in each fixture | Construction count | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -520,7 +538,7 @@ Execution: **1 passed**.
 
 **Input:** User, Hold state, Withdrawal time, Replaced participation ID, Replacement mode/invitee, Holding account, Share (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | User | Hold state | Withdrawal time | Replaced participation ID | Replacement mode/invitee | Holding account | Share (cents) | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -531,7 +549,7 @@ Execution: **2 passed**.
 
 **Input:** User, Replaced participation ID, Refund time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | User | Replaced participation ID | Refund time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -541,7 +559,7 @@ Execution: **1 passed**.
 
 **Input:** User, Replaced participation ID, Refund time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | User | Replaced participation ID | Refund time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -551,7 +569,7 @@ Execution: **1 passed**.
 
 **Input:** User, Queue sequence, Original waitlist time · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | User | Queue sequence | Original waitlist time | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -561,7 +579,7 @@ Execution: **1 passed**.
 
 **Input:** Participants, Share (cents), Payout ID option, Idempotency key option · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Participants | Share (cents) | Payout ID option | Idempotency key option | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |

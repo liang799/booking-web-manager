@@ -33,10 +33,25 @@ level of behavior groups. Guards stay beside their commands and failure/retry
 cases stay together. Grouping changes labels and navigation, without shared
 setup hooks, hidden prerequisites, or dependencies on execution order.
 
+Tests target supported contracts rather than every language-visible method.
+Actor commands, application-used permission guards, validated hydration, and
+value operations are public boundaries. Session recording invariants remain
+directly tested under the collaboration contract in ADR-0009; internal price
+resolution is exercised through Session construction. This applies
+[Google's public-API and state-testing guidance](https://abseil.io/resources/swe-book/html/ch12.html)
+without changing production interfaces.
+
+Value immutability means stable values and isolated mutable data, without
+requiring freezing or new object allocation for identity operations. Entity
+identity, replacement history, and defensive-copy contracts retain focused
+assertions. Child-method failure injection remains a limited instrumentation
+exception for atomicity and retry coverage: verify distinctive failures and
+public outcomes, omit exact call counts, and always restore spies.
+
 The [domain testing guide](../../tests/domain/README.md) holds the maintained
 convention and examples. Adjacent README tables retain Lecture 16's Input,
-Oracle, and Log terminology, with one row per executed case and a separate
-status. These dated snapshots describe only assertion-verified observations,
+Oracle, and Log terminology, with one row per executed case and statuses in the
+execution report, following ADR-0019. These dated snapshots describe only assertion-verified observations,
 linked to the Vitest JSON execution report and tested-source digest. They do
 not claim raw return-value capture: standard Vitest JSON records statuses and
 failure diagnostics. Refresh the tables from reviewed source assertions and

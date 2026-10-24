@@ -30,13 +30,13 @@ describe("Money multiplication by integer factors", () => {
       expect(money.toCents()).toBe(500);
     });
 
-    test("multiply_WhenFactorIsOne_ReturnsNewInstance", () => {
+    test("multiply_WhenFactorIsOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(500);
 
       const product = money.multiply(1);
 
-      expect(product).not.toBe(money);
       expect(product.toCents()).toBe(500);
+      expect(money.toCents()).toBe(500);
     });
   });
 

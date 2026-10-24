@@ -1,6 +1,6 @@
 # accounts/booker test cases
 
-Snapshot: **2026-10-24** · **55 cases**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24** · **55 cases, 55 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one executed test. Columns before **Expected Result** are inputs; **Expected Result** is the oracle and **Test Result** is the log. Test results are assertion-verified outcomes from the dated passing run, not captured runtime payloads. The first input value links to the test definition. Only checked fields are reported; matching fields do not imply equality of an entire returned object.
 
@@ -19,11 +19,11 @@ Execution: **9 passed / 9 cases**.
 | Booker | Account | Roster / holds | Time before start | Cancellation failure | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
 | [booker](administration.test.ts#L16) | ACTIVE | Empty | 48 h | None | Owner remains `booker`; session `CANCELLED`; instructions empty. | Owner remains `booker`; session `CANCELLED`; instructions empty. |
-| [booker](administration.test.ts#L53) | ACTIVE | alice, ben committed; waiting waitlisted | 48 h | Ben: INVALID_STATE, Second cancellation failed | DomainError `INVALID_STATE`: “Second cancellation failed”; Ben cancellation attempted once; session unchanged. | DomainError `INVALID_STATE`: “Second cancellation failed”; Ben cancellation attempted once; session unchanged. |
-| [booker](administration.test.ts#L84) | ACTIVE | alice, ben committed; waiting waitlisted | 48 h | Ben fails once; retry after recovery | First attempt throws DomainError `INVALID_STATE`: “Second cancellation failed”; retry instruction kinds `[REFUND, REFUND]`; session and all three participations `CANCELLED`. | First attempt throws DomainError `INVALID_STATE`: “Second cancellation failed”; retry instruction kinds `[REFUND, REFUND]`; session and all three participations `CANCELLED`. |
-| [booker](administration.test.ts#L124) | INACTIVE | alice committed | 48 h | None | Session `CANCELLED`; first instruction kind `REFUND`. | Session `CANCELLED`; first instruction kind `REFUND`. |
-| [booker](administration.test.ts#L138) | ACTIVE | alice committed | 0 h | None | Error code `SESSION_STARTED`; session unchanged. | Error code `SESSION_STARTED`; session unchanged. |
-| [booker](administration.test.ts#L149) | ACTIVE | alice withdrawn at −2 h, OPEN_SLOT, AWAITING_REPLACEMENT; ben committed; cara waitlisted | 1 h | None | Exactly two instructions; kinds `[REFUND, REFUND]`; session `CANCELLED`; no next waiter; hold states `[REFUNDED, REFUNDED, absent]` for alice, ben, cara. | Exactly two instructions; kinds `[REFUND, REFUND]`; session `CANCELLED`; no next waiter; hold states `[REFUNDED, REFUNDED, absent]` for alice, ben, cara. |
+| [booker](administration.test.ts#L53) | ACTIVE | alice, ben committed; waiting waitlisted | 48 h | Ben: INVALID_STATE, Second cancellation failed | Error code `INVALID_STATE`: “Second cancellation failed”; session unchanged. | Error code `INVALID_STATE`: “Second cancellation failed”; session unchanged. |
+| [booker](administration.test.ts#L86) | ACTIVE | alice, ben committed; waiting waitlisted | 48 h | Ben fails once; retry after recovery | First attempt throws Error code `INVALID_STATE`: “Second cancellation failed”; retry instruction kinds `[REFUND, REFUND]`; session and all three participations `CANCELLED`. | First attempt throws Error code `INVALID_STATE`: “Second cancellation failed”; retry instruction kinds `[REFUND, REFUND]`; session and all three participations `CANCELLED`. |
+| [booker](administration.test.ts#L129) | INACTIVE | alice committed | 48 h | None | Session `CANCELLED`; first instruction kind `REFUND`. | Session `CANCELLED`; first instruction kind `REFUND`. |
+| [booker](administration.test.ts#L143) | ACTIVE | alice committed | 0 h | None | Error code `SESSION_STARTED`; session unchanged. | Error code `SESSION_STARTED`; session unchanged. |
+| [booker](administration.test.ts#L154) | ACTIVE | alice withdrawn at −2 h, OPEN_SLOT, AWAITING_REPLACEMENT; ben committed; cara waitlisted | 1 h | None | Exactly two instructions; kinds `[REFUND, REFUND]`; session `CANCELLED`; no next waiter; hold states `[REFUNDED, REFUNDED, absent]` for alice, ben, cara. | Exactly two instructions; kinds `[REFUND, REFUND]`; session `CANCELLED`; no next waiter; hold states `[REFUNDED, REFUNDED, absent]` for alice, ben, cara. |
 | [other](authorization.test.ts#L11) | ACTIVE | alice committed | 48 h | None | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
 | [booker](cancellation-history.test.ts#L13) | ACTIVE | alice REMOVED and REFUNDED at −48 h; ben committed; cara waitlisted | 24 h | None | Session `CANCELLED`; alice participation retains the same object identity; instruction participation/amount pairs exactly `[(p-ben, 500 cents)]`; cara `CANCELLED`. | Session `CANCELLED`; alice participation retains the same object identity; instruction participation/amount pairs exactly `[(p-ben, 500 cents)]`; cara `CANCELLED`. |
 | [booker](cancellation-history.test.ts#L43) | ACTIVE | alice CANCELLED and REFUNDED at −48 h | 24 h | None | alice participation retains the same object identity; instructions empty. | alice participation retains the same object identity; instructions empty. |
@@ -49,9 +49,9 @@ Execution: **4 passed / 4 cases**.
 
 | Booker | Account | Email verified | Committed users | Requested visibility | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [booker](administration.test.ts#L217) | ACTIVE | No | None | PRIVATE | Visibility `PRIVATE`. | Visibility `PRIVATE`. |
-| [booker](administration.test.ts#L232) | INACTIVE | No; email absent | None | PRIVATE | Visibility `PRIVATE`. | Visibility `PRIVATE`. |
-| [booker](administration.test.ts#L245) | ACTIVE | Yes | alice, ben | PRIVATE | Error code `CAPACITY_EXCEEDED`; session unchanged. | Error code `CAPACITY_EXCEEDED`; session unchanged. |
+| [booker](administration.test.ts#L222) | ACTIVE | No | None | PRIVATE | Visibility `PRIVATE`. | Visibility `PRIVATE`. |
+| [booker](administration.test.ts#L237) | INACTIVE | No; email absent | None | PRIVATE | Visibility `PRIVATE`. | Visibility `PRIVATE`. |
+| [booker](administration.test.ts#L250) | ACTIVE | Yes | alice, ben | PRIVATE | Error code `CAPACITY_EXCEEDED`; session unchanged. | Error code `CAPACITY_EXCEEDED`; session unchanged. |
 | [other](authorization.test.ts#L23) | ACTIVE | Yes | None | PRIVATE | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
 
 ## assertCanChangeVisibility — check visibility eligibility
@@ -64,8 +64,8 @@ Execution: **2 passed / 2 cases**.
 
 | Booker email | Committed users | Requested visibility | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [Present, unverified](administration.test.ts#L183) | None | PRIVATE | Returns without error; session unchanged. | Returns without error; session unchanged. |
-| [Present, verified](administration.test.ts#L200) | alice, ben | PRIVATE | Error code `CAPACITY_EXCEEDED`; session unchanged. | Error code `CAPACITY_EXCEEDED`; session unchanged. |
+| [Present, unverified](administration.test.ts#L188) | None | PRIVATE | Returns without error; session unchanged. | Returns without error; session unchanged. |
+| [Present, verified](administration.test.ts#L205) | alice, ben | PRIVATE | Error code `CAPACITY_EXCEEDED`; session unchanged. | Error code `CAPACITY_EXCEEDED`; session unchanged. |
 
 ## removeParticipant — remove a committed participant
 
@@ -77,9 +77,9 @@ Execution: **3 passed / 3 cases**.
 
 | Booker | Account | Participation | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
-| [booker](administration.test.ts#L265) | INACTIVE | p-alice | alice `REMOVED`; hold `REFUNDED`; first instruction kind `REFUND`. | alice `REMOVED`; hold `REFUNDED`; first instruction kind `REFUND`. |
-| [other](administration.test.ts#L286) | ACTIVE | p-alice | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
-| [booker](administration.test.ts#L302) | ACTIVE | p-alice | Exactly one instruction with kind `REFUND`, participation `p-alice`, hold `h-alice`, wallet `w-alice`, amount 500 cents; alice `REMOVED`; hold `REFUNDED`. | Exactly one instruction with kind `REFUND`, participation `p-alice`, hold `h-alice`, wallet `w-alice`, amount 500 cents; alice `REMOVED`; hold `REFUNDED`. |
+| [booker](administration.test.ts#L270) | INACTIVE | p-alice | alice `REMOVED`; hold `REFUNDED`; first instruction kind `REFUND`. | alice `REMOVED`; hold `REFUNDED`; first instruction kind `REFUND`. |
+| [other](administration.test.ts#L291) | ACTIVE | p-alice | Error code `UNAUTHORIZED`; session unchanged. | Error code `UNAUTHORIZED`; session unchanged. |
+| [booker](administration.test.ts#L307) | ACTIVE | p-alice | Exactly one instruction with kind `REFUND`, participation `p-alice`, hold `h-alice`, wallet `w-alice`, amount 500 cents; alice `REMOVED`; hold `REFUNDED`. | Exactly one instruction with kind `REFUND`, participation `p-alice`, hold `h-alice`, wallet `w-alice`, amount 500 cents; alice `REMOVED`; hold `REFUNDED`. |
 
 ## verifyAttendance — record attendance
 
@@ -117,7 +117,7 @@ Execution: **5 passed / 5 cases**.
 
 **Input:** Account, Email, Payout setup · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Account | Email | Payout setup | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |

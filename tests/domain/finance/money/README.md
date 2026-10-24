@@ -1,10 +1,10 @@
 # finance/money test cases
 
-Snapshot: **2026-10-24** · **83 cases**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24** · **82 cases, 82 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one independently executable test; its first input value links to the test definition. **Oracle** is the expected result. **Log** contains assertion-verified observations from the recorded run, not captured runtime payloads. A result states only what that case's assertions establish; partial matches, approximate values, and identity checks retain their narrower meaning. Refresh this snapshot after relevant source changes.
 
-Money amounts are expressed in cents; validation cases deliberately include invalid numeric values. Dollar formatting results are strings, and equality/ordering results are booleans or comparison signs. `NaN`, `Infinity`, and `-Infinity` denote the corresponding numeric inputs; `-0` is negative zero. Separate operand instances are used unless stated otherwise.
+Money amounts are expressed in cents; validation cases deliberately include invalid numeric values. Dollar formatting results are strings, and equality/ordering results are booleans or comparison signs. `NaN`, `Infinity`, and `-Infinity` denote the corresponding numeric inputs; `-0` is negative zero. Operands are constructed separately unless stated otherwise; their reference identities are not part of value equality.
 
 ## Addition, subtraction, and immutability
 
@@ -17,14 +17,14 @@ Execution: **3 passed / 3 cases**.
 | First amount (cents) | Second amount (cents) | Expected Result | Test Result |
 |---|---|---|---|
 | [500](money-arithmetic.test.ts#L6) | 700 | 1200 | 1200 |
-| [500](money-arithmetic.test.ts#L51) | 0 | 500; new instance | 500; new instance |
-| [500](money-arithmetic.test.ts#L60) | 700 | Operands unchanged: 500, 700 | Operands unchanged: 500, 700 |
+| [500](money-arithmetic.test.ts#L43) | 0 | 500 cents; source unchanged at 500 cents; zero operand unchanged at 0 cents | 500 cents; source unchanged at 500 cents; zero operand unchanged at 0 cents |
+| [500](money-arithmetic.test.ts#L54) | 700 | Operands unchanged: 500, 700 | Operands unchanged: 500, 700 |
 
 ### Subtract the second amount, then add the first amount
 
 **Input:** First amount (cents), Second amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | First amount (cents) | Second amount (cents) | Expected Result | Test Result |
 |---|---|---|---|
@@ -40,18 +40,8 @@ Execution: **4 passed / 4 cases**.
 |---|---|---|---|
 | [500](money-arithmetic.test.ts#L24) | 700 | -200 | -200 |
 | [500](money-arithmetic.test.ts#L33) | -100 | 600 | 600 |
-| [500](money-arithmetic.test.ts#L70) | 0 | 500; new instance | 500; new instance |
-| [500](money-arithmetic.test.ts#L79) | 700 | Operands unchanged: 500, 700 | Operands unchanged: 500, 700 |
-
-### Construct a frozen money value
-
-**Input:** Amount (cents) · **Oracle:** Expected Result · **Log:** Test Result
-
-Execution: **1 passed / 1 case**.
-
-| Amount (cents) | Expected Result | Test Result |
-|---|---|---|
-| [500](money-arithmetic.test.ts#L43) | Frozen instance | Frozen instance |
+| [500](money-arithmetic.test.ts#L64) | 0 | 500 cents; source unchanged at 500 cents; zero operand unchanged at 0 cents | 500 cents; source unchanged at 500 cents; zero operand unchanged at 0 cents |
+| [500](money-arithmetic.test.ts#L75) | 700 | Operands unchanged: 500, 700 | Operands unchanged: 500, 700 |
 
 ## Safe integer boundaries
 
@@ -102,8 +92,8 @@ Execution: **2 passed / 2 cases**.
 
 | First amount (cents) | Second amount (cents) | Expected Result | Test Result |
 |---|---|---|---|
-| [500](money-comparison.test.ts#L5) | 500 | true; operands are distinct instances | true; operands are distinct instances |
-| [500](money-comparison.test.ts#L15) | 501 | false | false |
+| [500](money-comparison.test.ts#L5) | 500 | true | true |
+| [500](money-comparison.test.ts#L14) | 501 | false | false |
 
 ### Compare money ordering
 
@@ -113,10 +103,10 @@ Execution: **4 passed / 4 cases**.
 
 | First amount (cents) | Second amount (cents) | Expected Result | Test Result |
 |---|---|---|---|
-| [500](money-comparison.test.ts#L24) | 500 | 0 | 0 |
-| [500](money-comparison.test.ts#L33) | 501 | -1 | -1 |
-| [501](money-comparison.test.ts#L42) | 500 | 1 | 1 |
-| [-1](money-comparison.test.ts#L51) | 0 | -1 | -1 |
+| [500](money-comparison.test.ts#L23) | 500 | 0 | 0 |
+| [500](money-comparison.test.ts#L32) | 501 | -1 | -1 |
+| [501](money-comparison.test.ts#L41) | 500 | 1 | 1 |
+| [-1](money-comparison.test.ts#L50) | 0 | -1 | -1 |
 
 ## Creation from cents
 
@@ -172,16 +162,16 @@ Execution: **10 passed / 10 cases**.
 
 | Amount (cents) | Divisor | Expected Result | Test Result |
 |---|---|---|---|
-| [1001](money-division.test.ts#L98) | 1 | 1001; new instance | 1001; new instance |
-| [-1001](money-division.test.ts#L107) | 1 | -1001; new instance | -1001; new instance |
-| [1002](money-division.test.ts#L116) | 1 | 1002; new instance | 1002; new instance |
-| [-1002](money-division.test.ts#L125) | 1 | -1002; new instance | -1002; new instance |
-| [1](money-division.test.ts#L134) | 1 | 1; new instance | 1; new instance |
-| [-1](money-division.test.ts#L143) | 1 | -1; new instance | -1; new instance |
-| [0](money-division.test.ts#L152) | 1 | 0; new instance | 0; new instance |
-| [9007199254740991](money-division.test.ts#L161) | 1 | 9007199254740991; new instance | 9007199254740991; new instance |
-| [-9007199254740991](money-division.test.ts#L170) | 1 | -9007199254740991; new instance | -9007199254740991; new instance |
-| [9007199254740990](money-division.test.ts#L179) | 1 | 9007199254740990; new instance | 9007199254740990; new instance |
+| [1001](money-division.test.ts#L98) | 1 | 1001 cents; source unchanged at 1001 cents | 1001 cents; source unchanged at 1001 cents |
+| [-1001](money-division.test.ts#L107) | 1 | -1001 cents; source unchanged at -1001 cents | -1001 cents; source unchanged at -1001 cents |
+| [1002](money-division.test.ts#L116) | 1 | 1002 cents; source unchanged at 1002 cents | 1002 cents; source unchanged at 1002 cents |
+| [-1002](money-division.test.ts#L125) | 1 | -1002 cents; source unchanged at -1002 cents | -1002 cents; source unchanged at -1002 cents |
+| [1](money-division.test.ts#L134) | 1 | 1 cents; source unchanged at 1 cents | 1 cents; source unchanged at 1 cents |
+| [-1](money-division.test.ts#L143) | 1 | -1 cents; source unchanged at -1 cents | -1 cents; source unchanged at -1 cents |
+| [0](money-division.test.ts#L152) | 1 | 0 cents; source unchanged at 0 cents | 0 cents; source unchanged at 0 cents |
+| [9007199254740991](money-division.test.ts#L161) | 1 | 9007199254740991 cents; source unchanged at 9007199254740991 cents | 9007199254740991 cents; source unchanged at 9007199254740991 cents |
+| [-9007199254740991](money-division.test.ts#L170) | 1 | -9007199254740991 cents; source unchanged at -9007199254740991 cents | -9007199254740991 cents; source unchanged at -9007199254740991 cents |
+| [9007199254740990](money-division.test.ts#L179) | 1 | 9007199254740990 cents; source unchanged at 9007199254740990 cents | 9007199254740990 cents; source unchanged at 9007199254740990 cents |
 
 ### Reject invalid divisors
 
@@ -230,7 +220,7 @@ Execution: **4 passed / 4 cases**.
 | [500](money-multiplication.test.ts#L6) | 3 | 1500; source unchanged: 500 | 1500; source unchanged: 500 |
 | [500](money-multiplication.test.ts#L15) | -3 | -1500; source unchanged: 500 | -1500; source unchanged: 500 |
 | [500](money-multiplication.test.ts#L24) | 0 | 0; source unchanged: 500 | 0; source unchanged: 500 |
-| [500](money-multiplication.test.ts#L33) | 1 | 500; new instance | 500; new instance |
+| [500](money-multiplication.test.ts#L33) | 1 | 500 cents; source unchanged at 500 cents | 500 cents; source unchanged at 500 cents |
 
 ### Reject invalid factors even for zero cents
 

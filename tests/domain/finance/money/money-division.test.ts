@@ -94,95 +94,95 @@ describe("Money division with floor rounding", () => {
     });
   });
 
-  describe("Division by one and instance identity", () => {
-    test("divideFloor_WhenPositiveRemainderIsDividedByOne_ReturnsNewInstance", () => {
+  describe("Division by one preserves the amount", () => {
+    test("divideFloor_WhenPositiveRemainderIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(1001);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(1001);
+      expect(money.toCents()).toBe(1001);
     });
 
-    test("divideFloor_WhenNegativeRemainderIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenNegativeRemainderIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(-1001);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(-1001);
+      expect(money.toCents()).toBe(-1001);
     });
 
-    test("divideFloor_WhenPositiveExactDivisionIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenPositiveExactDivisionIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(1002);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(1002);
+      expect(money.toCents()).toBe(1002);
     });
 
-    test("divideFloor_WhenNegativeExactDivisionIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenNegativeExactDivisionIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(-1002);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(-1002);
+      expect(money.toCents()).toBe(-1002);
     });
 
-    test("divideFloor_WhenPositiveCentIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenPositiveCentIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(1);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(1);
+      expect(money.toCents()).toBe(1);
     });
 
-    test("divideFloor_WhenNegativeCentIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenNegativeCentIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(-1);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(-1);
+      expect(money.toCents()).toBe(-1);
     });
 
-    test("divideFloor_WhenZeroIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenZeroIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(0);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(0);
+      expect(money.toCents()).toBe(0);
     });
 
-    test("divideFloor_WhenMaximumSafeIntegerIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenMaximumSafeIntegerIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(Number.MAX_SAFE_INTEGER);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(Number.MAX_SAFE_INTEGER);
+      expect(money.toCents()).toBe(Number.MAX_SAFE_INTEGER);
     });
 
-    test("divideFloor_WhenMinimumSafeIntegerIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenMinimumSafeIntegerIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(Number.MIN_SAFE_INTEGER);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(Number.MIN_SAFE_INTEGER);
+      expect(money.toCents()).toBe(Number.MIN_SAFE_INTEGER);
     });
 
-    test("divideFloor_WhenJustBelowMaximumDivisorIsDividedByOne_ReturnsNewInstance", () => {
+    test("divideFloor_WhenJustBelowMaximumDivisorIsDividedByOne_PreservesAmountAndSource", () => {
       const money = Money.fromCents(Number.MAX_SAFE_INTEGER - 1);
 
       const quotient = money.divideFloor(1);
 
-      expect(quotient).not.toBe(money);
       expect(quotient.toCents()).toBe(Number.MAX_SAFE_INTEGER - 1);
+      expect(money.toCents()).toBe(Number.MAX_SAFE_INTEGER - 1);
     });
   });
 

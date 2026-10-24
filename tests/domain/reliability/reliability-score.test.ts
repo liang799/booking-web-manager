@@ -2,7 +2,7 @@ import { ReliabilityScore } from "@/domain";
 import { describe, expect, test } from "vitest";
 
 describe("Reliability score values and admission thresholds", () => {
-  describe("Score bounds and immutable values", () => {
+  describe("Score bounds and exact values", () => {
     test("from_WhenScoreIsZero_PreservesValue", () => {
       const value = 0;
 
@@ -73,12 +73,11 @@ describe("Reliability score values and admission thresholds", () => {
       expect(() => ReliabilityScore.from(value)).toThrow(RangeError);
     });
 
-    test("toNumber_WhenScoreIsFractional_PreservesImmutableValue", () => {
+    test("toNumber_WhenScoreIsFractional_ReturnsExactValue", () => {
       const score = ReliabilityScore.from(66.66666666666667);
 
       const numericScore = score.toNumber();
 
-      expect(Object.isFrozen(score)).toBe(true);
       expect(numericScore).toBe(66.66666666666667);
     });
   });
@@ -90,7 +89,6 @@ describe("Reliability score values and admission thresholds", () => {
 
       const comparison = score.equals(other);
 
-      expect(score).not.toBe(other);
       expect(comparison).toBe(true);
     });
 

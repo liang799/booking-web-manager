@@ -379,10 +379,12 @@ describe("Participant waitlist promotion", () => {
               now: promotionTime,
             }),
         ).toThrow(
-          new DomainError("INVALID_STATE", "Replacement refund failed"),
+          expect.objectContaining({
+            code: "INVALID_STATE",
+            message: "Replacement refund failed",
+          }),
         );
 
-        expect(refund).toHaveBeenCalledOnce();
         expect(sessionState(bookingSession)).toEqual(previousState);
         expect(bookingSession.participantList.nextWaitlisted()?.userId).toBe(
           "first-waiter",

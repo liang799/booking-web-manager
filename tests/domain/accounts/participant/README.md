@@ -1,6 +1,6 @@
 # accounts/participant test cases
 
-Snapshot: **2026-10-24** · **77 cases**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
+Snapshot: **2026-10-24** · **77 cases, 77 passed**. See the [domain testing guide](../../README.md) and [execution evidence](../../results/README.md).
 
 Each row is one executed test. Columns before **Expected Result** are inputs; **Expected Result** is the oracle and **Test Result** is the log. Test results are assertion-verified outcomes from the dated passing run, not captured runtime payloads. The first input value links to the test definition. Only checked fields are reported; matching fields do not imply equality of an entire returned object.
 
@@ -93,7 +93,7 @@ Execution: **3 passed / 3 cases**.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [dana](waitlist.test.ts#L30) | alice | ben: −10 h, DIRECT_INVITE to cara | None | 9 h | None | Exact admission: `WAITLISTED`, participation `p-dana`, empty instructions; next waiter dana; ben hold `AWAITING_REPLACEMENT`; committed count 1; available slots 0. | Exact admission: `WAITLISTED`, participation `p-dana`, empty instructions; next waiter dana; ben hold `AWAITING_REPLACEMENT`; committed count 1; available slots 0. |
 | [cara](replacement-reservations.test.ts#L43) | None | alice: −20 h, OPEN_SLOT; ben: −10 h, DIRECT_INVITE to cara | None | 9 h | None | Error code `INVALID_STATE`; session unchanged; no cara participation; cara reservation still targets `p-ben`; alice hold `AWAITING_REPLACEMENT`; available slots 1. | Error code `INVALID_STATE`; session unchanged; no cara participation; cara reservation still targets `p-ben`; alice hold `AWAITING_REPLACEMENT`; available slots 1. |
-| [replacement](admission.test.ts#L627) | ben | alice: −2 h, OPEN_SLOT | former-waiter LEFT_WAITLIST at position 1 | 1 h | INVALID_STATE: Replacement refund failed | DomainError `INVALID_STATE`: “Replacement refund failed”; refund attempted once; session unchanged. | DomainError `INVALID_STATE`: “Replacement refund failed”; refund attempted once; session unchanged. |
+| [replacement](admission.test.ts#L627) | ben | alice: −2 h, OPEN_SLOT | former-waiter LEFT_WAITLIST at position 1 | 1 h | INVALID_STATE: Replacement refund failed | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged. | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged. |
 
 ## acceptReplacement — accept a reserved seat
 
@@ -136,8 +136,8 @@ Execution: **3 passed / 3 cases**.
 
 | Ben withdrawal time / hold | First acceptance time | Later ordinary join | Replay time before start | Replay hold ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L673) | −9 h | None | 8 h | h-another | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. |
-| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L713) | −9 h | dana at −8 h, p-dana / h-dana | 7 h | h-another | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. |
+| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L675) | −9 h | None | 8 h | h-another | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. |
+| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L715) | −9 h | dana at −8 h, p-dana / h-dana | 7 h | h-another | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. |
 | [−40 h / REFUNDED at −40 h](replacement-reservations.test.ts#L354) | −39 h | None | 38 h | h-another | Replay error code `INVALID_ACCESS`; session unchanged by replay; committed count 1; available slots 1. | Replay error code `INVALID_ACCESS`; session unchanged by replay; committed count 1; available slots 1. |
 
 ## promoteFromWaitlist — eligibility and queue selection
@@ -189,9 +189,9 @@ Execution: **4 passed / 4 cases**.
 | Loaded user / hold ID | Committed users | Withdrawals | Waitlist | Time before start | Refund failure | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [dana / h-dana](promotion.test.ts#L300) | None | ben: −10 h, DIRECT_INVITE to cara; alice: −9 h, OPEN_SLOT | dana, evan | 8 h | None | Result `PROMOTED`, refunded participation `p-alice`; instruction kinds `[LOCK, REFUND]`; dana replaces `p-alice`; ben hold `AWAITING_REPLACEMENT`; next waiter evan; available slots 0. | Result `PROMOTED`, refunded participation `p-alice`; instruction kinds `[LOCK, REFUND]`; dana replaces `p-alice`; ben hold `AWAITING_REPLACEMENT`; next waiter evan; available slots 0. |
-| [first-waiter / h-promoted](promotion.test.ts#L348) | ben | alice: −2 h, OPEN_SLOT | first-waiter, second-waiter | 1 h | INVALID_STATE: Replacement refund failed | DomainError `INVALID_STATE`: “Replacement refund failed”; refund attempted once; session unchanged; next waiter first-waiter. | DomainError `INVALID_STATE`: “Replacement refund failed”; refund attempted once; session unchanged; next waiter first-waiter. |
-| [dana / h-dana](promotion.test.ts#L395) | alex | ben: −10 h, OPEN_SLOT | dana, evan | 8 h | None | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. |
-| [dana / h-dana](promotion.test.ts#L455) | None | ben: −10 h, OPEN_SLOT; alice: −9 h, OPEN_SLOT | dana | 7 h | None | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. |
+| [first-waiter / h-promoted](promotion.test.ts#L348) | ben | alice: −2 h, OPEN_SLOT | first-waiter, second-waiter | 1 h | INVALID_STATE: Replacement refund failed | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged; next waiter first-waiter. | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged; next waiter first-waiter. |
+| [dana / h-dana](promotion.test.ts#L397) | alex | ben: −10 h, OPEN_SLOT | dana, evan | 8 h | None | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. |
+| [dana / h-dana](promotion.test.ts#L457) | None | ben: −10 h, OPEN_SLOT; alice: −9 h, OPEN_SLOT | dana | 7 h | None | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. |
 
 ## leaveWaitlist — leave an existing entry
 
@@ -287,7 +287,7 @@ alice is the sole committed participant. The comparison asserts consistency betw
 
 **Input:** Participant, Starting hold (cents), Preview time before start, Withdrawal time before start · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Participant | Starting hold (cents) | Preview time before start | Withdrawal time before start | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |

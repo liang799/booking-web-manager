@@ -163,13 +163,12 @@ describe("Reliability scoring from participation history", () => {
       expect(score.toNumber()).toBe(100);
     });
 
-    test("fromHistory_WhenOutcomeIsFinalizedAtCutoff_IncludesOutcomeInImmutableScore", () => {
+    test("fromHistory_WhenOutcomeIsFinalizedAtCutoff_IncludesOutcome", () => {
       const history = [{ participation: absent("at-cutoff", asOf), endAt: asOf }];
 
       const score = ReliabilityScore.fromHistory("alice", history, asOf);
 
       expect(score.toNumber()).toBe(0);
-      expect(Object.isFrozen(score)).toBe(true);
     });
   });
 });

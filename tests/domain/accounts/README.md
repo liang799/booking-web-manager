@@ -1,6 +1,6 @@
 # Account test cases
 
-Snapshot: **2026-10-24** · **96 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24** · **95 cases, 95 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
@@ -33,34 +33,22 @@ Execution: **19 passed / 19 cases**.
 | [`"owner@example.com"`](email.test.ts#L6) | Exact address: `"owner@example.com"` | Exact address: `"owner@example.com"` |
 | [`"Owner+bookings@Example.COM"`](email.test.ts#L14) | Exact address: `"Owner+bookings@Example.COM"` | Exact address: `"Owner+bookings@Example.COM"` |
 | [`"owner@localhost"`](email.test.ts#L22) | Exact address: `"owner@localhost"` | Exact address: `"owner@localhost"` |
-| [`""`](email.test.ts#L48) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner.example.com"`](email.test.ts#L56) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"@example.com"`](email.test.ts#L64) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@"`](email.test.ts#L72) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@@example.com"`](email.test.ts#L80) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@example@com"`](email.test.ts#L88) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`" "`](email.test.ts#L98) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`" owner@example.com"`](email.test.ts#L106) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@example.com "`](email.test.ts#L114) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"own er@example.com"`](email.test.ts#L122) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@exam ple.com"`](email.test.ts#L130) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner\t@example.com"`](email.test.ts#L138) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@example.com\n"`](email.test.ts#L146) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@example.com\r\n"`](email.test.ts#L154) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@example.com\u2028"`](email.test.ts#L162) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-| [`"owner@\u00a0example.com"`](email.test.ts#L170) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
-
-## Email constructor — immutable public surface
-
-After construction, attempt to replace both the stored value and the string-conversion method with the replacement address.
-
-**Input:** Email address, Replacement address · **Oracle:** Expected Result · **Log:** Test Result
-
-Execution: **1 passed / 1 case**.
-
-| Email address | Replacement address | Expected Result | Test Result |
-| --- | --- | --- | --- |
-| [`owner@example.com`](email.test.ts#L30) | `other@example.com` | Instance frozen; both replacements return false; address owner@example.com | Instance frozen; both replacements return false; address owner@example.com |
+| [`""`](email.test.ts#L32) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner.example.com"`](email.test.ts#L40) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"@example.com"`](email.test.ts#L48) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@"`](email.test.ts#L56) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@@example.com"`](email.test.ts#L64) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example@com"`](email.test.ts#L72) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`" "`](email.test.ts#L82) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`" owner@example.com"`](email.test.ts#L90) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com "`](email.test.ts#L98) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"own er@example.com"`](email.test.ts#L106) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@exam ple.com"`](email.test.ts#L114) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner\t@example.com"`](email.test.ts#L122) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com\n"`](email.test.ts#L130) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com\r\n"`](email.test.ts#L138) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@example.com\u2028"`](email.test.ts#L146) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
+| [`"owner@\u00a0example.com"`](email.test.ts#L154) | Throws error with code INVALID_INPUT | Throws error with code INVALID_INPUT |
 
 ## Email.equals — exact text equality
 
@@ -71,10 +59,10 @@ Execution: **4 passed / 4 cases**.
 
 | Email address | Other email address | Expected Result | Test Result |
 | --- | --- | --- | --- |
-| [`Owner@example.com`](email.test.ts#L180) | `Owner@example.com` | true | true |
-| [`Owner@example.com`](email.test.ts#L189) | `owner@example.com` | false | false |
-| [`Owner@example.com`](email.test.ts#L198) | `Owner@EXAMPLE.COM` | false | false |
-| [`Owner@example.com`](email.test.ts#L207) | `other@example.com` | false | false |
+| [`Owner@example.com`](email.test.ts#L164) | `Owner@example.com` | true | true |
+| [`Owner@example.com`](email.test.ts#L173) | `owner@example.com` | false | false |
+| [`Owner@example.com`](email.test.ts#L182) | `Owner@EXAMPLE.COM` | false | false |
+| [`Owner@example.com`](email.test.ts#L191) | `other@example.com` | false | false |
 
 ## PayoutAccount constructor — setup state
 
@@ -110,7 +98,7 @@ Execution: **4 passed / 4 cases**.
 
 **Input:** Initial setup status, Stored bank reference · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Initial setup status | Stored bank reference | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -151,7 +139,7 @@ Construct loaded user `alice` with wallet `w-alice`, then replace the supplied w
 
 **Input:** Wallet funds (cents), Reliability, Memberships, Replacement wallet funds (cents), Replacement reliability, Appended membership · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Wallet funds (cents) | Reliability | Memberships | Replacement wallet funds (cents) | Replacement reliability | Appended membership | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -163,7 +151,7 @@ Read the memberships of loaded user `alice`, then append the stated ID to the re
 
 **Input:** Stored memberships, Appended membership · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Stored memberships | Appended membership | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -175,7 +163,7 @@ Attempt to assign a replacement wallet to loaded user `alice`; both wallets have
 
 **Input:** Original wallet funds (cents), Replacement wallet funds (cents) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Original wallet funds (cents) | Replacement wallet funds (cents) | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -187,7 +175,7 @@ Attempt to assign a replacement score to loaded user `alice`.
 
 **Input:** Original reliability, Replacement reliability · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Original reliability | Replacement reliability | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -216,7 +204,7 @@ Use loaded user `owner`, then clear both supplied preference sets after construc
 
 **Input:** Preferred sports, Preferred regions, Supplied sets after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Preferred sports | Preferred regions | Supplied sets after construction | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -228,7 +216,7 @@ Register `owner`, email `owner@example.com`, wallet `w-owner` at 2026-10-08 10:0
 
 **Input:** Preferred sports, Preferred regions, Supplied sets after registration · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Preferred sports | Preferred regions | Supplied sets after registration | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -269,7 +257,7 @@ Use loaded-user defaults for `owner`; clear the returned sports set.
 
 **Input:** Stored preferred sports, Returned sports after mutation · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Stored preferred sports | Returned sports after mutation | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -281,7 +269,7 @@ Use loaded-user defaults for `owner`; clear the returned regions set.
 
 **Input:** Stored preferred regions, Returned regions after mutation · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Stored preferred regions | Returned regions after mutation | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -306,7 +294,7 @@ Execution: **3 passed / 3 cases**.
 
 **Input:** Existing payout status, New payout account ID, New provider reference, Confirmation bank reference · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Existing payout status | New payout account ID | New provider reference | Confirmation bank reference | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -343,15 +331,15 @@ Execution: **3 passed / 3 cases**.
 
 INACTIVE users have null email. Other lifecycle defaults remain as stated above.
 
-**Input:** Account status, Payout status, Bank reference · **Oracle:** Expected Result · **Log:** Test Result
+**Input:** Account status, Payout status, Bank reference, Attempted bank reference · **Oracle:** Expected Result · **Log:** Test Result
 
 Execution: **3 passed / 3 cases**.
 
-| Account status | Payout status | Bank reference | Expected Result | Test Result |
-| --- | --- | --- | --- | --- |
-| [ACTIVE](user.test.ts#L392) | Absent | Absent | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
-| [ACTIVE](user.test.ts#L400) | COMPLETE | bank | Frozen destination exactly: account account; user owner; provider provider; bank bank | Frozen destination exactly: account account; user owner; provider provider; bank bank |
-| [INACTIVE](user.test.ts#L416) | COMPLETE | bank | Throws error with code INACTIVE_ACCOUNT | Throws error with code INACTIVE_ACCOUNT |
+| Account status | Payout status | Bank reference | Attempted bank reference | Expected Result | Test Result |
+| --- | --- | --- | --- | --- | --- |
+| [ACTIVE](user.test.ts#L392) | Absent | Absent | Not attempted | Throws error with code PAYOUT_ACCOUNT_NOT_READY | Throws error with code PAYOUT_ACCOUNT_NOT_READY |
+| [ACTIVE](user.test.ts#L400) | COMPLETE | bank | another-bank | Initial destination and account destination after attempted change: account account; user owner; provider provider; bank bank | Initial destination and account destination after attempted change: account account; user owner; provider provider; bank bank |
+| [INACTIVE](user.test.ts#L423) | COMPLETE | bank | Not attempted | Throws error with code INACTIVE_ACCOUNT | Throws error with code INACTIVE_ACCOUNT |
 
 ## User.deactivate — outstanding obligations
 
@@ -363,20 +351,20 @@ Execution: **14 passed / 14 cases**.
 
 | Available balance (cents) | Held balance (cents) | Active commitments | Unsettled owned sessions | Pending payouts | Active owned groups | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [1](user.test.ts#L430) | 0 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L444) | 1 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L458) | 0 | 1 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L472) | 0 | -1 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L486) | 0 | 0.5 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L500) | 0 | 0 | 1 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L514) | 0 | 0 | -1 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L528) | 0 | 0 | 0.5 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L542) | 0 | 0 | 0 | 1 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L553) | 0 | 0 | 0 | -1 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L564) | 0 | 0 | 0 | 0.5 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L578) | 0 | 0 | 0 | 0 | 1 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
-| [0](user.test.ts#L592) | 0 | 0 | 0 | 0 | -1 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
-| [0](user.test.ts#L606) | 0 | 0 | 0 | 0 | 0.5 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [1](user.test.ts#L437) | 0 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L451) | 1 | 0 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L465) | 0 | 1 | 0 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L479) | 0 | -1 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L493) | 0 | 0.5 | 0 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L507) | 0 | 0 | 1 | 0 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L521) | 0 | 0 | -1 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L535) | 0 | 0 | 0.5 | 0 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L549) | 0 | 0 | 0 | 1 | 0 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L560) | 0 | 0 | 0 | -1 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L571) | 0 | 0 | 0 | 0.5 | 0 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L585) | 0 | 0 | 0 | 0 | 1 | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged | Throws error with code ACTIVE_OBLIGATIONS; account state unchanged |
+| [0](user.test.ts#L599) | 0 | 0 | 0 | 0 | -1 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
+| [0](user.test.ts#L613) | 0 | 0 | 0 | 0 | 0.5 | Throws error with code INVALID_INPUT; account state unchanged | Throws error with code INVALID_INPUT; account state unchanged |
 
 ## User.deactivate — anonymisation and repeated requests
 
@@ -388,6 +376,6 @@ Execution: **3 passed / 3 cases**.
 
 | Initial account status | Preferred sports | Preferred regions | Payout status | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
-| [ACTIVE](user.test.ts#L620) | Tennis | West | Absent | Status INACTIVE; null email; sports and regions both empty | Status INACTIVE; null email; sports and regions both empty |
-| [ACTIVE](user.test.ts#L634) | Empty | Empty | COMPLETE | User ID owner; same wallet instance; same payout-account instance; bank bank | User ID owner; same wallet instance; same payout-account instance; bank bank |
-| [INACTIVE (already deactivated)](user.test.ts#L649) | Empty | Empty | Absent | Account state unchanged | Account state unchanged |
+| [ACTIVE](user.test.ts#L627) | Tennis | West | Absent | Status INACTIVE; null email; sports and regions both empty | Status INACTIVE; null email; sports and regions both empty |
+| [ACTIVE](user.test.ts#L641) | Empty | Empty | COMPLETE | User ID owner; same wallet instance; same payout-account instance; bank bank | User ID owner; same wallet instance; same payout-account instance; bank bank |
+| [INACTIVE (already deactivated)](user.test.ts#L656) | Empty | Empty | Absent | Account state unchanged | Account state unchanged |

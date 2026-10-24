@@ -1,0 +1,1896 @@
+{
+  "kind": "Focused public-contract mutation experiments",
+  "generatedAt": "2026-10-24T05:13:11.043Z",
+  "baseRevision": "009460ee725ce3cdc2793b3274db99ab50c38647",
+  "environment": {
+    "node": "v22.17.0",
+    "vitest": "4.1.11",
+    "description": "Independent temporary copies of domain source and tests, installed Vitest, Node environment, repository alias. Each experiment starts from the same copied source. No production or shared test source was modified.",
+    "config": "import { defineConfig } from 'vitest/config';\nexport default defineConfig({ resolve: { alias: { '@': import.meta.dirname } }, test: { environment: 'node', include: ['tests/domain/**/*.test.ts'], maxWorkers: 2, fileParallelism: false } });\n"
+  },
+  "sourceManifest": {
+    "algorithm": "SHA-256 of sorted file path, NUL, SHA-256 file digest, newline",
+    "sha256": "901d441f3975de925790efcb34eead73c993706979479360a6f9bb865e79102d",
+    "files": [
+      {
+        "file": "domain/accounts/booker.ts",
+        "sha256": "5ff925e4fdcab3cc1ca3c90f5bd77ebd740e90ec806bee88e75d8f29aec6145f"
+      },
+      {
+        "file": "domain/accounts/booking-account-eligibility.ts",
+        "sha256": "9cbf127166a8c3f3ee602915b45459b211b937261f058466d6a797b5c68d9075"
+      },
+      {
+        "file": "domain/accounts/deactivation-policy.ts",
+        "sha256": "ee9982f056830ff383038ad538d64c0186d1a7044b358662fdfbfe2916e3d273"
+      },
+      {
+        "file": "domain/accounts/email.ts",
+        "sha256": "eeb3db4061f4e8eb23708fabe26f28d2ec8b230bfaf181fbd5a3b5e5125a6ecc"
+      },
+      {
+        "file": "domain/accounts/participant.ts",
+        "sha256": "cb64123d83494ef118fa77aed84f68daa843853673d34e693f662780ed27f7a1"
+      },
+      {
+        "file": "domain/accounts/payout-account.ts",
+        "sha256": "a12d23acbf273da69e1a87e05a9a908c5be0474a7326e88aa25e1a9078466b10"
+      },
+      {
+        "file": "domain/accounts/profile.ts",
+        "sha256": "aa1b30d5331b66ae4f453cec966453eaa9c18a9540a4d0bc793634c2d24a6b41"
+      },
+      {
+        "file": "domain/accounts/user.ts",
+        "sha256": "ccd74f0b891a2a33039db45aed51c3a4b28c27e311fadff5e14343c539bfe2af"
+      },
+      {
+        "file": "domain/finance/holding-account-balance.ts",
+        "sha256": "794b15c3d85d89223f23dbdf94ae9617d52f966bb8dba37f575f9f65fdac281d"
+      },
+      {
+        "file": "domain/finance/holding-account.ts",
+        "sha256": "8dcd6f4716bbdbc42acdc4a365d5d1701eac45a7b6ab37350e01a0380a4b5677"
+      },
+      {
+        "file": "domain/finance/ledger-read-port.ts",
+        "sha256": "f83f7d745a06fb556980ed570ddb76483e8eaa825b0fd59b0889b662a105c274"
+      },
+      {
+        "file": "domain/finance/ledger-transaction.ts",
+        "sha256": "689f3c708e9ae50d02f5c7ead8d57ddf6220d14af62890f136150f46cbcc013a"
+      },
+      {
+        "file": "domain/finance/money.ts",
+        "sha256": "e9aa36e7be17ec4339197e9571a44d9e730027570d7b889a70b6d40d805fb338"
+      },
+      {
+        "file": "domain/finance/payout-attempt.ts",
+        "sha256": "b7a4ae0beb384d7e19d98bfe74690fd59a0146abe1b19fd13ad14a575de3c6d2"
+      },
+      {
+        "file": "domain/finance/wallet-balance.ts",
+        "sha256": "555bd7825ddf1072ff9962de9782e151cc803218986c6847f39bcd768444ca36"
+      },
+      {
+        "file": "domain/finance/wallet.ts",
+        "sha256": "6dd36214ff32c51ff8d56abc23c39296503e9e464808716f53c06ef93aa2db8a"
+      },
+      {
+        "file": "domain/groups/group-membership.ts",
+        "sha256": "395c48c0dad345f414daa55ce040ffb00c4865c400f8ee30d7bc12126d062d81"
+      },
+      {
+        "file": "domain/groups/regular-group.ts",
+        "sha256": "44d877c970dac609227683b4c9bdbc402e1f0560804a320907a8a54f7bc4136b"
+      },
+      {
+        "file": "domain/index.ts",
+        "sha256": "9149a661b15e99f7d8fa28aace68bebe148a5a7ace41569410f72fa0e447796b"
+      },
+      {
+        "file": "domain/reliability/reliability-score.ts",
+        "sha256": "e7c715c97d7c93d573ac2290a441e3a5cd219a5f71d144ce5f4cde19b207a6e4"
+      },
+      {
+        "file": "domain/sessions/booking.ts",
+        "sha256": "57d8e6c15829d363274a968d68224752950a93f24aac78700462b75bedb45121"
+      },
+      {
+        "file": "domain/sessions/capacity.ts",
+        "sha256": "41effb7368550e4c41a4783de1173eb09de49d0b2bafacbc6ca7507902bc0ab4"
+      },
+      {
+        "file": "domain/sessions/fund-hold.ts",
+        "sha256": "9e9d8ee5f3c7a0ee146632cd21ac144d4ad2ce7497ddb1aa86285184dbfcc377"
+      },
+      {
+        "file": "domain/sessions/participation-instructions.ts",
+        "sha256": "3be2fa9c163d91ec4f288091b99c1a2ff0ef8762f0baded6a4b21bd539f081b0"
+      },
+      {
+        "file": "domain/sessions/participation.ts",
+        "sha256": "9b312dce25cdacc8ce749aec73956b9cb72b9c3bd234e71d26b313e865285da3"
+      },
+      {
+        "file": "domain/sessions/pricing.ts",
+        "sha256": "c82149030f725c33f89d15f3545ede9aa79e73833a06694138986caa287351a6"
+      },
+      {
+        "file": "domain/sessions/session/index.ts",
+        "sha256": "da15ff4cb1683e77a20ab36e212d61a302062112cad30ce909df6b643fad9ff7"
+      },
+      {
+        "file": "domain/sessions/session/participant-list-validation.ts",
+        "sha256": "ac3ff6e5e92342c784129f082edd9065323d8839899007f4022fa38aba93d983"
+      },
+      {
+        "file": "domain/sessions/session/participant-list.ts",
+        "sha256": "548d5b139e549f61259236e97d3be275bc0eeed487e1a687c83871bbc64a498f"
+      },
+      {
+        "file": "domain/sessions/session/session-guards.ts",
+        "sha256": "33b4fe066c4db81942418f006358051ab3f0e64569e53193dfd68ca6d1c1c6bc"
+      },
+      {
+        "file": "domain/sessions/session/session-recording.ts",
+        "sha256": "45a7215695768d1776a823c84bb9e92e1e9729811d2169f1b8532f156b3af9a6"
+      },
+      {
+        "file": "domain/sessions/session/session-settlement.ts",
+        "sha256": "dd7d48558b1dfae6dd723ef882db53477d47f0eb84f24c85315a21602031047f"
+      },
+      {
+        "file": "domain/sessions/session/session-validation.ts",
+        "sha256": "20bc5557721b798278ef037d96cec07c41075afa66ebf6e61518df59fa63cb6e"
+      },
+      {
+        "file": "domain/sessions/session/session.ts",
+        "sha256": "c371ebf91c735b18d2e3bd08d33266ed3a06d7fcda9da487d8d27b60982b7bf1"
+      },
+      {
+        "file": "domain/shared/date.ts",
+        "sha256": "e35f73b88aaeb28b408b8536323abaa854409c5578329466b09b730cb41eea0e"
+      },
+      {
+        "file": "domain/shared/errors.ts",
+        "sha256": "c817943a9053faf934864a387b82f4c9305a29e65f8c749af191ca82c8001556"
+      },
+      {
+        "file": "domain/shared/operations.ts",
+        "sha256": "58f15fe5a206d3ad23d2ca5fcb87fc62be3c2e9e40886323e9416f50efee8bde"
+      },
+      {
+        "file": "domain/shared/statuses.ts",
+        "sha256": "834f83ade06ca3d42fdf4ca4a54559e79492fc70c4756af847c062bfe36c701d"
+      },
+      {
+        "file": "domain/shared/types.ts",
+        "sha256": "782f34c5772f92a146b67bf338801925bfa40871b0b05bcc13f73189f2d45a22"
+      },
+      {
+        "file": "tests/domain/accounts/booker/administration.test.ts",
+        "sha256": "8c510b879de29e5a6a463a16894f52671e0064c56526274af3dc6fa71382f39c"
+      },
+      {
+        "file": "tests/domain/accounts/booker/attendance.test.ts",
+        "sha256": "313eb5dbb693fcaf3db661e2f00039b83e3f13b9e826bc5a23d98558604918af"
+      },
+      {
+        "file": "tests/domain/accounts/booker/authorization.test.ts",
+        "sha256": "d03c7a1252a2c9a223bc12f5b189ed89e328a9a50e2606d194cfa9aab518b73a"
+      },
+      {
+        "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
+        "sha256": "bf0fcdb9fbd2e930b6230101f56cbe8511e209f7d989efc0765c24aad44c92b5"
+      },
+      {
+        "file": "tests/domain/accounts/booker/creation.test.ts",
+        "sha256": "2949192e38889ca0da477ec8997931725bc12d4c81c6dad6896312d043d92c12"
+      },
+      {
+        "file": "tests/domain/accounts/booker/settlement.test.ts",
+        "sha256": "4f552ba5a02e7a90d19fa7a85d257864658a705d4d5292dd06c4e16e83543543"
+      },
+      {
+        "file": "tests/domain/accounts/deactivation-policy.test.ts",
+        "sha256": "1a07eb9aa1bdfb1a2484b4cf4277fd01628d27174eda06c6794f9cc81904ae6c"
+      },
+      {
+        "file": "tests/domain/accounts/email.test.ts",
+        "sha256": "91b283abc001519e67212774693883264f107cc9b7308168732f5adfac4b13cf"
+      },
+      {
+        "file": "tests/domain/accounts/participant/admission.test.ts",
+        "sha256": "7b15e1fc355ba154731a1e2aedbbd09be2888832f513158a68ad1c8431ac06cc"
+      },
+      {
+        "file": "tests/domain/accounts/participant/promotion.test.ts",
+        "sha256": "e38b548e61f1c2853f33fee9a939ff108f1c90137fd393a9e5b952c45fc75ca0"
+      },
+      {
+        "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+        "sha256": "14831a5ea7dd71da31f9944c6ed4a66aee32747c500ec1d840771aab717e94cf"
+      },
+      {
+        "file": "tests/domain/accounts/participant/waitlist.test.ts",
+        "sha256": "2c3f089891e4924b73f87f76b6567128084eace05cef36cfc71fcefa182badd3"
+      },
+      {
+        "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+        "sha256": "e9f4f041e2aefae571c8b6600d312b4b63880fff1783c941512da83f55f59e4c"
+      },
+      {
+        "file": "tests/domain/accounts/payout-account.test.ts",
+        "sha256": "2767f635eed0204e5808771c4fd44e893a68cd3edf994c4523d310094421066a"
+      },
+      {
+        "file": "tests/domain/accounts/user-fixtures.ts",
+        "sha256": "9a56b9295e7c74953833720cc12a621427a4ddb26c2bfa2b5aeed91f84ac86d8"
+      },
+      {
+        "file": "tests/domain/accounts/user-related-data.test.ts",
+        "sha256": "69c58192283a687b058a0a8a7514344e163411c42fc5d4331c9a4fa0727fd0bb"
+      },
+      {
+        "file": "tests/domain/accounts/user.test.ts",
+        "sha256": "55847436ddaa6f1c4e525b63d9a33fa0dcf2a00078437293f5669020f8bc39f7"
+      },
+      {
+        "file": "tests/domain/finance/holding-account.test.ts",
+        "sha256": "04d903489a0c80983521c2052075316d47a3e010c2b673322ec3e4b76834eb31"
+      },
+      {
+        "file": "tests/domain/finance/ledger-transaction.test.ts",
+        "sha256": "2c2ce3cef315130b89acf83e95865fbe6c4b92c6c73f6ceeaa43917b6a54c232"
+      },
+      {
+        "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+        "sha256": "61ed48d43a416021f697f5a43f592a2d67ecb131b969d0b4d5d309417b6d8467"
+      },
+      {
+        "file": "tests/domain/finance/money/money-bounds.test.ts",
+        "sha256": "702d01e0c68fa6af70e43a03daebfa401ab60226fe962bc8ea402fcdbee9e30d"
+      },
+      {
+        "file": "tests/domain/finance/money/money-comparison.test.ts",
+        "sha256": "1a1fb9ddd138f7977c86a1b15def759d84a91f2b57edfb4dc33ed2f8221ffa48"
+      },
+      {
+        "file": "tests/domain/finance/money/money-construction.test.ts",
+        "sha256": "fe6bd8c602723994df323b25910f03d77a3e0359155e0926a3648b9996ffb2f1"
+      },
+      {
+        "file": "tests/domain/finance/money/money-division.test.ts",
+        "sha256": "742d279b3dd1b8971f1170179d52977f157e12dac86ca724e17cdce7ca29b466"
+      },
+      {
+        "file": "tests/domain/finance/money/money-dollars.test.ts",
+        "sha256": "88c4df5d0b719c0400cfc2f16f3b966c8786f286c6c2c5b7a0a7c3b9343fd6fd"
+      },
+      {
+        "file": "tests/domain/finance/money/money-multiplication.test.ts",
+        "sha256": "1ad7ea0cb29acad4aae47bb259dab85238578af0aaccb6da1d5051d63f1f823a"
+      },
+      {
+        "file": "tests/domain/finance/payout-attempt.test.ts",
+        "sha256": "66490fc600fa882117af34fb668cf493918533cdef927a5855177336b5ee81b5"
+      },
+      {
+        "file": "tests/domain/finance/wallet.test.ts",
+        "sha256": "0971f1e6ba2a94a2f3445e92b173af8c03e21b2fff06263fa8114339860e0fcd"
+      },
+      {
+        "file": "tests/domain/groups/group-membership.test.ts",
+        "sha256": "b29edab24e28748a113288e227a5336efd194224d54a9b4fe216edba9c00b99c"
+      },
+      {
+        "file": "tests/domain/groups/regular-group.test.ts",
+        "sha256": "62f50391b89f2c3d4b36ca5fa7815540a311a073fa8b97329c32b2224d52611a"
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score-history.test.ts",
+        "sha256": "ff665415b638cdd93aee800de355f1bbaf0297295a332b31ef1f9f3d6b1a1c7d"
+      },
+      {
+        "file": "tests/domain/reliability/reliability-score.test.ts",
+        "sha256": "06c8a2965a87f0abdbd4d9c71c74cafc5766c7c093c29cac0adf04ba26c6a879"
+      },
+      {
+        "file": "tests/domain/sessions/booking.test.ts",
+        "sha256": "90cbcc20660738cb79303eab4aed8fec2536fd4ba4b72549e4d299428cb3cc2e"
+      },
+      {
+        "file": "tests/domain/sessions/fund-hold.test.ts",
+        "sha256": "7ca7ecdb4ecb36fb8acdaf6c9e6177305d05736aebf2c5e6ae2a5a35347bd7d8"
+      },
+      {
+        "file": "tests/domain/sessions/participant-list.test.ts",
+        "sha256": "cb2b85e50947e6801484f2f2bd8499a7d71f7a474f0788f5dbfb7d177176efc0"
+      },
+      {
+        "file": "tests/domain/sessions/participation.test.ts",
+        "sha256": "1a5b1fd5d7e53439c864f035f6b346677327c873a68614051dad2275d1103a6f"
+      },
+      {
+        "file": "tests/domain/sessions/pricing.test.ts",
+        "sha256": "15c1186e3a4e1a39db002d3db57052fb484c74a87313917366eaa201f7dc811d"
+      },
+      {
+        "file": "tests/domain/sessions/session/admission.test.ts",
+        "sha256": "81b58488d74a6b33b15263f82c054056ca49e8fe09cc628c45ed3a029fa16473"
+      },
+      {
+        "file": "tests/domain/sessions/session/attendance.test.ts",
+        "sha256": "ac6d5ceac04041bbd44b0d0be1d433a890b12e94622e4ec3f34388ba9d796b77"
+      },
+      {
+        "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+        "sha256": "e5dd1bbbc3d2b21c8efbf8668e354aca411dc82a8c2332f6c886ed1caa2abf9b"
+      },
+      {
+        "file": "tests/domain/sessions/session/reconstruction.test.ts",
+        "sha256": "4598655fb680e122289207d4567e3a8d955c5642effc63b7f92c23a4867cd820"
+      },
+      {
+        "file": "tests/domain/sessions/session/recording.test.ts",
+        "sha256": "8a762a4aa7cb2fae4710f7331de0fcd8dc8d3fd5daca56ae97a37abfd7ddda47"
+      },
+      {
+        "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+        "sha256": "e64ba4190002d741c805cc70f83d0b140d81efdb144aa06c6be1ddf128f7488d"
+      },
+      {
+        "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+        "sha256": "9eac437b434e95433f6736e4e7986214eeecf1ddc1e08e9f783577a024e3f3ce"
+      },
+      {
+        "file": "tests/domain/sessions/session/session-fixtures.ts",
+        "sha256": "de3a71a558b632834f2ccc4432e66b839b093e15f1b89f89641988d6cb9ff9db"
+      },
+      {
+        "file": "tests/domain/sessions/session/settlement.test.ts",
+        "sha256": "542852273457bc23c910da4bdd6148189b6da4d1d335a3c33c24b3df37ecb3c7"
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "unchanged-control",
+      "description": "Execute the cleaned domain suite in the same isolated Node environment without changing production behavior.",
+      "expected": "pass",
+      "observed": "pass",
+      "meetsExpectation": true,
+      "startedAt": "2026-10-24T05:13:05.234Z",
+      "endedAt": "2026-10-24T05:13:08.884Z",
+      "command": "rtk proxy node /Users/tianpok/.codex/worktrees/domain-tests-input-oracle-log/booking-web-manager/node_modules/vitest/vitest.mjs run --config vitest.config.mts tests/domain --reporter=json --outputFile=vitest.json",
+      "workingDirectory": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/unchanged-control",
+      "exitCode": 0,
+      "passed": 622,
+      "failed": 0,
+      "skipped": 0,
+      "total": 622,
+      "patches": [],
+      "rawReportSha256": "d877c6714986e20f0e39f55fc7e988b49c07d58da38a8d1d19e8a4541a036a2a",
+      "rawReportPath": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/unchanged-control/vitest.json",
+      "suites": [
+        {
+          "file": "tests/domain/accounts/booker/administration.test.ts",
+          "passed": 16,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/booker/attendance.test.ts",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/booker/authorization.test.ts",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/booker/cancellation-history.test.ts",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/booker/creation.test.ts",
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/booker/settlement.test.ts",
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/deactivation-policy.test.ts",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/email.test.ts",
+          "passed": 23,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/participant/admission.test.ts",
+          "passed": 26,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/participant/promotion.test.ts",
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/participant/replacement-reservations.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/participant/waitlist.test.ts",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/participant/withdrawals.test.ts",
+          "passed": 23,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/payout-account.test.ts",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/user-related-data.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/accounts/user.test.ts",
+          "passed": 49,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/holding-account.test.ts",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/ledger-transaction.test.ts",
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "passed": 26,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/payout-attempt.test.ts",
+          "passed": 20,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/wallet.test.ts",
+          "passed": 22,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/groups/group-membership.test.ts",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/groups/regular-group.test.ts",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/reliability/reliability-score-history.test.ts",
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/reliability/reliability-score.test.ts",
+          "passed": 21,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/booking.test.ts",
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/fund-hold.test.ts",
+          "passed": 18,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/participant-list.test.ts",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "passed": 35,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/pricing.test.ts",
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/admission.test.ts",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/attendance.test.ts",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/reconstruction.test.ts",
+          "passed": 30,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "passed": 25,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/replacement-hydration.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/session-fixtures.test.ts",
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/sessions/session/settlement.test.ts",
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        }
+      ],
+      "testIdentityEvidence": "The complete 622-case control JSON is retained at rawReportPath; all suites passed. Non-control experiments below retain individual test identities."
+    },
+    {
+      "id": "equivalent-money-identity-reuse",
+      "description": "Reuse the current immutable Money instance for adding or subtracting zero, multiplication by one, and division by one; observable cents remain unchanged.",
+      "expected": "pass",
+      "observed": "pass",
+      "meetsExpectation": true,
+      "startedAt": "2026-10-24T05:13:08.901Z",
+      "endedAt": "2026-10-24T05:13:09.643Z",
+      "command": "rtk proxy node /Users/tianpok/.codex/worktrees/domain-tests-input-oracle-log/booking-web-manager/node_modules/vitest/vitest.mjs run --config vitest.config.mts tests/domain/finance/money --reporter=json --outputFile=vitest.json",
+      "workingDirectory": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/equivalent-money-identity-reuse",
+      "exitCode": 0,
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "total": 82,
+      "patches": [
+        {
+          "file": "domain/finance/money.ts",
+          "before": "  add(other: Money): Money {\n",
+          "after": "  add(other: Money): Money {\n    if (other.#cents === 0) return this;\n",
+          "beforeSha256": "e9aa36e7be17ec4339197e9571a44d9e730027570d7b889a70b6d40d805fb338",
+          "afterSha256": "c83810f7b8fc0faea0f42b809c5111fe610994af8db75bf944b60c4d8d0caf7f"
+        },
+        {
+          "file": "domain/finance/money.ts",
+          "before": "  subtract(other: Money): Money {\n",
+          "after": "  subtract(other: Money): Money {\n    if (other.#cents === 0) return this;\n",
+          "beforeSha256": "c83810f7b8fc0faea0f42b809c5111fe610994af8db75bf944b60c4d8d0caf7f",
+          "afterSha256": "753aa572af27d29a1770199687cde9429e96e841fc68553bfcf4b1b99a768e54"
+        },
+        {
+          "file": "domain/finance/money.ts",
+          "before": "  multiply(factor: number): Money {\n",
+          "after": "  multiply(factor: number): Money {\n    if (factor === 1) return this;\n",
+          "beforeSha256": "753aa572af27d29a1770199687cde9429e96e841fc68553bfcf4b1b99a768e54",
+          "afterSha256": "9d7c92a88a2a6a43f9e01b0425ed333dbcc6298e1f75ab6e9c2af376b746e210"
+        },
+        {
+          "file": "domain/finance/money.ts",
+          "before": "  divideFloor(divisor: number): Money {\n",
+          "after": "  divideFloor(divisor: number): Money {\n    if (divisor === 1) return this;\n",
+          "beforeSha256": "9d7c92a88a2a6a43f9e01b0425ed333dbcc6298e1f75ab6e9c2af376b746e210",
+          "afterSha256": "8d34bfbcd8b890ce3afb82ebe1328585b4143a3e973f500c3cc5615dea353e15"
+        }
+      ],
+      "tests": [
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenBothAmountsArePositive_ReturnsTheirSum",
+          "fullName": "Money addition and subtraction Exact sums and differences add_WhenBothAmountsArePositive_ReturnsTheirSum",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenChainedAfterSubtraction_ReturnsExactAmount",
+          "fullName": "Money addition and subtraction Exact sums and differences add_WhenChainedAfterSubtraction_ReturnsExactAmount",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference",
+          "fullName": "Money addition and subtraction Exact sums and differences subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenAmountIsNegative_IncreasesValue",
+          "fullName": "Money addition and subtraction Exact sums and differences subtract_WhenAmountIsNegative_IncreasesValue",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenAddingZero_PreservesAmountAndSource",
+          "fullName": "Money addition and subtraction Operand preservation add_WhenAddingZero_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenAppliedToOperands_PreservesBothValues",
+          "fullName": "Money addition and subtraction Operand preservation add_WhenAppliedToOperands_PreservesBothValues",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenSubtractingZero_PreservesAmountAndSource",
+          "fullName": "Money addition and subtraction Operand preservation subtract_WhenSubtractingZero_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenAppliedToOperands_PreservesBothValues",
+          "fullName": "Money addition and subtraction Operand preservation subtract_WhenAppliedToOperands_PreservesBothValues",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "add_WhenMaximumAndMinimumAreCombined_ReturnsZero",
+          "fullName": "Money arithmetic at safe integer limits Addition boundaries add_WhenMaximumAndMinimumAreCombined_ReturnsZero",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "add_WhenResultExceedsMaximum_ThrowsRangeError",
+          "fullName": "Money arithmetic at safe integer limits Addition boundaries add_WhenResultExceedsMaximum_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "add_WhenResultFallsBelowMinimum_ThrowsRangeError",
+          "fullName": "Money arithmetic at safe integer limits Addition boundaries add_WhenResultFallsBelowMinimum_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "subtract_WhenOneIsSubtractedFromMaximum_PreservesExactValue",
+          "fullName": "Money arithmetic at safe integer limits Subtraction boundaries subtract_WhenOneIsSubtractedFromMaximum_PreservesExactValue",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "subtract_WhenResultExceedsMaximum_ThrowsRangeError",
+          "fullName": "Money arithmetic at safe integer limits Subtraction boundaries subtract_WhenResultExceedsMaximum_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "subtract_WhenResultFallsBelowMinimum_ThrowsRangeError",
+          "fullName": "Money arithmetic at safe integer limits Subtraction boundaries subtract_WhenResultFallsBelowMinimum_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "multiply_WhenMinimumIsNegated_ReturnsMaximum",
+          "fullName": "Money arithmetic at safe integer limits Multiplication boundaries multiply_WhenMinimumIsNegated_ReturnsMaximum",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "multiply_WhenOneCentIsScaledToMaximum_PreservesExactValue",
+          "fullName": "Money arithmetic at safe integer limits Multiplication boundaries multiply_WhenOneCentIsScaledToMaximum_PreservesExactValue",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "multiply_WhenMaximumIsDoubled_ThrowsRangeError",
+          "fullName": "Money arithmetic at safe integer limits Multiplication boundaries multiply_WhenMaximumIsDoubled_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "name": "multiply_WhenMinimumIsDoubled_ThrowsRangeError",
+          "fullName": "Money arithmetic at safe integer limits Multiplication boundaries multiply_WhenMinimumIsDoubled_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "name": "equals_WhenValuesAreEqual_ReturnsTrue",
+          "fullName": "Money equality and ordering equals_WhenValuesAreEqual_ReturnsTrue",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "name": "equals_WhenValuesDiffer_ReturnsFalse",
+          "fullName": "Money equality and ordering equals_WhenValuesDiffer_ReturnsFalse",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "name": "compareTo_WhenValuesAreEqual_ReturnsZero",
+          "fullName": "Money equality and ordering compareTo_WhenValuesAreEqual_ReturnsZero",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "name": "compareTo_WhenValueIsSmaller_ReturnsNegativeOne",
+          "fullName": "Money equality and ordering compareTo_WhenValueIsSmaller_ReturnsNegativeOne",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "name": "compareTo_WhenValueIsGreater_ReturnsOne",
+          "fullName": "Money equality and ordering compareTo_WhenValueIsGreater_ReturnsOne",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "name": "compareTo_WhenComparingNegativeToZero_ReturnsNegativeOne",
+          "fullName": "Money equality and ordering compareTo_WhenComparingNegativeToZero_ReturnsNegativeOne",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenZero_PreservesExactCents",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenZero_PreservesExactCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenPositiveCent_PreservesExactCents",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenPositiveCent_PreservesExactCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenNegativeCent_PreservesExactCents",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenNegativeCent_PreservesExactCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenWholeCents_PreservesExactCents",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenWholeCents_PreservesExactCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenMaximumSafeInteger_PreservesExactCents",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenMaximumSafeInteger_PreservesExactCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenMinimumSafeInteger_PreservesExactCents",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenMinimumSafeInteger_PreservesExactCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenNegativeZero_NormalizesToZero",
+          "fullName": "Money creation from integer cents Exact cent values fromCents_WhenNegativeZero_NormalizesToZero",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenPositiveFraction_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenPositiveFraction_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenNegativeFraction_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenNegativeFraction_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenNaN_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenNaN_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenPositiveInfinity_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenPositiveInfinity_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenNegativeInfinity_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenNegativeInfinity_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenAboveMaximum_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenAboveMaximum_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "name": "fromCents_WhenBelowMinimum_ThrowsRangeError",
+          "fullName": "Money creation from integer cents Cent input validation fromCents_WhenBelowMinimum_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenPositiveRemainder_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenPositiveRemainder_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenNegativeRemainder_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenNegativeRemainder_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenPositiveExactDivision_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenPositiveExactDivision_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenNegativeExactDivision_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenNegativeExactDivision_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenPositiveCent_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenPositiveCent_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenNegativeCent_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenNegativeCent_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenZero_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenZero_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenMaximumSafeInteger_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenMaximumSafeInteger_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenMinimumSafeInteger_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenMinimumSafeInteger_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenJustBelowMaximumDivisor_RoundsDownAndPreservesSource",
+          "fullName": "Money division with floor rounding Floor rounding divideFloor_WhenJustBelowMaximumDivisor_RoundsDownAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenPositiveRemainderIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenPositiveRemainderIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenNegativeRemainderIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenNegativeRemainderIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenPositiveExactDivisionIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenPositiveExactDivisionIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenNegativeExactDivisionIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenNegativeExactDivisionIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenPositiveCentIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenPositiveCentIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenNegativeCentIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenNegativeCentIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenZeroIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenZeroIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenMaximumSafeIntegerIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenMaximumSafeIntegerIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenMinimumSafeIntegerIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenMinimumSafeIntegerIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenJustBelowMaximumDivisorIsDividedByOne_PreservesAmountAndSource",
+          "fullName": "Money division with floor rounding Division by one preserves the amount divideFloor_WhenJustBelowMaximumDivisorIsDividedByOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenDivisorIsZero_ThrowsRangeError",
+          "fullName": "Money division with floor rounding Divisor validation divideFloor_WhenDivisorIsZero_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenDivisorIsNegative_ThrowsRangeError",
+          "fullName": "Money division with floor rounding Divisor validation divideFloor_WhenDivisorIsNegative_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenDivisorIsFractional_ThrowsRangeError",
+          "fullName": "Money division with floor rounding Divisor validation divideFloor_WhenDivisorIsFractional_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenDivisorIsNaN_ThrowsRangeError",
+          "fullName": "Money division with floor rounding Divisor validation divideFloor_WhenDivisorIsNaN_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenDivisorIsInfinite_ThrowsRangeError",
+          "fullName": "Money division with floor rounding Divisor validation divideFloor_WhenDivisorIsInfinite_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "name": "divideFloor_WhenDivisorIsUnsafeInteger_ThrowsRangeError",
+          "fullName": "Money division with floor rounding Divisor validation divideFloor_WhenDivisorIsUnsafeInteger_ThrowsRangeError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenZero_ReturnsTwoDecimalPlaces",
+          "fullName": "Money formatting in dollars toDollars_WhenZero_ReturnsTwoDecimalPlaces",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenOneCent_PadsTheFraction",
+          "fullName": "Money formatting in dollars toDollars_WhenOneCent_PadsTheFraction",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenWholeDollars_PreservesTwoDecimalPlaces",
+          "fullName": "Money formatting in dollars toDollars_WhenWholeDollars_PreservesTwoDecimalPlaces",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenFractionalDollars_ReturnsExactAmount",
+          "fullName": "Money formatting in dollars toDollars_WhenFractionalDollars_ReturnsExactAmount",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenNegativeCent_PreservesSign",
+          "fullName": "Money formatting in dollars toDollars_WhenNegativeCent_PreservesSign",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenNegativeDollars_ReturnsExactAmount",
+          "fullName": "Money formatting in dollars toDollars_WhenNegativeDollars_ReturnsExactAmount",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenMaximumSafeInteger_PreservesEveryCent",
+          "fullName": "Money formatting in dollars toDollars_WhenMaximumSafeInteger_PreservesEveryCent",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "name": "toDollars_WhenMinimumSafeInteger_PreservesEveryCent",
+          "fullName": "Money formatting in dollars toDollars_WhenMinimumSafeInteger_PreservesEveryCent",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsPositive_ReturnsProductAndPreservesSource",
+          "fullName": "Money multiplication by integer factors Products and source immutability multiply_WhenFactorIsPositive_ReturnsProductAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsNegative_ReturnsProductAndPreservesSource",
+          "fullName": "Money multiplication by integer factors Products and source immutability multiply_WhenFactorIsNegative_ReturnsProductAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsZero_ReturnsProductAndPreservesSource",
+          "fullName": "Money multiplication by integer factors Products and source immutability multiply_WhenFactorIsZero_ReturnsProductAndPreservesSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsOne_PreservesAmountAndSource",
+          "fullName": "Money multiplication by integer factors Products and source immutability multiply_WhenFactorIsOne_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsFractional_RejectsEvenForZeroCents",
+          "fullName": "Money multiplication by integer factors Integer factor validation multiply_WhenFactorIsFractional_RejectsEvenForZeroCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsNaN_RejectsEvenForZeroCents",
+          "fullName": "Money multiplication by integer factors Integer factor validation multiply_WhenFactorIsNaN_RejectsEvenForZeroCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsPositiveInfinity_RejectsEvenForZeroCents",
+          "fullName": "Money multiplication by integer factors Integer factor validation multiply_WhenFactorIsPositiveInfinity_RejectsEvenForZeroCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsNegativeInfinity_RejectsEvenForZeroCents",
+          "fullName": "Money multiplication by integer factors Integer factor validation multiply_WhenFactorIsNegativeInfinity_RejectsEvenForZeroCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsAboveMaximum_RejectsEvenForZeroCents",
+          "fullName": "Money multiplication by integer factors Integer factor validation multiply_WhenFactorIsAboveMaximum_RejectsEvenForZeroCents",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "name": "multiply_WhenFactorIsBelowMinimum_RejectsEvenForZeroCents",
+          "fullName": "Money multiplication by integer factors Integer factor validation multiply_WhenFactorIsBelowMinimum_RejectsEvenForZeroCents",
+          "status": "passed"
+        }
+      ],
+      "rawReportSha256": "5c6c837a675114f39f305d6f261e50e07eff35fdf7ca395044895d6dcab8d44d",
+      "rawReportPath": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/equivalent-money-identity-reuse/vitest.json",
+      "suites": [
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-bounds.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-comparison.test.ts",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-construction.test.ts",
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-division.test.ts",
+          "passed": 26,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-dollars.test.ts",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "file": "tests/domain/finance/money/money-multiplication.test.ts",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "id": "incorrect-money-amount",
+      "description": "Add one spurious cent to successful Money addition.",
+      "expected": "fail",
+      "observed": "fail",
+      "meetsExpectation": true,
+      "startedAt": "2026-10-24T05:13:09.655Z",
+      "endedAt": "2026-10-24T05:13:09.985Z",
+      "command": "rtk proxy node /Users/tianpok/.codex/worktrees/domain-tests-input-oracle-log/booking-web-manager/node_modules/vitest/vitest.mjs run --config vitest.config.mts tests/domain/finance/money/money-arithmetic.test.ts --reporter=json --outputFile=vitest.json",
+      "workingDirectory": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/incorrect-money-amount",
+      "exitCode": 1,
+      "passed": 5,
+      "failed": 3,
+      "skipped": 0,
+      "total": 8,
+      "patches": [
+        {
+          "file": "domain/finance/money.ts",
+          "before": "return Money.fromBigInt(BigInt(this.#cents) + BigInt(other.#cents));",
+          "after": "return Money.fromBigInt(BigInt(this.#cents) + BigInt(other.#cents) + 1n);",
+          "beforeSha256": "e9aa36e7be17ec4339197e9571a44d9e730027570d7b889a70b6d40d805fb338",
+          "afterSha256": "4a723ebb65a121ce3a5545dd06831073f2c970361ce30a13d82fc9ca159171f3"
+        }
+      ],
+      "tests": [
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenBothAmountsArePositive_ReturnsTheirSum",
+          "fullName": "Money addition and subtraction Exact sums and differences add_WhenBothAmountsArePositive_ReturnsTheirSum",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected 1201 to be 1200 // Object.is equality\n    at <isolated-copy>/tests/domain/finance/money/money-arithmetic.test.ts:12:29"
+          ]
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenChainedAfterSubtraction_ReturnsExactAmount",
+          "fullName": "Money addition and subtraction Exact sums and differences add_WhenChainedAfterSubtraction_ReturnsExactAmount",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected 301 to be 300 // Object.is equality\n    at <isolated-copy>/tests/domain/finance/money/money-arithmetic.test.ts:21:34"
+          ]
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference",
+          "fullName": "Money addition and subtraction Exact sums and differences subtract_WhenSecondAmountIsLarger_ReturnsNegativeDifference",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenAmountIsNegative_IncreasesValue",
+          "fullName": "Money addition and subtraction Exact sums and differences subtract_WhenAmountIsNegative_IncreasesValue",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenAddingZero_PreservesAmountAndSource",
+          "fullName": "Money addition and subtraction Operand preservation add_WhenAddingZero_PreservesAmountAndSource",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected 501 to be 500 // Object.is equality\n    at <isolated-copy>/tests/domain/finance/money/money-arithmetic.test.ts:49:29"
+          ]
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "add_WhenAppliedToOperands_PreservesBothValues",
+          "fullName": "Money addition and subtraction Operand preservation add_WhenAppliedToOperands_PreservesBothValues",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenSubtractingZero_PreservesAmountAndSource",
+          "fullName": "Money addition and subtraction Operand preservation subtract_WhenSubtractingZero_PreservesAmountAndSource",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "name": "subtract_WhenAppliedToOperands_PreservesBothValues",
+          "fullName": "Money addition and subtraction Operand preservation subtract_WhenAppliedToOperands_PreservesBothValues",
+          "status": "passed"
+        }
+      ],
+      "rawReportSha256": "2c11ffa2cc0792c48d149dac7af46cf6c65ca60f6a5ca53413cd635ab71659e2",
+      "rawReportPath": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/incorrect-money-amount/vitest.json",
+      "suites": [
+        {
+          "file": "tests/domain/finance/money/money-arithmetic.test.ts",
+          "passed": 5,
+          "failed": 3,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "id": "relaxed-session-price-bounds",
+      "description": "Accept every nonnegative selected booking share, bypassing the permitted minimum and maximum.",
+      "expected": "fail",
+      "observed": "fail",
+      "meetsExpectation": true,
+      "startedAt": "2026-10-24T05:13:09.998Z",
+      "endedAt": "2026-10-24T05:13:10.335Z",
+      "command": "rtk proxy node /Users/tianpok/.codex/worktrees/domain-tests-input-oracle-log/booking-web-manager/node_modules/vitest/vitest.mjs run --config vitest.config.mts tests/domain/sessions/session/custom-pricing.test.ts --reporter=json --outputFile=vitest.json",
+      "workingDirectory": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/relaxed-session-price-bounds",
+      "exitCode": 1,
+      "passed": 9,
+      "failed": 3,
+      "skipped": 0,
+      "total": 12,
+      "patches": [
+        {
+          "file": "domain/sessions/pricing.ts",
+          "before": "share.toCents() >= range.minimumCents &&\n    share.toCents() <= range.maximumCents",
+          "after": "share.toCents() >= 0",
+          "beforeSha256": "c82149030f725c33f89d15f3545ede9aa79e73833a06694138986caa287351a6",
+          "afterSha256": "eb6cef34de630f774e3dce2add10623026ae34eb201c9a9058cb943af7417f15"
+        }
+      ],
+      "tests": [
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceIsOmitted_PreservesEqualSplit",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceIsOmitted_PreservesEqualSplit",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceEqualsMinimum_AcceptsBoundedAdjustment",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceEqualsMinimum_AcceptsBoundedAdjustment",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceExceedsEqualSplitByOneCent_AcceptsBoundedAdjustment",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceExceedsEqualSplitByOneCent_AcceptsBoundedAdjustment",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceEqualsMaximum_AcceptsBoundedAdjustment",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceEqualsMaximum_AcceptsBoundedAdjustment",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceIsZero_RejectsOutsideBounds",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceIsZero_RejectsOutsideBounds",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected function to throw an error, but it didn't\n    at <isolated-copy>/tests/domain/sessions/session/custom-pricing.test.ts:70:42"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceIsOneCentBelowMinimum_RejectsOutsideBounds",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceIsOneCentBelowMinimum_RejectsOutsideBounds",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected function to throw an error, but it didn't\n    at <isolated-copy>/tests/domain/sessions/session/custom-pricing.test.ts:82:42"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "constructor_WhenPriceIsOneCentAboveMaximum_RejectsOutsideBounds",
+          "fullName": "Session participant pricing Participant price selection constructor_WhenPriceIsOneCentAboveMaximum_RejectsOutsideBounds",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected function to throw an error, but it didn't\n    at <isolated-copy>/tests/domain/sessions/session/custom-pricing.test.ts:94:42"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "join_WhenPriceExceedsEqualSplit_LocksChosenPrice",
+          "fullName": "Session participant pricing Chosen price across financial operations join_WhenPriceExceedsEqualSplit_LocksChosenPrice",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice",
+          "fullName": "Session participant pricing Chosen price across financial operations withdraw_WhenCustomPriceIsRefundable_RefundsChosenPrice",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "cancel_WhenCustomPriceWasCollected_RefundsTheFullHold",
+          "fullName": "Session participant pricing Chosen price across financial operations cancel_WhenCustomPriceWasCollected_RefundsTheFullHold",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount",
+          "fullName": "Session participant pricing Chosen price across financial operations preparePayout_WhenCustomPriceAttendanceIsVerified_IncludesChosenAmount",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "name": "completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount",
+          "fullName": "Session participant pricing Chosen price across financial operations completeSettlement_WhenCustomPricePayoutSucceeds_ReleasesChosenAmount",
+          "status": "passed"
+        }
+      ],
+      "rawReportSha256": "2d8811d68f241d68a30d7543206936d4d647429e49dd789d7dd3edb593e3419b",
+      "rawReportPath": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/relaxed-session-price-bounds/vitest.json",
+      "suites": [
+        {
+          "file": "tests/domain/sessions/session/custom-pricing.test.ts",
+          "passed": 9,
+          "failed": 3,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "id": "lost-replacement-history",
+      "description": "Stop carrying the accepted replacement's replacesParticipationId into subsequent immutable transitions.",
+      "expected": "fail",
+      "observed": "fail",
+      "meetsExpectation": true,
+      "startedAt": "2026-10-24T05:13:10.347Z",
+      "endedAt": "2026-10-24T05:13:10.679Z",
+      "command": "rtk proxy node /Users/tianpok/.codex/worktrees/domain-tests-input-oracle-log/booking-web-manager/node_modules/vitest/vitest.mjs run --config vitest.config.mts tests/domain/sessions/participation.test.ts --reporter=json --outputFile=vitest.json",
+      "workingDirectory": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/lost-replacement-history",
+      "exitCode": 1,
+      "passed": 32,
+      "failed": 3,
+      "skipped": 0,
+      "total": 35,
+      "patches": [
+        {
+          "file": "domain/sessions/participation.ts",
+          "before": "      replacesParticipationId: this.#replacesParticipationId,\n",
+          "after": "",
+          "beforeSha256": "9b312dce25cdacc8ce749aec73956b9cb72b9c3bd234e71d26b313e865285da3",
+          "afterSha256": "e92b9c6bd9a9b47e095c23a8838af73eb148afc959fa62d1999cfe7386f77877"
+        }
+      ],
+      "tests": [
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenDatesAreMutated_PreservesTimestampAndImmutableHold",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenDatesAreMutated_PreservesTimestampAndImmutableHold",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenHoldBelongsToAnotherParticipation_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenHoldBelongsToAnotherParticipation_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenCommittedHoldIsMissing_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenCommittedHoldIsMissing_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenCommitmentDateIsMissing_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenCommitmentDateIsMissing_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenWaitlistMetadataIsMissing_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenWaitlistMetadataIsMissing_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenWaitlistedParticipationHasHold_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenWaitlistedParticipationHasHold_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenQueueSequenceIsZero_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state constructor_WhenQueueSequenceIsZero_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "commit_WhenPromotedAsReplacement_PreservesQueueEntryAndReplacementIdentity",
+          "fullName": "Participation state and fund lifecycle Commitment and queue state commit_WhenPromotedAsReplacement_PreservesQueueEntryAndReplacementIdentity",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected undefined to be 'original-participation' // Object.is equality\n    at <isolated-copy>/tests/domain/sessions/participation.test.ts:104:49"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenParticipationReplacesItself_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenParticipationReplacesItself_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "refundReplacement_WhenReplacementIsFound_ReturnsNewChild",
+          "fullName": "Participation state and fund lifecycle Withdrawal and replacement reservations refundReplacement_WhenReplacementIsFound_ReturnsNewChild",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory",
+          "fullName": "Participation state and fund lifecycle Cancellation and removal remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected undefined to be 'original-participation' // Object.is equality\n    at <isolated-copy>/tests/domain/sessions/participation.test.ts:311:47"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory",
+          "fullName": "Participation state and fund lifecycle Cancellation and removal cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected undefined to be 'original-participation' // Object.is equality\n    at <isolated-copy>/tests/domain/sessions/participation.test.ts:327:49"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Cancellation and removal constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenRemovedParticipationHasHold_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Cancellation and removal constructor_WhenRemovedParticipationHasHold_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata",
+          "fullName": "Participation state and fund lifecycle Cancellation and removal cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenAttendanceHasNoVerification_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Attendance verification and settlement constructor_WhenAttendanceHasNoVerification_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError",
+          "fullName": "Participation state and fund lifecycle Attendance verification and settlement constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "settleHold_WhenAttendanceIsUnverified_RejectsRelease",
+          "fullName": "Participation state and fund lifecycle Attendance verification and settlement settleHold_WhenAttendanceIsUnverified_RejectsRelease",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
+          "fullName": "Participation state and fund lifecycle Attendance verification and settlement settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "settleHold_WhenParticipantAttended_RejectsForfeiture",
+          "fullName": "Participation state and fund lifecycle Attendance verification and settlement settleHold_WhenParticipantAttended_RejectsForfeiture",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy",
+          "fullName": "Participation state and fund lifecycle Replacement expiry and forfeiture expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy",
+          "fullName": "Participation state and fund lifecycle Replacement expiry and forfeiture settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy",
+          "status": "passed"
+        },
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "name": "reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero",
+          "fullName": "Participation state and fund lifecycle Replacement expiry and forfeiture reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero",
+          "status": "passed"
+        }
+      ],
+      "rawReportSha256": "48b98c7568edb2d0faca36e48bbeb3024badfd35150fefa9a315fd5bfbfda5d4",
+      "rawReportPath": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/lost-replacement-history/vitest.json",
+      "suites": [
+        {
+          "file": "tests/domain/sessions/participation.test.ts",
+          "passed": 32,
+          "failed": 3,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "id": "partial-session-cancellation-state",
+      "description": "Set session status to CANCELLED before validating the supplied cancellation roster, leaving a partial state update when validation rejects it.",
+      "expected": "fail",
+      "observed": "fail",
+      "meetsExpectation": true,
+      "startedAt": "2026-10-24T05:13:10.691Z",
+      "endedAt": "2026-10-24T05:13:11.039Z",
+      "command": "rtk proxy node /Users/tianpok/.codex/worktrees/domain-tests-input-oracle-log/booking-web-manager/node_modules/vitest/vitest.mjs run --config vitest.config.mts tests/domain/sessions/session/recording.test.ts -t recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged --reporter=json --outputFile=vitest.json",
+      "workingDirectory": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/partial-session-cancellation-state",
+      "exitCode": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 24,
+      "total": 25,
+      "patches": [
+        {
+          "file": "domain/sessions/session/session.ts",
+          "before": "  recordCancellation(cancelled: readonly Participation[], now: Date): void {\n    assertOpenBefore(this.#status, this.#booking, now);\n",
+          "after": "  recordCancellation(cancelled: readonly Participation[], now: Date): void {\n    assertOpenBefore(this.#status, this.#booking, now);\n    this.#status = \"CANCELLED\";\n",
+          "beforeSha256": "c371ebf91c735b18d2e3bd08d33266ed3a06d7fcda9da487d8d27b60982b7bf1",
+          "afterSha256": "a233078e334f20d226eccebba537f89cd0c7c614a77495596a8c23c3ea9ce63e"
+        }
+      ],
+      "tests": [
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges",
+          "fullName": "Session transition recording Reserved replacement admission recordAdmission_WhenOnlySeatIsReserved_RejectsOrdinaryAdmissionWithoutChanges",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges",
+          "fullName": "Session transition recording Reserved replacement admission recordAdmission_WhenPendingInviteeTakesOrdinaryOpenSeat_RejectsWithoutChanges",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges",
+          "fullName": "Session transition recording Reserved replacement admission recordAdmission_WhenPreparedReplacementNamesWrongRecipient_RejectsWithoutChanges",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState",
+          "fullName": "Session transition recording Reserved replacement admission constructor_WhenReservedSeatsAndCommitmentsExceedCapacity_RejectsState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged",
+          "fullName": "Session transition recording Reserved replacement admission recordAdmission_WhenReplacementRefundIsMissing_LeavesCommitmentAndHeldFundsUnchanged",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged",
+          "fullName": "Session transition recording Reserved replacement admission recordAdmission_WhenRefundTargetsNewerWithdrawal_LeavesEntireRosterUnchanged",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenHoldIdIsDuplicated_PreservesListAndQueries",
+          "fullName": "Session transition recording Seat and waitlist admission recordAdmission_WhenHoldIdIsDuplicated_PreservesListAndQueries",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList",
+          "fullName": "Session transition recording Seat and waitlist admission recordAdmission_WhenValidAdmissionFollowsRejectedAttempt_PreservesPreviousList",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Seat and waitlist admission recordAdmission_WhenSessionStartsNow_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Seat and waitlist admission recordAdmission_WhenCommitmentExceedsCapacity_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Seat and waitlist admission recordAdmission_WhenNewCommitmentBypassesFirstWaiter_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Seat and waitlist admission recordAdmission_WhenReturningWaiterChangesParticipationId_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges",
+          "fullName": "Session transition recording Participation transitions recordParticipationTransition_WhenEarlyPersonalChoiceChangesToOpen_RejectsWithoutChanges",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges",
+          "fullName": "Session transition recording Participation transitions recordParticipationTransition_WhenLateOpenChoiceChangesToPersonal_RejectsWithoutChanges",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Participation transitions recordParticipationTransition_WhenSourceIsStale_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Participation transitions recordParticipationTransition_WhenReplacementChangesIdentity_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Participation transitions recordParticipationTransition_WhenSessionIsCancelled_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged",
+          "fullName": "Session transition recording Session cancellation recordCancellation_WhenCandidateOmitsAnOwnedParticipation_LeavesRosterAndStatusUnchanged",
+          "status": "failed",
+          "diagnostics": [
+            "AssertionError: expected { status: 'CANCELLED', \u2026(7) } to deeply equal { status: 'OPEN', \u2026(7) }\n    at <isolated-copy>/tests/domain/sessions/session/recording.test.ts:576:44"
+          ]
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Session cancellation recordCancellation_WhenSessionStartsNow_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged",
+          "fullName": "Session transition recording Attendance verification recordAttendance_WhenCandidateContainsDuplicateMarks_LeavesRosterAndStatusUnchanged",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged",
+          "fullName": "Session transition recording Attendance verification recordAttendance_WhenSessionHasNotEnded_LeavesRosterAndStatusUnchanged",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied",
+          "fullName": "Session transition recording Attendance verification recordAttendance_WhenLaterCandidateWasAlreadyVerified_LeavesAllMarksUnapplied",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState",
+          "fullName": "Session transition recording Settlement preparation recordSettlementPreparation_WhenSessionHasNotEnded_RejectsWithoutChangingState",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged",
+          "fullName": "Session transition recording Settlement preparation recordSettlementPreparation_WhenPayableHoldsHaveNoBatch_LeavesRosterAndHistoryUnchanged",
+          "status": "skipped"
+        },
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "name": "recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged",
+          "fullName": "Session transition recording Settlement preparation recordSettlementPreparation_WhenBatchOmitsPayableHold_LeavesRosterAndHistoryUnchanged",
+          "status": "skipped"
+        }
+      ],
+      "rawReportSha256": "7729463a3a626540d16c4e6f60dcf48e5bf03b1aeda69dccaa49de6798a91df0",
+      "rawReportPath": "/var/folders/_9/pn95p16944d7s7mn2t16l17c0000gn/T/domain-public-contract-2wvSGH/partial-session-cancellation-state/vitest.json",
+      "suites": [
+        {
+          "file": "tests/domain/sessions/session/recording.test.ts",
+          "passed": 0,
+          "failed": 1,
+          "skipped": 24
+        }
+      ]
+    }
+  ],
+  "allExpectedOutcomesObserved": true,
+  "evidenceNotes": [
+    "Observations come from isolated Vitest JSON reports. Equivalent identity reuse is expected to pass; intentionally incorrect behavior is expected to fail.",
+    "These focused experiments are regression checks, not an exhaustive mutation score. The unchanged-copy control executes all 622 final cases.",
+    "The source digest covers the exact 85 domain and domain-test TypeScript files copied into each experiment; the repository execution manifest also covers configuration files.",
+    "Temporary working directories and raw reports are local diagnostic artifacts. Exact patches, test selectors, runner configuration, source hashes, and failure excerpts are retained here for reproduction."
+  ]
+}

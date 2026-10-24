@@ -39,22 +39,16 @@ describe("Money addition and subtraction", () => {
     });
   });
 
-  describe("Immutable operands and results", () => {
-    test("fromCents_WhenCreated_ReturnsFrozenInstance", () => {
-      const cents = 500;
-
-      const money = Money.fromCents(cents);
-
-      expect(Object.isFrozen(money)).toBe(true);
-    });
-
-    test("add_WhenAddingZero_ReturnsNewInstance", () => {
+  describe("Operand preservation", () => {
+    test("add_WhenAddingZero_PreservesAmountAndSource", () => {
       const money = Money.fromCents(500);
+      const zero = Money.fromCents(0);
 
-      const sum = money.add(Money.fromCents(0));
+      const sum = money.add(zero);
 
-      expect(sum).not.toBe(money);
       expect(sum.toCents()).toBe(500);
+      expect(money.toCents()).toBe(500);
+      expect(zero.toCents()).toBe(0);
     });
 
     test("add_WhenAppliedToOperands_PreservesBothValues", () => {
@@ -67,13 +61,15 @@ describe("Money addition and subtraction", () => {
       expect(second.toCents()).toBe(700);
     });
 
-    test("subtract_WhenSubtractingZero_ReturnsNewInstance", () => {
+    test("subtract_WhenSubtractingZero_PreservesAmountAndSource", () => {
       const money = Money.fromCents(500);
+      const zero = Money.fromCents(0);
 
-      const difference = money.subtract(Money.fromCents(0));
+      const difference = money.subtract(zero);
 
-      expect(difference).not.toBe(money);
       expect(difference.toCents()).toBe(500);
+      expect(money.toCents()).toBe(500);
+      expect(zero.toCents()).toBe(0);
     });
 
     test("subtract_WhenAppliedToOperands_PreservesBothValues", () => {

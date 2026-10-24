@@ -1,6 +1,6 @@
 # Reliability test cases
 
-Snapshot: **2026-10-24** · **33 cases**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24** · **33 cases, 33 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one test case. The first input value links to its test definition. Input columns precede **Expected Result** (Oracle) and **Test Result** (Log). Test Result records only assertion-verified outcomes from the passing snapshot, not captured runtime payloads. Matching result cells are expected for passing cases; partial matches, identity checks and approximate comparisons retain their stated limits.
 
@@ -47,7 +47,7 @@ Execution: **4 passed / 4 cases**.
 | [`waiting`](reliability-score-history.test.ts#L127) | WAITLISTED; queue sequence 1 | 2026-09-14 | Not finalized | 100 | 100 |
 | [`future-end`](reliability-score-history.test.ts#L141) | ABSENT | 2026-09-16 | 2026-09-16 | 100 | 100 |
 | [`future-finalization`](reliability-score-history.test.ts#L152) | ABSENT | 2026-09-14 | 2026-09-16 | 100 | 100 |
-| [`at-cutoff`](reliability-score-history.test.ts#L166) | ABSENT | 2026-09-15 | 2026-09-15 | 0; score instance is frozen | 0; score instance is frozen |
+| [`at-cutoff`](reliability-score-history.test.ts#L166) | ABSENT | 2026-09-15 | 2026-09-15 | 0 | 0 |
 
 ## ReliabilityScore.from — score bounds
 
@@ -69,16 +69,16 @@ Execution: **10 passed / 10 cases**.
 | [+Infinity](reliability-score.test.ts#L64) | Throws RangeError | Throws RangeError |
 | [−Infinity](reliability-score.test.ts#L70) | Throws RangeError | Throws RangeError |
 
-## ReliabilityScore.toNumber — immutable value
+## ReliabilityScore.toNumber — exact numeric value
 
 
 **Input:** Stored score · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed / 1 case**.
+Execution: **1 passed / 1 cases**.
 
 | Stored score | Expected Result | Test Result |
 | --- | --- | --- |
-| [66.66666666666667](reliability-score.test.ts#L76) | 66.66666666666667; score instance is frozen | 66.66666666666667; score instance is frozen |
+| [66.66666666666667](reliability-score.test.ts#L76) | 66.66666666666667 | 66.66666666666667 |
 
 ## ReliabilityScore.equals — value equality
 
@@ -89,8 +89,8 @@ Execution: **2 passed / 2 cases**.
 
 | Score | Other score | Expected Result | Test Result |
 | --- | --- | --- | --- |
-| [75.5](reliability-score.test.ts#L87) | 75.5 | true; operands are different instances | true; operands are different instances |
-| [75.5](reliability-score.test.ts#L97) | 80 | false | false |
+| [75.5](reliability-score.test.ts#L86) | 75.5 | true | true |
+| [75.5](reliability-score.test.ts#L95) | 80 | false | false |
 
 ## ReliabilityScore.compareTo — ordering
 
@@ -101,9 +101,9 @@ Execution: **3 passed / 3 cases**.
 
 | Score | Other score | Expected Result | Test Result |
 | --- | --- | --- | --- |
-| [75.5](reliability-score.test.ts#L106) | 75.5 | 0 | 0 |
-| [75.5](reliability-score.test.ts#L115) | 80 | −1 | −1 |
-| [80](reliability-score.test.ts#L124) | 75.5 | 1 | 1 |
+| [75.5](reliability-score.test.ts#L104) | 75.5 | 0 | 0 |
+| [75.5](reliability-score.test.ts#L113) | 80 | −1 | −1 |
+| [80](reliability-score.test.ts#L122) | 75.5 | 1 | 1 |
 
 ## ReliabilityScore.meetsMinimum — admission threshold
 
@@ -114,8 +114,8 @@ Execution: **5 passed / 5 cases**.
 
 | Score | Minimum score | Expected Result | Test Result |
 | --- | --- | --- | --- |
-| [75.5](reliability-score.test.ts#L135) | 75 | true | true |
-| [75.5](reliability-score.test.ts#L144) | 75.5 | true | true |
-| [75.5](reliability-score.test.ts#L153) | 75.5001 | false | false |
-| [0](reliability-score.test.ts#L162) | 0 | true | true |
-| [100](reliability-score.test.ts#L171) | 100 | true | true |
+| [75.5](reliability-score.test.ts#L133) | 75 | true | true |
+| [75.5](reliability-score.test.ts#L142) | 75.5 | true | true |
+| [75.5](reliability-score.test.ts#L151) | 75.5001 | false | false |
+| [0](reliability-score.test.ts#L160) | 0 | true | true |
+| [100](reliability-score.test.ts#L169) | 100 | true | true |

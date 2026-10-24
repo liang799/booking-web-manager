@@ -1,6 +1,6 @@
 # Sessions test cases
 
-Snapshot: **2026-10-24** · **92 cases, 92 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
+Snapshot: **2026-10-24** · **85 cases, 85 passed**. See the [domain testing guide](../README.md) and [execution evidence](../results/README.md).
 
 Each row is one independently executable test; its first input value links to the test definition. **Test Result** contains assertion-verified observations derived from executed assertions and their recorded status, not captured runtime payloads. Expected Result is the **Oracle**; Test Result is the **Log**. A matching result reports only the stated assertions, including partial matches, identity and unchanged-state checks. Refresh the snapshot after relevant source changes.
 
@@ -12,7 +12,7 @@ Source: [booking.test.ts](booking.test.ts). Defaults: venue Court, region North,
 
 **Input:** Cost (cents), Venue · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Cost (cents) | Venue | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -23,7 +23,7 @@ Execution: **2 passed**.
 
 **Input:** Start date, End date · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Start date | End date | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ Execution: **2 passed**.
 
 **Input:** Start date, End date, Source start year after construction, Returned start/end years after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Start date | End date | Source start year after construction | Returned start/end years after construction | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ Execution: **1 passed**.
 
 **Input:** Current time (UTC) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Current time (UTC) | Expected Result | Test Result |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ Execution: **1 passed**.
 
 **Input:** Current time (UTC) · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Current time (UTC) | Expected Result | Test Result |
 | --- | --- | --- |
@@ -66,7 +66,7 @@ All remaining booking values are identical.
 
 **Input:** First venue, Second venue · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | First venue | Second venue | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -81,7 +81,7 @@ Source: [fund-hold.test.ts](fund-hold.test.ts). Defaults: hold hold, participati
 
 **Input:** Hold state, Amount (cents), Created date, Source/returned date after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Hold state | Amount (cents) | Created date | Source/returned date after construction | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -93,7 +93,7 @@ Execution: **3 passed**.
 
 **Input:** Hold state, Amount (cents), Created date, Settled date, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **5 passed**.
+Execution: **5 passed / 5 cases**.
 
 | Hold state | Amount (cents) | Created date | Settled date | Payout ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -107,7 +107,7 @@ Execution: **5 passed**.
 
 **Input:** Hold state, Settled date, Payout ID, Source/returned settled date after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Hold state | Settled date | Payout ID | Source/returned settled date after construction | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -119,7 +119,7 @@ Execution: **3 passed**.
 
 **Input:** Hold state, Settled date, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **4 passed**.
+Execution: **4 passed / 4 cases**.
 
 | Hold state | Settled date | Payout ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -134,7 +134,7 @@ All holds were settled on 2026-10-03.
 
 **Input:** Hold state, Payout ID, Refund date · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Hold state | Payout ID | Refund date | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -150,7 +150,7 @@ Source: [participant-list.test.ts](participant-list.test.ts). Session defaults: 
 
 **Input:** Committed users in roster order, Source array edits, Returned array edits · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed users in roster order | Source array edits | Returned array edits | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -160,7 +160,7 @@ Execution: **1 passed**.
 
 **Input:** Roster order, Queue sequences (same order), Next queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Roster order | Queue sequences (same order) | Next queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -170,7 +170,7 @@ Execution: **1 passed**.
 
 **Input:** Roster order, Hold states (same order), Withdrawal times (hours before start), Replacement modes (same order), Named invitee · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Roster order | Hold states (same order) | Withdrawal times (hours before start) | Replacement modes (same order) | Named invitee | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -185,7 +185,7 @@ Source: [participation.test.ts](participation.test.ts). Defaults: participation 
 
 **Input:** Committed date, Source/returned committed date after construction · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Committed date | Source/returned committed date after construction | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -195,7 +195,7 @@ Execution: **1 passed**.
 
 **Input:** Participation state, Hold owner, Committed date, Waitlisted date, Queue sequence · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **6 passed**.
+Execution: **6 passed / 6 cases**.
 
 | Participation state | Hold owner | Committed date | Waitlisted date | Queue sequence | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -212,7 +212,7 @@ The original entry was waitlisted on 2026-10-01.
 
 **Input:** Participation state, Queue sequence, Commit date, Hold (cents), Replaced participation ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Participation state | Queue sequence | Commit date | Hold (cents) | Replaced participation ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -222,7 +222,7 @@ Execution: **1 passed**.
 
 **Input:** Participation state, Hold state, Withdrawn date, Replaced participation ID, Replacement mode, Invitee · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **8 passed**.
+Execution: **8 passed / 8 cases**.
 
 | Participation state | Hold state | Withdrawn date | Replaced participation ID | Replacement mode | Invitee | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -239,7 +239,7 @@ Execution: **8 passed**.
 
 **Input:** Participation state, Replaced participation ID, New hold state, Replacement mode, Invitee · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed**.
+Execution: **3 passed / 3 cases**.
 
 | Participation state | Replaced participation ID | New hold state | Replacement mode | Invitee | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -253,7 +253,7 @@ Both inputs are already WITHDRAWN on 2026-10-03; the existing hold is supplied a
 
 **Input:** Existing replacement mode, Existing invitee, Existing hold state, Requested replacement mode, Requested invitee · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Existing replacement mode | Existing invitee | Existing hold state | Requested replacement mode | Requested invitee | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -264,7 +264,7 @@ Execution: **2 passed**.
 
 **Input:** Withdrawal date, Replacement mode, Invitee, Refund date · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Withdrawal date | Replacement mode | Invitee | Refund date | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- |
@@ -274,7 +274,7 @@ Execution: **1 passed**.
 
 **Input:** Participation state, Hold state · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Participation state | Hold state | Expected Result | Test Result |
 | --- | --- | --- | --- |
@@ -287,7 +287,7 @@ The withdrawn input has an AWAITING_REPLACEMENT hold and withdrawal date 2026-10
 
 **Input:** Participation state, Replaced participation ID, Existing replacement mode, Invitee, New hold state · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Participation state | Replaced participation ID | Existing replacement mode | Invitee | New hold state | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -300,7 +300,7 @@ The supplied refund settled on 2026-10-03.
 
 **Input:** Participation state, Replaced participation ID, New hold state · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Participation state | Replaced participation ID | New hold state | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -310,7 +310,7 @@ Execution: **1 passed**.
 
 **Input:** Attendance, Verification method, Verified date · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed**.
+Execution: **2 passed / 2 cases**.
 
 | Attendance | Verification method | Verified date | Expected Result | Test Result |
 | --- | --- | --- | --- | --- |
@@ -323,7 +323,7 @@ ATTENDED inputs were verified by BOOKER on 2026-10-03; withdrawn input left on 2
 
 **Input:** Participation state, Attendance, Hold state, Settlement kind, Payout ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **4 passed**.
+Execution: **4 passed / 4 cases**.
 
 | Participation state | Attendance | Hold state | Settlement kind | Payout ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -336,7 +336,7 @@ Execution: **4 passed**.
 
 **Input:** Hold state, Withdrawn date, Replacement mode, Invitee, Expiry date · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Hold state | Withdrawn date | Replacement mode | Invitee | Expiry date | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -348,7 +348,7 @@ Withdrawal was on 2026-10-01.
 
 **Input:** Participation state, Hold state, Payout ID, Settled date, Observation date · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **1 passed**.
+Execution: **1 passed / 1 cases**.
 
 | Participation state | Hold state | Payout ID | Settled date | Observation date | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -362,42 +362,26 @@ Source: [pricing.test.ts](pricing.test.ts). All prices and costs are integer cen
 
 **Input:** Booking cost (cents), Slots · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **19 passed**.
+Execution: **19 passed / 19 cases**.
 
 | Booking cost (cents) | Slots | Expected Result | Test Result |
 | --- | --- | --- | --- |
-| [1001](pricing.test.ts#L7) | 3 | 333 / 167 / 666; maximum total safely bounded | 333 / 167 / 666; maximum total safely bounded |
-| [6000](pricing.test.ts#L23) | 8 | 750 / 375 / 1500; maximum total safely bounded | 750 / 375 / 1500; maximum total safely bounded |
-| [2](pricing.test.ts#L39) | 2 | 1 / 1 / 2; maximum total safely bounded | 1 / 1 / 2; maximum total safely bounded |
-| [9007199254740991](pricing.test.ts#L55) | 2 | 4503599627370495 / 2251799813685248 / 4503599627370495; maximum total safely bounded | 4503599627370495 / 2251799813685248 / 4503599627370495; maximum total safely bounded |
-| [9007199254740991](pricing.test.ts#L71) | 8 | 1125899906842623 / 562949953421312 / 1125899906842623; maximum total safely bounded | 1125899906842623 / 562949953421312 / 1125899906842623; maximum total safely bounded |
-| [30000](pricing.test.ts#L87) | 30 | 1000 / 500 / 2000; maximum total safely bounded | 1000 / 500 / 2000; maximum total safely bounded |
-| [9007199254740991](pricing.test.ts#L103) | 30 | 300239975158033 / 150119987579017 / 300239975158033; maximum total safely bounded | 300239975158033 / 150119987579017 / 300239975158033; maximum total safely bounded |
-| [0](pricing.test.ts#L119) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [1](pricing.test.ts#L128) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [-1](pricing.test.ts#L137) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [1.5](pricing.test.ts#L146) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [NaN](pricing.test.ts#L155) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [Infinity](pricing.test.ts#L164) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [9007199254740992](pricing.test.ts#L173) | 2 | INVALID_INPUT | INVALID_INPUT |
-| [1000](pricing.test.ts#L184) | 0 | INVALID_INPUT | INVALID_INPUT |
-| [1000](pricing.test.ts#L193) | 1 | INVALID_INPUT | INVALID_INPUT |
-| [1000](pricing.test.ts#L202) | 31 | INVALID_INPUT | INVALID_INPUT |
-| [1000](pricing.test.ts#L211) | 2.5 | INVALID_INPUT | INVALID_INPUT |
-| [1000](pricing.test.ts#L220) | NaN | INVALID_INPUT | INVALID_INPUT |
-
-### Resolve participant share
-
-**Input:** Booking cost (cents), Slots, Chosen share (cents) · **Oracle:** Expected Result · **Log:** Test Result
-
-Execution: **7 passed**.
-
-| Booking cost (cents) | Slots | Chosen share (cents) | Expected Result | Test Result |
-| --- | --- | --- | --- | --- |
-| [1001](pricing.test.ts#L231) | 3 | Omitted | 333 | 333 |
-| [1001](pricing.test.ts#L240) | 3 | 167 | 167 | 167 |
-| [1001](pricing.test.ts#L250) | 3 | 334 | 334 | 334 |
-| [1001](pricing.test.ts#L260) | 3 | 666 | 666 | 666 |
-| [1001](pricing.test.ts#L270) | 3 | 0 | INVALID_INPUT | INVALID_INPUT |
-| [1001](pricing.test.ts#L280) | 3 | 166 | INVALID_INPUT | INVALID_INPUT |
-| [1001](pricing.test.ts#L290) | 3 | 667 | INVALID_INPUT | INVALID_INPUT |
+| [1001](pricing.test.ts#L6) | 3 | 333 / 167 / 666; maximum total safely bounded | 333 / 167 / 666; maximum total safely bounded |
+| [6000](pricing.test.ts#L22) | 8 | 750 / 375 / 1500; maximum total safely bounded | 750 / 375 / 1500; maximum total safely bounded |
+| [2](pricing.test.ts#L38) | 2 | 1 / 1 / 2; maximum total safely bounded | 1 / 1 / 2; maximum total safely bounded |
+| [9007199254740991](pricing.test.ts#L54) | 2 | 4503599627370495 / 2251799813685248 / 4503599627370495; maximum total safely bounded | 4503599627370495 / 2251799813685248 / 4503599627370495; maximum total safely bounded |
+| [9007199254740991](pricing.test.ts#L70) | 8 | 1125899906842623 / 562949953421312 / 1125899906842623; maximum total safely bounded | 1125899906842623 / 562949953421312 / 1125899906842623; maximum total safely bounded |
+| [30000](pricing.test.ts#L86) | 30 | 1000 / 500 / 2000; maximum total safely bounded | 1000 / 500 / 2000; maximum total safely bounded |
+| [9007199254740991](pricing.test.ts#L102) | 30 | 300239975158033 / 150119987579017 / 300239975158033; maximum total safely bounded | 300239975158033 / 150119987579017 / 300239975158033; maximum total safely bounded |
+| [0](pricing.test.ts#L118) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [1](pricing.test.ts#L127) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [-1](pricing.test.ts#L136) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [1.5](pricing.test.ts#L145) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [NaN](pricing.test.ts#L154) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [Infinity](pricing.test.ts#L163) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [9007199254740992](pricing.test.ts#L172) | 2 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L183) | 0 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L192) | 1 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L201) | 31 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L210) | 2.5 | INVALID_INPUT | INVALID_INPUT |
+| [1000](pricing.test.ts#L219) | NaN | INVALID_INPUT | INVALID_INPUT |

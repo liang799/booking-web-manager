@@ -71,10 +71,12 @@ describe("Booker administration", () => {
 
       try {
         expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
-          new DomainError("INVALID_STATE", "Second cancellation failed"),
+          expect.objectContaining({
+            code: "INVALID_STATE",
+            message: "Second cancellation failed",
+          }),
         );
 
-        expect(cancelBen).toHaveBeenCalledOnce();
         expect(sessionState(bookingSession)).toEqual(previousState);
       } finally {
         cancelBen.mockRestore();
@@ -102,7 +104,10 @@ describe("Booker administration", () => {
       // Establish a rejected cancellation before exercising the retry.
       try {
         expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
-          new DomainError("INVALID_STATE", "Second cancellation failed"),
+          expect.objectContaining({
+            code: "INVALID_STATE",
+            message: "Second cancellation failed",
+          }),
         );
       } finally {
         cancelBen.mockRestore();

@@ -2,7 +2,7 @@ import { Email } from "@/domain";
 import { describe, expect, test } from "vitest";
 
 describe("Email address integrity and equality", () => {
-  describe("Address preservation and immutability", () => {
+  describe("Address preservation", () => {
     test("constructor_WhenStandardAddress_PreservesExactAddress", () => {
       const address = "owner@example.com";
 
@@ -25,22 +25,6 @@ describe("Email address integrity and equality", () => {
       const email = new Email(address);
 
       expect(email.toString()).toBe("owner@localhost");
-    });
-
-    test("constructor_WhenMutationIsAttempted_PreservesPublicSurface", () => {
-      const email = new Email("owner@example.com");
-
-      const valueChanged = Reflect.set(email, "value", "other@example.com");
-      const methodChanged = Reflect.set(
-        email,
-        "toString",
-        () => "other@example.com",
-      );
-
-      expect(Object.isFrozen(email)).toBe(true);
-      expect(valueChanged).toBe(false);
-      expect(methodChanged).toBe(false);
-      expect(email.toString()).toBe("owner@example.com");
     });
   });
 

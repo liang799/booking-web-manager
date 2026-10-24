@@ -142,7 +142,9 @@ describe("Session payout settlement", () => {
 
   describe("Failure recovery and attempt history", () => {
     test("completeSettlement_WhenSecondHoldFails_PreservesAllHolds", () => {
-      const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
+      const bookingSession = new Session(
+        pendingPayoutDetails(["alice", "ben"]),
+      );
       const previousState = sessionState(bookingSession);
 
       // Simulate Ben's settlement failing after Alice's release is prepared.
@@ -172,7 +174,9 @@ describe("Session payout settlement", () => {
 
     test("completeSettlement_WhenSecondHoldFailureIsRetried_ReleasesAllHolds", () => {
       const completionTime = sessionEndsAt;
-      const bookingSession = new Session(pendingPayoutDetails(["alice", "ben"]));
+      const bookingSession = new Session(
+        pendingPayoutDetails(["alice", "ben"]),
+      );
 
       // Simulate Ben's settlement failing after Alice's release is prepared.
       const settleBen = vi
@@ -186,12 +190,20 @@ describe("Session payout settlement", () => {
       try {
         expect(() =>
           bookingSession.completeSettlement("out", completionTime),
-        ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
+        ).toThrow(
+          expect.objectContaining({
+            code: "INVALID_STATE",
+            message: "Second line rejected",
+          }),
+        );
       } finally {
         settleBen.mockRestore();
       }
 
-      const completion = bookingSession.completeSettlement("out", completionTime);
+      const completion = bookingSession.completeSettlement(
+        "out",
+        completionTime,
+      );
 
       expect(completion.instructions).toHaveLength(2);
       expect(

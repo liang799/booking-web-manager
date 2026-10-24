@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { sessionPricing, resolveBookingShare } from "@/domain/sessions/pricing";
-import { Money } from "@/domain";
+import { sessionPricing } from "@/domain";
 
 describe("Session pricing", () => {
   describe("Price bounds from booking cost", () => {
@@ -222,77 +221,6 @@ describe("Session pricing", () => {
       const slots = NaN;
 
       expect(() => sessionPricing(costCents, slots)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-  });
-
-  describe("Participant price selection", () => {
-    test("resolveBookingShare_WhenPriceIsOmitted_PreservesEqualSplit", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-
-      const share = resolveBookingShare(cost, slots);
-
-      expect(share.toCents()).toBe(333);
-    });
-
-    test("resolveBookingShare_WhenPriceEqualsMinimum_AcceptsBoundedAdjustment", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-      const chosenPrice = Money.fromCents(167);
-
-      const share = resolveBookingShare(cost, slots, chosenPrice);
-
-      expect(share.toCents()).toBe(167);
-    });
-
-    test("resolveBookingShare_WhenPriceExceedsEqualSplitByOneCent_AcceptsBoundedAdjustment", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-      const chosenPrice = Money.fromCents(334);
-
-      const share = resolveBookingShare(cost, slots, chosenPrice);
-
-      expect(share.toCents()).toBe(334);
-    });
-
-    test("resolveBookingShare_WhenPriceEqualsMaximum_AcceptsBoundedAdjustment", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-      const chosenPrice = Money.fromCents(666);
-
-      const share = resolveBookingShare(cost, slots, chosenPrice);
-
-      expect(share.toCents()).toBe(666);
-    });
-
-    test("resolveBookingShare_WhenPriceIsZero_RejectsOutsideBounds", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-      const chosenPrice = Money.fromCents(0);
-
-      expect(() => resolveBookingShare(cost, slots, chosenPrice)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-
-    test("resolveBookingShare_WhenPriceIsOneCentBelowMinimum_RejectsOutsideBounds", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-      const chosenPrice = Money.fromCents(166);
-
-      expect(() => resolveBookingShare(cost, slots, chosenPrice)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-
-    test("resolveBookingShare_WhenPriceIsOneCentAboveMaximum_RejectsOutsideBounds", () => {
-      const cost = Money.fromCents(1001);
-      const slots = 3;
-      const chosenPrice = Money.fromCents(667);
-
-      expect(() => resolveBookingShare(cost, slots, chosenPrice)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });

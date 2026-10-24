@@ -7,6 +7,30 @@ public APIs. For new and refactored tests, follow the unit-test style in
 [CombatantTest](https://github.com/liang799/SC2002-Project/blob/main/src/test/java/sc2002/turnbased/domain/CombatantTest.java),
 and [SpecialSkillTest](https://github.com/liang799/SC2002-Project/blob/main/src/test/java/sc2002/turnbased/domain/SpecialSkillTest.java).
 
+## Public contracts and observable outcomes
+
+Choose the unit's supported interface, not merely a method that TypeScript lets
+the test call. Exercise actor commands, public queries, value operations, and
+validated constructors as their callers do. Check returned values and resulting
+public state. Internal helpers such as price resolution are covered through
+Session construction; the supported `sessionPricing` calculation is tested
+directly. This follows [Google's guidance on public APIs and state testing](https://abseil.io/resources/swe-book/html/ch12.html).
+
+Permission guards are independent contracts used by application callers. Keep
+their tests alongside commands without treating a successful guard as a state
+change. Session's `record*` operations are the documented collaboration contract
+in [ADR-0009](../../docs/adr/0009-role-workflows-and-session-recording.md): direct
+tests protect candidate validation and atomic recording, not actor authorization.
+
+For immutable values, assert exact values and unchanged operands. Do not require
+`Object.freeze` or a newly allocated result for adding zero, multiplying by one,
+or other identity operations. An equivalent implementation may reuse immutable
+values. Preserve reference assertions when identity itself is the contract, such
+as retained participations, payout history, fresh fixture objects, and isolation
+of mutable collections or dates. Test returned data isolation by attempting a
+change and observing the source again; do not require a particular copying or
+freezing technique. Monkey-patching methods is not a value-object requirement.
+
 ## Structure and naming
 
 - Use a file named after the entity or value object, with one top-level
@@ -137,9 +161,13 @@ Preserve both concrete outcomes and `sessionState` comparisons where rejection
 atomicity matters. Run the exception assertion in the state named by the test;
 do not save a callback and invoke it after subsequent state changes.
 
-Fault injection is test instrumentation. Explain the failure being simulated,
-construct the thrown error inside the stub, and state the expected error
-independently in the assertion. Restore spies in `finally`:
+Fault injection is a deliberate exception to implementation-independent tests:
+the existing child-method stubs exercise mid-operation failure and retry paths
+that valid starting data cannot reliably reach. Keep real collaborators for
+normal scenarios. Explain the simulated failure, construct the error inside the
+stub, and assert its distinctive code and message to establish that the failure
+was reached. Assert atomicity or recovery through public state, without checking
+exact collaborator call counts. Restore spies in `finally`:
 
 ```ts
 // Simulate Ben's cancellation failing after Alice has been processed.
@@ -151,9 +179,11 @@ const cancelBen = vi
 
 try {
   expect(() => booker.cancel(bookingSession, cancellationTime)).toThrow(
-    new DomainError("INVALID_STATE", "Second cancellation failed"),
+    expect.objectContaining({
+      code: "INVALID_STATE",
+      message: "Second cancellation failed",
+    }),
   );
-  expect(cancelBen).toHaveBeenCalledOnce();
   expect(sessionState(bookingSession)).toEqual(previousState);
 } finally {
   cancelBen.mockRestore();
@@ -312,10 +342,11 @@ Examples following this standard are
 [user.test.ts](./accounts/user.test.ts) and
 [payout-account.test.ts](./accounts/payout-account.test.ts).
 
-When restructuring tests, preserve distinct behaviors, error codes, immutability
-checks, and unchanged-state assertions. Map the old assertions to their new
-cases before removing or consolidating a test; test count alone does not prove
-that coverage was retained. Fix scenarios whose setup does not match their
+When restructuring tests, preserve distinct behaviors, error codes, observable
+immutability, and unchanged-state assertions. Map the old assertions to their
+new cases before removing or consolidating a test; explicitly record retired
+implementation requirements and their rationale. Test and assertion counts alone
+do not prove that coverage was retained. Fix scenarios whose setup does not match their
 names. Run the affected files, the complete domain suite, a shuffled domain
 run with recorded seed `2006`, then `rtk npm test`, `rtk npm run typecheck`, and
 `rtk npm run lint`. Splitting scenarios may increase the test count without changing
@@ -360,15 +391,15 @@ Execution: **1 passed / 1 illustrative case** (also included in the Money table)
 
 | Area | Cases | Tables |
 |---|---:|---|
-| Accounts | 96 | [Account cases](./accounts/README.md) |
+| Accounts | 95 | [Account cases](./accounts/README.md) |
 | Booker | 55 | [Booker cases](./accounts/booker/README.md) |
 | Participant | 77 | [Participant cases](./accounts/participant/README.md) |
 | Finance | 55 | [Finance cases](./finance/README.md) |
-| Money | 83 | [Money cases](./finance/money/README.md) |
+| Money | 82 | [Money cases](./finance/money/README.md) |
 | Groups | 35 | [Group cases](./groups/README.md) |
 | Reliability | 33 | [Reliability cases](./reliability/README.md) |
-| Sessions | 92 | [Session value and pricing cases](./sessions/README.md) |
-| Session lifecycle and fixtures | 98 | [Session lifecycle cases](./sessions/session/README.md) |
+| Sessions | 85 | [Session value and pricing cases](./sessions/README.md) |
+| Session lifecycle and fixtures | 105 | [Session lifecycle cases](./sessions/session/README.md) |
 
 The [execution evidence and refresh procedure](./results/README.md) retain the
 JSON report, source hashes, and baseline-to-final scenario mapping. Log values

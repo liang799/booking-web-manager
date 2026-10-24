@@ -397,20 +397,27 @@ describe("User account lifecycle", () => {
       );
     });
 
-    test("payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination", () => {
+    test("payoutDestination_WhenReturnedDataMutationIsAttempted_PreservesAccountDestination", () => {
       const user = createUser({
         payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
 
       const destination = user.payoutDestination();
+      const destinationBeforeMutation = { ...destination };
+      Reflect.set(destination, "bankAccountReference", "another-bank");
 
-      expect(destination).toEqual({
+      expect(destinationBeforeMutation).toEqual({
         payoutAccountId: "account",
         userId: "owner",
         providerAccountReference: "provider",
         bankAccountReference: "bank",
       });
-      expect(Object.isFrozen(destination)).toBe(true);
+      expect(user.payoutDestination()).toEqual({
+        payoutAccountId: "account",
+        userId: "owner",
+        providerAccountReference: "provider",
+        bankAccountReference: "bank",
+      });
     });
 
     test("payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount", () => {

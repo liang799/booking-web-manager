@@ -660,10 +660,12 @@ describe("Participant session admission", () => {
               now: replacementJoinTime,
             }),
         ).toThrow(
-          new DomainError("INVALID_STATE", "Replacement refund failed"),
+          expect.objectContaining({
+            code: "INVALID_STATE",
+            message: "Replacement refund failed",
+          }),
         );
 
-        expect(refund).toHaveBeenCalledOnce();
         expect(sessionState(bookingSession)).toEqual(previousState);
       } finally {
         refund.mockRestore();
