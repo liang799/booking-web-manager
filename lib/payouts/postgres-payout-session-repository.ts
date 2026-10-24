@@ -1,8 +1,15 @@
 import type { FundHold, Participation, PayoutBatch, Session, UUID } from "@/domain";
 import type { SqlExecutor } from "@/lib/money/sql";
+import { LedgerError } from "@/lib/money/errors";
 import type { Repository } from "@/use-cases/shared/contracts";
-import { SessionPersistenceError } from "@/lib/sessions/postgres-row-values";
+import type { PayoutSubmission } from "@/use-cases/payouts/WithdrawSessionPayout";
+import { SessionPersistenceError, strings, text } from "@/lib/sessions/postgres-row-values";
 import { PostgresSessionManagementRepository } from "@/lib/sessions/postgres-session-management-repository";
+
+interface StoredRequestMetadata {
+  readonly keys: readonly string[];
+  readonly pending?: { readonly payoutId: UUID; readonly key: string };
+}
 
 /**
  * Session persistence for UC1-08 payouts: preparing, completing and failing a
@@ -14,13 +21,32 @@ import { PostgresSessionManagementRepository } from "@/lib/sessions/postgres-ses
  */
 export class PostgresPayoutSessionRepository implements Repository<Session> {
   readonly #loaded = new Map<UUID, ReadonlyMap<UUID, Participation>>();
+  readonly #metadata = new Map<UUID, StoredRequestMetadata>();
 
   /** Uses the caller's SQL executor so reads and writes share its transaction. */
-  constructor(private readonly sql: SqlExecutor) {}
+  constructor(private readonly sql: SqlExecutor, private readonly submission?: PayoutSubmission) {}
 
   async get(sessionId: UUID): Promise<Session | null> {
     const session = await new PostgresSessionManagementRepository(this.sql).get(sessionId);
-    if (session !== null) this.#remember(session);
+    if (session !== null) {
+      // The shared reader already holds the Session lock and validates these
+      // fields. Keep their values beside the aggregate, never inside it.
+      const rows = await this.sql.query(
+        "select payout_idempotency_keys, pending_settlement from sessions where session_id = $1",
+        [sessionId],
+      );
+      const row = rows[0];
+      if (row === undefined) throw new SessionPersistenceError("Locked session metadata was not found");
+      const pending = row.pending_settlement;
+      if (pending !== null && (typeof pending !== "object" || pending === undefined ||
+          !("payoutId" in pending) || !("idempotencyKey" in pending)))
+        throw new SessionPersistenceError("Stored pending payout metadata is invalid");
+      this.#metadata.set(sessionId, {
+        keys: strings(row.payout_idempotency_keys),
+        pending: pending === null ? undefined : { payoutId: text(pending.payoutId), key: text(pending.idempotencyKey) },
+      });
+      this.#remember(session);
+    }
     return session;
   }
 
@@ -28,6 +54,23 @@ export class PostgresPayoutSessionRepository implements Repository<Session> {
     const loaded = this.#loaded.get(session.sessionId);
     if (loaded === undefined)
       throw new SessionPersistenceError("A session must be loaded in this transaction before it is saved");
+    const metadata = this.#metadata.get(session.sessionId);
+    if (metadata === undefined) throw new SessionPersistenceError("Session request metadata was not loaded");
+    const pending = session.pendingSettlement;
+    let nextMetadata = metadata;
+    if (pending !== undefined && pending.payoutId !== metadata.pending?.payoutId) {
+      const request = this.submission;
+      if (request === undefined || request.sessionId !== session.sessionId || request.bookerId !== session.bookerId || request.idempotencyKey.trim() === "")
+        throw new SessionPersistenceError("New payout settlements require preparation request metadata");
+      if (metadata.keys.includes(request.idempotencyKey))
+        throw new LedgerError("IDEMPOTENCY_CONFLICT", "This payout request key already belongs to an attempt");
+      nextMetadata = {
+        keys: [...metadata.keys, request.idempotencyKey],
+        pending: { payoutId: pending.payoutId, key: request.idempotencyKey },
+      };
+    } else if (pending === undefined) {
+      nextMetadata = { keys: metadata.keys };
+    }
 
     const current = session.participantList.participations;
     if (current.length !== loaded.size || current.some((p) => !loaded.has(p.participationId)))
@@ -55,12 +98,13 @@ export class PostgresPayoutSessionRepository implements Repository<Session> {
       [
         session.sessionId,
         session.status,
-        storedBatch(session.pendingSettlement),
+        storedBatch(pending, nextMetadata.pending?.key),
         [...session.payoutAttemptIds],
-        [...session.payoutIdempotencyKeys],
+        [...nextMetadata.keys],
       ],
     );
     if (rows.length !== 1) throw new SessionPersistenceError("Session update did not find the session");
+    this.#metadata.set(session.sessionId, nextMetadata);
     this.#remember(session);
   }
 
@@ -111,12 +155,13 @@ export class PostgresPayoutSessionRepository implements Repository<Session> {
 }
 
 /** The JSON shape the shared session reader validates when hydrating `pending_settlement`. */
-function storedBatch(batch: PayoutBatch | undefined): string | null {
+function storedBatch(batch: PayoutBatch | undefined, requestKey: string | undefined): string | null {
   if (batch === undefined) return null;
+  if (requestKey === undefined) throw new SessionPersistenceError("Pending payout request metadata was not loaded");
   return JSON.stringify({
     payoutId: batch.payoutId,
     sessionId: batch.sessionId,
-    idempotencyKey: batch.idempotencyKey,
+    idempotencyKey: requestKey,
     requestedAt: batch.requestedAt.toISOString(),
     destination: { ...batch.destination },
     lines: batch.lines.map((line) => ({

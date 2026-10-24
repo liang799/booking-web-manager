@@ -103,6 +103,8 @@ describe("stored state validation", () => {
     { minimum_headcount: 4 },
     { payout_attempt_ids: undefined },
     { payout_idempotency_keys: null },
+    { payout_idempotency_keys: [" "] },
+    { payout_idempotency_keys: ["same", "same"] },
     { total_cost_cents: "9007199254740992" },
     { booking_share_cents: "166" },
     { booking_share_cents: "667" },
@@ -136,9 +138,13 @@ test("hydrates a complete pending settlement and retained payout history", async
   const participants = [participantRow({ attendance: "ATTENDED", verified_at: startAt, verification_method: "BOOKER" })];
   const session = await scenario(rows, participants).repository.get("s");
   expect(session?.payoutAttemptIds).toEqual(["earlier", "out"]);
+  expect(session).not.toHaveProperty("payoutIdempotencyKeys");
+  expect(session?.pendingSettlement).not.toHaveProperty("idempotencyKey");
   expect(session?.pendingSettlement?.requestedAt).toEqual(startAt);
   expect(session?.pendingSettlement?.lines[0]?.amount.toCents()).toBe(333);
   await expect(scenario([sessionRow({ ...rows[0], pending_settlement: { ...batch, requestedAt: "not-a-date" } })], participants).repository.get("s"))
+    .rejects.toMatchObject({ name: "SessionPersistenceError" });
+  await expect(scenario([sessionRow({ ...rows[0], payout_idempotency_keys: ["unrelated"] })], participants).repository.get("s"))
     .rejects.toMatchObject({ name: "SessionPersistenceError" });
 });
 
@@ -146,6 +152,7 @@ test.each(["CANCELLED", "SETTLED", "AWAITING_PAYOUT"])("hydrates %s without eras
   const session = await scenario([sessionRow({ status, payout_attempt_ids: ["old"], payout_idempotency_keys: ["old-key"] })]).repository.get("s");
   expect(session?.status).toBe(status);
   expect(session?.payoutAttemptIds).toEqual(["old"]);
+  expect(session).not.toHaveProperty("payoutIdempotencyKeys");
 });
 
 test("preserves SQL failures rather than disguising them as hydration errors", async () => {

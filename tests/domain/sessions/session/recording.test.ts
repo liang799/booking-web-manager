@@ -665,7 +665,6 @@ describe("Session transition recording", () => {
         bookingSession.recordSettlementPreparation(
           {
             payoutId: "out",
-            idempotencyKey: "key",
             participations: [],
           },
           hoursBeforeSessionStart(48),
@@ -687,7 +686,6 @@ describe("Session transition recording", () => {
         bookingSession.recordSettlementPreparation(
           {
             payoutId: "out",
-            idempotencyKey: "key",
             participations: bookingSession.participantList.participations,
           },
           sessionEndsAt,
@@ -711,7 +709,6 @@ describe("Session transition recording", () => {
         bookingSession.recordSettlementPreparation(
           {
             payoutId: "out",
-            idempotencyKey: "key",
             participations: bookingSession.participantList.participations,
             batch: { ...batch, lines: batch.lines.slice(0, 1) },
           },

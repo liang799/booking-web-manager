@@ -310,11 +310,9 @@ export function pendingPayoutDetails(
   {
     bookingShare,
     payoutId = "out",
-    idempotencyKey = "key",
   }: {
     readonly bookingShare?: Money;
     readonly payoutId?: string;
-    readonly idempotencyKey?: string;
   } = {},
 ): SessionDetails {
   const share = bookingShare ?? Money.fromCents(500);
@@ -330,7 +328,6 @@ export function pendingPayoutDetails(
     pendingSettlement: {
       payoutId,
       sessionId: "s",
-      idempotencyKey,
       requestedAt: new Date(sessionEndsAt),
       destination: { ...destination },
       lines: userIds.map((userId) => ({
@@ -343,7 +340,6 @@ export function pendingPayoutDetails(
       })),
     },
     payoutAttemptIds: [payoutId],
-    payoutIdempotencyKeys: [idempotencyKey],
   });
 }
 
@@ -363,7 +359,6 @@ export function sessionDetails(
     participations: [],
     nextQueueSequence: 1,
     payoutAttemptIds: [],
-    payoutIdempotencyKeys: [],
     ...overrides,
   };
 }
@@ -377,7 +372,6 @@ export function sessionState(s: Session) {
     invitedGroupId: s.invitedGroupId,
     nextQueueSequence: s.participantList.nextQueueSequence,
     payoutAttemptIds: s.payoutAttemptIds,
-    payoutIdempotencyKeys: s.payoutIdempotencyKeys,
     pendingSettlement: batch && {
       ...batch,
       lines: batch.lines.map((line) => ({

@@ -36,6 +36,8 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0018: Readable domain tests and execution evidence](./adr/0018-domain-test-input-oracle-log.md) — supported public contracts, observable outcomes, and readable behavior groups, plus dated assertion-verified evidence; table layout superseded by ADR-0019.
 - [ADR-0019: Domain result tables follow the lecture format](./adr/0019-domain-result-table-layout.md) — individual input columns, Expected Result and Test Result, with source links on the first input value and execution counts above each table.
 
+- [ADR-0020: Payout request idempotency belongs to application transactions](./adr/0020-payout-request-idempotency.md) — supersedes only payout request-key ownership in ADRs 0003, 0008 and 0009; terminal receipts prevent payment redispatch.
+
 Product decisions and remaining discussion:
 
 - [Waitlists and replacements: confirmed scope, historical options, and remaining policy questions](./discussions/waitlist-and-replacement-options.md). The waitlist and fixed either/or departure choice are confirmed; unrelated financial and rejoining proposals remain under review.

@@ -201,7 +201,9 @@ describe("UC2-03a PostgreSQL management", () => {
     await context.pool.query("update sessions set status='AWAITING_PAYOUT',pending_settlement=null where session_id=$1", [sessionId]);
     const failed = await transaction().run(({ sessions }) => sessions.get(sessionId));
     expect(failed?.pendingSettlement).toBeUndefined();
-    expect(failed?.payoutIdempotencyKeys).toEqual(["earlier-key", "current-key"]);
+    expect(failed).not.toHaveProperty("payoutIdempotencyKeys");
+    expect((await context.pool.query("select payout_idempotency_keys from sessions where session_id=$1", [sessionId])).rows)
+      .toEqual([{ payout_idempotency_keys: ["earlier-key", "current-key"] }]);
   });
 
   test("rejects malformed settlement JSON and hold ownership without writing visibility", async () => {

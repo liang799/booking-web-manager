@@ -30,7 +30,6 @@ export interface PayoutLine {
 export interface PayoutBatch {
   readonly payoutId: UUID;
   readonly sessionId: UUID;
-  readonly idempotencyKey: string;
   readonly requestedAt: Date;
   readonly destination: PayoutDestination;
   readonly lines: readonly PayoutLine[];
@@ -89,7 +88,6 @@ export interface PayoutRequestedIntent {
   readonly kind: "PAYOUT_REQUESTED";
   readonly payoutId: UUID;
   readonly sessionId: UUID;
-  readonly idempotencyKey: string;
   readonly amount: Money;
   readonly destination: PayoutDestination;
   readonly requestedAt: Date;

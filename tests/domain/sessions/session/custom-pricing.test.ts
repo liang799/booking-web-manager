@@ -180,7 +180,6 @@ describe("Session participant pricing", () => {
 
       const payout = booker.preparePayout(session, {
         payoutId: "out",
-        idempotencyKey: "key",
         now: sessionEndsAt,
       });
 

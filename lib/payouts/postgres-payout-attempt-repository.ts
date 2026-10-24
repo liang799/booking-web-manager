@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Money, PayoutAttempt, type UUID } from "@/domain";
 import { fromDatabaseCents, toDatabaseCents } from "@/lib/money/cents";
+import { LedgerError } from "@/lib/money/errors";
 import type { SqlExecutor } from "@/lib/money/sql";
 import {
   choice,
@@ -11,6 +12,7 @@ import {
   text,
 } from "@/lib/sessions/postgres-row-values";
 import type { Repository } from "@/use-cases/shared/contracts";
+import type { PayoutSubmission } from "@/use-cases/payouts/WithdrawSessionPayout";
 
 const storedDestination = z.object({
   payoutAccountId: z.string().min(1),
@@ -34,8 +36,10 @@ const storedLines = z
 
 /** Persists the PayoutAttempt aggregate (migration 0012); `get` locks the row. */
 export class PostgresPayoutAttemptRepository implements Repository<PayoutAttempt> {
+  readonly #requestKeys = new Map<UUID, string>();
+
   /** Uses the caller's SQL executor so reads and writes share its transaction. */
-  constructor(private readonly sql: SqlExecutor) {}
+  constructor(private readonly sql: SqlExecutor, private readonly submission?: PayoutSubmission) {}
 
   async get(payoutId: UUID): Promise<PayoutAttempt | null> {
     const rows = await this.sql.query(
@@ -47,24 +51,31 @@ export class PostgresPayoutAttemptRepository implements Repository<PayoutAttempt
     const row = rows[0];
     if (row === undefined) return null;
     try {
-      return new PayoutAttempt({
+      const requestKey = text(row.idempotency_key);
+      if (requestKey.trim() === "") throw new Error("Stored request key is blank");
+      const attempt = new PayoutAttempt({
         payoutId: text(row.payout_id),
         sessionId: text(row.session_id),
         payoutAccountId: text(row.payout_account_id),
         amount: fromDatabaseCents(row.amount_cents, "amount_cents"),
         status: choice(row.status, ["REQUESTED", "COMPLETED", "FAILED"]),
-        idempotencyKey: text(row.idempotency_key),
         requestedAt: date(row.requested_at),
         completedAt: optionalDate(row.completed_at),
         failedAt: optionalDate(row.failed_at),
         failureReason: optionalText(row.failure_reason),
         providerReference: optionalText(row.provider_reference),
-        destination: storedDestination.parse(row.destination),
-        lines: storedLines.parse(row.lines).map(({ amountCents, ...line }) => ({
-          ...line,
-          amount: Money.fromCents(amountCents),
+        destination: hydrateDestination(row.destination),
+        lines: storedLines.parse(row.lines).map((line) => ({
+          holdId: line.holdId,
+          participationId: line.participationId,
+          holdingAccountId: line.holdingAccountId,
+          walletId: line.walletId,
+          kind: line.kind,
+          amount: Money.fromCents(line.amountCents),
         })),
       });
+      this.#requestKeys.set(attempt.payoutId, requestKey);
+      return attempt;
     } catch (cause) {
       throw new SessionPersistenceError("Stored payout attempt could not be hydrated", { cause });
     }
@@ -72,7 +83,15 @@ export class PostgresPayoutAttemptRepository implements Repository<PayoutAttempt
 
   /** Inserts a new attempt, or stores the outcome of an existing one. Frozen fields never change. */
   async save(attempt: PayoutAttempt): Promise<void> {
-    await this.sql.query(
+    const originalKey = this.#requestKeys.get(attempt.payoutId);
+    const requestKey = originalKey ?? this.submission?.idempotencyKey;
+    if (requestKey === undefined || requestKey.trim() === "")
+      throw new SessionPersistenceError("New payout attempts require preparation request metadata");
+    if (originalKey === undefined &&
+        (attempt.sessionId !== this.submission?.sessionId || attempt.destination.userId !== this.submission.bookerId))
+      throw new SessionPersistenceError("Payout attempt does not belong to its preparation request");
+    try {
+      await this.sql.query(
       `insert into payout_attempts (payout_id, session_id, payout_account_id, amount_cents, status,
          idempotency_key, requested_at, completed_at, failed_at, failure_reason, provider_reference,
          destination, lines)
@@ -89,7 +108,7 @@ export class PostgresPayoutAttemptRepository implements Repository<PayoutAttempt
         attempt.payoutAccountId,
         toDatabaseCents(attempt.amount),
         attempt.status,
-        attempt.idempotencyKey,
+        requestKey,
         attempt.requestedAt,
         attempt.completedAt ?? null,
         attempt.failedAt ?? null,
@@ -107,6 +126,27 @@ export class PostgresPayoutAttemptRepository implements Repository<PayoutAttempt
           })),
         ),
       ],
-    );
+      );
+      this.#requestKeys.set(attempt.payoutId, requestKey);
+    } catch (cause) {
+      if (isDuplicateRequestKey(cause))
+        throw new LedgerError("IDEMPOTENCY_CONFLICT", "This payout request key already belongs to an attempt", { cause });
+      throw cause;
+    }
   }
+}
+
+function hydrateDestination(value: unknown) {
+  const destination = storedDestination.parse(value);
+  return {
+    payoutAccountId: destination.payoutAccountId,
+    userId: destination.userId,
+    providerAccountReference: destination.providerAccountReference,
+    bankAccountReference: destination.bankAccountReference,
+  };
+}
+
+function isDuplicateRequestKey(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "23505" &&
+    "constraint" in error && error.constraint === "payout_attempts_session_key_unique";
 }

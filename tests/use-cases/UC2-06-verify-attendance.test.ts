@@ -252,7 +252,7 @@ async function verificationScenario() {
     payableLines() {
       const batch = booker.asBooker().preparePayout(
         unitOfWork.requireSession(sessionId),
-        { payoutId: "payout", idempotencyKey: "payout", now },
+        { payoutId: "payout", now },
       );
       return (batch?.lines ?? []).map((line) => [
         userOf(line.participationId),

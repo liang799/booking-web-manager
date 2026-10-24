@@ -72,9 +72,7 @@ export function assertSettlementOpen(
 export function validatePayoutAttempt(
   pendingSettlement: PayoutBatch | undefined,
   payoutAttemptIds: readonly UUID[],
-  payoutIdempotencyKeys: readonly string[],
   payoutId: UUID,
-  idempotencyKey: string,
 ): void {
   DomainError.require(
     pendingSettlement === undefined,
@@ -85,10 +83,5 @@ export function validatePayoutAttempt(
     !payoutAttemptIds.includes(payoutId),
     "DUPLICATE_ID",
     "A payout ID can only be used once for this session",
-  );
-  DomainError.require(
-    !payoutIdempotencyKeys.includes(idempotencyKey),
-    "DUPLICATE_ID",
-    "A payout idempotency key can only be used once for this session",
   );
 }

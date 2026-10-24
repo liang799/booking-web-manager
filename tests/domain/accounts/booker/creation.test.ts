@@ -116,7 +116,6 @@ describe("Booker session creation", () => {
       expect(bookingSession.participantList.participations).toEqual([]);
       expect(bookingSession.participantList.nextQueueSequence).toBe(1);
       expect(bookingSession.payoutAttemptIds).toEqual([]);
-      expect(bookingSession.payoutIdempotencyKeys).toEqual([]);
       expect(bookingSession.pendingSettlement).toBeUndefined();
     });
 

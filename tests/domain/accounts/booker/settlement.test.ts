@@ -37,7 +37,6 @@ describe("Booker payout preparation", () => {
       expect(() =>
         booker.preparePayout(bookingSession, {
           payoutId: "out",
-          idempotencyKey: "key",
           now: payoutTime,
         }),
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
@@ -56,7 +55,6 @@ describe("Booker payout preparation", () => {
       expect(() =>
         readyBooker().preparePayout(bookingSession, {
           payoutId: "out",
-          idempotencyKey: "key",
           now: payoutTime,
         }),
       ).toThrow(expect.objectContaining({ code: "ATTENDANCE_INCOMPLETE" }));
@@ -82,12 +80,13 @@ describe("Booker payout preparation", () => {
 
       const payout = readyBooker().preparePayout(bookingSession, {
         payoutId: "out",
-        idempotencyKey: "key",
         now: payoutTime,
       });
 
       expect(bookingSession.status).toBe("PAYOUT_PENDING");
       expect(payout?.destination).toEqual(destination);
+      expect(payout).not.toHaveProperty("idempotencyKey");
+      expect(bookingSession.pendingSettlement).not.toHaveProperty("idempotencyKey");
       expect(payout?.lines.map((line) => line.kind)).toEqual([
         "FORFEIT",
         "RELEASE",
@@ -105,12 +104,13 @@ describe("Booker payout preparation", () => {
 
       const payout = readyBooker().preparePayout(bookingSession, {
         payoutId: "unused",
-        idempotencyKey: "unused",
         now: payoutTime,
       });
 
       expect(payout).toBeUndefined();
       expect(bookingSession.status).toBe("SETTLED");
+      expect(bookingSession.payoutAttemptIds).toEqual([]);
+      expect(bookingSession.pendingSettlement).toBeUndefined();
     });
   });
 
@@ -123,7 +123,6 @@ describe("Booker payout preparation", () => {
       expect(() =>
         readyBooker().preparePayout(bookingSession, {
           payoutId: "another",
-          idempotencyKey: "key2",
           now: payoutTime,
         }),
       ).toThrow(expect.objectContaining({ code: "PAYOUT_IN_PROGRESS" }));
@@ -140,38 +139,9 @@ describe("Booker payout preparation", () => {
       expect(() =>
         readyBooker().preparePayout(bookingSession, {
           payoutId: "out",
-          idempotencyKey: "new",
           now: payoutTime,
         }),
       ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-
-      expect(sessionState(bookingSession)).toEqual(previousState);
-    });
-
-    test("preparePayout_WhenFailedPayoutKeyIsReusedWithNewPayoutId_RejectsWithoutChangingState", () => {
-      const payoutTime = sessionEndsAt;
-      const bookingSession = new Session(
-        pendingPayoutDetails(["alice", "ben"], {
-          payoutId: "original-payout",
-          idempotencyKey: "original-key",
-        }),
-      );
-      bookingSession.failSettlement("original-payout", sessionEndsAt);
-      const previousState = sessionState(bookingSession);
-
-      expect(() =>
-        readyBooker().preparePayout(bookingSession, {
-          payoutId: "retry",
-          idempotencyKey: "original-key",
-          now: payoutTime,
-        }),
-      ).toThrow(
-        expect.objectContaining({
-          code: "DUPLICATE_ID",
-          message:
-            "A payout idempotency key can only be used once for this session",
-        }),
-      );
 
       expect(sessionState(bookingSession)).toEqual(previousState);
     });
@@ -191,19 +161,13 @@ describe("Booker payout preparation", () => {
 
       const retryBatch = booker.preparePayout(bookingSession, {
         payoutId: "retry",
-        idempotencyKey: "retry-key",
         now: payoutTime,
       });
 
       expect(retryBatch?.payoutId).toBe("retry");
-      expect(retryBatch?.idempotencyKey).toBe("retry-key");
       expect(bookingSession.status).toBe("PAYOUT_PENDING");
       expect(bookingSession.pendingSettlement?.payoutId).toBe("retry");
       expect(bookingSession.payoutAttemptIds).toEqual(["out", "retry"]);
-      expect(bookingSession.payoutIdempotencyKeys).toEqual([
-        "key",
-        "retry-key",
-      ]);
       expect(
         bookingSession.participantList.requireParticipation("p-alice").hold,
       ).toBe(aliceHold);
@@ -235,7 +199,6 @@ describe("Booker payout preparation", () => {
 
       const payout = readyBooker().preparePayout(bookingSession, {
         payoutId: "out",
-        idempotencyKey: "key",
         now: payoutTime,
       });
 
@@ -261,7 +224,6 @@ describe("Booker payout preparation", () => {
       });
       const command = {
         payoutId: "out",
-        idempotencyKey: "key",
         now: payoutTime,
       };
       const previousState = sessionState(bookingSession);
@@ -294,7 +256,6 @@ describe("Booker payout preparation", () => {
       });
       const command = {
         payoutId: "out",
-        idempotencyKey: "key",
         now: payoutTime,
       };
       const previousState = sessionState(bookingSession);
@@ -305,7 +266,6 @@ describe("Booker payout preparation", () => {
 
       expect(sessionState(bookingSession)).toEqual(previousState);
       expect(bookingSession.payoutAttemptIds).toEqual([]);
-      expect(bookingSession.payoutIdempotencyKeys).toEqual([]);
     });
 
     test("preparePayout_WhenOwningBookerRetriesAfterForeignBooker_AppliesExpiryAndRecordsAttempt", () => {
@@ -325,7 +285,6 @@ describe("Booker payout preparation", () => {
       });
       const command = {
         payoutId: "out",
-        idempotencyKey: "key",
         now: payoutTime,
       };
 
@@ -345,7 +304,6 @@ describe("Booker payout preparation", () => {
           ?.state,
       ).toBe("FORFEITURE_DUE");
       expect(bookingSession.payoutAttemptIds).toEqual(["out"]);
-      expect(bookingSession.payoutIdempotencyKeys).toEqual(["key"]);
     });
   });
 
@@ -363,28 +321,6 @@ describe("Booker payout preparation", () => {
       expect(() =>
         booker.preparePayout(bookingSession, {
           payoutId: "out",
-          idempotencyKey: "retry-key",
-          now: payoutTime,
-        }),
-      ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
-
-      expect(sessionState(bookingSession)).toEqual(previousState);
-    });
-
-    test("preparePayout_WhenFailedPayoutHistoryIsRestored_RejectsReusedIdempotencyKey", () => {
-      const payoutTime = sessionEndsAt;
-      const bookingSession = new Session({
-        ...pendingPayoutDetails(),
-        status: "AWAITING_PAYOUT",
-        pendingSettlement: undefined,
-      });
-      const booker = readyBooker();
-      const previousState = sessionState(bookingSession);
-
-      expect(() =>
-        booker.preparePayout(bookingSession, {
-          payoutId: "retry",
-          idempotencyKey: "key",
           now: payoutTime,
         }),
       ).toThrow(expect.objectContaining({ code: "DUPLICATE_ID" }));
@@ -406,19 +342,13 @@ describe("Booker payout preparation", () => {
 
       const retryBatch = booker.preparePayout(restoredSession, {
         payoutId: "retry",
-        idempotencyKey: "retry-key",
         now: payoutTime,
       });
 
       expect(retryBatch?.payoutId).toBe("retry");
-      expect(retryBatch?.idempotencyKey).toBe("retry-key");
       expect(restoredSession.status).toBe("PAYOUT_PENDING");
       expect(restoredSession.pendingSettlement?.payoutId).toBe("retry");
       expect(restoredSession.payoutAttemptIds).toEqual(["out", "retry"]);
-      expect(restoredSession.payoutIdempotencyKeys).toEqual([
-        "key",
-        "retry-key",
-      ]);
       expect(sessionState(originalSession)).toEqual(sourceState);
     });
   });

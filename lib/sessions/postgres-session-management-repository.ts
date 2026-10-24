@@ -13,7 +13,7 @@ const sessionColumns = `session_id, booker_id, venue_name, region, sport, start_
 const storedBatch = z.object({
   payoutId: z.string().min(1),
   sessionId: z.string().min(1),
-  idempotencyKey: z.string().min(1),
+  idempotencyKey: z.string().refine((value) => value.trim() !== ""),
   requestedAt: z.string().datetime({ offset: true }),
   destination: z.object({
     payoutAccountId: z.string().min(1), userId: z.string().min(1),
@@ -90,6 +90,14 @@ export class PostgresSessionManagementRepository {
     try {
       return rows.map((row) => {
         const sessionId = text(row.session_id);
+        // Legacy request metadata remains a validated storage concern. It must
+        // never become part of the Session or its pending domain batch.
+        const keys = strings(row.payout_idempotency_keys);
+        if (keys.some((key) => key.trim() === "") || new Set(keys).size !== keys.length)
+          throw new SessionPersistenceError("Stored payout request history is invalid");
+        const pending = row.pending_settlement === null ? undefined : storedBatch.parse(row.pending_settlement);
+        if (pending !== undefined && !keys.includes(pending.idempotencyKey))
+          throw new SessionPersistenceError("Stored pending payout is missing its request key");
         const session = new Session({
           sessionId,
           bookerId: text(row.booker_id),
@@ -111,7 +119,6 @@ export class PostgresSessionManagementRepository {
             .map((participation) => hydrateParticipation(participation, text(participation.participant_wallet_id))),
           nextQueueSequence: z.number().int().safe().parse(row.next_queue_sequence),
           payoutAttemptIds: strings(row.payout_attempt_ids),
-          payoutIdempotencyKeys: strings(row.payout_idempotency_keys),
           pendingSettlement: hydrateBatch(row.pending_settlement),
         });
         return session;
@@ -127,8 +134,22 @@ function hydrateBatch(value: unknown): PayoutBatch | undefined {
   if (value === null) return undefined;
   const parsed = storedBatch.parse(value);
   return {
-    ...parsed,
+    payoutId: parsed.payoutId,
+    sessionId: parsed.sessionId,
     requestedAt: new Date(parsed.requestedAt),
-    lines: parsed.lines.map(({ amountCents, ...line }) => ({ ...line, amount: Money.fromCents(amountCents) })),
+    destination: {
+      payoutAccountId: parsed.destination.payoutAccountId,
+      userId: parsed.destination.userId,
+      providerAccountReference: parsed.destination.providerAccountReference,
+      bankAccountReference: parsed.destination.bankAccountReference,
+    },
+    lines: parsed.lines.map((line) => ({
+      holdId: line.holdId,
+      participationId: line.participationId,
+      holdingAccountId: line.holdingAccountId,
+      walletId: line.walletId,
+      kind: line.kind,
+      amount: Money.fromCents(line.amountCents),
+    })),
   };
 }

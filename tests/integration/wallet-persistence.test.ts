@@ -84,7 +84,7 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
 
   async function saveAttempt(userId: string, sessionId: string, amountCents: number) {
     const attempt = PayoutAttempt.create({
-      payoutId: randomUUID(), sessionId, idempotencyKey: randomUUID(),
+      payoutId: randomUUID(), sessionId,
       requestedAt: new Date("2045-04-03T00:00:00Z"),
       destination: {
         payoutAccountId: randomUUID(), userId,
@@ -97,7 +97,9 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
         holdingAccountId: PLATFORM_HOLDING_ACCOUNT_ID, amount: Money.fromCents(amountCents), kind: "RELEASE",
       }],
     });
-    await new PostgresPayoutAttemptRepository(cancellationSql(context)).save(attempt);
+    await new PostgresPayoutAttemptRepository(cancellationSql(context), {
+      bookerId: userId, sessionId, idempotencyKey: randomUUID(),
+    }).save(attempt);
     return attempt;
   }
 
@@ -110,13 +112,18 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
     const completedSession = await insertSession(booker.userId);
     const otherSession = await insertSession(other.userId);
     const repository = new PostgresPayoutAttemptRepository(cancellationSql(context));
+    async function load(attempt: PayoutAttempt) {
+      const stored = await repository.get(attempt.payoutId);
+      if (!stored) throw new Error("Payout fixture missing");
+      return stored;
+    }
 
-    const failed = await saveAttempt(booker.userId, firstSession, 999);
+    const failed = await load(await saveAttempt(booker.userId, firstSession, 999));
     failed.fail("Provider rejected the transfer", new Date("2045-04-03T01:00:00Z"));
     await repository.save(failed);
-    const first = await saveAttempt(booker.userId, firstSession, 1250);
-    const second = await saveAttempt(booker.userId, secondSession, 600);
-    const completed = await saveAttempt(booker.userId, completedSession, 888);
+    const first = await load(await saveAttempt(booker.userId, firstSession, 1250));
+    const second = await load(await saveAttempt(booker.userId, secondSession, 600));
+    const completed = await load(await saveAttempt(booker.userId, completedSession, 888));
     completed.complete(`transfer-${randomUUID()}`, new Date("2045-04-03T01:00:00Z"));
     await repository.save(completed);
     await saveAttempt(other.userId, otherSession, 9000);

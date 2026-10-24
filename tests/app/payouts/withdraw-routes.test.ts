@@ -33,6 +33,18 @@ describe("UC1-08 payout routes", () => {
     expect((await response.json()).amountCents).toBe(1000);
   });
 
+  test("returns a recovered paid receipt without inventing a bank payout method", async () => {
+    const recovered = { kind: "PAID" as const, payoutId: "33333333-3333-4333-8333-333333333333", amountCents: 1000 };
+    const forBooker = vi.fn(async () => recovered);
+    mocks.dependencies.mockResolvedValue(dependencies({ withdrawals: { forBooker } }));
+
+    const response = await withdraw(post({ sessionId, idempotencyKey: "original-key", method: "INSTANT" }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(recovered);
+    expect(forBooker).toHaveBeenCalledWith({ bookerId, sessionId, idempotencyKey: "original-key", method: "INSTANT" });
+  });
+
   test("rejects a withdrawal without a valid session ID", async () => {
     // Arrange
     mocks.dependencies.mockResolvedValue(dependencies({}));

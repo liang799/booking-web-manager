@@ -63,7 +63,6 @@ describe("Booker session ownership", () => {
     expect(() =>
       readyBooker("other").preparePayout(bookingSession, {
         payoutId: "out",
-        idempotencyKey: "key",
         now: payoutTime,
       }),
     ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));

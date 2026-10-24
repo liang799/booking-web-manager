@@ -74,7 +74,9 @@ export function SessionPayouts({ transport, instantAvailable }: SessionPayoutsPr
             ? "Every share in this session was refunded, so there's nothing to withdraw."
             : outcome.bankPayout === "INSTANT"
               ? "Paid. The money is on its way to your debit card now."
-              : "Paid. Stripe sends it to your bank on its standard schedule, usually within a few business days.",
+              : outcome.bankPayout === "STANDARD"
+                ? "Paid. Stripe sends it to your bank on its standard schedule, usually within a few business days."
+                : "Paid. Your session payout is complete.",
     });
     await load();
   }

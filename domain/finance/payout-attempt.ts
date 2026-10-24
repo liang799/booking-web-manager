@@ -15,7 +15,6 @@ export interface PayoutAttemptDetails {
   readonly payoutAccountId: UUID;
   readonly amount: Money;
   readonly status: PayoutStatus;
-  readonly idempotencyKey: string;
   readonly requestedAt: Date;
   readonly completedAt?: Date;
   readonly failedAt?: Date;
@@ -28,7 +27,7 @@ export interface PayoutAttemptDetails {
 /**
  * Aggregate root: PayoutAttempt.
  * Owns one provider attempt's status and outcome, with fixed settlement lines,
- * amount, destination, and idempotency key. Completion and failure commands enter
+ * amount and destination. Completion and failure commands enter
  * through this root; terminal outcomes are retained and retries use a new root.
  * The referenced Session owns the participations and holds. An application
  * coordinator combines both roots' changes and the resulting ledger effects.
@@ -40,7 +39,6 @@ export class PayoutAttempt {
   readonly #payoutAccountId: UUID;
   readonly #amount: Money;
   #status: PayoutStatus;
-  readonly #idempotencyKey: string;
   readonly #requestedAt: Date;
   #completedAt?: Date;
   #failedAt?: Date;
@@ -67,11 +65,9 @@ export class PayoutAttempt {
     );
     validateText(details.payoutId, "payoutId");
     validateText(details.sessionId, "sessionId");
-    validateText(details.idempotencyKey, "idempotencyKey");
     validateBatch({
       payoutId: details.payoutId,
       sessionId: details.sessionId,
-      idempotencyKey: details.idempotencyKey,
       requestedAt: details.requestedAt,
       destination: details.destination,
       lines: details.lines,
@@ -130,7 +126,6 @@ export class PayoutAttempt {
     this.#payoutAccountId = details.payoutAccountId;
     this.#amount = details.amount;
     this.#status = details.status;
-    this.#idempotencyKey = details.idempotencyKey;
     this.#requestedAt = copyDate(details.requestedAt, "requestedAt");
     this.#completedAt = copyOptionalDate(details.completedAt, "completedAt");
     this.#failedAt = copyOptionalDate(details.failedAt, "failedAt");
@@ -152,7 +147,6 @@ export class PayoutAttempt {
       payoutAccountId: batch.destination.payoutAccountId,
       amount,
       status: "REQUESTED",
-      idempotencyKey: batch.idempotencyKey,
       requestedAt: batch.requestedAt,
       destination: { ...batch.destination },
       lines: [...batch.lines],
@@ -203,7 +197,6 @@ export class PayoutAttempt {
       kind: "PAYOUT_REQUESTED",
       payoutId: this.payoutId,
       sessionId: this.sessionId,
-      idempotencyKey: this.idempotencyKey,
       amount: this.amount,
       destination: Object.freeze({ ...this.destination }),
       requestedAt: this.requestedAt,
@@ -224,9 +217,6 @@ export class PayoutAttempt {
   }
   get status(): PayoutStatus {
     return this.#status;
-  }
-  get idempotencyKey(): string {
-    return this.#idempotencyKey;
   }
   get requestedAt(): Date {
     return copyDate(this.#requestedAt, "requestedAt");
@@ -254,7 +244,6 @@ export class PayoutAttempt {
 function validateBatch(batch: PayoutBatch): void {
   validateText(batch.payoutId, "payoutId");
   validateText(batch.sessionId, "sessionId");
-  validateText(batch.idempotencyKey, "idempotencyKey");
   copyDate(batch.requestedAt, "requestedAt");
   DomainError.require(
     batch.destination !== undefined && batch.destination !== null,
