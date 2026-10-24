@@ -3,7 +3,8 @@ import path from "node:path";
 import tseslint from "typescript-eslint";
 
 const methods = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]);
-// These endpoints have a different boundary: public reads, a Stripe signature, or a cron secret.
+// GET sessions uses its own stage-aware authenticated discovery action. The other
+// exceptions are public metadata, a Stripe signature, or a cron secret.
 const exceptions = new Set([
   "GET /api/sessions", "GET /api/openapi", "POST /api/webhooks/stripe", "GET /api/cron/commitments",
 ]);
