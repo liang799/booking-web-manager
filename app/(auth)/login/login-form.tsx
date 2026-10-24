@@ -38,7 +38,8 @@ export function LoginForm({ next }: LoginFormProps) {
   return (
     <div className="space-y-5">
       {state.status === "check-email" && <EmailConfirmationNotice key={state.email} email={state.email} next={destination} />}
-      <form onSubmit={handleSubmit} noValidate className={styles.form}>
+      {/* POST keeps the password out of the URL if the form is submitted before JavaScript loads. */}
+      <form method="post" onSubmit={handleSubmit} noValidate className={styles.form}>
         {state.status === "error" && state.message !== undefined && (
           <ErrorMessage>{state.message}</ErrorMessage>
         )}

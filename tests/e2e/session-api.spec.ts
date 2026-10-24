@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { PLATFORM_HOLDING_ACCOUNT_ID } from "@/lib/money/constants";
+import { PostgresSessionCreationTransaction } from "@/lib/sessions/postgres-session-creation-transaction";
+import { CreateSessions } from "@/use-cases/sessions/CreateSessions";
 import { sessionTestContext } from "../support/session-test-context";
 
 const body = () => ({
@@ -34,10 +37,7 @@ test("authenticated creation replays atomically and refuses replay after deactiv
       Array.from({ length: 4 }, () =>
         request.post("/api/sessions", {
           headers,
-          data: {
-            ...submission,
-            booking: { ...submission.booking, totalCostCents: 9999 },
-          },
+          data: submission,
         }),
       ),
     );
@@ -45,6 +45,29 @@ test("authenticated creation replays atomically and refuses replay after deactiv
       expect(response.status()).toBe(201);
       expect(await response.json()).toEqual(result);
     }
+    const conflict = await request.post("/api/sessions", {
+      headers,
+      data: { ...submission, booking: { ...submission.booking, totalCostCents: 9999 } },
+    });
+    expect(conflict.status()).toBe(409);
+    expect(await conflict.json()).toEqual({
+      error: {
+        code: "IDEMPOTENCY_CONFLICT",
+        message: "This submission key was already used for different booking details",
+      },
+    });
+    const recovered = await request.post("/api/sessions", { headers, data: submission });
+    expect(recovered.status()).toBe(201);
+    expect(await recovered.json()).toEqual(result);
+    const normalizedReplay = await request.post("/api/sessions", {
+      headers,
+      data: {
+        ...submission,
+        booking: { ...submission.booking, startAt: "2030-01-02T18:00:00+08:00", endAt: "2030-01-02T20:00:00+08:00" },
+      },
+    });
+    expect(normalizedReplay.status()).toBe(201);
+    expect(await normalizedReplay.json()).toEqual(result);
     expect(
       (
         await context.pool.query(
@@ -81,6 +104,87 @@ test("authenticated creation replays atomically and refuses replay after deactiv
     expect(await denied.json()).toMatchObject({
       error: { code: "INACTIVE_ACCOUNT" },
     });
+  } finally {
+    await context.pool.end();
+  }
+});
+
+test("concurrent different requests sharing a new key create one session and return one conflict", async ({ request }) => {
+  const context = sessionTestContext();
+  try {
+    const booker = await context.identity();
+    const original = body();
+    const changed = { ...original, booking: { ...original.booking, venueName: "Another sports hall" } };
+    const headers = { Authorization: `Bearer ${booker.token}` };
+    const [first, second] = await Promise.all([
+      request.post("/api/sessions", { headers, data: original }),
+      request.post("/api/sessions", { headers, data: changed }),
+    ]);
+    expect([first.status(), second.status()].sort()).toEqual([201, 409]);
+    const winner = first.status() === 201
+      ? { response: first, conflict: second, submission: original }
+      : { response: second, conflict: first, submission: changed };
+    const result = await winner.response.json();
+    const conflict = await winner.conflict.json();
+    expect(conflict).toEqual({
+      error: { code: "IDEMPOTENCY_CONFLICT", message: "This submission key was already used for different booking details" },
+    });
+    const retry = await request.post("/api/sessions", { headers, data: winner.submission });
+    expect(retry.status()).toBe(201);
+    expect(await retry.json()).toEqual(result);
+    expect((await context.pool.query(
+      "select session_id, venue_name from sessions where booker_id = $1", [booker.userId],
+    )).rows).toEqual([{ session_id: result.sessionId, venue_name: winner.submission.booking.venueName }]);
+  } finally {
+    await context.pool.end();
+  }
+});
+
+test("HTTP retries recover legacy results without rewriting their fingerprint", async ({ request }) => {
+  const context = sessionTestContext();
+  try {
+    const booker = await context.identity();
+    const submission = body();
+    const clock = { now: () => new Date("2029-01-01T00:00:00Z") };
+    const legacy = new CreateSessions({
+      transaction: new PostgresSessionCreationTransaction(context.pool, { idempotencyKey: submission.idempotencyKey }, clock),
+      clock, ids: { next: randomUUID }, holdingAccountId: PLATFORM_HOLDING_ACCOUNT_ID,
+    });
+    const result = await legacy.forBooker(booker.userId, {
+      ...submission.booking,
+      startAt: new Date(submission.booking.startAt), endAt: new Date(submission.booking.endAt),
+    }, submission.config);
+    const key = JSON.stringify(["UC2-02", booker.userId, submission.idempotencyKey]);
+    const stored = await context.pool.query("select request_fingerprint, response from idempotency_keys where idempotency_key = $1", [key]);
+    const replay = await request.post("/api/sessions", {
+      headers: { Authorization: `Bearer ${booker.token}` },
+      data: { ...submission, booking: { ...submission.booking, totalCostCents: 9999 } },
+    });
+    expect(replay.status()).toBe(201);
+    expect(await replay.json()).toEqual(result);
+    expect((await context.pool.query("select request_fingerprint, response from idempotency_keys where idempotency_key = $1", [key])).rows).toEqual(stored.rows);
+    expect((await context.pool.query("select session_id from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{ session_id: result.sessionId }]);
+  } finally {
+    await context.pool.end();
+  }
+});
+
+test("the same HTTP key is isolated by authenticated booker despite forged body identities", async ({ request }) => {
+  const context = sessionTestContext();
+  try {
+    const bookers = await Promise.all([context.identity(), context.identity()]);
+    const submission = body();
+    const responses = await Promise.all(bookers.map((booker, index) => request.post("/api/sessions", {
+      headers: { Authorization: `Bearer ${booker.token}` },
+      data: { ...submission, bookerId: index === 0 ? bookers[1].userId : bookers[0].userId },
+    })));
+    for (const response of responses) expect(response.status()).toBe(201);
+    const results = await Promise.all(responses.map((response) => response.json()));
+    expect(results[0].sessionId).not.toBe(results[1].sessionId);
+    for (const [index, booker] of bookers.entries()) {
+      expect((await context.pool.query("select session_id from sessions where booker_id = $1", [booker.userId])).rows)
+        .toEqual([{ session_id: results[index].sessionId }]);
+    }
   } finally {
     await context.pool.end();
   }
