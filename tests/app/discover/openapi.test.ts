@@ -6,14 +6,14 @@ import { describe, expect, test } from "vitest";
 const discoveryOpenApiDocument = createOpenApiDocument([registerDiscoveryApi]);
 
 describe("session discovery OpenAPI contract", () => {
-  test("documents discovery filters, public listing fields, pagination and failures", () => {
+  test("documents authenticated discovery filters, listing fields, pagination and failures", () => {
     const operation = discoveryOpenApiDocument.paths["/api/sessions"]?.get;
-    expect(operation?.security).toEqual([]);
+    expect(operation?.security).toEqual([{ bearerAuth: [] }, { loginCookie: [] }]);
     expect(operation?.parameters?.map((parameter) => "name" in parameter ? parameter.name : undefined)).toEqual([
       "q", "sport", "region", "date", "timeFrom", "timeTo", "cursor",
     ]);
     expect(Object.keys(operation?.responses ?? {})).toEqual([
-      "200", "400", "500", "503",
+      "200", "400", "401", "403", "404", "500", "503",
     ]);
     expect(operation?.description).toContain("Asia/Singapore");
     expect(operation?.description).toContain("and full sessions");
@@ -95,7 +95,7 @@ describe("session discovery OpenAPI contract", () => {
               type: "string",
               enum: ["DATABASE_UNAVAILABLE", "DATABASE_ACCESS_DENIED", "DATABASE_SCHEMA_MISMATCH", "INITIALIZATION_FAILED", "UNEXPECTED_ERROR"],
             },
-            stage: { type: "string", enum: ["initialization", "validation", "query", "serialization"] },
+            stage: { type: "string", enum: ["initialization", "authentication", "validation", "query", "serialization"] },
             diagnostics: {
               type: "array",
               minItems: 1,
@@ -113,7 +113,7 @@ describe("session discovery OpenAPI contract", () => {
         },
       },
     });
-    for (const status of ["400", "503"]) {
+    for (const status of ["400", "401", "403", "404", "503"]) {
       expect(operation?.responses[status]).toMatchObject({
         content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } },
       });
