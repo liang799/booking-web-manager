@@ -59,6 +59,12 @@ short rule remain anchored to the wall at different viewport sizes. Numbered
 section navigation appears only on mobile, with its caption separate from
 the navigation landmark.
 
+The hero action reads **Sign up** and links to `/register?next=%2Fdiscover`,
+allowing new accounts to browse after registration. Sport cards preserve their
+discovery filter links; signed-out visitors are redirected to login and return
+to the selected sport after signing in. Session data is never rendered on this
+public landing page.
+
 Product proof is descriptive: supported sports, date/time filters, and the
 price per player. No venue, player or location totals are invented. Sports
 links use canonical discovery query values (UC2-01). Hosting links to the

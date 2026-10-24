@@ -7,11 +7,11 @@
 Authenticated `/` is a personal bookings dashboard with compact date cards, or a
 Singapore weather forecast when no upcoming bookings exist. It has no filters or
 public discovery feed. See [`app/home/README.md`](../home/README.md).
-`/discover` is the dedicated public-session search page. It lists upcoming, public,
+`/discover` is the dedicated authenticated session search page. It lists upcoming, public,
 open sessions, including full sessions, using the stored region. Cards show venue,
 sport, region, Singapore timing, total capacity and the participant share in SGD.
-Cards use the shared join confirmation. Signed-out visitors sign in before
-joining; full sessions can accept waitlist requests without holding funds.
+Cards use the shared join confirmation. Signed-out visitors must sign in before
+browsing; full sessions can accept waitlist requests without holding funds.
 
 The creation wizard supports OneMap venue search and coordinate-based region
 derivation. Discovery filters the persisted region; its tests do not establish
@@ -20,24 +20,30 @@ live OneMap availability. Private sessions are accessible through valid
 
 ## Query and HTTP contract
 
-`GET /api/sessions` and `/discover` allow signed-out, unverified and verified
-visitors. The API validates the external query and calls
-`DiscoverSessions.searchPublic(criteria)` without authenticating or loading a
-User. The page invokes the same use case. Cookie authentication is optional for
-the signed-in navigation and verification prompt; an unavailable auth provider
-must not block public browsing. Other personal screens remain protected.
+`GET /api/sessions` requires an authenticated Supabase identity supplied by
+a same-origin login cookie or a bearer token. The discovery HTTP action checks
+the identity **before** parsing filters or querying sessions. Invalid or missing
+credentials return `401 UNAUTHENTICATED`; provider failures fail closed.
+An authenticated user with an unverified email may browse. Discovery itself
+still reads the public-session projection, not a viewer-specific roster.
 
-Discovery reads require only `DATABASE_URL` and the existing session schema, with
-no browser table grants, wallet dependency or cached results. Optional Realtime
+`/discover` is protected at the middleware, layout, and page boundaries.
+Anonymous visitors are redirected to login, with their original search filters
+preserved by middleware. Private-session invitation previews are separate from
+discovery and stay publicly reachable.
+
+Discovery needs the database and Supabase authentication configuration.
+Its query requires no browser table grants, wallet dependency or cached results.
+Optional Realtime
 invalidation uses migration 0015; the query and listing JSON stay unchanged. The
 GET route declares `parse`, `run` and `serialize` through
 [`discoveryAction`](./discovery-action.ts). Its factory owns one error boundary
-around dependency loading, query validation, querying and serialization; the
-route's `run` callback visibly invokes `DiscoverSessions.searchPublic`, and its
-serializer applies pagination. It does not authenticate or read a request body.
+around dependency loading, authentication, query validation, querying and serialization;
+the route's `run` callback invokes `DiscoverSessions.searchPublic`, and its
+serializer applies pagination. It does not read a request body.
 Unexpected failures return a category, execution stage, request identifier and
 safe exception/cause diagnostics. Original exceptions stay in server logs.
-The factory preserves the four diagnostic stages described below.
+The factory preserves five diagnostic stages, including authentication.
 All responses use `Cache-Control: no-store`. Successful responses also include
 `X-Server-Time`, the server's Unix time in milliseconds when the response is
 constructed. This additive header anchors browser expiry scheduling without
@@ -55,8 +61,9 @@ unknown parameters are ignored. `q` is trimmed, limited to 100 characters, and m
 a case-insensitive literal substring of sport or venue name. SQL wildcard characters
 are treated literally. Search combines with all other filters, preserving the same
 ordering and pagination. A repeatable-read transaction loads only public summaries;
-no profile, wallet, membership, payout or reliability facts are loaded. Missing
-account records therefore cannot prevent browsing.
+no profile, wallet, membership, payout or reliability facts are loaded by
+the discovery query. The verified Supabase identity is required; domain profile
+and wallet records are not required by this API listing.
 
 Dates use `YYYY-MM-DD`; times use `HH:mm`. Date and time refer to
 `Asia/Singapore`. A date alone selects that calendar day. Time bounds require a
@@ -85,6 +92,7 @@ the latter also depends on replacement reservations.
 | --- | --- |
 | 200 | Results or an empty page |
 | 400 | Invalid filters, dates, time range or cursor |
+| 401 | No valid login cookie or bearer token (`UNAUTHENTICATED`) |
 | 500 | Unexpected failure with a diagnostic reason, stage, request identifier and safe exception/cause messages |
 | 503 | Missing server settings (`DISCOVERY_API_UNAVAILABLE`) |
 
@@ -131,7 +139,7 @@ missing-settings 503 responses keep their existing shape.
 
 Swagger UI at `/api-docs` and the
 public `/api/openapi` document describe both GET discovery and POST creation,
-including public discovery examples and authenticated creation.
+including authenticated discovery examples and authenticated creation.
 Discovery registers its operation in [the feature OpenAPI module](./openapi.ts);
 see the [shared OpenAPI guide](../openapi/README.md) for composition and the steps
 to add another feature's operations.
@@ -246,7 +254,7 @@ A separate timer uses initial page `serverNow` metadata, then the API's
 refresh when the first displayed session starts, even if no row changes or the
 device's wall clock is inaccurate. The three-second appearance/disappearance target requires healthy
 Realtime delivery plus a healthy visible online page; degraded-mode reconciliation
-does not meet that target. Initial public reads still work without Realtime.
+does not meet that target. Initial authenticated reads still work without Realtime.
 
 See [the Realtime runbook](./REALTIME.md) for migration 0015, public channel setup,
 privacy boundaries, validation commands and rollback instructions. This change
