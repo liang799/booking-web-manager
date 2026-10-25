@@ -62,6 +62,7 @@ import * as pushSubscriptions from "@/app/api/push/subscriptions/route";
 import * as cron from "@/app/api/cron/commitments/route";
 import * as webhook from "@/app/api/webhooks/stripe/route";
 import * as openapi from "@/app/api/openapi/route";
+import * as health from "@/app/api/health/route";
 
 const methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] as const;
 type Method = typeof methods[number];
@@ -98,9 +99,10 @@ const routes: Route[] = [
   { path: "/api/cron/commitments", handlers: cron },
   { path: "/api/webhooks/stripe", handlers: webhook },
   { path: "/api/openapi", handlers: openapi },
+  { path: "/api/health", handlers: health },
 ];
 const nonUserRoutes = new Set([
-  "GET /api/openapi",
+  "GET /api/openapi", "GET /api/health",
   "GET /api/cron/commitments", "POST /api/webhooks/stripe",
 ]);
 const exportedMethods = routes.flatMap(({ path, handlers }) => methods.flatMap((method) => {
@@ -190,6 +192,19 @@ describe("explicit exceptions to user authentication", () => {
     expect(await response.json()).toMatchObject({ error: { code: "UNAUTHENTICATED" } });
     expect(authenticate).toHaveBeenCalledExactlyOnceWith(request);
     expect(searchPublic).not.toHaveBeenCalled();
+  });
+
+  test("health remains public even without database settings", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+    try {
+      const response = await health.GET();
+      expect(response.status).toBe(503);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(await response.json()).toEqual({ status: "unavailable" });
+      expect(authenticate).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   test("OpenAPI remains public", async () => {

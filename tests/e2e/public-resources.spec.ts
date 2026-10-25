@@ -58,7 +58,7 @@ test("preserves Storybook deep links and renders its manager, iframe, and local 
 test("landing signup is public but discovery requires sign-in without auth settings", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Sign up", exact: true }).click();
-  await expect(page).toHaveURL(/\/register$/);
+  await expect(page).toHaveURL(/\/register\?next=%2Fdiscover$/);
   await expect(page.getByRole("button", { name: "Sign Up", exact: true })).toBeVisible();
 
   await page.goto("/discover?sport=Tennis");
