@@ -32,7 +32,7 @@ test("checks actual session-table read access and reuses one pool", async () => 
   expect(db.createProvider).toHaveBeenCalledExactlyOnceWith("postgresql://postgres:postgres@127.0.0.1:55322/postgres");
   expect(db.getPool).toHaveBeenCalledTimes(2);
   expect(db.query).toHaveBeenCalledTimes(2);
-  expect(db.query).toHaveBeenCalledWith("select 1 from sessions limit 0");
+  expect(db.query).toHaveBeenCalledWith({ text: "select 1 from sessions limit 0", query_timeout: 1500 });
 });
 
 test("fails closed during an outage and recovers on the next probe", async () => {

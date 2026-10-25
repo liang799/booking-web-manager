@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const invitation = isSessionInvitationPath(pathname);
   const next = safeRedirectPath(request.nextUrl.searchParams.get("next"));
+  const accountFailureNext = pathname === "/discover" ? `${pathname}${search}` : next;
   const sensitivePage = invitation || pathname === "/discover" || isAuthPage(pathname) || pathname === AUTH_CALLBACK_PATH || pathname === "/profile/email"
     || isSessionInvitationPath(next.split(/[?#]/, 1)[0] ?? "");
   const protectResponse = (result: NextResponse): NextResponse => {
@@ -79,7 +80,7 @@ export async function middleware(request: NextRequest) {
   const account = await getAccountStatus(supabase, user.id);
   if (account.kind !== "active") {
     await supabase.auth.signOut();
-    return redirectKeepingCookies(new URL(pathWithNext("/login", next), request.url), response);
+    return redirectKeepingCookies(new URL(pathWithNext("/login", accountFailureNext), request.url), response);
   }
 
   if (isAuthPage(pathname)) {

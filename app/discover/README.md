@@ -127,7 +127,7 @@ Request query parameters and headers are not logged.
 
 `reason` is one of `DATABASE_UNAVAILABLE`, `DATABASE_ACCESS_DENIED`,
 `DATABASE_SCHEMA_MISMATCH`, `INITIALIZATION_FAILED` or `UNEXPECTED_ERROR`.
-`stage` identifies `initialization`, `validation`, `query` or `serialization`.
+`stage` identifies `initialization` (dependency setup), `authentication` (identity and account-access checks), `validation` (query filters), `query` (database read) or `serialization` (response preparation).
 The message gives a suggested next step for the category. Invalid-query 400 and
 missing-settings 503 responses keep their existing shape.
 

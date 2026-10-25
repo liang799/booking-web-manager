@@ -2,6 +2,8 @@ import { readSessionServerSettings } from "@/app/sessions/server-environment";
 import { createPostgresPoolProvider } from "@/lib/database/postgres-pool";
 
 // Reuse one small database pool per warm runtime; do not open a new pool per probe.
+// Bound this probe alone; session and financial queries keep their existing timeout policy.
+const readinessQuery = { text: "select 1 from sessions limit 0", query_timeout: 1500 };
 let databaseUrl: string | undefined;
 let getPool: ReturnType<typeof createPostgresPoolProvider> | undefined;
 
@@ -18,7 +20,7 @@ export async function isApiReady(): Promise<boolean> {
       getPool = createPostgresPoolProvider(settings.databaseUrl);
       databaseUrl = settings.databaseUrl;
     }
-    await getPool().query("select 1 from sessions limit 0");
+    await getPool().query(readinessQuery);
     return true;
   } catch {
     return false;

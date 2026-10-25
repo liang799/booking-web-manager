@@ -43,12 +43,27 @@ test("active accounts can browse discovery", async () => {
   expect(getAccountStatus).toHaveBeenCalledOnce();
 });
 
-test("inactive accounts cannot browse discovery", async () => {
+test.each([
+  { kind: "inactive" },
+  { kind: "missing-profile" },
+  { kind: "lookup-failed", code: "DATABASE_UNAVAILABLE", message: "Profile read unavailable" },
+] as const)("account check failure ($kind) preserves discovery filters", async (status) => {
+  vi.mocked(createServerClient).mockReturnValue(fakeSupabase({ user: { id: "viewer" } }) as never);
+  vi.mocked(getAccountStatus).mockResolvedValue(status);
+  const response = await middleware(new NextRequest("https://booking.example/discover?sport=Tennis&q=Jurong"));
+  const target = new URL(response.headers.get("location")!);
+  expect(target.pathname).toBe("/login");
+  expect(target.searchParams.get("next")).toBe("/discover?sport=Tennis&q=Jurong");
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+});
+
+test("account check failures retain the existing next destination for non-discovery pages", async () => {
   vi.mocked(createServerClient).mockReturnValue(fakeSupabase({ user: { id: "viewer" } }) as never);
   vi.mocked(getAccountStatus).mockResolvedValue({ kind: "inactive" });
-  const response = await middleware(new NextRequest("https://booking.example/discover"));
-  expect(new URL(response.headers.get("location")!).pathname).toBe("/login");
-  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  const response = await middleware(new NextRequest("https://booking.example/profile?next=%2Fwallet"));
+  const target = new URL(response.headers.get("location")!);
+  expect(target.pathname).toBe("/login");
+  expect(target.searchParams.get("next")).toBe("/wallet");
 });
 
 test("unconfigured authentication redirects discovery but keeps registration public", async () => {
