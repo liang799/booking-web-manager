@@ -80,7 +80,7 @@ describe("Participant withdrawal and refund choices", () => {
       ).toBe("REFUNDED");
     });
 
-    test("withdraw_WhenExactlyAtRefundCutoff_AwaitsReplacement", () => {
+    test("withdraw_WhenExactlyAtRefundCutoff_RefundsHold", () => {
       const refundCutoff = hoursBeforeSessionStart(30);
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
 
@@ -91,21 +91,21 @@ describe("Participant withdrawal and refund choices", () => {
           now: refundCutoff,
         });
 
-      expect(withdrawal.kind).toBe("AWAITING_REPLACEMENT");
+      expect(withdrawal.kind).toBe("REFUNDED");
       expect(
         bookingSession.participantList.requireParticipation("p-alice").hold
           ?.state,
-      ).toBe("AWAITING_REPLACEMENT");
+      ).toBe("REFUNDED");
     });
 
-    test("withdraw_WhenOneHourBeforeStart_AwaitsReplacement", () => {
+    test("withdraw_WhenOneSecondInsideRefundCutoff_AwaitsReplacement", () => {
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
 
       const withdrawal = createTestUser({ userId: "alice" })
         .asParticipant()
         .withdraw(bookingSession, {
           participationId: "p-alice",
-          now: hoursBeforeSessionStart(1),
+          now: new Date(hoursBeforeSessionStart(30).getTime() + 1_000),
         });
 
       expect(withdrawal.kind).toBe("AWAITING_REPLACEMENT");
@@ -465,7 +465,7 @@ describe("Participant withdrawal and refund choices", () => {
       expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
-    test("previewWithdrawal_WhenExactlyAtRefundCutoff_ShowsShareStaysHeld", () => {
+    test("previewWithdrawal_WhenExactlyAtRefundCutoff_ShowsFullRefund", () => {
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
       const previousState = sessionState(bookingSession);
 
@@ -473,14 +473,14 @@ describe("Participant withdrawal and refund choices", () => {
         .asParticipant()
         .previewWithdrawal(bookingSession, hoursBeforeSessionStart(30));
 
-      expect(preview.kind).toBe("AWAITING_REPLACEMENT");
-      expect(preview.refundAmount.toCents()).toBe(0);
+      expect(preview.kind).toBe("REFUNDED");
+      expect(preview.refundAmount.toCents()).toBe(500);
       expect(preview.heldAmount.toCents()).toBe(500);
       expect(sessionState(bookingSession)).toEqual(previousState);
     });
 
     test("previewWithdrawal_WhenFollowedByWithdrawalAtSameTime_MatchesItsOutcome", () => {
-      const now = hoursBeforeSessionStart(40);
+      const now = hoursBeforeSessionStart(30);
       const bookingSession = createTestSession({ committedUserIds: ["alice"] });
       const alice = createTestUser({ userId: "alice" }).asParticipant();
 
