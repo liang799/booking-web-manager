@@ -19,20 +19,29 @@ export class StripePayoutAccountProvider implements PayoutAccountProvider {
     readonly email: string | null;
     readonly idempotencyKey: string;
   }): Promise<string> {
-    const account = await provider(() =>
-      this.stripe.accounts.create(
-        {
-          type: "express",
-          country: "SG",
-          business_type: "individual",
-          ...(request.email !== null ? { email: request.email } : {}),
-          capabilities: { transfers: { requested: true } },
-          metadata: { user_id: request.userId },
-        },
-        { idempotencyKey: request.idempotencyKey },
-      ),
-    );
-    return account.id;
+    const params: Stripe.AccountCreateParams = {
+      type: "express",
+      country: "SG",
+      business_type: "individual",
+      ...(request.email !== null ? { email: request.email } : {}),
+      capabilities: { transfers: { requested: true } },
+      metadata: { user_id: request.userId },
+    };
+    let idempotencyKey = request.idempotencyKey;
+    for (let replays = 0; ; replays++) {
+      try {
+        const account = await this.stripe.accounts.create(params, { idempotencyKey });
+        return account.id;
+      } catch (cause) {
+        // Stripe keeps a refusal under its key for 24 hours, even after the cause
+        // (such as a Dashboard setting) is fixed. A replayed 4xx created no
+        // account, so continue under a key derived from the original refused
+        // request: concurrent requests derive the same key and stay deduplicated.
+        const refused = replayedRefusal(cause);
+        if (refused === undefined || replays >= MAX_REPLAYED_REFUSALS) throw providerFailure(cause);
+        idempotencyKey = JSON.stringify([request.idempotencyKey, "after", refused]);
+      }
+    }
   }
 
   async createOnboardingLink(
@@ -94,12 +103,33 @@ export function stripeAccountState(account: Stripe.Account): ProviderAccountStat
   };
 }
 
+const MAX_REPLAYED_REFUSALS = 3;
+
+/** The original request ID of a replayed client error, which created nothing. */
+function replayedRefusal(cause: unknown): string | undefined {
+  if (!(cause instanceof Stripe.errors.StripeError)) return undefined;
+  const status = cause.statusCode ?? 0;
+  // 409 is an in-flight conflict and 429 a rate limit; neither is a stored refusal.
+  if (status < 400 || status >= 500 || status === 409 || status === 429) return undefined;
+  if (cause.headers?.["idempotent-replayed"] !== "true") return undefined;
+  return cause.headers["original-request"] || undefined;
+}
+
 async function provider<T>(call: () => Promise<T>): Promise<T> {
   try {
     return await call();
   } catch (cause) {
-    if (cause instanceof Stripe.errors.StripeError)
-      throw new PayoutProviderError("The payout provider could not complete the request", { cause });
-    throw cause;
+    throw providerFailure(cause);
   }
+}
+
+function providerFailure(cause: unknown): unknown {
+  if (!(cause instanceof Stripe.errors.StripeError)) return cause;
+  // The response stays generic; the log keeps Stripe's reason for operators.
+  console.error("Stripe payout account request failed", {
+    type: cause.type, code: cause.code, statusCode: cause.statusCode,
+    requestId: cause.requestId, replayed: cause.headers?.["idempotent-replayed"] === "true",
+    message: cause.message,
+  });
+  return new PayoutProviderError("The payout provider could not complete the request", { cause });
 }

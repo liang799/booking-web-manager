@@ -48,6 +48,7 @@ describe("StripeWalletTopUps", () => {
         amount: 2000,
         currency: "sgd",
         payment_method_types: ["paynow"],
+        payment_method_data: { type: "paynow" },
         metadata: { purpose: "wallet_top_up", wallet_id: "wallet-user-a", user_id: "user-a" },
       },
       { idempotencyKey: '["UC1-05:top-up-intent","user-a","key-1"]' },
