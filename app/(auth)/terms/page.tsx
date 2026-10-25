@@ -40,9 +40,9 @@ export default function TermsPage() {
 
       <InfoSection id="terms-withdrawing" title="Withdrawing">
         <ul>
-          <li>More than 30 hours before the start: your full share comes back to your wallet.</li>
+          <li>At least 30 hours before the start: your full share comes back to your wallet.</li>
           <li>
-            30 hours or less before the start: your share stays held until someone takes your place, either the next
+            Less than 30 hours before the start: your share stays held until someone takes your place, either the next
             person on the waitlist or one person you invite. If nobody does before the session starts, it goes to the
             booker.
           </li>

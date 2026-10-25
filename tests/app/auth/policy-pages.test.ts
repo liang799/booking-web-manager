@@ -27,7 +27,8 @@ test("the terms state the money rules shown elsewhere in the app", () => {
   const html = renderToStaticMarkup(createElement(TermsPage));
 
   expect(html).toContain("<h1");
-  expect(html).toContain("More than 30 hours before the start: your full share comes back to your wallet.");
+  expect(html).toContain("At least 30 hours before the start: your full share comes back to your wallet.");
+  expect(html).toContain("Less than 30 hours before the start: your share stays held");
   expect(html).toContain("72 hours after the");
   expect(html).toContain("Stripe test mode");
   expect(html).toContain("does not reserve venues");
