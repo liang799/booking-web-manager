@@ -13,7 +13,7 @@ and `app/profile` and reuse what is here.
 | [`_components/user-handle-field.tsx`](./_components/user-handle-field.tsx) | The `@` input with the rules, a live availability check and server errors. |
 | [`handle-availability-action.ts`](./handle-availability-action.ts) | Public server action: AVAILABLE, TAKEN, INVALID, or UNKNOWN when the check cannot run. |
 | [`find-player-action.ts`](./find-player-action.ts), [`_components/find-player.tsx`](./_components/find-player.tsx) | "Find a player" on the Groups page: signed-in exact search showing the player's name, `@id` and reliability score. |
-| [`user-lookup-action.ts`](./user-lookup-action.ts), [`user-lookup-response.ts`](./user-lookup-response.ts), [`openapi.ts`](./openapi.ts) | `GET /api/users/by-handle/{handle}`: signed-in exact lookup, its error mapping and its API reference. |
+| [`user-lookup-action.ts`](./user-lookup-action.ts), [`user-lookup-response.ts`](./user-lookup-response.ts), [`openapi.ts`](./openapi.ts) | `GET /api/users/{handle}`: signed-in exact lookup, its error mapping and its API reference. |
 
 The live check waits 400 ms after the last keystroke and ignores answers to
 older keystrokes. It never blocks saving: the register action and

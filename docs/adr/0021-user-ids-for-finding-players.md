@@ -51,7 +51,7 @@ shown as `@name`.
   took the ID, the account is restored with a newly generated ID.
 - **Lookup:** `FindUserByHandle` returns the ACTIVE account holding exactly that
   ID, as `{ userId, handle, displayName }`, through the signed-in
-  `GET /api/users/by-handle/{handle}` route. There is no partial-match or list
+  `GET /api/users/{handle}` route. There is no partial-match or list
   search, so the directory cannot be browsed.
 - **Finding a player (Groups page):** a "Find a player" box at the top of Groups
   runs the same lookup for the signed-in player and shows the found player's

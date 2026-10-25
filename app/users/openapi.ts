@@ -22,7 +22,7 @@ export function registerUserLookupApi(registry: OpenAPIRegistry): void {
 
   registry.registerPath({
     method: "get",
-    path: "/api/users/by-handle/{handle}",
+    path: "/api/users/{handle}",
     operationId: "findUserByHandle",
     tags: ["Users"],
     summary: "Find a player by user ID",

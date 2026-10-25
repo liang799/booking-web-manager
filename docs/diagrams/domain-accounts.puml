@@ -127,8 +127,11 @@ end note
 
 note bottom of User
   UC1-03 profile edits use prepareProfileUpdate(...)
-  without loading User (ADR-0014). The public user ID
-  is a UserHandle on the profile, outside User (ADR-0021).
+  without loading User (ADR-0014).
+  userId is the permanent internal UUID that wallets, sessions,
+  groups and the ledger reference. The public user ID (@name) is a
+  separate UserHandle on the profile: it can change and is released
+  on deletion, so no record refers to it (ADR-0021).
   Deactivation shares assertDeactivationAllowed(...).
 end note
 

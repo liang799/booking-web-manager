@@ -5,7 +5,7 @@ import { toUserLookupResponse } from "@/app/users/user-lookup-response";
 // Owner: Joseph (Jolingoes) — /app/users (ADR-0021)
 test("documents the signed-in user ID lookup with its error responses", () => {
   // Act
-  const operation = openApiDocument.paths["/api/users/by-handle/{handle}"]?.get;
+  const operation = openApiDocument.paths["/api/users/{handle}"]?.get;
 
   // Assert
   expect(operation?.operationId).toBe("findUserByHandle");

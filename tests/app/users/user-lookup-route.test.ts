@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { GET } from "@/app/api/users/by-handle/[handle]/route";
+import { GET } from "@/app/api/users/[handle]/route";
 import { UserHandlesUnavailableError } from "@/app/users/user-handle-dependencies";
 import { DomainError } from "@/domain";
 
@@ -10,13 +10,13 @@ const VIEWER = "11111111-1111-4111-8111-111111111111";
 const MARCUS = { userId: "6f1c2a7e-4b8d-4c1e-9a3f-2d5b7c9e1f03", handle: "marcus_lim", displayName: "Marcus Lim" };
 
 function lookup(handle: string) {
-  return GET(new Request(`https://app.test/api/users/by-handle/${encodeURIComponent(handle)}`, {
+  return GET(new Request(`https://app.test/api/users/${encodeURIComponent(handle)}`, {
     headers: { authorization: "Bearer viewer-token" },
   }), { params: Promise.resolve({ handle }) });
 }
 
 // Owner: Joseph (Jolingoes) — /app/api/users (ADR-0021)
-describe("GET /api/users/by-handle/{handle}", () => {
+describe("GET /api/users/{handle}", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.authenticate.mockResolvedValue(VIEWER);
