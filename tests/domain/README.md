@@ -329,9 +329,9 @@ const oneMillisecondBeforeAutomaticVerification = new Date(
 
 The refund boundary is measured from session start; automatic attendance
 verification is measured from session end. Exactly 30 hours before session start
-still requires a replacement for a refund. One millisecond earlier is inside the
-full-refund window. Automatic verification is allowed exactly 72 hours after
-session end and rejected one millisecond earlier.
+is inside the full-refund window, as is one millisecond earlier. One millisecond
+later requires a replacement for a refund. Automatic verification is allowed
+exactly 72 hours after session end and rejected one millisecond earlier.
 
 ## Examples and verification
 

@@ -59,7 +59,7 @@ export function pushPayloadFor(
       return {
         ...base,
         title: "Your share is still held",
-        body: "You withdrew within 30 hours of the start. Your share is forfeited to the booker unless someone replaces you before the session starts.",
+        body: "You withdrew less than 30 hours before the start. Your share is forfeited to the booker unless someone replaces you before the session starts.",
       };
     case "FORFEITURE_DUE":
       return {
