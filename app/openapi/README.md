@@ -13,7 +13,12 @@ examples, authentication requirements and response codes.
 [`GET /api/openapi`](../api/openapi/route.ts) serves the assembled document.
 [`/api-docs`](../api-docs/page.tsx) displays it with the shared Swagger UI.
 The reference is public; authentication and availability are documented per
-operation. Try it out sends real requests using Swagger's default supported HTTP
+operation. The public `GET /api/health` readiness probe checks server settings and
+read access to the session table without exposing records or connection errors.
+It returns HTTP 200 with `{"status":"ok"}` or HTTP 503 with
+`{"status":"unavailable"}`, both with `Cache-Control: no-store`. The production
+smoke test uses this probe instead of requesting authenticated listings without
+a login. Try it out sends real requests using Swagger's default supported HTTP
 methods. Authorization is not persisted, and the online validator badge is
 disabled.
 

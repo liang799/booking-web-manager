@@ -98,7 +98,7 @@ test("landing navigation stays usable without horizontal overflow on mobile, tab
     await openLanding(page);
 
     await expect(page.getByRole("heading", { name: "Find your next game.", exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Sign up", exact: true })).toHaveAttribute("href", "/register");
+    await expect(page.getByRole("link", { name: "Sign up", exact: true })).toHaveAttribute("href", "/register?next=%2Fdiscover");
     const mobileMenu = page.getByLabel("Open navigation menu", { exact: true });
     const isMobile = await mobileMenu.isVisible();
     if (isMobile) await mobileMenu.click();
@@ -538,7 +538,7 @@ test.describe("without JavaScript", () => {
       await expect(page.locator("#how-it-works")).toBeInViewport();
       if (isMobile) await mobileMenu.click();
       await page.getByRole("link", { name: "Sign up", exact: true }).click();
-      await expect(page).toHaveURL(/\/register$/);
+      await expect(page).toHaveURL(/\/register\?next=%2Fdiscover$/);
       await expect(page.getByRole("button", { name: "Sign Up", exact: true })).toBeVisible();
     });
   }

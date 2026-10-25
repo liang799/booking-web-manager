@@ -58,6 +58,7 @@ describe("application OpenAPI document", () => {
       post: { operationId: "createSession" },
     });
     expect(document.paths["/api/venues"]?.get).toMatchObject({ operationId: "searchVenues", security: [{ bearerAuth: [] }] });
+    expect(document.paths["/api/health"]?.get).toMatchObject({ operationId: "apiHealth", security: [] });
   });
 
   test("composes an independent public feature without imposing session authentication", async () => {

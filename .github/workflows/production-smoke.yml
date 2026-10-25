@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   smoke:
-    name: Live production API authentication health
+    name: Live production API readiness and authentication
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -31,7 +31,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Check deployed APIs
+      - name: Check deployed readiness, OpenAPI and access control
         run: npm run test:e2e:production
         env:
           PRODUCTION_URL: https://booking-web-manager.vercel.app

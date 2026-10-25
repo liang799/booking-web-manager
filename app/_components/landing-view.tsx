@@ -51,7 +51,7 @@ export function LandingView() {
           <p className={styles.eyebrow}>Courts bring<br className={styles.mobileBreak} /> people together</p>
           <h1 id="landing-title">Find your<br />next game.</h1>
           <p className={styles.intro}>Share the court. Meet players.<br />Make time for play.</p>
-          <Link className={styles.primaryLink} href="/register" prefetch={false}>Sign up<ArrowRight aria-hidden="true" /></Link>
+          <Link className={styles.primaryLink} href="/register?next=%2Fdiscover" prefetch={false}>Sign up<ArrowRight aria-hidden="true" /></Link>
         </div>
 
         <div className={styles.sectionIndex}>

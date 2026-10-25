@@ -24,6 +24,10 @@ test("serves the shared OpenAPI document with creation, discovery, visibility an
     nextCursor: null,
   });
   expect(discovery.responses["503"].content["application/json"].example.error.code).toBe("DISCOVERY_API_UNAVAILABLE");
+  const health = document.paths["/api/health"].get;
+  expect(health.security).toEqual([]);
+  expect(health.responses["200"]).toBeDefined();
+  expect(health.responses["503"]).toBeDefined();
   const visibility = document.paths["/api/sessions/{sessionId}/visibility"].patch;
   expect(visibility.security).toEqual([{ bearerAuth: [] }]);
   expect(visibility.requestBody.content["application/json"].example).toEqual({ visibility: "PUBLIC" });

@@ -15,6 +15,13 @@ interface DiscoveryItem {
 }
 interface DiscoveryPage { items: DiscoveryItem[]; nextCursor: string | null }
 
+test("health check verifies configured session database readiness", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  expect(await response.json()).toEqual({ status: "ok" });
+});
+
 test("anonymous and invalid-token callers cannot list sessions", async ({ request }) => {
   for (const headers of [undefined, { Authorization: "Bearer invalid-token" }]) {
     const response = await request.get("/api/sessions?q=Badminton", { headers });
