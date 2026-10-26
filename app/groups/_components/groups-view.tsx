@@ -3,12 +3,13 @@
 import { ChevronRight, Link2, MoreHorizontal, Plus, Settings2, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { InfoNote } from "@/components/ui/info-note";
 import { initials } from "@/components/ui/initials";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SessionViewNavigation } from "@/app/sessions/_components/session-view-navigation";
 import styles from "./groups-view.module.css";
 
 export interface GroupOverview {
@@ -37,19 +38,31 @@ const filters = [
 // Existing decorative court photography; groups do not have uploaded covers.
 const covers = ["/images/sessions/court.webp", "/images/session-court.webp", "/images/sessions/bench.webp", "/images/sports/tennis.jpg"] as const;
 
+const mobileQuery = "(max-width: 767px)";
+function subscribeToMobile(onChange: () => void) {
+  const query = window.matchMedia(mobileQuery);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+const isMobileScreen = () => window.matchMedia(mobileQuery).matches;
+const isServerScreenMobile = () => false;
+
 /** Synchronous UC1-06 overview; mutations remain in the server-owned form slot. */
 export function GroupsView({ groups, createForm, leftGroup = false }: GroupsViewProps) {
+  const [filterValue, setFilterValue] = useState("all");
+  const mobile = useSyncExternalStore(subscribeToMobile, isMobileScreen, isServerScreenMobile);
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div>
+        <div className={styles.mobileNavigation}><SessionViewNavigation active="groups" /></div>
+        <div className={styles.headerCopy}>
           <p className={styles.eyebrow}>Groups</p>
           <h1>Your groups</h1>
           <p className={styles.intro}>Play together. Organise sessions with your regular players.</p>
         </div>
         <Dialog>
           <DialogTrigger asChild>
-            <Button className={styles.createButton}><Plus aria-hidden="true" />Create group</Button>
+            <Button className={styles.createButton}><Plus aria-hidden="true" /><span>Create group</span></Button>
           </DialogTrigger>
           <DialogContent className={styles.createDialog}>
             <DialogHeader>
@@ -65,7 +78,7 @@ export function GroupsView({ groups, createForm, leftGroup = false }: GroupsView
 
       {leftGroup && <div className={styles.notice}><InfoNote icon><span role="status">You left the group.</span></InfoNote></div>}
 
-      <Tabs defaultValue="all" className={styles.tabs}>
+      <Tabs value={mobile ? "all" : filterValue} onValueChange={setFilterValue} className={styles.tabs}>
         <TabsList aria-label="Filter groups" className={styles.filters}>
           {filters.map((filter) => <TabsTrigger key={filter.value} value={filter.value} className={styles.filter}>{filter.label}</TabsTrigger>)}
         </TabsList>
@@ -95,11 +108,12 @@ export function GroupsView({ groups, createForm, leftGroup = false }: GroupsView
 function GroupRow({ group, coverIndex }: { readonly group: GroupOverview; readonly coverIndex: number }) {
   const remainder = group.memberCount - group.memberNames.length;
   return (
-    <li className={styles.row}>
+    <li className={styles.row} data-archived={group.archived || undefined}>
       <Link href={`/groups/${group.groupId}`} className={styles.rowLink} aria-label={`Open ${group.name}`}>
         <span className={styles.cover}>
           <Image src={covers[coverIndex % covers.length] ?? covers[0]} alt="" fill sizes="(min-width: 1101px) 160px, (min-width: 768px) 120px, 76px" className={styles.coverImage} />
         </span>
+        <span className={styles.monogram} data-tone={coverIndex % 4} aria-hidden="true">{initials(group.name.replace(/[&+]/g, " "))}</span>
         <span className={styles.copy}>
           <span className={styles.name}>{group.name}</span>
           <span className={styles.description}>Organised by {group.ownerName}</span>
@@ -109,6 +123,7 @@ function GroupRow({ group, coverIndex }: { readonly group: GroupOverview; readon
               {remainder > 0 && <span className={styles.remainder}>+{remainder}</span>}
             </span>
             <span className={styles.memberCount}>{group.memberCount} {group.memberCount === 1 ? "member" : "members"}</span>
+            <span className={styles.mobileRole}>{group.archived ? "Archived" : group.isOwner ? "Owner" : "Member"}</span>
           </span>
         </span>
         <span className={styles.status}>

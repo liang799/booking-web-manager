@@ -121,9 +121,24 @@ export const EmptyFilter: Story = {
 };
 
 export const LeftGroup: Story = { args: { leftGroup: true } };
-export const Mobile: Story = { globals: { viewport: { value: "phone", isRotated: false } } };
+export const Mobile: Story = {
+  globals: { viewport: { value: "phone", isRotated: false } },
+  play: async ({ canvas, canvasElement }) => {
+    const views = within(canvas.getByRole("navigation", { name: "Session views" }));
+    await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
+    await expect(views.getByRole("link", { name: "Joined" })).toHaveAttribute("href", "/sessions");
+    await expect(views.getByRole("link", { name: "Hosting" })).toHaveAttribute("href", "/sessions?tab=hosting");
+    await expect(canvas.queryByRole("button", { name: "Create group" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("tablist", { name: "Filter groups" })).not.toBeInTheDocument();
+    await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
+    const row = canvas.getByRole("link", { name: "Open Weekend Tennis Club" });
+    await expect(row).toHaveTextContent("8 members");
+    await expect(row).toHaveTextContent("Owner");
+    await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
 export const Dark: Story = { globals: { theme: "dark" } };
-export const MobileDark: Story = { globals: { theme: "dark", viewport: { value: "phone", isRotated: false } } };
+export const MobileDark: Story = { ...Mobile, globals: { theme: "dark", viewport: { value: "phone", isRotated: false } } };
 export const LongNames: Story = {
   args: { groups: [{ ...groups[0], name: "Weekend tennis players from the North Spine residences club", ownerName: "Alexandria Wei Ling Tan", memberCount: 1234 }] },
 };

@@ -12,11 +12,7 @@
 .secondaryButton:hover { background: hsl(var(--muted)); }
 .page :is(button,a):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
 .page button:disabled { cursor: wait; opacity: .65; }
-.tabs { display: flex; align-self: stretch; gap: 38px; }
-.tabs > :is(button,a) { position: relative; min-height: 48px; padding: 10px 0 14px; color: var(--session-muted); font-size: 20px; line-height: 1.2; }
-.tabs > [aria-current] { color: hsl(var(--foreground)); font-weight: 600; }
-.tabs > [aria-current]::after { content: ""; position: absolute; height: 2px; bottom: 0; left: 0; right: 0; background: currentColor; }
-.mobileGroups,.mobileList { display: none; }
+.mobileList { display: none; }
 .timeline { --date-column: 148px; --session-line: hsl(var(--border) / .7); position: relative; margin-top: 28px; padding: 0 0 24px; overflow-anchor: none; }
 .rail { position: absolute; left: 6px; top: 32px; bottom: 0; width: 1px; background: var(--timeline-rail); transform-origin: top; }
 .activeDot { position: absolute; z-index: 2; left: -.5px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #111211; transform: translateY(calc(var(--marker-y) - 50%)); pointer-events: none; box-shadow: 0 0 0 3px var(--session-paper); }
@@ -246,8 +242,6 @@
   .collapsedPlayers { gap: 8px; }
   .header { gap: 12px; }
   .header .primaryButton { min-width: 130px; font-size: 13px; padding: 10px; gap: 8px; }
-  .tabs { gap: 20px; }
-  .tabs > button { font-size: 14px; }
   .timeline { --date-column: 72px; }
   .timeline .collapsedCopy strong { font-size: 18px; }
   .collapsedCard { gap: 12px; }
@@ -296,9 +290,6 @@
   .header h1 { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
   .header .primaryButton { display: inline-flex; min-width: 44px; width: 44px; min-height: 44px; padding: 10px; }
   .header .primaryButton > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .tabs { margin: 0; gap: 25px; min-height: 44px; }
-  .tabs > :is(button,a) { min-height: 44px; padding: 4px 0 13px; font-size: 13px; display: inline-flex; align-items: center; }
-  .tabs > [aria-current]::after { bottom: 0; }
   .desktop { display: none; }
   .mobileList { display: grid; }
   .headerActions .manageLink { display: none; }
@@ -337,7 +328,7 @@
   .dialogContent .detailTabs { gap: 24px; }
   .dialogContent .details { font-size: 12px; }
 }
-@media (max-width: 360px) { .page { padding-left: 16px; padding-right: 16px; } .tabs { gap: 18px; } .mobileCopy { padding-left: 20px; padding-right: 10px; } .mobileCard > .date { flex-basis: 52px; } }
+@media (max-width: 360px) { .page { padding-left: 16px; padding-right: 16px; } .mobileCopy { padding-left: 20px; padding-right: 10px; } .mobileCard > .date { flex-basis: 52px; } }
 @media (prefers-reduced-motion: reduce) { .page * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {

@@ -35,5 +35,15 @@ owner name, and decorative thumbnails reuse `/images/sessions/court.webp`,
 `/images/sports/tennis.jpg`. Their existing provenance lives with the source assets.
 The shared shell and group detail pages are unchanged.
 
+On mobile, Groups continues the existing Joined / Hosting / Groups navigation
+used by Sessions, with Groups marked as current and links back to both session
+views. The navigation component and its original styles are reused by both pages.
+The latest mobile reference is inspiration for simple monogram rows, member
+counts, inline roles/archive status and dividers. Photographs, avatar stacks and
+row options remain on desktop; mobile opens the existing detail page for group
+actions. Per the mobile correction, the navigation leads straight into all group
+rows, without a visible page heading, create button, description or filter bar.
+Resizing from a filtered desktop view still shows all groups on mobile.
+
 Storybook's **Groups / Overview** includes filters, role-specific options, dialog
 keyboard behavior, empty states, long names, mobile layouts and both themes.

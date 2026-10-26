@@ -1,5 +1,13 @@
 # Groups overview redesign
 
+Mobile correction: retain the existing Joined / Hosting / Groups navigation,
+reusing its component and styles with Groups selected. Use the user's latest
+mobile image only as inspiration: simple circular group initials, names, member
+counts, inline role/archive labels and dividers. Keep the desktop design and
+shared shell unchanged. Open existing group details for mobile administration.
+The final mobile correction removes the visible heading, creation CTA,
+description and filters: retain the existing navigation followed by all rows.
+
 Implement the supplied reference for UC1-06: a spacious “Your groups” heading,
 supporting copy, a Create group button, All/Owned/Joined/Archived filters, and
 horizontal rows with court imagery, membership previews, role badges and links.

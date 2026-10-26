@@ -36,5 +36,15 @@ long content, keyboard dismissal and focus restoration.
   Chromium and WebKit. Repair any overflow, accessibility or interaction issues.
 - [x] Update `app/groups/README.md` with overview behavior and asset provenance.
 - [x] Run typecheck, lint and the unit suite; compare any failures with baseline.
-- [ ] Review the diff, commit semantically, push the feature branch, and create
+- [x] Review the diff, commit semantically, push the feature branch, and create
   and attach the PR with validation and relevant screenshots.
+
+## Mobile follow-up
+
+- [x] Reuse the existing Sessions view navigation and original breakpoint styles.
+- [x] Use the latest mobile reference as inspiration for simple monogram rows.
+- [x] Apply the final correction: navigation followed directly by all rows, without
+  a visible heading, creation action, description or filters. Preserve desktop.
+- [x] Verify both themes, all rows after a desktop-to-mobile resize, existing
+  Sessions navigation, accessibility, production build and unit checks. Record
+  pre-existing desktop WebKit failures separately in the screenshot evidence.
