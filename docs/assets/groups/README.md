@@ -33,6 +33,8 @@ The existing Joined / Hosting / Groups navigation is reused, with Groups selecte
 It leads directly into monogram rows: the visible page heading, creation button,
 description and filter bar are omitted on mobile. Desktop retains its original
 redesign. Resizing from a filtered desktop view restores all rows on mobile.
+The mobile screenshots also verify the transparent page surface: the shell's
+existing court artwork fades continuously behind the tabs and into the list.
 
 Validation after the correction: 47 Groups/Sessions view stories pass in Chromium,
 all 11 Groups stories pass in WebKit, all 3,156 unit tests pass, and typecheck,

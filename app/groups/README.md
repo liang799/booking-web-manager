@@ -44,6 +44,8 @@ row options remain on desktop; mobile opens the existing detail page for group
 actions. Per the mobile correction, the navigation leads straight into all group
 rows, without a visible page heading, create button, description or filter bar.
 Resizing from a filtered desktop view still shows all groups on mobile.
+The mobile page background stays transparent so the shared shell's court artwork
+and existing gradient fade through the tab area without a hard horizontal edge.
 
 Storybook's **Groups / Overview** includes filters, role-specific options, dialog
 keyboard behavior, empty states, long names, mobile layouts and both themes.
