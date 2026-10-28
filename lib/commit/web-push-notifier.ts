@@ -49,6 +49,19 @@ export function pushPayloadFor(
         title: "You're in!",
         body: "A place opened up and your share is now held for this session.",
       };
+    case "REMOVED_FROM_WAITLIST":
+      return notification.reason === "INSUFFICIENT_FUNDS"
+        ? {
+            ...base,
+            url: "/wallet",
+            title: "You missed a place",
+            body: "A place opened up, but your wallet couldn't cover your share, so you left the waitlist. Top up and join again if places remain.",
+          }
+        : {
+            ...base,
+            title: "You missed a place",
+            body: "A place opened up, but your account no longer meets this session's requirements, so you left the waitlist.",
+          };
     case "REPLACEMENT_INVITATION":
       return {
         ...base,
