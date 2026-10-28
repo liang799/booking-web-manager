@@ -98,7 +98,7 @@ test("landing navigation stays usable without horizontal overflow on mobile, tab
     await openLanding(page);
 
     await expect(page.getByRole("heading", { name: "Find your next game.", exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Browse sessions", exact: true })).toHaveAttribute("href", "/discover");
+    await expect(page.getByRole("link", { name: "Sign up", exact: true })).toHaveAttribute("href", "/register?next=%2Fdiscover");
     const mobileMenu = page.getByLabel("Open navigation menu", { exact: true });
     const isMobile = await mobileMenu.isVisible();
     if (isMobile) await mobileMenu.click();
@@ -114,8 +114,9 @@ test("landing navigation stays usable without horizontal overflow on mobile, tab
   }
 
   await page.locator('a[href="/discover?sport=Tennis"]').first().click();
-  await expect(page).toHaveURL(/\/discover\?sport=Tennis$/);
-  await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/login\?next=/);
+  expect(new URL(page.url()).searchParams.get("next")).toBe("/discover?sport=Tennis");
+  await expect(page.getByRole("heading", { name: "Log in", exact: true })).toBeVisible();
 });
 
 test("the keyboard skip link moves past navigation to the primary action", async ({ page }) => {
@@ -128,7 +129,7 @@ test("the keyboard skip link moves past navigation to the primary action", async
     await page.keyboard.press("Enter");
     await expect(page.locator("#landing-content")).toBeFocused();
     await pressTab(page);
-    await expect(page.getByRole("link", { name: "Browse sessions", exact: true })).toBeFocused();
+    await expect(page.getByRole("link", { name: "Sign up", exact: true })).toBeFocused();
   }
 });
 
@@ -168,7 +169,7 @@ test("the mobile disclosure supports keyboard navigation and all dismissal paths
     await expect(link).toHaveAttribute("href", href);
   }
   await pressTab(page);
-  await expect(page.getByRole("link", { name: "Browse sessions", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Sign up", exact: true })).toBeFocused();
   await expect(panel).toBeHidden();
 
   await trigger.click();
@@ -197,7 +198,7 @@ test("rapid mobile toggles recover and resizing to desktop closes the disclosure
 
   await trigger.click();
   await pressTab(page);
-  await expect(page.getByRole("link", { name: "Browse sessions", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Sign up", exact: true })).toBeFocused();
   await expect(panel).toBeHidden();
 
   await trigger.click();
@@ -217,7 +218,7 @@ test("rapid mobile toggles recover and resizing to desktop closes the disclosure
 
   // Resizing must preserve focus when it already belongs to the page content.
   await page.setViewportSize({ width: 390, height: 844 });
-  const primaryAction = page.getByRole("link", { name: "Browse sessions", exact: true });
+  const primaryAction = page.getByRole("link", { name: "Sign up", exact: true });
   await primaryAction.focus();
   await page.setViewportSize({ width: 900, height: 844 });
   await expect(primaryAction).toBeFocused();
@@ -383,7 +384,7 @@ test("the hero action and practical details do not overlap at short and wide des
     await page.setViewportSize(viewport);
     await openLanding(page);
 
-    const action = page.getByRole("link", { name: "Browse sessions", exact: true });
+    const action = page.getByRole("link", { name: "Sign up", exact: true });
     const facts = page.getByRole("list", { name: "What you can do with Booking", exact: true });
     await expect(action).toBeVisible();
     await expect(facts).toBeVisible();
@@ -515,7 +516,7 @@ test.describe("without JavaScript", () => {
 
   // Each viewport independently verifies the server-rendered copy and navigation.
   for (const width of [390, 1440]) {
-    test(`the landing copy and primary discovery link remain usable at ${width}px`, async ({ page }) => {
+    test(`the landing copy and primary signup link remain usable at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       // Decorative optimized images can remain in flight with JavaScript disabled.
       // Check the actual usable content and hero instead of waiting for every image.
@@ -536,9 +537,9 @@ test.describe("without JavaScript", () => {
       await expect(page).toHaveURL(/\/#how-it-works$/);
       await expect(page.locator("#how-it-works")).toBeInViewport();
       if (isMobile) await mobileMenu.click();
-      await page.getByRole("link", { name: "Browse sessions", exact: true }).click();
-      await expect(page).toHaveURL(/\/discover$/);
-      await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
+      await page.getByRole("link", { name: "Sign up", exact: true }).click();
+      await expect(page).toHaveURL(/\/register\?next=%2Fdiscover$/);
+      await expect(page.getByRole("button", { name: "Sign Up", exact: true })).toBeVisible();
     });
   }
 

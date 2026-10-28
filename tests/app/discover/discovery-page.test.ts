@@ -26,14 +26,14 @@ beforeEach(() => {
     preferredSports: ["Tennis"], preferredRegions: ["East"], reliabilityScore: 100,
   });
   searchPublic.mockResolvedValue([]);
-  vi.mocked(getDiscoveryDependencies).mockResolvedValue({ discoverSessions: { searchPublic } });
+  vi.mocked(getDiscoveryDependencies).mockResolvedValue({ authenticate: async () => "10000000-0000-4000-8000-000000000001", discoverSessions: { searchPublic } });
 });
 
 function renderPage(params: Record<string, string | string[]> = {}) {
   return DiscoveryPage({ searchParams: Promise.resolve(params) });
 }
 
-describe("public discovery server page", () => {
+describe("authenticated discovery server page", () => {
   test("samples expiry timing after the server read and only for the displayed page", async () => {
     vi.useFakeTimers(); vi.setSystemTime(0);
     const sessions = Array.from({ length: 21 }, (_, index) => ({
@@ -59,11 +59,20 @@ describe("public discovery server page", () => {
     expect((await renderPage()).props.expiry).toBeNull();
   });
 
-  test("renders anonymous results without consulting authentication", async () => {
+  test("redirects signed-out visitors before loading listings, preserving filters", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null);
-    const result = await renderPage();
-    expect(result.props.outcome).toEqual({ status: "ready", page: { items: [], nextCursor: null } });
-    expect(getCurrentUser).not.toHaveBeenCalled();
+    await expect(renderPage({ sport: "Tennis" })).rejects.toThrow("redirect:/login?next=%2Fdiscover%3Fsport%3DTennis");
+    expect(getDiscoveryDependencies).not.toHaveBeenCalled();
+    expect(searchPublic).not.toHaveBeenCalled();
+  });
+
+  test("redirects inactive accounts before querying sessions", async () => {
+    const viewer = await getCurrentUser();
+    if (viewer === null) throw new Error("Missing viewer fixture");
+    vi.mocked(getCurrentUser).mockResolvedValue({ ...viewer, accountStatus: "INACTIVE" });
+    await expect(renderPage()).rejects.toThrow("redirect:/login?next=%2Fdiscover");
+    expect(getDiscoveryDependencies).not.toHaveBeenCalled();
+    expect(searchPublic).not.toHaveBeenCalled();
   });
 
   test("shows an opaque error on a database failure", async () => {
