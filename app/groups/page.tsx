@@ -1,15 +1,11 @@
-import { ChevronRight } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { EmptyState } from "@/components/ui/empty-state";
-import { InfoNote } from "@/components/ui/info-note";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { displayNames } from "@/lib/supabase/profile-names";
 import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { FindPlayer } from "@/app/users/_components/find-player";
 import { findPlayer } from "@/app/users/find-player-action";
 import { CreateGroupForm } from "./_components/group-controls";
+import { GroupsView } from "./_components/groups-view";
 
 interface GroupsPageProps {
   /** e.g. /groups?left=1 after leaving a group. */
@@ -22,7 +18,12 @@ export default async function GroupsPage({ searchParams }: GroupsPageProps) {
   if (user === null) redirect("/login");
   const { left } = await searchParams;
 
-    const groups = await createManageGroup().listMine({ actorId: user.id });
+  const groups = await createManageGroup().listMine({ actorId: user.id });
+  const previewIds = [...new Set(groups.flatMap((group) => [
+    group.ownerId,
+    ...group.memberships.slice(0, 4).map((member) => member.userId),
+  ]))];
+  const names = await displayNames(previewIds);
   return (
     <>
       <PageHeader breadcrumb="Groups" title="My groups" />
