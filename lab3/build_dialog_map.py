@@ -119,7 +119,7 @@ edge("Details", "JoinConfirm", "Commit[not participating]", planned=True, style=
 edge("JoinConfirm", "Details", "Confirm()[slot avail.] / lockShare\nConfirm()[full] / joinWaitlist\nCancel",
      planned=True, style=P(0.75, 0, 0.3, 1), pos=-0.5)
 edge("Details", "WithdrawConfirm", "Withdraw[committed]", planned=True, style=P(1, 0.9, 0.85, 0) + ORTHO)
-edge("WithdrawConfirm", "Details", "Confirm(choice)[>30h] / refund\nConfirm(choice)[≤30h] / awaitReplacement\nCancel",
+edge("WithdrawConfirm", "Details", "Confirm(choice)[≥30h] / refund\nConfirm(choice)[<30h] / awaitReplacement\nCancel",
      planned=True, style=P(0.25, 0, 0.75, 1), pos=0.5)
 edge("JoinConfirm", "Wallet", "Confirm()[insufficient funds] / promptTopUp", planned=True,
      style=P(0.5, 1, 0, 0.5) + ORTHO, points=[(615, 1040), (2080, 1040), (2080, 370)])
