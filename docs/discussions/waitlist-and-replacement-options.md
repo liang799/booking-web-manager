@@ -28,10 +28,12 @@ the joining waitlist. [ADR-0006](../adr/0006-personal-replacement-reservations.m
 records the confirmed scope and its domain implementation consequences.
 
 The supplied participant state diagram remains the earlier confirmed reference.
-Today's confirmation does not resolve its completion-balance or exactly-30-hour
-discrepancies, approve rejoining after late withdrawal, or approve all the
-financial proposals below. Historical proposals are retained with their scope
-and approval status visible.
+The 27 September confirmation did not resolve the completion-balance or
+exactly-30-hour discrepancies. The refund boundary was subsequently decided
+on 25 October 2026: exactly 30 hours qualifies for an immediate full refund.
+Completion-balance questions, rejoining after late withdrawal, and other
+financial proposals below remain open. Historical proposals are retained with
+their scope and approval status visible.
 
 ## Earlier first-release proposals — historical
 
@@ -101,9 +103,10 @@ Two points should stay visible during review:
   retaining $20, which also matches the existing settlement code. Confirm the
   intended outcome and update the diagram if needed; the source above has not
   been silently corrected.
-- **30-hour boundary:** the diagram says an immediate refund at exactly 30 hours.
-  Current code and an existing test instead make that participant await a
-  replacement. This is a diagram/code discrepancy separate from waitlist policy.
+- **30-hour boundary (resolved 25 October 2026):** the diagram specifies an
+  immediate full refund at exactly 30 hours. The previously exclusive cutoff
+  in code and tests was corrected to include exactly 30 hours. The decisive
+  time is taken from the server when the withdrawal is processed.
 
 ## 2. Two different groups are involved
 
