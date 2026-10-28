@@ -157,6 +157,7 @@ export const WithFindPlayer: Story = {
   play: async ({ canvas }) => {
     const search = canvas.getByRole("search", { name: "Find a player" });
     await expect(canvas.getByRole("heading", { name: "Find a player" })).toBeVisible();
+    await expect(canvas.getByText("Search by their exact user ID.")).toBeVisible();
     await userEvent.type(within(search).getByRole("textbox", { name: "User ID" }), "marcus_lim");
     await userEvent.click(within(search).getByRole("button", { name: "Find" }));
     await expect(await canvas.findByText("@marcus_lim")).toBeVisible();

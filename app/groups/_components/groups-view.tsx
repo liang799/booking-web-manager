@@ -84,7 +84,7 @@ export function GroupsView({ groups, createForm, findPlayer, leftGroup = false }
         <section className={styles.findPlayer} aria-labelledby="find-player-heading">
           <div className={styles.findPlayerCopy}>
             <h2 id="find-player-heading">Find a player</h2>
-            <p>Search by their exact user ID, like a Telegram username.</p>
+            <p>Search by their exact user ID.</p>
           </div>
           {findPlayer}
         </section>
