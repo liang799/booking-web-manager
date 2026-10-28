@@ -71,9 +71,9 @@ ID, so nobody can act on another person's place, and each takes an
 idempotency key.
 
 - [`WithdrawFromSession`](../../use-cases/sessions/WithdrawFromSession.ts) runs
-  `Participant.withdraw` in one unit of work. More than 30 hours before start,
+  `Participant.withdraw` in one unit of work. At least 30 hours before start,
   the share is refunded at once (the REFUND is written with the session
-  change). At 30 hours or less it stays held, awaiting a replacement. The
+  change). Less than 30 hours before start it stays held, awaiting a replacement. The
   participant chooses either `OPEN_SLOT` or `DIRECT_INVITE` for one named,
   existing user, and cannot change it later (ADR-0006).
 - [`AcceptReplacement`](../../use-cases/sessions/AcceptReplacement.ts) lets the
@@ -91,9 +91,10 @@ a separate unit of work ([follow-up-promotion.ts](../../use-cases/sessions/follo
 If that fails, the committed withdrawal is kept and the result reports
 `DEFERRED`; the scheduled promotion sweep fills the place later.
 
-The 30-hour boundary follows CLAUDE.md and the domain: exactly 30 hours is a
-late withdrawal. The product-owner diagram includes exactly 30 hours in the
-refund window; that discrepancy is tracked in the waitlist discussion document.
+The 30-hour boundary follows CLAUDE.md and the product-owner diagram: exactly
+30 hours still qualifies for an immediate full refund. A withdrawal processed
+less than 30 hours before start is late. The server decides using its clock
+inside the withdrawal unit of work; a preview is only a snapshot.
 
 ### Withdraw / Leave-waitlist screens
 

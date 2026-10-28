@@ -99,7 +99,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
               </div>
               <InfoNote icon>
                 Your share is held, not paid, until attendance is verified. If the session is already full you join the
-                waitlist instead and nothing is held. Withdraw more than 30 hours before the start for a full refund; later,
+                waitlist instead and nothing is held. Withdraw at least 30 hours before the start for a full refund; closer to start,
                 you need a replacement or the share is forfeited.
               </InfoNote>
             </div>

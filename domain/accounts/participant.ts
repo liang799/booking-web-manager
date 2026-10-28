@@ -514,7 +514,7 @@ export class Participant {
       "Only a committed participant can withdraw",
     );
     const hold = participation.hold;
-    const late = booking.hoursUntilStart(command.now) <= 30;
+    const late = booking.hoursUntilStart(command.now) < 30;
     const nextHold = late ? hold.awaitReplacement() : hold.refund(command.now);
     const next = participation.withdraw(
       nextHold,

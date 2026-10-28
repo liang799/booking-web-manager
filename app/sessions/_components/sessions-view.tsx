@@ -13,6 +13,7 @@ import styles from "./sessions.module.css";
 import { useTimelineEntrance } from "./use-timeline-entrance";
 import { useTimelineNavigation } from "./use-timeline-navigation";
 import { SessionsSkeleton } from "./sessions-skeleton";
+import { SessionViewNavigation } from "./session-view-navigation";
 
 export interface SessionsViewProps {
   readonly tab: "joined" | "hosting";
@@ -45,11 +46,7 @@ export function SessionsView(props: SessionsViewProps) {
     <div className={styles.breadcrumb} aria-hidden>My sessions <span>/</span></div>
     <div className={styles.panel}>
     <header className={styles.header}>
-      <nav className={styles.tabs} aria-label="Session views">
-        <button type="button" aria-current={tab === "joined" ? "page" : undefined} onClick={() => onTabChange("joined")}>Joined</button>
-        <button type="button" aria-current={tab === "hosting" ? "page" : undefined} onClick={() => onTabChange("hosting")}>Hosting</button>
-        <Link href="/groups" className={styles.mobileGroups}>Groups</Link>
-      </nav>
+      <SessionViewNavigation active={tab} onTabChange={onTabChange} />
       <div className={styles.headerActions}>
         {/* Desktop keeps this in the sticky header, because the timeline scrolls to the next session. */}
         {tab === "joined" && <Link href="/sessions/joined" className={styles.manageLink}>Manage my places<ArrowRight size={18} strokeWidth={1.5} aria-hidden /></Link>}

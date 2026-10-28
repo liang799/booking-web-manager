@@ -221,8 +221,8 @@ Execution: **5 passed / 5 cases**.
 | [participant](withdrawals.test.ts#L13) | Yes | 31 h | Result `REFUNDED`; participation belongs to `participant`, status `WITHDRAWN`, hold `REFUNDED`; exactly one instruction with kind `REFUND`, participation `p-participant`, hold `h-participant`, wallet `w-participant`, amount 500 cents. | Result `REFUNDED`; participation belongs to `participant`, status `WITHDRAWN`, hold `REFUNDED`; exactly one instruction with kind `REFUND`, participation `p-participant`, hold `h-participant`, wallet `w-participant`, amount 500 cents. |
 | [alice](withdrawals.test.ts#L42) | No | 48 h | Result `REFUNDED`; first instruction kind `REFUND`, amount 500 cents; alice `WITHDRAWN`. | Result `REFUNDED`; first instruction kind `REFUND`, amount 500 cents; alice `WITHDRAWN`. |
 | [alice](withdrawals.test.ts#L62) | Yes | 30 h + 1 ms | Result `REFUNDED`; hold `REFUNDED`. | Result `REFUNDED`; hold `REFUNDED`. |
-| [alice](withdrawals.test.ts#L83) | Yes | 30 h | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. |
-| [alice](withdrawals.test.ts#L101) | Yes | 1 h | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. |
+| [alice](withdrawals.test.ts#L83) | Yes | 30 h | Result `REFUNDED`; hold `REFUNDED`. | Result `REFUNDED`; hold `REFUNDED`. |
+| [alice](withdrawals.test.ts#L101) | Yes | 29 h 59 min 59 s | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. |
 
 ## withdraw — invite a replacement
 

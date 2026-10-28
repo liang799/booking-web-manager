@@ -96,8 +96,8 @@ export function registerCommitmentApi(registry: OpenAPIRegistry): void {
       result: withdrawalResult, invalidMessage: "Invalid withdrawal request",
       example: { sessionId, idempotencyKey: "withdraw-my-place", replacement: { mode: "DIRECT_INVITE", inviteeId } },
       description: "Withdraws the authenticated participant's own place. Choose OPEN_SLOT or DIRECT_INVITE " +
-        "for one existing named invitee; the choice cannot change after withdrawal. More than 30 hours " +
-        "before start refunds immediately; exactly 30 hours or less retains the held share awaiting replacement. " +
+        "for one existing named invitee; the choice cannot change after withdrawal. At least 30 hours " +
+        "before start refunds immediately; less than 30 hours retains the held share awaiting replacement. " +
         "Open-slot withdrawal triggers promotion after commit. DEFERRED promotion keeps the withdrawal committed.",
     },
     {

@@ -5,6 +5,7 @@ import { logIn } from "@/app/(auth)/login/actions";
 import { HOME_PATH, isAuthPage, isPublicPath, safeRedirectPath } from "@/app/(auth)/redirect-path";
 import { loginSchema } from "@/app/(auth)/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { isAuthenticationConfigured } from "@/lib/supabase/is-configured";
 import { middleware } from "@/middleware";
 import {
   activeProfile,
@@ -18,6 +19,7 @@ import {
 // The login action and middleware talk to Supabase and Next.js; both are replaced with test doubles.
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@supabase/ssr", () => ({ createServerClient: vi.fn() }));
+vi.mock("@/lib/supabase/is-configured", () => ({ isAuthenticationConfigured: vi.fn() }));
 vi.mock("next/navigation", async () => {
   const { RedirectCalled } = await import("./support/fake-supabase-auth");
   return {
@@ -37,6 +39,7 @@ describe("UC1-02 Authenticate User", () => {
   beforeEach(() => {
     vi.mocked(createClient).mockReset();
     vi.mocked(createServerClient).mockReset();
+    vi.mocked(isAuthenticationConfigured).mockReturnValue(true);
   });
 
   describe("log in (server action)", () => {
@@ -285,7 +288,7 @@ describe("UC1-02 Authenticate User", () => {
   });
 
   describe("which pages need a login", () => {
-    test.each(["/", "/discover", "/login", "/register", "/terms", "/privacy"])("%s is open to logged-out visitors", (path) => {
+    test.each(["/", "/login", "/register", "/terms", "/privacy"])("%s is open to logged-out visitors", (path) => {
       // Act
       const result = isPublicPath(path);
 
@@ -293,7 +296,7 @@ describe("UC1-02 Authenticate User", () => {
       expect(result).toBe(true);
     });
 
-    test.each(["/profile", "/profile/help", "/groups", "/wallet", "/payouts", "/groups/join/abc123"])(
+    test.each(["/discover", "/profile", "/profile/help", "/groups", "/wallet", "/payouts", "/groups/join/abc123"])(
       "%s requires a login",
       (path) => {
         // Act

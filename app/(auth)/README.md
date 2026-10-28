@@ -21,9 +21,16 @@ the court image also reuses it with inherited white text. Review captures:
 
 Registration starts with region, email and password. **Sign Up** validates those
 details using the existing registration schema and opens the required name and
-preferred-sport step. **Create account** submits all five fields and the validated
-return destination to the server action. Both steps remain mounted so Back and validation errors preserve
-the draft. Terms and privacy links appear before the final submission.
+preferred-sport step. **Continue** validates that step and opens **Your user ID**,
+where the person chooses the public ID other players find them by
+([ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md)). The field
+checks Telegram's username rules as they type and asks the server whether the ID
+is free. **Create account** submits all six fields and the validated return
+destination to the server action, which checks the ID again before sign-up; the
+sign-up trigger keeps IDs unique even if two people race for one, by adding a
+number to the later sign-up's ID. All steps remain
+mounted so Back and validation errors preserve the draft. Terms and privacy links
+appear before the final submission.
 
 Both forms set `method="post"`. After hydration the client handler submits them,
 but a submission before JavaScript loads uses the browser default. Without a
@@ -48,7 +55,7 @@ sign-in, registration and confirmation still need a configured Supabase service.
 `/sessions/{sessionId}/join?token=...` is a public preview for a UUID session ID.
 Its token is checked by the session reader; becoming signed in never joins a
 session automatically. Other Sessions routes remain protected. Missing or
-unavailable authentication does not block this preview, just as with Discover.
+unavailable authentication does not block invitation previews; Discover requires an active login.
 Invitation responses and authentication/recovery responses carrying their return
 destination use `Cache-Control: private, no-store` and `Referrer-Policy: no-referrer`.
 

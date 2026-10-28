@@ -165,7 +165,13 @@ export const DesktopWallet: Story = {
   args: { children: <PageHeader breadcrumb="Wallet" title="Wallet" /> },
   play: async ({ canvas }) => {
     const nav = canvas.getByRole("navigation", { name: "Main" });
-    await expect(within(nav).getByRole("link", { name: "Wallet" })).toHaveAttribute("aria-current", "page");
+    const sidebar = canvas.getByRole("complementary");
+    // Wallet uses the same inset sidebar and full-height navigation links as other routes.
+    await expect(getComputedStyle(sidebar).borderTopWidth).toBe("1px");
+    await expect(getComputedStyle(sidebar).borderTopLeftRadius).toBe("16px");
+    const walletLink = within(nav).getByRole("link", { name: "Wallet" });
+    await expect(walletLink).toHaveAttribute("aria-current", "page");
+    await expect(walletLink.getBoundingClientRect().height).toBeGreaterThanOrEqual(52);
     await expectNavigationIcons(nav);
   },
 };

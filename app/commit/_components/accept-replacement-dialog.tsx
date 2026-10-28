@@ -40,7 +40,7 @@ export function AcceptReplacementDialog({ state, onConfirm, onClose }: {
             </div>
             <InfoNote icon>
               It stays held until attendance is verified, then goes to the booker. If you withdraw later, the usual
-              refund rules apply: a full refund more than 30 hours before the start.
+              refund rules apply: a full refund at least 30 hours before the start.
             </InfoNote>
             {state.error !== null && (
               <ErrorMessage>
