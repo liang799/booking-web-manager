@@ -111,11 +111,11 @@ describe("Participant waitlist promotion", () => {
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
       });
-      const unfundedUser = createTestUser({
+      const queuedUser = createTestUser({
         userId: "cara",
-        availableFundsCents: 0,
+        availableFundsCents: 500,
       });
-      const waitlistAdmission = unfundedUser
+      const waitlistAdmission = queuedUser
         .asParticipant()
         .join(bookingSession, {
           participationId: "p-cara",
@@ -129,7 +129,7 @@ describe("Participant waitlist promotion", () => {
         });
       const reloadedUser = createTestUser({
         userId: "cara",
-        availableFundsCents: 500,
+        availableFundsCents: 700,
       });
 
       const promotion = reloadedUser
@@ -142,8 +142,43 @@ describe("Participant waitlist promotion", () => {
       expect(waitlistAdmission.kind).toBe("WAITLISTED");
       expect(promotion.kind).toBe("PROMOTED");
       expect(promotion.instructions[0]?.walletId).toBe("w-cara");
-      expect(unfundedUser.wallet.getAvailableBalance().toCents()).toBe(0);
-      expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(500);
+      expect(queuedUser.wallet.getAvailableBalance().toCents()).toBe(500);
+      expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(700);
+    });
+
+    test("promoteFromWaitlist_WhenWaiterSpentFundsWhileQueued_SkipsThem", () => {
+      const queueTime = hoursBeforeSessionStart(48);
+      const bookingSession = createTestSession({
+        committedUserIds: ["alice", "ben"],
+      });
+      createTestUser({ userId: "cara", availableFundsCents: 500 })
+        .asParticipant()
+        .join(bookingSession, { participationId: "p-cara", now: queueTime });
+      createTestUser({ userId: "alice" })
+        .asParticipant()
+        .withdraw(bookingSession, { participationId: "p-alice", now: queueTime });
+      const reloadedUser = createTestUser({
+        userId: "cara",
+        availableFundsCents: 0,
+      });
+
+      const promotion = reloadedUser
+        .asParticipant()
+        .promoteFromWaitlist(bookingSession, {
+          holdId: "h-cara",
+          now: queueTime,
+        });
+
+      expect(promotion).toEqual({
+        kind: "SKIPPED",
+        participationId: "p-cara",
+        reason: "INSUFFICIENT_FUNDS",
+        instructions: [],
+      });
+      expect(
+        bookingSession.participantList.requireParticipation("p-cara").status,
+      ).toBe("LEFT_WAITLIST");
+      expect(bookingSession.getAvailableSlots(queueTime)).toBe(1);
     });
 
     test("promoteFromWaitlist_WhenFirstWaiterCannotPay_SkipsThemAndSelectsNextWaiter", () => {

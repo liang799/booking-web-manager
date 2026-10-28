@@ -233,6 +233,8 @@ test("a full private session remains shareable and invited players waitlist with
       await addCancellationParticipant(cancellationSql(context), fixture.sessionId, await context.identity(false));
     }
     const player = await context.identity(false);
+    // Joining a waitlist holds nothing, but the wallet must still cover the share.
+    await fundInvitationWallet(context, player);
     const invitation = await request.get(`/api/sessions/${fixture.sessionId}/invitation`, { headers: { Authorization: `Bearer ${fixture.booker.token}` } });
     expect(invitation.status()).toBe(200);
     expect(await invitation.json()).toEqual({ invitationPath: fixture.invitationPath });

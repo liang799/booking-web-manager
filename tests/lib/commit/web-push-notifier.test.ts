@@ -152,6 +152,38 @@ describe("pushPayloadFor", () => {
       expect(payload.body).not.toBe("");
     }
   });
+
+  test("pushPayloadFor_WhenRemovedFromWaitlistForFunds_LinksToTheWallet", () => {
+    // Act
+    const payload = pushPayloadFor({
+      kind: "REMOVED_FROM_WAITLIST",
+      recipientId: "u",
+      sessionId: "s9",
+      reason: "INSUFFICIENT_FUNDS",
+    });
+
+    // Assert
+    expect(payload).toMatchObject({
+      kind: "REMOVED_FROM_WAITLIST",
+      sessionId: "s9",
+      url: "/wallet",
+    });
+    expect(payload.body).toContain("Top up");
+  });
+
+  test("pushPayloadFor_WhenRemovedFromWaitlistForEligibility_LinksToDiscovery", () => {
+    // Act
+    const payload = pushPayloadFor({
+      kind: "REMOVED_FROM_WAITLIST",
+      recipientId: "u",
+      sessionId: "s9",
+      reason: "LOW_RELIABILITY",
+    });
+
+    // Assert
+    expect(payload.url).toBe("/discover");
+    expect(payload.body).toContain("requirements");
+  });
 });
 
 function subscription(endpoint: string): WebPushSubscription {
