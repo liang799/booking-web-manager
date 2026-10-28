@@ -4,6 +4,8 @@
 JavaScript, authentication, PostgreSQL and live session counts. The signed-in
 home route continues to select `HomeController` in `app/page.tsx`.
 
+The hero's primary sign-up link retains `/discover` as the post-registration destination via `/register?next=%2Fdiscover`, without opening discovery to signed-out visitors.
+
 The hero uses static, separately composed desktop and mobile WebP backgrounds.
 Its responsive `picture` selects the mobile image below 701px and prioritizes
 loading the hero. Both assets together are approximately 112 KiB. Text, links
