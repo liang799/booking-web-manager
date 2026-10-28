@@ -342,7 +342,7 @@ replays its result and notifies again, so delivery is at-least-once.
 | Notification | Recipient | Sent by |
 | --- | --- | --- |
 | `PROMOTED` | Promoted participant | `PromoteFromWaitlist` |
-| `REMOVED_FROM_WAITLIST` | Skipped queue head | `PromoteFromWaitlist`; links to the wallet when the reason is `INSUFFICIENT_FUNDS` |
+| `REMOVED_FROM_WAITLIST` | Skipped queue head | `PromoteFromWaitlist`; links to the wallet when the reason is `INSUFFICIENT_FUNDS`, otherwise to Discover |
 | `REPLACEMENT_INVITATION` | Named invitee | `WithdrawFromSession` (`DIRECT_INVITE`) |
 | `FORFEITURE_WARNING` | Late withdrawer | `WithdrawFromSession` (awaiting replacement) |
 | `FORFEITURE_DUE` | Late withdrawer | `ExpireReplacements` at session start |

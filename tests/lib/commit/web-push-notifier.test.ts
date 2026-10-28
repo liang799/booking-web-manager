@@ -171,7 +171,7 @@ describe("pushPayloadFor", () => {
     expect(payload.body).toContain("Top up");
   });
 
-  test("pushPayloadFor_WhenRemovedFromWaitlistForEligibility_LinksToTheSession", () => {
+  test("pushPayloadFor_WhenRemovedFromWaitlistForEligibility_LinksToDiscovery", () => {
     // Act
     const payload = pushPayloadFor({
       kind: "REMOVED_FROM_WAITLIST",
@@ -181,7 +181,7 @@ describe("pushPayloadFor", () => {
     });
 
     // Assert
-    expect(payload.url).toBe("/sessions/s9");
+    expect(payload.url).toBe("/discover");
     expect(payload.body).toContain("requirements");
   });
 });

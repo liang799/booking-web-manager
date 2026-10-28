@@ -59,6 +59,7 @@ export function pushPayloadFor(
           }
         : {
             ...base,
+            url: "/discover",
             title: "You missed a place",
             body: "A place opened up, but your account no longer meets this session's requirements, so you left the waitlist.",
           };
