@@ -25,6 +25,8 @@ export interface GroupOverview {
 export interface GroupsViewProps {
   readonly groups: readonly GroupOverview[];
   readonly createForm: ReactNode;
+  /** Player search by user ID (ADR-0021), shown above the filters. */
+  readonly findPlayer?: ReactNode;
   readonly leftGroup?: boolean;
 }
 
@@ -48,7 +50,7 @@ const isMobileScreen = () => window.matchMedia(mobileQuery).matches;
 const isServerScreenMobile = () => false;
 
 /** Synchronous UC1-06 overview; mutations remain in the server-owned form slot. */
-export function GroupsView({ groups, createForm, leftGroup = false }: GroupsViewProps) {
+export function GroupsView({ groups, createForm, findPlayer, leftGroup = false }: GroupsViewProps) {
   const [filterValue, setFilterValue] = useState("all");
   const mobile = useSyncExternalStore(subscribeToMobile, isMobileScreen, isServerScreenMobile);
   return (
@@ -77,6 +79,16 @@ export function GroupsView({ groups, createForm, leftGroup = false }: GroupsView
       </header>
 
       {leftGroup && <div className={styles.notice}><InfoNote icon><span role="status">You left the group.</span></InfoNote></div>}
+
+      {findPlayer !== undefined && (
+        <section className={styles.findPlayer} aria-labelledby="find-player-heading">
+          <div className={styles.findPlayerCopy}>
+            <h2 id="find-player-heading">Find a player</h2>
+            <p>Search by their exact user ID, like a Telegram username.</p>
+          </div>
+          {findPlayer}
+        </section>
+      )}
 
       <Tabs value={mobile ? "all" : filterValue} onValueChange={setFilterValue} className={styles.tabs}>
         <TabsList aria-label="Filter groups" className={styles.filters}>
