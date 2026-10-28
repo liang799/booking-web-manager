@@ -263,8 +263,8 @@ BREAKING CHANGE: use JavaScript features not available in Node 6.
 
 | Rule | Value |
 |---|---|
-| Full refund window | more than 30h before session start |
-| Late withdrawal | 30h or less — requires replacement or forfeits |
+| Full refund window | at least 30h before session start (including exactly 30h) |
+| Late withdrawal | less than 30h before start — requires replacement or forfeits |
 | Auto-verify | 72h after session **end** (not start) |
 | Slot propagation | within 3s |
 | Wallet operations | within 2s for 95% of requests |

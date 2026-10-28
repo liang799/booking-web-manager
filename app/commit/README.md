@@ -26,8 +26,12 @@ instruction in one `UnitOfWork.execute` call, so the commitment and its fund
 lock succeed or fail together. The idempotency key is required; a retry with
 the same key replays the original result without locking funds again.
 
-The domain decides commit versus waitlist. Waitlist order is the session's
-FIFO `queueSequence`, assigned inside that transaction. The production
+The domain decides commit versus waitlist. Joining the waitlist holds nothing,
+but it applies the same eligibility checks as committing, including enough
+available funds for the share (`INSUFFICIENT_FUNDS` otherwise). The balance is
+checked again at promotion, because it can change while the player waits.
+Waitlist order is the session's FIFO `queueSequence`, assigned inside that
+transaction. The production
 unit-of-work adapter must lock the session row (`SELECT ... FOR UPDATE`) so
 concurrent commits serialize; the in-memory test double does this by running
 transactions one at a time.
@@ -45,8 +49,9 @@ while the dialog is open, so retrying an unconfirmed result cannot hold the shar
 fills free places from the waitlist in FIFO `queueSequence` order, in one unit
 of work. For each unreserved free place it loads the queue head's User and calls
 `promoteFromWaitlist` as that participant. A head who is inactive, below the
-reliability minimum, or cannot fund the share is skipped and leaves the queue.
-A head holding a personal replacement invitation must accept it explicitly
+reliability minimum, or cannot fund the share is skipped and leaves the queue;
+after the unit of work commits they get a `REMOVED_FROM_WAITLIST` notification
+with the reason. A head holding a personal replacement invitation must accept it explicitly
 (ADR-0006), so promotion stops there. Each promotion locks the entrant's share
 and refunds the oldest late open-slot withdrawal it replaces, all in the same
 transaction; any failure promotes nobody.
@@ -66,9 +71,9 @@ ID, so nobody can act on another person's place, and each takes an
 idempotency key.
 
 - [`WithdrawFromSession`](../../use-cases/sessions/WithdrawFromSession.ts) runs
-  `Participant.withdraw` in one unit of work. More than 30 hours before start,
+  `Participant.withdraw` in one unit of work. At least 30 hours before start,
   the share is refunded at once (the REFUND is written with the session
-  change). At 30 hours or less it stays held, awaiting a replacement. The
+  change). Less than 30 hours before start it stays held, awaiting a replacement. The
   participant chooses either `OPEN_SLOT` or `DIRECT_INVITE` for one named,
   existing user, and cannot change it later (ADR-0006).
 - [`AcceptReplacement`](../../use-cases/sessions/AcceptReplacement.ts) lets the
@@ -86,9 +91,10 @@ a separate unit of work ([follow-up-promotion.ts](../../use-cases/sessions/follo
 If that fails, the committed withdrawal is kept and the result reports
 `DEFERRED`; the scheduled promotion sweep fills the place later.
 
-The 30-hour boundary follows CLAUDE.md and the domain: exactly 30 hours is a
-late withdrawal. The product-owner diagram includes exactly 30 hours in the
-refund window; that discrepancy is tracked in the waitlist discussion document.
+The 30-hour boundary follows CLAUDE.md and the product-owner diagram: exactly
+30 hours still qualifies for an immediate full refund. A withdrawal processed
+less than 30 hours before start is late. The server decides using its clock
+inside the withdrawal unit of work; a preview is only a snapshot.
 
 ### Withdraw / Leave-waitlist screens
 
@@ -337,6 +343,7 @@ replays its result and notifies again, so delivery is at-least-once.
 | Notification | Recipient | Sent by |
 | --- | --- | --- |
 | `PROMOTED` | Promoted participant | `PromoteFromWaitlist` |
+| `REMOVED_FROM_WAITLIST` | Skipped queue head | `PromoteFromWaitlist`; links to the wallet when the reason is `INSUFFICIENT_FUNDS`, otherwise to Discover |
 | `REPLACEMENT_INVITATION` | Named invitee | `WithdrawFromSession` (`DIRECT_INVITE`) |
 | `FORFEITURE_WARNING` | Late withdrawer | `WithdrawFromSession` (awaiting replacement) |
 | `FORFEITURE_DUE` | Late withdrawer | `ExpireReplacements` at session start |

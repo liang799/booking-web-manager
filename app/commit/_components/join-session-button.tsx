@@ -88,7 +88,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
             <p role="status"><Money cents={outcome.heldCents} className="font-semibold" /> is now held in your wallet. It goes to the booker after attendance is verified.</p>
           )}
           {outcome?.status === "waitlisted" && (
-            <p role="status">The session is full, so you've joined the waitlist. Nothing is held until a place opens for you.</p>
+            <p role="status">The session is full, so you've joined the waitlist. Nothing is held until a place opens for you. Keep enough in your wallet to cover your share, or you'll leave the waitlist when a place opens.</p>
           )}
 
           {!finished && (
@@ -99,7 +99,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
               </div>
               <InfoNote icon>
                 Your share is held, not paid, until attendance is verified. If the session is already full you join the
-                waitlist instead and nothing is held. Withdraw more than 30 hours before the start for a full refund; later,
+                waitlist instead and nothing is held. Withdraw at least 30 hours before the start for a full refund; closer to start,
                 you need a replacement or the share is forfeited.
               </InfoNote>
             </div>

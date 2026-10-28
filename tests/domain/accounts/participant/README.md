@@ -62,12 +62,13 @@ Execution: **4 passed / 4 cases**.
 
 **Input:** Applicant, Committed users, Existing waiters, Available funds (cents), Hold ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **2 passed / 2 cases**.
+Execution: **3 passed / 3 cases**.
 
 | Applicant | Committed users | Existing waiters | Available funds (cents) | Hold ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [cara](admission.test.ts#L381) | alice, ben | None | 0 | Omitted | Exact admission: `WAITLISTED`, participation `p-cara`, empty instructions; cara `WAITLISTED`, hold absent; next waiter cara. | Exact admission: `WAITLISTED`, participation `p-cara`, empty instructions; cara `WAITLISTED`, hold absent; next waiter cara. |
-| [evan](admission.test.ts#L409) | ben | cara, dana | 10,000 | h-evan | Admission `WAITLISTED`; instructions empty; evan queue position 3; next waiter cara; next queue sequence 4; available slots 1. | Admission `WAITLISTED`; instructions empty; evan queue position 3; next waiter cara; next queue sequence 4; available slots 1. |
+| [cara](admission.test.ts#L381) | alice, ben | None | 499 | Omitted | Error code `INSUFFICIENT_FUNDS`; session unchanged. | Error code `INSUFFICIENT_FUNDS`; session unchanged. |
+| [cara](admission.test.ts#L401) | alice, ben | None | 500 | Omitted | Exact admission: `WAITLISTED`, participation `p-cara`, empty instructions; cara `WAITLISTED`, hold absent; next waiter cara. | Exact admission: `WAITLISTED`, participation `p-cara`, empty instructions; cara `WAITLISTED`, hold absent; next waiter cara. |
+| [evan](admission.test.ts#L429) | ben | cara, dana | 10,000 | h-evan | Admission `WAITLISTED`; instructions empty; evan queue position 3; next waiter cara; next queue sequence 4; available slots 1. | Admission `WAITLISTED`; instructions empty; evan queue position 3; next waiter cara; next queue sequence 4; available slots 1. |
 
 ## join — participation history and reentry
 
@@ -77,11 +78,11 @@ Execution: **5 passed / 5 cases**.
 
 | Applicant | Prior participation | Requested participation ID | Committed users | Waiting / departed entries | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [cara](admission.test.ts#L438) | p-cara LEFT_WAITLIST, position 1 | different | alice, ben | cara departed; dana waiting at 2 | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
-| [cara](admission.test.ts#L462) | p-cara LEFT_WAITLIST, position 1 | p-cara | alice, ben | cara departed; dana waiting at 2 | Admission `WAITLISTED`; next waiter dana; exactly one cara entry; roster order `[alice, ben, cara, dana]`; cara position 3, next sequence 4; new participant-list object. Old list still references the same departed cara object (`LEFT_WAITLIST`, position 1), next sequence 3, committed count 2. | Admission `WAITLISTED`; next waiter dana; exactly one cara entry; roster order `[alice, ben, cara, dana]`; cara position 3, next sequence 4; new participant-list object. Old list still references the same departed cara object (`LEFT_WAITLIST`, position 1), next sequence 3, committed count 2. |
-| [alice](admission.test.ts#L508) | p-alice COMMITTED | p-alice | alice | None | Error code `ALREADY_PARTICIPATING`; session unchanged. | Error code `ALREADY_PARTICIPATING`; session unchanged. |
-| [alice](admission.test.ts#L526) | p-alice WITHDRAWN at −48 h; OPEN_SLOT; REFUNDED at −48 h | p-alice | None | None | Error code `REJOIN_NOT_ALLOWED`; session unchanged. | Error code `REJOIN_NOT_ALLOWED`; session unchanged. |
-| [alice](admission.test.ts#L555) | p-alice REMOVED; REFUNDED at −48 h | p-alice | None | None | Error code `REJOIN_NOT_ALLOWED`; session unchanged. | Error code `REJOIN_NOT_ALLOWED`; session unchanged. |
+| [cara](admission.test.ts#L458) | p-cara LEFT_WAITLIST, position 1 | different | alice, ben | cara departed; dana waiting at 2 | Error code `DUPLICATE_ID`; session unchanged. | Error code `DUPLICATE_ID`; session unchanged. |
+| [cara](admission.test.ts#L482) | p-cara LEFT_WAITLIST, position 1 | p-cara | alice, ben | cara departed; dana waiting at 2 | Admission `WAITLISTED`; next waiter dana; exactly one cara entry; roster order `[alice, ben, cara, dana]`; cara position 3, next sequence 4; new participant-list object. Old list still references the same departed cara object (`LEFT_WAITLIST`, position 1), next sequence 3, committed count 2. | Admission `WAITLISTED`; next waiter dana; exactly one cara entry; roster order `[alice, ben, cara, dana]`; cara position 3, next sequence 4; new participant-list object. Old list still references the same departed cara object (`LEFT_WAITLIST`, position 1), next sequence 3, committed count 2. |
+| [alice](admission.test.ts#L528) | p-alice COMMITTED | p-alice | alice | None | Error code `ALREADY_PARTICIPATING`; session unchanged. | Error code `ALREADY_PARTICIPATING`; session unchanged. |
+| [alice](admission.test.ts#L546) | p-alice WITHDRAWN at −48 h; OPEN_SLOT; REFUNDED at −48 h | p-alice | None | None | Error code `REJOIN_NOT_ALLOWED`; session unchanged. | Error code `REJOIN_NOT_ALLOWED`; session unchanged. |
+| [alice](admission.test.ts#L575) | p-alice REMOVED; REFUNDED at −48 h | p-alice | None | None | Error code `REJOIN_NOT_ALLOWED`; session unchanged. | Error code `REJOIN_NOT_ALLOWED`; session unchanged. |
 
 ## join — replacement reservations and refund failure
 
@@ -93,7 +94,7 @@ Execution: **3 passed / 3 cases**.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [dana](waitlist.test.ts#L30) | alice | ben: −10 h, DIRECT_INVITE to cara | None | 9 h | None | Exact admission: `WAITLISTED`, participation `p-dana`, empty instructions; next waiter dana; ben hold `AWAITING_REPLACEMENT`; committed count 1; available slots 0. | Exact admission: `WAITLISTED`, participation `p-dana`, empty instructions; next waiter dana; ben hold `AWAITING_REPLACEMENT`; committed count 1; available slots 0. |
 | [cara](replacement-reservations.test.ts#L43) | None | alice: −20 h, OPEN_SLOT; ben: −10 h, DIRECT_INVITE to cara | None | 9 h | None | Error code `INVALID_STATE`; session unchanged; no cara participation; cara reservation still targets `p-ben`; alice hold `AWAITING_REPLACEMENT`; available slots 1. | Error code `INVALID_STATE`; session unchanged; no cara participation; cara reservation still targets `p-ben`; alice hold `AWAITING_REPLACEMENT`; available slots 1. |
-| [replacement](admission.test.ts#L627) | ben | alice: −2 h, OPEN_SLOT | former-waiter LEFT_WAITLIST at position 1 | 1 h | INVALID_STATE: Replacement refund failed | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged. | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged. |
+| [replacement](admission.test.ts#L647) | ben | alice: −2 h, OPEN_SLOT | former-waiter LEFT_WAITLIST at position 1 | 1 h | INVALID_STATE: Replacement refund failed | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged. | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged. |
 
 ## acceptReplacement — accept a reserved seat
 
@@ -107,7 +108,7 @@ Execution: **4 passed / 4 cases**.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [cara](replacement-reservations.test.ts#L14) | No | alex | ben: −10 h, DIRECT_INVITE to cara | None | 9 h | Admission `COMMITTED`; cara participation `COMMITTED`. | Admission `COMMITTED`; cara participation `COMMITTED`. |
 | [cara](replacement-reservations.test.ts#L124) | Yes | alex | ben: −10 h, DIRECT_INVITE to cara | dana, cara, evan | 9 h | Admission `COMMITTED`, refunded participation `p-ben`; instruction kinds `[LOCK, REFUND]`; cara `COMMITTED`, position 2, replaces `p-ben`; next waiter dana; next sequence stays 4; committed count 2; available slots 0. | Admission `COMMITTED`, refunded participation `p-ben`; instruction kinds `[LOCK, REFUND]`; cara `COMMITTED`, position 2, replaces `p-ben`; next waiter dana; next sequence stays 4; committed count 2; available slots 0. |
-| [cara](admission.test.ts#L581) | Yes | None | alice: −20 h, DIRECT_INVITE to donna; ben: −19 h, DIRECT_INVITE to cara; PRIVATE session | None | 18 h | Refunded participation `p-ben`; instruction kinds `[LOCK, REFUND]`; alice hold `AWAITING_REPLACEMENT`; cara replaces `p-ben`; available slots 0. | Refunded participation `p-ben`; instruction kinds `[LOCK, REFUND]`; alice hold `AWAITING_REPLACEMENT`; cara replaces `p-ben`; available slots 0. |
+| [cara](admission.test.ts#L601) | Yes | None | alice: −20 h, DIRECT_INVITE to donna; ben: −19 h, DIRECT_INVITE to cara; PRIVATE session | None | 18 h | Refunded participation `p-ben`; instruction kinds `[LOCK, REFUND]`; alice hold `AWAITING_REPLACEMENT`; cara replaces `p-ben`; available slots 0. | Refunded participation `p-ben`; instruction kinds `[LOCK, REFUND]`; alice hold `AWAITING_REPLACEMENT`; cara replaces `p-ben`; available slots 0. |
 | [cara](replacement-reservations.test.ts#L302) | Yes | None | ben: −40 h, DIRECT_INVITE to cara, REFUNDED at −40 h; alice: −20 h, OPEN_SLOT | None | 19 h | Admission `COMMITTED`; refunded participation absent; instruction kinds `[LOCK]`; cara replaces `p-ben`; ben retains the same `REFUNDED` hold object; alice hold `AWAITING_REPLACEMENT`; available slots 1. | Admission `COMMITTED`; refunded participation absent; instruction kinds `[LOCK]`; cara replaces `p-ben`; ben retains the same `REFUNDED` hold object; alice hold `AWAITING_REPLACEMENT`; available slots 1. |
 
 ## acceptReplacement — preserve reservations on rejection
@@ -136,8 +137,8 @@ Execution: **3 passed / 3 cases**.
 
 | Ben withdrawal time / hold | First acceptance time | Later ordinary join | Replay time before start | Replay hold ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L675) | −9 h | None | 8 h | h-another | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. |
-| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L715) | −9 h | dana at −8 h, p-dana / h-dana | 7 h | h-another | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. |
+| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L695) | −9 h | None | 8 h | h-another | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. | First admission `COMMITTED`, refunded participation `p-ben`; available slots 1; replay error code `INVALID_ACCESS`; session unchanged by replay. |
+| [−10 h / AWAITING_REPLACEMENT](admission.test.ts#L735) | −9 h | dana at −8 h, p-dana / h-dana | 7 h | h-another | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. | Available slots 0; replay error code `INVALID_ACCESS`; session unchanged by replay. |
 | [−40 h / REFUNDED at −40 h](replacement-reservations.test.ts#L354) | −39 h | None | 38 h | h-another | Replay error code `INVALID_ACCESS`; session unchanged by replay; committed count 1; available slots 1. | Replay error code `INVALID_ACCESS`; session unchanged by replay; committed count 1; available slots 1. |
 
 ## promoteFromWaitlist — eligibility and queue selection
@@ -159,13 +160,14 @@ All operations occur 48 hours before start; queue entries have the same timestam
 
 **Input:** Loaded user, Available funds (cents), Committed users, Waitlist / previous entry, Hold ID · **Oracle:** Expected Result · **Log:** Test Result
 
-Execution: **3 passed / 3 cases**.
+Execution: **4 passed / 4 cases**.
 
 | Loaded user | Available funds (cents) | Committed users | Waitlist / previous entry | Hold ID | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [cara](promotion.test.ts#L107) | 0 at waitlist entry; 500 after reload | alice and ben at join; alice then withdraws at −48 h | cara joins full session before alice withdraws | h-cara | Initial admission `WAITLISTED`; promotion `PROMOTED`; first instruction wallet `w-cara`; old wallet remains 0 cents, reloaded wallet remains 500 cents. | Initial admission `WAITLISTED`; promotion `PROMOTED`; first instruction wallet `w-cara`; old wallet remains 0 cents, reloaded wallet remains 500 cents. |
-| [cara](promotion.test.ts#L149) | 0 | ben | cara, dana, evan | h-cara | Exact result: `SKIPPED`, participation `p-cara`, reason `INSUFFICIENT_FUNDS`, empty instructions; cara `LEFT_WAITLIST`; next waiter dana; next sequence stays 4; available slots 1. | Exact result: `SKIPPED`, participation `p-cara`, reason `INSUFFICIENT_FUNDS`, empty instructions; cara `LEFT_WAITLIST`; next waiter dana; next sequence stays 4; available slots 1. |
-| [dana](promotion.test.ts#L184) | 500 | ben | cara LEFT_WAITLIST at 1; dana at 2; evan at 3 | h-dana | Result `PROMOTED`, participation `p-dana`; exactly one instruction with kind `LOCK`, participation `p-dana`, hold `h-dana`, amount 500 cents; dana `COMMITTED`; next waiter evan. | Result `PROMOTED`, participation `p-dana`; exactly one instruction with kind `LOCK`, participation `p-dana`, hold `h-dana`, amount 500 cents; dana `COMMITTED`; next waiter evan. |
+| [cara](promotion.test.ts#L107) | 500 at waitlist entry; 700 after reload | alice and ben at join; alice then withdraws at −48 h | cara joins full session before alice withdraws | h-cara | Initial admission `WAITLISTED`; promotion `PROMOTED`; first instruction wallet `w-cara`; wallet at entry remains 500 cents, reloaded wallet remains 700 cents. | Initial admission `WAITLISTED`; promotion `PROMOTED`; first instruction wallet `w-cara`; wallet at entry remains 500 cents, reloaded wallet remains 700 cents. |
+| [cara](promotion.test.ts#L149) | 500 at waitlist entry; 0 after reload | alice and ben at join; alice then withdraws at −48 h | cara joins full session before alice withdraws | h-cara | Exact result: `SKIPPED`, participation `p-cara`, reason `INSUFFICIENT_FUNDS`, empty instructions; cara `LEFT_WAITLIST`; available slots 1. | Exact result: `SKIPPED`, participation `p-cara`, reason `INSUFFICIENT_FUNDS`, empty instructions; cara `LEFT_WAITLIST`; available slots 1. |
+| [cara](promotion.test.ts#L184) | 0 | ben | cara, dana, evan | h-cara | Exact result: `SKIPPED`, participation `p-cara`, reason `INSUFFICIENT_FUNDS`, empty instructions; cara `LEFT_WAITLIST`; next waiter dana; next sequence stays 4; available slots 1. | Exact result: `SKIPPED`, participation `p-cara`, reason `INSUFFICIENT_FUNDS`, empty instructions; cara `LEFT_WAITLIST`; next waiter dana; next sequence stays 4; available slots 1. |
+| [dana](promotion.test.ts#L219) | 500 | ben | cara LEFT_WAITLIST at 1; dana at 2; evan at 3 | h-dana | Result `PROMOTED`, participation `p-dana`; exactly one instruction with kind `LOCK`, participation `p-dana`, hold `h-dana`, amount 500 cents; dana `COMMITTED`; next waiter evan. | Result `PROMOTED`, participation `p-dana`; exactly one instruction with kind `LOCK`, participation `p-dana`, hold `h-dana`, amount 500 cents; dana `COMMITTED`; next waiter evan. |
 
 ## promoteFromWaitlist — reserved vacancies
 
@@ -175,8 +177,8 @@ Execution: **2 passed / 2 cases**.
 
 | Loaded user | Committed users | Reserved withdrawal | Waitlist | Time before start | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [cara](promotion.test.ts#L223) | alice | ben at −10 h; DIRECT_INVITE to cara | cara, dana | 9 h | Error code `INVALID_STATE`; session unchanged; cara `WAITLISTED` and still next; reservation still targets `p-ben`; committed count 1; available slots 0; next sequence stays 3. | Error code `INVALID_STATE`; session unchanged; cara `WAITLISTED` and still next; reservation still targets `p-ben`; committed count 1; available slots 0; next sequence stays 3. |
-| [dana](promotion.test.ts#L268) | alice | ben at −10 h; DIRECT_INVITE to cara | dana, evan | 9 h | Error code `CAPACITY_EXCEEDED`; session unchanged; next waiter dana. | Error code `CAPACITY_EXCEEDED`; session unchanged; next waiter dana. |
+| [cara](promotion.test.ts#L258) | alice | ben at −10 h; DIRECT_INVITE to cara | cara, dana | 9 h | Error code `INVALID_STATE`; session unchanged; cara `WAITLISTED` and still next; reservation still targets `p-ben`; committed count 1; available slots 0; next sequence stays 3. | Error code `INVALID_STATE`; session unchanged; cara `WAITLISTED` and still next; reservation still targets `p-ben`; committed count 1; available slots 0; next sequence stays 3. |
+| [dana](promotion.test.ts#L303) | alice | ben at −10 h; DIRECT_INVITE to cara | dana, evan | 9 h | Error code `CAPACITY_EXCEEDED`; session unchanged; next waiter dana. | Error code `CAPACITY_EXCEEDED`; session unchanged; next waiter dana. |
 
 ## promoteFromWaitlist — replacement refunds
 
@@ -188,10 +190,10 @@ Execution: **4 passed / 4 cases**.
 
 | Loaded user / hold ID | Committed users | Withdrawals | Waitlist | Time before start | Refund failure | Expected Result | Test Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [dana / h-dana](promotion.test.ts#L300) | None | ben: −10 h, DIRECT_INVITE to cara; alice: −9 h, OPEN_SLOT | dana, evan | 8 h | None | Result `PROMOTED`, refunded participation `p-alice`; instruction kinds `[LOCK, REFUND]`; dana replaces `p-alice`; ben hold `AWAITING_REPLACEMENT`; next waiter evan; available slots 0. | Result `PROMOTED`, refunded participation `p-alice`; instruction kinds `[LOCK, REFUND]`; dana replaces `p-alice`; ben hold `AWAITING_REPLACEMENT`; next waiter evan; available slots 0. |
-| [first-waiter / h-promoted](promotion.test.ts#L348) | ben | alice: −2 h, OPEN_SLOT | first-waiter, second-waiter | 1 h | INVALID_STATE: Replacement refund failed | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged; next waiter first-waiter. | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged; next waiter first-waiter. |
-| [dana / h-dana](promotion.test.ts#L397) | alex | ben: −10 h, OPEN_SLOT | dana, evan | 8 h | None | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. |
-| [dana / h-dana](promotion.test.ts#L457) | None | ben: −10 h, OPEN_SLOT; alice: −9 h, OPEN_SLOT | dana | 7 h | None | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. |
+| [dana / h-dana](promotion.test.ts#L335) | None | ben: −10 h, DIRECT_INVITE to cara; alice: −9 h, OPEN_SLOT | dana, evan | 8 h | None | Result `PROMOTED`, refunded participation `p-alice`; instruction kinds `[LOCK, REFUND]`; dana replaces `p-alice`; ben hold `AWAITING_REPLACEMENT`; next waiter evan; available slots 0. | Result `PROMOTED`, refunded participation `p-alice`; instruction kinds `[LOCK, REFUND]`; dana replaces `p-alice`; ben hold `AWAITING_REPLACEMENT`; next waiter evan; available slots 0. |
+| [first-waiter / h-promoted](promotion.test.ts#L383) | ben | alice: −2 h, OPEN_SLOT | first-waiter, second-waiter | 1 h | INVALID_STATE: Replacement refund failed | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged; next waiter first-waiter. | Error code `INVALID_STATE`: “Replacement refund failed”; session unchanged; next waiter first-waiter. |
+| [dana / h-dana](promotion.test.ts#L432) | alex | ben: −10 h, OPEN_SLOT | dana, evan | 8 h | None | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. | Result fields: `PROMOTED`, participation `p-dana`, refunded `p-ben`; exactly two instructions: LOCK p-dana/h-dana then REFUND p-ben/h-ben, each 500 cents; ben hold `REFUNDED`, dana hold `HELD`; dana replaces `p-ben`; next waiter evan; next sequence stays 3. |
+| [dana / h-dana](promotion.test.ts#L492) | None | ben: −10 h, OPEN_SLOT; alice: −9 h, OPEN_SLOT | dana | 7 h | None | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. | Result fields: `PROMOTED`, refunded `p-ben`; exactly two instruction entries with LOCK/p-dana then REFUND/p-ben; ben withdrawal stays −10 h, hold `REFUNDED`; alice withdrawal stays −9 h, hold `AWAITING_REPLACEMENT`; dana replaces `p-ben`. |
 
 ## leaveWaitlist — leave an existing entry
 
@@ -219,8 +221,8 @@ Execution: **5 passed / 5 cases**.
 | [participant](withdrawals.test.ts#L13) | Yes | 31 h | Result `REFUNDED`; participation belongs to `participant`, status `WITHDRAWN`, hold `REFUNDED`; exactly one instruction with kind `REFUND`, participation `p-participant`, hold `h-participant`, wallet `w-participant`, amount 500 cents. | Result `REFUNDED`; participation belongs to `participant`, status `WITHDRAWN`, hold `REFUNDED`; exactly one instruction with kind `REFUND`, participation `p-participant`, hold `h-participant`, wallet `w-participant`, amount 500 cents. |
 | [alice](withdrawals.test.ts#L42) | No | 48 h | Result `REFUNDED`; first instruction kind `REFUND`, amount 500 cents; alice `WITHDRAWN`. | Result `REFUNDED`; first instruction kind `REFUND`, amount 500 cents; alice `WITHDRAWN`. |
 | [alice](withdrawals.test.ts#L62) | Yes | 30 h + 1 ms | Result `REFUNDED`; hold `REFUNDED`. | Result `REFUNDED`; hold `REFUNDED`. |
-| [alice](withdrawals.test.ts#L83) | Yes | 30 h | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. |
-| [alice](withdrawals.test.ts#L101) | Yes | 1 h | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. |
+| [alice](withdrawals.test.ts#L83) | Yes | 30 h | Result `REFUNDED`; hold `REFUNDED`. | Result `REFUNDED`; hold `REFUNDED`. |
+| [alice](withdrawals.test.ts#L101) | Yes | 29 h 59 min 59 s | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. | Result `AWAITING_REPLACEMENT`; hold `AWAITING_REPLACEMENT`. |
 
 ## withdraw — invite a replacement
 

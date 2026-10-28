@@ -177,8 +177,9 @@ test("an empty Home offers weather and search on both layouts, and account logou
     await expect(signIn).toHaveAttribute("href", "/login");
     await expect(page.getByRole("heading", { name: /^Upcoming bookings$/i })).toHaveCount(0);
     await page.goto("/discover");
-    await expect(page).toHaveURL(/\/discover$/);
-    await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/login\?next=/);
+    expect(new URL(page.url()).searchParams.get("next")).toBe("/discover");
+    await expect(page.getByRole("heading", { name: "Log in", exact: true })).toBeVisible();
   } finally {
     await context.pool.end();
   }

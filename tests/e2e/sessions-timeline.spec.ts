@@ -53,7 +53,8 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1536, height: 1024 });
   // Real AppShell, view and Zustand provider with a deterministic chronological feed.
   await page.goto("/storybook/iframe.html?id=sessions-overview--desktop-wheel-navigation&viewMode=story");
-  await expect(timeline(page)).toHaveAttribute("data-timeline-entrance", "complete");
+  // WebKit may take longer than the default 5s for the staged entrance animations.
+  await expect(timeline(page)).toHaveAttribute("data-timeline-entrance", "complete", { timeout: 15_000 });
   await expectSettled(page, 21);
 });
 
@@ -88,10 +89,17 @@ test("momentum beyond animation completion stays one gesture, then fresh gesture
   await pointAtPhoto(page);
   // A continuous tail lasts over twice the 280 ms glide. Each gap is below the
   // 220 ms quiet boundary, including the tiny final deltas.
-  for (const delta of [40, 32, 24, 18, 12, 8, 6, 4, 2, 1]) {
-    await page.mouse.wheel(0, delta);
-    await page.waitForTimeout(65);
-  }
+  // Keep wheel intervals inside the browser event loop. Playwright RPC and CI
+  // scheduling can stretch 65ms into >220ms and falsely split one gesture.
+  await timeline(page).evaluate(async (root) => {
+    for (const delta of [40, 32, 24, 18, 12, 8, 6, 4, 2, 1]) {
+      const target = root.querySelector<HTMLElement>('[data-current="true"] [data-timeline-reveal="hero"]');
+      if (!target) throw new Error("No active session photo for the wheel gesture");
+      const consumed = !target.dispatchEvent(new WheelEvent("wheel", { deltaY: delta, bubbles: true, cancelable: true }));
+      if (!consumed) throw new Error("Timeline did not consume the current wheel burst");
+      await new Promise<void>((resolve) => setTimeout(resolve, 65));
+    }
+  });
   await expectSettled(page, 23);
   await freshGesture(page, 80);
   await expectSettled(page, 24);
@@ -442,8 +450,8 @@ test("older-history pagination preserves the active artwork and viewport anchor 
 test("URL-restored session details keep native dialog scrolling and restore focus", async ({ page }) => {
   const story = "sessions-overview-loading--url-restores-session-and-panel-across-pages";
   await page.goto(`/storybook/iframe.html?id=${story}&viewMode=story`);
-  await expect.poll(() => page.evaluate((id) => Reflect.get(window, "__STORYBOOK_PREVIEW__")?.storyRenders?.some((render: { id: string; phase: string }) => render.id === id && render.phase === "finished"), story)).toBe(true);
-  await expect(timeline(page).locator("[data-session-id]")).toHaveCount(10);
+  // Wait for the user-visible loaded feed, not a private Storybook phase.
+  await expect(timeline(page).locator("[data-session-id]")).toHaveCount(10, { timeout: 15_000 });
   await expectSettled(page, 10);
   expect(new URL(page.url()).searchParams.get("session")).toBe("54000000-0000-4000-8000-000000000008");
   expect(new URL(page.url()).searchParams.get("panel")).toBe("participants");

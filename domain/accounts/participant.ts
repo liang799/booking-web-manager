@@ -163,6 +163,9 @@ export class Participant {
       (session.getAvailableSlots() === 0 ||
         participantList.nextWaitlisted() !== undefined)
     ) {
+      // Nothing is held while queued, but a player who could not fund the share
+      // now would only be skipped at promotion.
+      this.assertEligibleFor(terms, true);
       const sequence = participantList.nextQueueSequence;
       DomainError.require(
         Number.isSafeInteger(sequence) &&
@@ -511,7 +514,7 @@ export class Participant {
       "Only a committed participant can withdraw",
     );
     const hold = participation.hold;
-    const late = booking.hoursUntilStart(command.now) <= 30;
+    const late = booking.hoursUntilStart(command.now) < 30;
     const nextHold = late ? hold.awaitReplacement() : hold.refund(command.now);
     const next = participation.withdraw(
       nextHold,
