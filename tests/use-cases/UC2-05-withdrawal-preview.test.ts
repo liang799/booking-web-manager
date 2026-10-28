@@ -12,9 +12,9 @@ import {
 // A two-slot session for a 1000-cent booking: each share is 500 cents.
 // Owner: Yajie (Wyjessie) — /app/commit
 describe("UC2-05 Withdraw from Session — refund preview", () => {
-  test("shows a full refund more than 30h before start", async () => {
+  test("shows a full refund 30h and one second before start", async () => {
     // Arrange
-    const { preview, session } = previewScenario(hoursBeforeSessionStart(31));
+    const { preview, session } = previewScenario(new Date(hoursBeforeSessionStart(30).getTime() - 1_000));
 
     // Act
     const result = await preview.forParticipant("alice", session.sessionId);
@@ -29,9 +29,25 @@ describe("UC2-05 Withdraw from Session — refund preview", () => {
     });
   });
 
-  test("shows the share staying held at 30h or less", async () => {
+  test("shows an immediate full refund at exactly 30h", async () => {
     // Arrange
     const { preview, session } = previewScenario(hoursBeforeSessionStart(30));
+
+    // Act
+    const result = await preview.forParticipant("alice", session.sessionId);
+
+    // Assert
+    expect(result).toMatchObject({
+      kind: "REFUNDED",
+      refundCents: 500,
+      heldCents: 500,
+    });
+  });
+
+  test("shows the share staying held one second inside the 30-hour cutoff", async () => {
+    // Arrange
+    const now = new Date(hoursBeforeSessionStart(30).getTime() + 1_000);
+    const { preview, session } = previewScenario(now);
 
     // Act
     const result = await preview.forParticipant("alice", session.sessionId);

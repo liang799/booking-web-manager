@@ -26,7 +26,7 @@ export const candidates: readonly ReplacementCandidate[] = [
   { userId: "55555555-5555-4555-8555-555555555555", displayName: "Priya Lim" },
 ];
 
-/** More than 30 hours before start the share comes back; otherwise it stays held awaiting a replacement. */
+/** At least 30 hours before start the share comes back; closer to start it stays held awaiting a replacement. */
 export function previewFor(session: JoinedSessionItem): WithdrawalPreview {
   return session.sessionId === lateSession.sessionId
     ? { kind: "AWAITING_REPLACEMENT", refundCents: 0, heldCents: session.bookingShareCents }

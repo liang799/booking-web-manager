@@ -55,7 +55,7 @@ export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvi
           <div className="space-y-4">
             {state.termsChanged && (
               <ErrorMessage>
-                Your refund changed while this was open: the session now starts in 30 hours or less. Check the new amount and confirm again.
+                Your refund changed while this was open: the session now starts in less than 30 hours. Check the new amount and confirm again.
               </ErrorMessage>
             )}
             <Refund preview={state.preview} />
@@ -143,7 +143,7 @@ function Refund({ preview }: { readonly preview: WithdrawalPreview }) {
       </div>
       {preview.kind === "AWAITING_REPLACEMENT" && (
         <InfoNote icon>
-          The session starts in 30 hours or less, so your <Money cents={preview.heldCents} /> stays held until someone
+          The session starts in less than 30 hours, so your <Money cents={preview.heldCents} /> stays held until someone
           takes your place. If nobody does before it starts, it goes to the booker.
         </InfoNote>
       )}

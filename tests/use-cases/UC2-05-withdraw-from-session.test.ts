@@ -24,11 +24,11 @@ const openSlot: ReplacementChoice = { mode: "OPEN_SLOT" };
 
 // Owner: Yajie (Wyjessie) — /app/commit
 describe("UC2-05 Withdraw from Session", () => {
-  test("full refund when withdrawing more than 30h before session start", async () => {
+  test("full refund when withdrawing 30h and one second before session start", async () => {
     // Arrange
     const scenario = withdrawalScenario();
     await scenario.commit("alice");
-    scenario.setTime(hoursBeforeSessionStart(31));
+    scenario.setTime(new Date(hoursBeforeSessionStart(30).getTime() - 1_000));
 
     // Act
     const result = await scenario.withdraw("alice", openSlot);
@@ -43,11 +43,11 @@ describe("UC2-05 Withdraw from Session", () => {
     expect(scenario.participation("id-1").hold?.state).toBe("REFUNDED");
   });
 
-  test("at 30h or less, moves to awaiting_replacement instead of an immediate refund", async () => {
+  test("less than 30h before start, keeps the share held pending replacement", async () => {
     // Arrange
     const scenario = withdrawalScenario();
     await scenario.commit("alice");
-    scenario.setTime(hoursBeforeSessionStart(30));
+    scenario.setTime(new Date(hoursBeforeSessionStart(30).getTime() + 1_000));
 
     // Act
     const result = await scenario.withdraw("alice", openSlot);
@@ -61,6 +61,26 @@ describe("UC2-05 Withdraw from Session", () => {
     expect(scenario.participation("id-1").hold?.state).toBe(
       "AWAITING_REPLACEMENT",
     );
+  });
+
+  test("at exactly 30h, refunds the full held share in the withdrawal transaction", async () => {
+    // Arrange
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(30));
+
+    // Act
+    const result = await scenario.withdraw("alice", openSlot);
+
+    // Assert
+    expect(result).toMatchObject({
+      kind: "REFUNDED",
+      participationId: "id-1",
+      refundedCents: 500,
+    });
+    expect(scenario.unitOfWork.availableCents("alice")).toBe(10_000);
+    expect(scenario.participation("id-1").hold?.state).toBe("REFUNDED");
+    expect(scenario.ledgerKinds()).toEqual(["LOCK", "REFUND"]);
   });
 
   test("forfeits (credits the booker) if no replacement is found before session start", async () => {

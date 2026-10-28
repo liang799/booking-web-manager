@@ -5,6 +5,7 @@ const config = vi.hoisted(() => ({ createDiscoveryDependencies: vi.fn<() => Disc
 vi.mock("@/use-case-config/discovery", () => config);
 
 const dependencies: DiscoveryDependencies = {
+  authenticate: async () => null,
   discoverSessions: { searchPublic: async () => [] },
 };
 

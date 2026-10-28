@@ -140,7 +140,7 @@ export const LoadFailedThenRetried: Story = {
   },
 };
 
-/** More than 30 hours before the start: the refund is shown first, rechecked, then the place opens to the waitlist. */
+/** At least 30 hours before the start: the refund is shown first, rechecked, then the place opens to the waitlist. */
 export const WithdrawWithFullRefund: Story = {
   play: async ({ args, canvas }) => {
     await openWithdraw(canvas, "Bishan Sports Hall");
@@ -158,7 +158,7 @@ export const WithdrawWithFullRefund: Story = {
   },
 };
 
-/** 30 hours or less before the start: nothing comes back now; the player names one replacement. */
+/** Less than 30 hours before the start: nothing comes back now; the player names one replacement. */
 export const LateWithdrawalInvitingSomeone: Story = {
   play: async ({ args, canvas }) => {
     await openWithdraw(canvas, "Kallang Tennis Centre");

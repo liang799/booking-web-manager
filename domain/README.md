@@ -266,12 +266,12 @@ Participation status describes enrollment (`WAITLISTED`, `COMMITTED`,
 `LEFT_WAITLIST`, `WITHDRAWN`, `REMOVED`, `CANCELLED`), while attendance and hold
 states remain separate. A waitlist re-entry reuses its participation ID and gets
 a new persisted queue sequence. The current implementation immediately refunds
-a withdrawal more than 30 hours before start; at 30 hours or less it awaits a
-replacement. This differs from the product-owner-confirmed state diagram, which
-includes exactly 30 hours in the immediate-refund window. At start, unmatched
-replacement holds become `FORFEITURE_DUE`. See the
+a withdrawal at least 30 hours before start, including the exact cutoff; below
+30 hours it awaits a replacement. The final decision uses the server clock
+when processing the withdrawal, not the earlier read-only preview. At start,
+unmatched replacement holds become `FORFEITURE_DUE`. See the
 [product discussion](../docs/discussions/waitlist-and-replacement-options.md)
-for the source diagram and policy questions separate from that boundary issue.
+for the source diagram and remaining policy questions.
 
 ## Named replacements and the joining waitlist
 

@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { DomainError } from "@/domain";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { displayNames } from "@/lib/supabase/profile-names";
+import { memberProfiles } from "@/lib/supabase/profile-names";
 import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import {
@@ -22,7 +22,7 @@ interface GroupPageProps {
   readonly params: Promise<{ groupId: string }>;
 }
 
-/** UC1-06 Manage Group: one group's members and invitation link. Owners also get the controls. */
+/** UC1-06 Manage Group: one group's members (with their user IDs, ADR-0021) and invitation link. Owners also get the controls. */
 export default async function GroupPage({ params }: GroupPageProps) {
   const { groupId } = await params;
   const user = await getCurrentUser();
@@ -36,7 +36,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
     throw error;
   }
 
-  const names = await displayNames(group.memberships.map((member) => member.userId));
+  const profiles = await memberProfiles(group.memberships.map((member) => member.userId));
   const isOwner = group.ownerId === user.id;
   const active = group.status === "ACTIVE";
 
@@ -61,7 +61,8 @@ export default async function GroupPage({ params }: GroupPageProps) {
             </h2>
             <ul className="divide-y overflow-hidden rounded-lg border bg-card">
               {group.memberships.map((member) => {
-                const name = names.get(member.userId) ?? "Unnamed player";
+                const profile = profiles.get(member.userId);
+                const name = profile?.name ?? "Unnamed player";
                 const memberIsOwner = member.userId === group.ownerId;
                 return (
                   <li key={member.userId} className="flex items-center gap-3 px-4 py-3">
@@ -70,7 +71,8 @@ export default async function GroupPage({ params }: GroupPageProps) {
                         {name}
                         {member.userId === user.id && " (you)"}
                       </span>
-                      <span className="block text-sm text-muted-foreground">
+                      <span className="block truncate text-sm text-muted-foreground">
+                        {profile?.handle != null && <>@{profile.handle} · </>}
                         Joined {joinedDate.format(member.joinedAt)}
                       </span>
                     </span>
