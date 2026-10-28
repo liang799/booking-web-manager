@@ -22,8 +22,6 @@ state("Register", 40, 250, "Register", "/register",
       ["submit()[invalid | dup. email] / showError"])
 state("Login", 270, 250, "Login", "/login?next=…",
       ["submit()[invalid] / showError"])
-state("CheckEmail", 40, 420, "Check Your Email", "after sign-up",
-      ["entry / send confirmation link"])
 
 # ---- signed in: top ----
 state("Home", 820, 110, "Home", "/",
@@ -49,13 +47,11 @@ state("MySessions", 1100, 330, "My Sessions", "/sessions",
       ["entry / list hosted sessions with server-selected actions",
        "toggleVisibility(Public | Private)[open, not full] / refresh"], w=610)
 state("Participants", 1100, 620, "Manage Participants", "/sessions/{id}/participants",
-      ["entry / list roster & waitlist"])
+      ["entry / list roster & waitlist", "verify(marks)[ended] / markAttendance"])
 state("RemoveDialog", 1100, 830, "Remove Participant", "dialog",
       ["entry / GET removal-preview:", "display wallet refund"])
 state("CancelDialog", 1310, 620, "Cancel Session", "dialog",
       ["entry / GET cancellation-preview:", "display total wallet refunds"])
-state("Verify", 1520, 620, "Verify Attendance", "planned · POST /api/sessions/attendance",
-      ["entry / list committed participants"], planned=True)
 
 # column: create wizard (UC2-02)
 state("CreateVenue", 1860, 330, "Create Session: Venue Details", "/sessions/create · step 1",
@@ -64,14 +60,13 @@ state("CreateSettings", 1860, 520, "Create Session: Settings", "step 2",
       ["schedule, slots, visibility,", "minimum reliability"])
 state("CreateShare", 1860, 710, "Create Session: Booking Share", "step 3",
       ["entry / compute booking share", "server-side"])
-state("Email", 1860, 900, "Email Verification", "/profile/email",
-      ["entry / show verification status"])
+state("Email", 1860, 900, "Email Address", "/profile/email",
+      ["entry / show current address", "save(email)[valid] / updateEmail"])
 
 # column: wallet
 state("Wallet", 2110, 330, "Wallet", "/wallet",
-      ["entry / query available balance,", "held funds & tx history"])
-state("TopUp", 2110, 540, "Top Up", "planned · Stripe PayNow",
-      ["do / await payment;", "webhook credits wallet"], planned=True)
+      ["entry / query available balance,", "held funds & tx history",
+       "topUp(amount)[valid] / PayNow;", "    webhook credits wallet"])
 
 # column: groups (UC1-06)
 state("Groups", 2350, 330, "Groups", "/groups",
@@ -106,8 +101,8 @@ ORTHO = "edgeStyle=orthogonalEdgeStyle;"
 edge("start", "Landing")
 edge("Landing", "Register", "Sign up", style=P(0.25, 1, 0.5, 0))
 edge("Landing", "Login", "Log in", style=P(0.75, 1, 0.5, 0))
-edge("Register", "CheckEmail", "submit()[valid]\n/createAcct + initWallet")
-edge("CheckEmail", "Login", "Go to log in", style=P(1, 0.5, 0.5, 1))
+edge("Register", "Home", "submit()[valid]\n/createAcct + initWallet + signIn",
+     style=P(0.5, 1, 0, 0.75) + ORTHO, points=[(135, 395), (490, 395), (490, 168)], pos=-0.55)
 edge("Login", "Home", "submit()[valid]\n/redirect(next)", style=P(1, 0.3, 0, 0.5))
 edge("Settings", "Landing", "Logout() / clearSession", style=P(0.5, 0, 0.5, 0) + ORTHO)
 
@@ -128,7 +123,7 @@ edge("WithdrawConfirm", "Details", "Confirm(choice)[>30h] / refund\nConfirm(choi
      planned=True, style=P(0.25, 0, 0.75, 1), pos=0.5)
 edge("JoinConfirm", "Wallet", "Confirm()[insufficient funds] / promptTopUp", planned=True,
      style=P(0.5, 1, 0, 0.5) + ORTHO, points=[(615, 1040), (2080, 1040), (2080, 370)])
-edge("JoinConfirm", "Email", "Confirm()[email unverified]", planned=True,
+edge("JoinConfirm", "Email", "Confirm()[no email]", planned=True,
      style=P(0.15, 1, 0, 0.5) + ORTHO, points=[(548, 1010), (1820, 1010), (1820, 935)])
 
 # hosting
@@ -137,21 +132,17 @@ edge("CreateVenue", "CreateSettings", "Next()[valid]", style=P(0.4, 1, 0.4, 0), 
 edge("CreateSettings", "CreateVenue", "Back", style=P(0.6, 0, 0.6, 1), pos=-0.4)
 edge("CreateSettings", "CreateShare", "Next()[valid]", style=P(0.4, 1, 0.4, 0), pos=-0.4)
 edge("CreateShare", "CreateSettings", "Back", style=P(0.6, 0, 0.6, 1), pos=-0.4)
-edge("CreateShare", "MySessions", "Confirm()[email verified]\n/computeShare + genLink",
+edge("CreateShare", "MySessions", "Confirm()[has email]\n/computeShare + genLink",
      style=P(0, 0.4, 1, 0.75) + ORTHO, points=[(1785, 755), (1785, 420)])
-edge("CreateShare", "Email", "Confirm()[email unverified]", style=P(0.5, 1, 0.5, 0))
+edge("CreateShare", "Email", "Confirm()[no email]", style=P(0.5, 1, 0.5, 0))
 edge("MySessions", "Participants", "Manage participants", style=P(0.1, 1, 0.3, 0), pos=-0.45)
 edge("Participants", "MySessions", "Back", style=P(0.7, 0, 0.22, 1), pos=-0.45)
 edge("Participants", "RemoveDialog", "Remove(participant)", style=P(0.3, 1, 0.3, 0), pos=-0.45)
 edge("RemoveDialog", "Participants", "Confirm() / refund + notify\nCancel", style=P(0.7, 0, 0.7, 1), pos=-0.4)
 edge("MySessions", "CancelDialog", "Cancel session\n[before start]", style=P(0.44, 1, 0.3, 0), pos=-0.45)
 edge("CancelDialog", "MySessions", "Confirm() / refundAll\nCancel", style=P(0.7, 0, 0.56, 1), pos=-0.45)
-edge("MySessions", "Verify", "Verify attendance\n[ended]", planned=True, style=P(0.78, 1, 0.3, 0), pos=-0.45)
-edge("Verify", "MySessions", "Submit(marks) / markPayable\nBack", planned=True, style=P(0.7, 0, 0.9, 1), pos=-0.45)
 
 # wallet
-edge("Wallet", "TopUp", "Top up", planned=True, style=P(0.3, 1, 0.3, 0), pos=-0.4)
-edge("TopUp", "Wallet", "paymentSucceeded()\n/ webhookCredit | Cancel", planned=True, style=P(0.7, 0, 0.7, 1), pos=-0.4)
 
 # groups
 edge("Groups", "GroupDetails", "Open group\ncreate(name)", style=P(0.3, 1, 0.3, 0), pos=-0.4)
@@ -190,7 +181,8 @@ def region_cell(cid, label, x, y, w, h, size=11, arc=1, wrap=""):
 SIGNED_OUT = "<b>Signed out</b>"
 SIGNED_IN = ("<b>Signed in (app shell)</b><br>"
              "nav(Home | Discover | My sessions | Wallet | Groups | Settings) reaches each top-level screen "
-             "from any state in this region<br>any protected screen [signed out] / redirect(/login?next=screen)")
+             "from any state in this region<br>any protected screen [signed out] / redirect(/login?next=screen)<br>"
+             "addEmail()[no email] / open Email Address (shell prompt; an address is required, confirming it is not)")
 LEGEND = ("Format: event(arguments)[guard]/action  |  solid dot = start  |  bullseye = end  |  "
           "divider separates state name from entry/do actions and internal transitions  |  "
           "<b>dashed = planned screen</b> (API on main, UI not yet built)")
@@ -251,7 +243,7 @@ def write(path, cells):
 
 # ---- full map ----
 nid = iter(range(100, 10000))
-cells = [region_cell("region-out", SIGNED_OUT, 20, 80, 460, 440, size=12, arc=3),
+cells = [region_cell("region-out", SIGNED_OUT, 20, 80, 460, 290, size=12, arc=3),
          region_cell("region-in", SIGNED_IN, 500, 80, 2380, 1100)]
 cells += state_cells(states) + pseudo_cells(pseudo)
 cells += [edge_cell(*e, next(nid)) for e in edges]
@@ -270,12 +262,12 @@ print(f"{len(states)} states, {len(edges)} transitions")
 SW, SH = 150, 44
 parts = [
     ("Part 1: sign-in, discovery and joining a session",
-     ["Landing", "Register", "Login", "CheckEmail", "Home", "Discover", "Details",
+     ["Landing", "Register", "Login", "Home", "Discover", "Details",
       "JoinConfirm", "WithdrawConfirm", "PlayerProfile"],
      ["start", "push"],
      {"toCreate": (1120, 135, SW, "Create Session: Venue Details", 2),
       "fromSettings": (540, 125, SW, "Settings", 3),
-      "toEmail": (520, 1090, SW, "Email Verification", 2),
+      "toEmail": (520, 1090, SW, "Email Address", 2),
       "toWallet": (720, 1090, SW, "Wallet", 3)},
      {("Home", "CreateVenue"): ("toCreate", P(1, 0.3, 0, 0.5), (), 0),
       ("Settings", "Landing"): ("fromSettings", P(0, 0.5, 1, 0.5), (), 0),
@@ -283,7 +275,7 @@ parts = [
       ("JoinConfirm", "Wallet"): ("toWallet", P(0.8, 1, 0.5, 0) + ORTHO, (), 0.35)},
      True),
     ("Part 2: hosting and creating a session",
-     ["MySessions", "Participants", "RemoveDialog", "CancelDialog", "Verify",
+     ["MySessions", "Participants", "RemoveDialog", "CancelDialog",
       "CreateVenue", "CreateSettings", "CreateShare", "Email"],
      [],
      {"fromHome": (1880, 180, SW, "Home", 1),
@@ -294,11 +286,11 @@ parts = [
       ("Settings", "Email"): ("fromSettings2", P(0.5, 0, 0.5, 1), (), 0)},
      False),
     ("Part 3: wallet, groups and settings",
-     ["Wallet", "TopUp", "Groups", "GroupDetails", "JoinGroup", "Settings", "EditProfile", "DeleteAccount"],
+     ["Wallet", "Groups", "GroupDetails", "JoinGroup", "Settings", "EditProfile", "DeleteAccount"],
      ["invite", "deleted"],
      {"fromJoin3": (2130, 180, SW, "Join Confirmation", 1),
       "toLanding": (2620, 180, SW, "Landing", 1),
-      "toEmail3": (2900, 340, SW, "Email Verification", 2)},
+      "toEmail3": (2900, 340, SW, "Email Address", 2)},
      {("JoinConfirm", "Wallet"): ("fromJoin3", P(0.5, 1, 0.5, 0), (), 0),
       ("Settings", "Landing"): ("toLanding", P(0.5, 0, 0.5, 1), (), 0),
       ("Settings", "Email"): ("toEmail3", P(1, 0.3, 0, 0.5), (), 0)},
@@ -318,7 +310,7 @@ for n, (title, keys, pkeys, stubs, reroute, signed_out) in enumerate(parts, 1):
     x1 = max(b[0] + b[2] for b in boxes) + 30
     y1 = max(b[1] + b[3] for b in boxes) + 75
     if signed_out:
-        cells.append(region_cell("region-out", SIGNED_OUT, 20, 80, 460, 440, size=12, arc=3))
+        cells.append(region_cell("region-out", SIGNED_OUT, 20, 80, 460, 290, size=12, arc=3))
         x0 = 500
     cells.append(region_cell("region-in", SIGNED_IN, x0, y0, x1 - x0, y1 - y0, wrap="whiteSpace=wrap;"))
     cells += state_cells(keys) + pseudo_cells(pkeys)
