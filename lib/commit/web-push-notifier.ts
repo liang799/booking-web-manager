@@ -36,11 +36,29 @@ export interface PushPayload {
   readonly sessionId: UUID;
 }
 
+/**
+ * The page that lets the recipient act on a notification. There is no
+ * /sessions/{id} page: players manage places and invitations on
+ * /sessions/joined, a late withdrawer's held share is on the wallet, and the
+ * booker verifies attendance on the participants page.
+ */
+function destinationFor(notification: CommitmentNotification): string {
+  switch (notification.kind) {
+    case "VERIFICATION_REMINDER":
+      return `/sessions/${encodeURIComponent(notification.sessionId)}/participants`;
+    case "FORFEITURE_WARNING":
+    case "FORFEITURE_DUE":
+      return "/wallet";
+    default:
+      return "/sessions/joined";
+  }
+}
+
 /** User-facing text for each notification. Amounts are shown in the app, not here. */
 export function pushPayloadFor(
   notification: CommitmentNotification,
 ): PushPayload {
-  const url = `/sessions/${notification.sessionId}`;
+  const url = destinationFor(notification);
   const base = { url, kind: notification.kind, sessionId: notification.sessionId };
   switch (notification.kind) {
     case "PROMOTED":
