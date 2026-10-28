@@ -345,7 +345,9 @@ replays its result and notifies again, so delivery is at-least-once.
 [`WebPushNotifier`](../../lib/commit/web-push-notifier.ts) is the Web Push
 adapter. It holds the notification text, sends to every subscription the
 recipient registered, and removes subscriptions the push service reports as
-expired. [`createWebPush`](../../lib/commit/web-push.ts) assembles it over the
+expired. A tap opens the page where the recipient can act: `/sessions/joined`
+for players, `/wallet` for a late withdrawer's held or forfeited share, and
+`/sessions/{id}/participants` for the booker's verification reminder. [`createWebPush`](../../lib/commit/web-push.ts) assembles it over the
 [`PostgresPushSubscriptionStore`](../../lib/commit/postgres-push-subscription-store.ts)
 (`push_subscriptions`, migration 0009, at most 10 browsers per user) and the
 [`WebPushSender`](../../lib/commit/web-push-sender.ts) (`web-push`, VAPID,
