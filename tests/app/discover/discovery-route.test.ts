@@ -18,7 +18,8 @@ afterEach(() => {
 
 async function scenario() {
   const searchPublic = vi.fn<DiscoveryDependencies["discoverSessions"]["searchPublic"]>().mockResolvedValue([]);
-  configuration.createDiscoveryDependencies.mockReturnValue({ discoverSessions: { searchPublic } });
+  const authenticate = vi.fn<DiscoveryDependencies["authenticate"]>().mockResolvedValue(userId);
+  configuration.createDiscoveryDependencies.mockReturnValue({ authenticate, discoverSessions: { searchPublic } });
   const { GET } = await import("@/app/api/sessions/route");
   const { DomainError } = await import("@/domain");
   const { DiscoveryApiUnavailableError } = await import("@/app/discover/discovery-api-unavailable");
@@ -36,7 +37,7 @@ describe("GET /api/sessions", () => {
       return [];
     });
 
-    const response = await GET(new Request("http://localhost/api/sessions"));
+    const response = await GET(request());
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
@@ -83,7 +84,7 @@ describe("GET /api/sessions", () => {
     }
   });
 
-  test("withholds unconfigured topology and arbitrary codes from anonymous callers", async () => {
+  test("withholds unconfigured topology and arbitrary codes from authenticated callers", async () => {
     const { GET, searchPublic } = await scenario();
     const cause = Object.assign(new Error("getaddrinfo ENOTFOUND db.internal.corp"), { code: "ENOTFOUND" });
     const failure = Object.assign(new Error("user=alice host=db.internal 10.0.0.5:5432"), {
@@ -91,7 +92,7 @@ describe("GET /api/sessions", () => {
     });
     searchPublic.mockRejectedValue(failure);
 
-    const response = await GET(new Request("http://localhost/api/sessions"));
+    const response = await GET(request());
     const body = await response.json();
 
     expect(response.status).toBe(500);
@@ -243,7 +244,7 @@ describe("GET /api/sessions", () => {
     expect(searchPublic).not.toHaveBeenCalled();
   });
 
-  test("invokes public discovery with validated filter bounds", async () => {
+  test("invokes authenticated discovery with validated filter bounds", async () => {
     const { GET, searchPublic } = await scenario();
     const req = request("q=+Jurong+&sport=Badminton&region=West&date=2030-01-02&timeFrom=18:00&timeTo=20:00");
     const response = await GET(req);
