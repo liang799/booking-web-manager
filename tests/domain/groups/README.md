@@ -175,3 +175,87 @@ Execution: **1 passed / 1 cases**.
 | User ID | Initial member IDs | Supplied token | Expected Result | Test Result |
 |---|---|---|---|---|
 | [aisha](regular-group.test.ts#L366) | owner, aisha | first-token | JOINED; members: owner, aisha | JOINED; members: owner, aisha |
+
+## Invitations by user ID
+
+Added after the 2026-10-24 snapshot with [ADR-0022](../../../docs/adr/0022-invite-players-to-groups-by-user-id.md); the counts below are from this change's run on 2026-10-28 (**24 cases, 24 passed**), not the snapshot. Unless overridden, group `group` is ACTIVE, named `Sunday badminton`, with active token `first-token`, owned by `owner` and containing only `owner`; invitations are sent by `owner` and dates are 2026-09-15 00:00:00 UTC. “State unchanged” also covers the ordered pending invitations (invitee, inviter, time) and group status.
+
+### Restore pending invitations
+
+**Input:** Member IDs, Invitation active, Pending invitee IDs · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Member IDs | Invitation active | Pending invitee IDs | Expected Result | Test Result |
+|---|---|---|---|---|
+| [owner](regular-group-invitations.test.ts#L11) | true | Omitted | Invitations: none | Invitations: none |
+| [owner](regular-group-invitations.test.ts#L17) | true | aisha, aisha | DUPLICATE_ID | DUPLICATE_ID |
+| [owner, aisha](regular-group-invitations.test.ts#L27) | true | aisha | INVALID_INPUT | INVALID_INPUT |
+| [owner](regular-group-invitations.test.ts#L38) | false | aisha | INVALID_INPUT | INVALID_INPUT |
+
+### Construct an invitation
+
+**Input:** Invitee ID, Invited by, Invited at (UTC) · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 cases**.
+
+| Invitee ID | Invited by | Invited at (UTC) | Expected Result | Test Result |
+|---|---|---|---|---|
+| [owner](regular-group-invitations.test.ts#L49) | owner | 2026-09-15 00:00:00 | INVALID_INPUT | INVALID_INPUT |
+
+### Read invitations after attempted collection and date mutation
+
+**Input:** Original invitee IDs, Mutation target, Attempted changes · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **1 passed / 1 cases**.
+
+| Original invitee IDs | Mutation target | Attempted changes | Expected Result | Test Result |
+|---|---|---|---|---|
+| [aisha](regular-group-invitations.test.ts#L60) | Returned invitations | Set first invitation year to 2000; remove last invitation | Invitees: aisha; invited at: 2026-09-15 00:00:00 UTC | Invitees: aisha; invited at: 2026-09-15 00:00:00 UTC |
+
+### Send an invitation
+
+**Input:** Actor ID, Group status, Invitation active, Existing member IDs, Existing invitee IDs, Invitee ID · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **8 passed / 8 cases**.
+
+| Actor ID | Group status | Invitation active | Existing member IDs | Existing invitee IDs | Invitee ID | Expected Result | Test Result |
+|---|---|---|---|---|---|---|---|
+| [owner](regular-group-invitations.test.ts#L77) | ACTIVE | true | owner | None | aisha | INVITED; invitations: aisha by owner at 2026-09-16 08:00:00 UTC; members: owner | INVITED; invitations: aisha by owner at 2026-09-16 08:00:00 UTC; members: owner |
+| [ben](regular-group-invitations.test.ts#L90) | ACTIVE | true | owner, ben | None | aisha | INVITED; invitations: aisha by ben | INVITED; invitations: aisha by ben |
+| [ben](regular-group-invitations.test.ts#L103) | ACTIVE | true | owner, ben | aisha (by owner) | aisha | ALREADY_INVITED; invitations: aisha by owner at 2026-09-15 00:00:00 UTC | ALREADY_INVITED; invitations: aisha by owner at 2026-09-15 00:00:00 UTC |
+| [stranger](regular-group-invitations.test.ts#L123) | ACTIVE | true | owner | None | aisha | UNAUTHORIZED; state unchanged | UNAUTHORIZED; state unchanged |
+| [owner](regular-group-invitations.test.ts#L133) | ACTIVE | false | owner | None | aisha | INVALID_INVITATION; state unchanged | INVALID_INVITATION; state unchanged |
+| [owner](regular-group-invitations.test.ts#L143) | ARCHIVED | false | owner | None | aisha | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+| [owner](regular-group-invitations.test.ts#L155) | ACTIVE | true | owner | None | owner | INVALID_INPUT; state unchanged | INVALID_INPUT; state unchanged |
+| [owner](regular-group-invitations.test.ts#L165) | ACTIVE | true | owner, aisha | None | aisha | ALREADY_MEMBER; state unchanged | ALREADY_MEMBER; state unchanged |
+
+### Answer an invitation
+
+The archived case has an inactive invitation link.
+
+**Input:** Command, User ID, Group status, Existing member IDs, Pending invitee IDs · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **6 passed / 6 cases**.
+
+| Command | User ID | Group status | Existing member IDs | Pending invitee IDs | Expected Result | Test Result |
+|---|---|---|---|---|---|---|
+| [acceptInvitation](regular-group-invitations.test.ts#L179) | aisha | ACTIVE | owner | aisha | JOINED; members: owner, aisha (joined 2026-09-16 09:30:00 UTC); invitations: none | JOINED; members: owner, aisha (joined 2026-09-16 09:30:00 UTC); invitations: none |
+| [acceptInvitation](regular-group-invitations.test.ts#L195) | aisha | ACTIVE | owner, aisha | None | ALREADY_MEMBER; state unchanged | ALREADY_MEMBER; state unchanged |
+| [acceptInvitation](regular-group-invitations.test.ts#L207) | ben | ACTIVE | owner | aisha | INVALID_INVITATION; state unchanged | INVALID_INVITATION; state unchanged |
+| [acceptInvitation](regular-group-invitations.test.ts#L219) | aisha | ARCHIVED | owner | None | INVALID_STATE; state unchanged | INVALID_STATE; state unchanged |
+| [declineInvitation](regular-group-invitations.test.ts#L231) | aisha | ACTIVE | owner | aisha, ben | Invitations: ben; members: owner | Invitations: ben; members: owner |
+| [declineInvitation](regular-group-invitations.test.ts#L242) | ben | ACTIVE | owner | aisha | State unchanged | State unchanged |
+
+### End invitations with the link
+
+**Input:** Command, Pending invitee IDs · **Oracle:** Expected Result · **Log:** Test Result
+
+Execution: **4 passed / 4 cases**.
+
+| Command | Pending invitee IDs | Expected Result | Test Result |
+|---|---|---|---|
+| [join (aisha, token first-token)](regular-group-invitations.test.ts#L255) | aisha, ben | JOINED; invitations: ben | JOINED; invitations: ben |
+| [revokeInvitation (owner)](regular-group-invitations.test.ts#L266) | aisha | Invitation inactive; invitations: none | Invitation inactive; invitations: none |
+| [rotateInvitation (owner, next-token)](regular-group-invitations.test.ts#L277) | aisha | Invitations: aisha | Invitations: aisha |
+| [archive (owner, 0 unsettled)](regular-group-invitations.test.ts#L287) | aisha | ARCHIVED; invitations: none | ARCHIVED; invitations: none |
