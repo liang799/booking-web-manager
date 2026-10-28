@@ -1,0 +1,20 @@
+.tabs { display: flex; align-self: stretch; gap: 38px; }
+.tabs > :is(button,a) { position: relative; min-height: 48px; padding: 10px 0 14px; color: var(--session-muted, hsl(var(--muted-foreground))); font-size: 20px; line-height: 1.2; }
+.tabs > [aria-current] { color: hsl(var(--foreground)); font-weight: 600; }
+.tabs > [aria-current]::after { content: ""; position: absolute; height: 2px; bottom: 0; left: 0; right: 0; background: currentColor; }
+.tabs > :is(button,a):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
+.mobileGroups { display: none; }
+
+@media (min-width: 768px) and (max-width: 950px) {
+  .tabs { gap: 20px; }
+  .tabs > button { font-size: 14px; }
+}
+
+@media (max-width: 767px) {
+  .tabs { margin: 0; gap: 25px; min-height: 44px; }
+  .tabs > :is(button,a) { min-height: 44px; padding: 4px 0 13px; font-size: 13px; display: inline-flex; align-items: center; }
+}
+
+@media (max-width: 360px) {
+  .tabs { gap: 18px; }
+}

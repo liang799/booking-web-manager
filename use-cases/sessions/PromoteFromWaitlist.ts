@@ -144,14 +144,19 @@ export class PromoteFromWaitlist {
       };
     });
 
-    await notifyBestEffort(
-      notifier,
-      result.promoted.map((entry) => ({
+    await notifyBestEffort(notifier, [
+      ...result.promoted.map((entry) => ({
         kind: "PROMOTED" as const,
         recipientId: entry.userId,
         sessionId: result.sessionId,
       })),
-    );
+      ...result.skipped.map((entry) => ({
+        kind: "REMOVED_FROM_WAITLIST" as const,
+        recipientId: entry.userId,
+        sessionId: result.sessionId,
+        reason: entry.reason,
+      })),
+    ]);
     return result;
   }
 }

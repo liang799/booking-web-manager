@@ -462,7 +462,7 @@ describe("UC2-04 Commit to Session", () => {
       expect(unitOfWork.ledgerInstructions).toHaveLength(0);
     });
 
-    test("notifies each promoted participant, but not a skipped one", async () => {
+    test("notifies each promoted participant and tells a skipped one why they left the waitlist", async () => {
       // Arrange
       const { promote, notifier } = promotionScenario({
         totalSlots: 2,
@@ -475,7 +475,17 @@ describe("UC2-04 Commit to Session", () => {
       await promote.forSession(promotionRequest());
 
       // Assert
-      expect(notifier.deliveries()).toEqual([["PROMOTED", "dave"]]);
+      expect(notifier.deliveries()).toEqual([
+        ["PROMOTED", "dave"],
+        ["REMOVED_FROM_WAITLIST", "carol"],
+      ]);
+      expect(notifier.sent).toContainEqual(
+        expect.objectContaining({
+          kind: "REMOVED_FROM_WAITLIST",
+          recipientId: "carol",
+          reason: "INSUFFICIENT_FUNDS",
+        }),
+      );
     });
 
     test("keeps a promotion when its notification cannot be delivered", async () => {

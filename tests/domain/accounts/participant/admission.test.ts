@@ -378,13 +378,33 @@ describe("Participant session admission", () => {
       expect(reloadedUser.wallet.getAvailableBalance().toCents()).toBe(0);
     });
 
-    test("join_WhenSessionIsFullAndUserHasNoFunds_JoinsWaitlistWithoutLockingFunds", () => {
+    test("join_WhenSessionIsFullAndUserCannotFundShare_RejectsWithoutQueueing", () => {
       const bookingSession = createTestSession({
         committedUserIds: ["alice", "ben"],
       });
       const cara = createTestUser({
         userId: "cara",
-        availableFundsCents: 0,
+        availableFundsCents: 499,
+      }).asParticipant();
+      const previousState = sessionState(bookingSession);
+
+      expect(() =>
+        cara.join(bookingSession, {
+          participationId: "p-cara",
+          now: hoursBeforeSessionStart(48),
+        }),
+      ).toThrow(expect.objectContaining({ code: "INSUFFICIENT_FUNDS" }));
+
+      expect(sessionState(bookingSession)).toEqual(previousState);
+    });
+
+    test("join_WhenSessionIsFullAndUserCanFundShare_JoinsWaitlistWithoutLockingFunds", () => {
+      const bookingSession = createTestSession({
+        committedUserIds: ["alice", "ben"],
+      });
+      const cara = createTestUser({
+        userId: "cara",
+        availableFundsCents: 500,
       }).asParticipant();
 
       const admission = cara.join(bookingSession, {

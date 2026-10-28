@@ -1,29 +1,39 @@
-import { ChevronRight } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { EmptyState } from "@/components/ui/empty-state";
-import { InfoNote } from "@/components/ui/info-note";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { displayNames } from "@/lib/supabase/profile-names";
 import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
+import { FindPlayer } from "@/app/users/_components/find-player";
+import { findPlayer } from "@/app/users/find-player-action";
 import { CreateGroupForm } from "./_components/group-controls";
+import { GroupsView } from "./_components/groups-view";
 
 interface GroupsPageProps {
   /** e.g. /groups?left=1 after leaving a group. */
   readonly searchParams: Promise<{ left?: string | string[] }>;
 }
 
-/** UC1-06 Manage Group: the groups you belong to, and a form to create one. */
+/** UC1-06 Manage Group: the groups you belong to, a form to create one, and player search by user ID (ADR-0021). */
 export default async function GroupsPage({ searchParams }: GroupsPageProps) {
   const user = await getCurrentUser();
   if (user === null) redirect("/login");
   const { left } = await searchParams;
 
-    const groups = await createManageGroup().listMine({ actorId: user.id });
+  const groups = await createManageGroup().listMine({ actorId: user.id });
+  const previewIds = [...new Set(groups.flatMap((group) => [
+    group.ownerId,
+    ...group.memberships.slice(0, 4).map((member) => member.userId),
+  ]))];
+  const names = await displayNames(previewIds);
   return (
     <>
       <PageHeader breadcrumb="Groups" title="My groups" />
+      <section className="mx-4 mt-4 space-y-3 rounded-lg border bg-card p-6 md:mx-8 md:mt-8" aria-labelledby="find-player">
+        <h2 id="find-player" className="text-xl font-semibold">
+          Find a player
+        </h2>
+        <p className="text-sm text-muted-foreground">Search by their exact user ID, like a Telegram username.</p>
+        <FindPlayer action={findPlayer} />
+      </section>
       <div className="grid grid-cols-1 gap-8 p-4 md:p-8 lg:grid-cols-[1fr_22rem]">
         <section className="min-w-0 space-y-3" aria-labelledby="my-groups">
           <h2 id="my-groups" className="text-xl font-semibold">

@@ -26,7 +26,7 @@ export type LoadJoinedSessions = () => Promise<readonly JoinedSessionItem[]>;
 
 /** What withdrawing now would do, calculated by the server (integer cents). */
 export interface WithdrawalPreview {
-  /** REFUNDED: more than 30 hours before start. AWAITING_REPLACEMENT: 30 hours or less. */
+  /** REFUNDED: at least 30 hours before start. AWAITING_REPLACEMENT: less than 30 hours. */
   readonly kind: "REFUNDED" | "AWAITING_REPLACEMENT";
   readonly refundCents: number;
   readonly heldCents: number;

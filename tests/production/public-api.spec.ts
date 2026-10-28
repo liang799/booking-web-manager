@@ -1,22 +1,5 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { expect, test } from "@playwright/test";
-import { z } from "zod";
-
-const discoveryPageSchema = z.object({
-  items: z.array(
-    z.object({
-      sessionId: z.string().uuid(),
-      venueName: z.string(),
-      region: z.string(),
-      sport: z.string(),
-      startAt: z.string().datetime(),
-      endAt: z.string().datetime(),
-      totalSlots: z.number().int().min(1).max(30),
-      bookingShareCents: z.number().int().positive().safe(),
-    }).strict(),
-  ).max(20),
-  nextCursor: z.string().nullable(),
-}).strict();
 
 test("production serves its OpenAPI contract", async ({ request }) => {
   const response = await request.get("/api/openapi");
@@ -26,14 +9,24 @@ test("production serves its OpenAPI contract", async ({ request }) => {
   await expect(SwaggerParser.validate(structuredClone(document))).resolves.toBeDefined();
   expect(document.openapi).toMatch(/^3\./);
   expect(document.paths?.["/api/sessions"]?.get).toBeDefined();
+  expect(document.paths?.["/api/health"]?.get).toMatchObject({ security: [], responses: expect.objectContaining({ 200: expect.any(Object), 503: expect.any(Object) }) });
+  expect(document.paths["/api/sessions"].get.security).toEqual([{ bearerAuth: [] }, { loginCookie: [] }]);
 });
 
-test("live GET /api/sessions returns HTTP 200 for anonymous visitors", async ({ request }) => {
+test("live GET /api/health checks database readiness without authentication", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.status(), "Deployment is not ready to serve session queries").toBe(200);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  expect(await response.json()).toEqual({ status: "ok" });
+});
+
+test("live GET /api/sessions rejects anonymous visitors", async ({ request }) => {
   const response = await request.get("/api/sessions");
-  expect(response.status(), "Live session discovery must be healthy; a 503 is a production failure").toBe(200);
+
+  expect(response.status()).toBe(401);
   expect(response.headers()["content-type"]).toContain("application/json");
   expect(response.headers()["cache-control"]).toBe("no-store");
-
-  const parsed = discoveryPageSchema.safeParse(await response.json());
-  expect(parsed.success, parsed.success ? undefined : parsed.error.message).toBe(true);
+  expect(await response.json()).toEqual({
+    error: { code: "UNAUTHENTICATED", message: "Authentication is required" },
+  });
 });
