@@ -1,18 +1,21 @@
+.overlay { background: rgb(20 20 20 / .55); backdrop-filter: blur(6px); }
+.sheetHandle { display: none; }
 .dialog.dialog { width: calc(100% - 32px); max-width: 640px; max-height: calc(100dvh - 32px); overflow-y: auto; padding: 40px; gap: 0; border-radius: 14px; background: hsl(var(--card)); box-shadow: 0 24px 80px hsl(var(--foreground) / .12); }
 .header { text-align: left; margin-bottom: 36px; }
 .eyebrow { margin: 0 44px 44px 0; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 500; letter-spacing: .17em; text-transform: uppercase; }
 .titleRow { min-width: 0; }
-.title { margin: 0; font-size: 44px; line-height: 1.15; font-weight: 500; letter-spacing: -1.5px; text-transform: capitalize; }
+.title { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 44px; line-height: 1.15; font-weight: 400; letter-spacing: -1.5px; text-transform: capitalize; }
 .subtitle { margin-top: 8px !important; color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.5; letter-spacing: .035em; overflow-wrap: anywhere; }
 .subtitle a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.date { flex: 1; }
 .summary { display: flex; align-items: baseline; justify-content: space-between; gap: 16px 24px; padding-bottom: 36px; margin-bottom: 40px; border-bottom: 1px solid hsl(var(--border)); }
 .date, .time { font-size: 18px; line-height: 1.5; }
-.time { font-size: 17px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.time { flex: 0 0 38%; padding-left: 24px; border-left: 1px solid hsl(var(--border)); text-align: right; font-size: 17px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
 .managementRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-left: 3px solid hsl(var(--border)); min-height: 98px; margin-bottom: 36px; padding: 0 0 0 28px; }
 .managementRow > div:first-child { min-width: 0; }
 .managementRow h3 { margin-bottom: 10px; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 600; line-height: 1.4; letter-spacing: .12em; text-transform: uppercase; }
 .count { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
-.count strong { color: hsl(var(--foreground)); font-size: 34px; font-weight: 500; letter-spacing: -.8px; line-height: 1.2; }
+.count strong { color: hsl(var(--foreground)); font-family: Georgia, "Times New Roman", serif; font-size: 40px; font-weight: 400; letter-spacing: -.8px; line-height: 1.2; }
 .count > span { color: hsl(var(--muted-foreground)); font-size: 13px; letter-spacing: .035em; }
 .manageButton { min-height: 44px; flex-shrink: 0; padding: 0 20px; border-radius: 5px; font-size: 14px; font-weight: 400; text-transform: capitalize; }
 .visibilityDescription { max-width: 300px; color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.5; letter-spacing: .035em; }
@@ -43,23 +46,38 @@
 .danger p { max-width: 250px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
 :global(.dark) .danger { --destructive: 0 85% 72%; }
 :global(.dark) .dialog { --muted-foreground: 220 10% 72%; --destructive: 0 85% 72%; }
+@keyframes sheetEnter { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetExit { from { transform: translateY(0); } to { transform: translateY(100%); } }
 @media (max-width: 580px) {
-  .dialog.dialog { padding: 28px 24px; }
-  .eyebrow { margin-bottom: 30px; font-size: 10px; }
-  .title { font-size: 32px; letter-spacing: -1px; }
-  .subtitle { font-size: 13px; }
-  .header { margin-bottom: 28px; }
-  .summary { flex-wrap: wrap; gap: 6px 16px; padding-bottom: 24px; margin-bottom: 28px; }
-  .date, .time { font-size: 15px; }
-  .managementRow { align-items: flex-start; flex-direction: column; gap: 16px; padding-left: 18px; margin-bottom: 28px; }
-  .count strong { font-size: 30px; }
-  .manageButton { min-height: 44px; padding: 0 20px; }
-  .segment { align-self: stretch; }
-  .segment button { flex: 1; }
-  .hostFooter { padding-top: 24px; gap: 16px; }
-  .inviteButton, .cancelButton { min-height: 54px; font-size: 15px; }
+  .dialog.dialog { top: auto; bottom: 0; left: 0; display: flex; flex-direction: column; width: 100%; max-width: none; height: calc(100dvh - max(16px, env(safe-area-inset-top))); max-height: calc(100dvh - max(16px, env(safe-area-inset-top))); transform: none; padding: 52px 24px max(24px, env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; overscroll-behavior: contain; }
+  .dialog.dialog > :not(button) { flex-shrink: 0; }
+  .dialog.dialog[data-state="open"] { animation: sheetEnter 240ms ease-out; }
+  .dialog.dialog[data-state="closed"] { animation: sheetExit 180ms ease-in; }
+  .sheetHandle { position: absolute; top: 2px; left: 50%; display: flex; align-items: center; justify-content: center; width: 80px; height: 40px; transform: translateX(-50%); border-radius: 8px; }
+  .sheetHandle span { width: 34px; height: 3px; border-radius: 999px; background: hsl(var(--muted-foreground) / .3); }
+  .eyebrow { margin-bottom: 32px; font-size: 10px; }
+  .title { font-size: 40px; letter-spacing: -1px; }
+  .subtitle { font-size: 13px; letter-spacing: 0; }
+  .header { margin-bottom: 32px; }
+  .summary { flex-wrap: wrap; gap: 8px 12px; padding-bottom: 28px; margin-bottom: 28px; }
+  .date { font-size: 10px; font-weight: 600; letter-spacing: .12em; line-height: 1.6; text-transform: uppercase; }
+  .time { flex: none; padding-left: 0; border-left: 0; font-size: 12px; line-height: 1.6; }
+  .managementRow { align-items: stretch; flex-direction: column; gap: 18px; min-height: 0; padding-left: 20px; margin-bottom: 32px; border-left-width: 2px; }
+  .managementRow > div:first-child { width: 100%; }
+  .managementRow h3 { font-size: 10px; font-weight: 500; letter-spacing: .16em; }
+  .count strong { font-size: 40px; }
+  .count > span { font-size: 13px; letter-spacing: 0; }
+  .manageButton { justify-content: space-between; width: 100%; min-height: 44px; padding: 0 16px; font-size: 14px; }
+  .visibilityDescription { max-width: 270px; font-size: 13px; letter-spacing: 0; line-height: 1.6; }
+  .segment { align-self: stretch; padding: 0; }
+  .segment button { flex: 1; min-height: 44px; }
+  .hostFooter { margin-top: auto; padding-top: 26px; gap: 14px; }
+  .inviteButton, .cancelButton { min-height: 52px; font-size: 14px; }
   .inviteButton > svg, .cancelButton > svg { width: 21px; height: 21px; }
-  .dialog > button:last-child { top: 14px; right: 14px; }
+  .dialog > button:last-child { top: 38px; right: 14px; }
   .danger { align-items: flex-start; flex-direction: column; gap: 0; }
   .danger p { max-width: none; }
+}
+@media (max-width: 580px) and (prefers-reduced-motion: reduce) {
+  .dialog.dialog[data-state] { animation: none; }
 }

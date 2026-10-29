@@ -118,3 +118,18 @@ export const JoinedCompleted: Story = {
 };
 
 export const JoinedCompletedMobile: Story = { ...JoinedCompleted, globals: { viewport: { value: "phone", isRotated: false } } };
+
+export const MobileSheetDismiss: Story = {
+  globals: { viewport: { value: "phone", isRotated: false } },
+  play: async ({ canvas }) => {
+    const trigger = await canvas.findByRole("button", { name: `View Tennis Court Booking at ${session.venueName}, 6 Nov 2026` });
+    await userEvent.click(trigger);
+    const element = await screen.findByRole("dialog", { name: "Tennis session" });
+    const dialog = within(element);
+    const handle = await dialog.findByRole("button", { name: "Dismiss session details" });
+    await waitFor(() => expect(handle).toBeVisible());
+    await userEvent.click(handle);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await expect(trigger).toHaveFocus();
+  },
+};

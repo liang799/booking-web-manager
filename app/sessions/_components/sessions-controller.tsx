@@ -78,6 +78,7 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
   const [cancelled, setCancelled] = useState<SessionCancellationResult | null>(null);
   const cancellationTrigger = useRef<HTMLButtonElement | null>(null);
   const sessionTrigger = useRef<HTMLElement | null>(null);
+  const [lastOpenedSession, setLastOpenedSession] = useState<SessionFeedItem | null>(null);
   const feed = useInfiniteQuery({
     queryKey: [...sessionFeedQueryKey, userId, tab],
     initialPageParam: null as string | null,
@@ -107,6 +108,8 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
     // discard the user's selection, and an old ID must not reopen on a later refresh.
     if (feed.isSuccess && !feed.isFetching && mode.status === "viewingSession" && !selected) closeSession();
   }, [feed.isSuccess, feed.isFetching, mode, selected, closeSession]);
+  // Retain the visible content while Radix finishes the closing animation.
+  const dialogSession = selected ?? lastOpenedSession;
   const first = feed.data?.pages[0];
   const signIn = feed.error instanceof SessionFeedLoadError && feed.error.signIn;
   const loginPath = feed.error instanceof SessionFeedLoadError && feed.error.code === "UNAUTHENTICATED" ? "/login?next=%2Fsessions" : "/login";
@@ -129,27 +132,28 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
     }} sessions={restoringSelection && feed.isError ? [] : sessions} asOf={first?.asOf ?? new Date().toISOString()} upcomingCount={first?.upcomingCount ?? 0} pastCount={first?.pastCount ?? 0} actions={actions}
       scrollTargetId={scrollTargetId} onUrlRestored={finishUrlRestoration}
       loading={feed.isPending || signIn || (restoringSelection && !feed.isError)} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
-      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => { sessionTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; openSession(session.sessionId); }} />
+      loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => { setLastOpenedSession(session); sessionTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; openSession(session.sessionId); }} />
     <Dialog open={mode.status === "viewingSession" && selected !== null} onOpenChange={(open) => { if (!open) closeSession(); }}>
-      <DialogContent className={selected?.role === "HOST" ? `${styles.dialogContent} ${details.dialog}` : `${styles.dialogContent} sm:max-w-[680px]`} onCloseAutoFocus={(event) => {
+      <DialogContent overlayClassName={dialogSession?.role === "HOST" ? details.overlay : undefined} className={dialogSession?.role === "HOST" ? `${styles.dialogContent} ${details.dialog}` : `${styles.dialogContent} sm:max-w-[680px]`} onCloseAutoFocus={(event) => {
         event.preventDefault();
         if (sessionTrigger.current?.isConnected) sessionTrigger.current.focus({ preventScroll: true });
         else document.getElementById("sessions-heading")?.focus({ preventScroll: true });
       }}>
-        {selected && <>
-          {selected.role === "HOST" ? <DialogHeader className={details.header}>
-            <p className={details.eyebrow}>Sessions / {selected.section === "upcoming" ? "Organising" : "Hosted"}</p>
-            <div className={details.titleRow}><DialogTitle className={details.title}>{selected.sport} session</DialogTitle>
+        {dialogSession && <>
+          {dialogSession.role === "HOST" && <button type="button" className={details.sheetHandle} aria-label="Dismiss session details" onClick={closeSession}><span aria-hidden /></button>}
+          {dialogSession.role === "HOST" ? <DialogHeader className={details.header}>
+            <p className={details.eyebrow}>Sessions / {dialogSession.section === "upcoming" ? "Organising" : "Hosted"}</p>
+            <div className={details.titleRow}><DialogTitle className={details.title}>{dialogSession.sport} session</DialogTitle>
             </div>
-            <DialogDescription className={details.subtitle}><a href={`https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: `${selected.venueName}, Singapore` })}`} target="_blank" rel="noreferrer">{selected.venueName}<span className="sr-only"> (opens in a new tab)</span></a>{selected.section === "past" && <span> · {sessionStatus(selected)}</span>}</DialogDescription>
-          </DialogHeader> : <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(selected)}</DialogTitle><DialogDescription>{selected.venueName} · {sessionStatus(selected)}</DialogDescription></DialogHeader>}
-          {selected.role === "HOST" ? <>
-            <SessionDetailsSummary session={selected} />
-            <HostedSessionManagement userId={userId} session={selected} loadHosted={loadHosted} onRefresh={refresh} onCancel={(session, trigger) => { cancellationTrigger.current = trigger; setCancelling(session); }} />
+            <DialogDescription className={details.subtitle}><a href={`https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: `${dialogSession.venueName}, Singapore` })}`} target="_blank" rel="noreferrer">{dialogSession.venueName}<span className="sr-only"> (opens in a new tab)</span></a>{dialogSession.section === "past" && <span> · {sessionStatus(dialogSession)}</span>}</DialogDescription>
+          </DialogHeader> : <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(dialogSession)}</DialogTitle><DialogDescription>{dialogSession.venueName} · {sessionStatus(dialogSession)}</DialogDescription></DialogHeader>}
+          {dialogSession.role === "HOST" ? <>
+            <SessionDetailsSummary session={dialogSession} />
+            <HostedSessionManagement userId={userId} session={dialogSession} loadHosted={loadHosted} onRefresh={refresh} onCancel={(session, trigger) => { cancellationTrigger.current = trigger; setCancelling(session); }} />
           </> : <>
-            <div className={styles.dialogHero}><Image src={sessionArtwork(selected)} alt="" fill sizes="680px" className={styles.photo} /></div>
-            <SessionDetails session={selected} footer={false} />
-            <SessionParticipantControls userId={userId} session={selected} onRefresh={refresh} available={sessionCanLeave(selected, first?.asOf ?? new Date().toISOString())} />
+            <div className={styles.dialogHero}><Image src={sessionArtwork(dialogSession)} alt="" fill sizes="680px" className={styles.photo} /></div>
+            <SessionDetails session={dialogSession} footer={false} />
+            <SessionParticipantControls userId={userId} session={dialogSession} onRefresh={refresh} available={sessionCanLeave(dialogSession, first?.asOf ?? new Date().toISOString())} />
           </>}
         </>}
       </DialogContent>
