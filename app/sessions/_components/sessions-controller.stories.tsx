@@ -544,11 +544,11 @@ export const HostedManagementDialog: Story = {
     const trigger = await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await userEvent.click(trigger);
     const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
-    const participants = await dialog.findByRole("link", { name: "Manage participants" });
+    const participants = await dialog.findByRole("link", { name: "Manage players" });
     await expect(participants).toHaveAttribute("href", `/sessions/${hostedSessions[0]!.sessionId}/participants`);
     await waitFor(() => expect(dialog.getByRole("button", { name: "Change visibility to private" })).toBeVisible());
-    await expect(dialog.getByText("Hosting", { exact: true })).toBeVisible();
-    await expect(dialog.getByText("2 of 4 players joined")).toBeVisible();
+    await expect(dialog.getByText("Sessions / Organising", { exact: true })).toBeVisible();
+    await expect(dialog.getByLabelText("2 of 4 players joined")).toBeVisible();
     await expect(dialog.getAllByText("Bukit Timah Community Club", { exact: true })).toHaveLength(1);
     await expect(dialog.getByText("Wednesday, 21 October 2026")).toBeVisible();
     await expect(dialog.getByText("The venue booking must be cancelled separately.")).toBeVisible();

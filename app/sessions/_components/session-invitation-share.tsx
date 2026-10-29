@@ -50,10 +50,9 @@ export function SessionInvitationShare({ sessionId, disabled, presentation = "de
 
   return <div className={presentation === "details" ? details.invitation : "mt-4 space-y-3"}>
     <div className={presentation === "details" ? details.inviteRow : undefined}>
-    {presentation === "details" && <div><h3>Invite your friends</h3><p>Share a link to join this session.</p></div>}
     <Button type="button" variant={presentation === "details" ? "default" : "outline"} className={presentation === "details" ? details.inviteButton : "min-h-11"} disabled={disabled || state.status === "loading"} onClick={copyInvitation}>
       {presentation === "details" ? <Link2 className="mr-2 h-4 w-4" aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
-      {state.status === "loading" ? "Loading invitation…" : presentation === "details" ? "Copy link" : "Copy invitation link"}
+      {state.status === "loading" ? "Loading invitation…" : "Copy invitation link"}
     </Button>
     </div>
     {state.status === "ready" && <div className="mt-3 space-y-2 rounded-lg bg-muted p-3">

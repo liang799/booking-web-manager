@@ -138,11 +138,10 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
       }}>
         {selected && <>
           {selected.role === "HOST" ? <DialogHeader className={details.header}>
-            <p className={details.eyebrow}>Session details</p>
+            <p className={details.eyebrow}>Sessions / {selected.section === "upcoming" ? "Organising" : "Hosted"}</p>
             <div className={details.titleRow}><DialogTitle className={details.title}>{selected.sport} session</DialogTitle>
-              <span className={details.badge}>{selected.section === "upcoming" ? "Hosting" : `Hosted · ${sessionStatus(selected)}`}</span>
             </div>
-            <DialogDescription className="sr-only">When and where you’re playing, and your session actions.</DialogDescription>
+            <DialogDescription className={details.subtitle}><a href={`https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: `${selected.venueName}, Singapore` })}`} target="_blank" rel="noreferrer">{selected.venueName}<span className="sr-only"> (opens in a new tab)</span></a>{selected.section === "past" && <span> · {sessionStatus(selected)}</span>}</DialogDescription>
           </DialogHeader> : <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(selected)}</DialogTitle><DialogDescription>{selected.venueName} · {sessionStatus(selected)}</DialogDescription></DialogHeader>}
           {selected.role === "HOST" ? <>
             <SessionDetailsSummary session={selected} />
@@ -170,7 +169,7 @@ function HostedSessionManagement({ userId, session, loadHosted, onRefresh, onCan
   const managed = query.data.sessions.find((item) => item.sessionId === session.sessionId);
   const attendance = query.data.awaitingAttendance.find((item) => item.sessionId === session.sessionId);
   if (managed) return <HostedSessionControls session={managed} refreshing={query.isFetching}
-    participantSummary={`${session.participantCount} of ${session.capacity} players joined`}
+    participants={{ participantCount: session.participantCount, capacity: session.capacity }}
     onSetVisibility={(_id, action) => executeSessionVisibility(action)} onRefresh={onRefresh}
     onCancel={(trigger) => onCancel(managed, trigger)} />;
   return <div className={details.row}>

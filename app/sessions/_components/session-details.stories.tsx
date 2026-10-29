@@ -34,13 +34,14 @@ const meta = {
     await userEvent.click(await canvas.findByRole("button", { name: window.innerWidth < 768 ? `View Tennis Court Booking at ${session.venueName}, 6 Nov 2026` : `Manage Tennis Court Booking at ${session.venueName}` }));
     const element = await screen.findByRole("dialog", { name: "Tennis session" });
     const dialog = within(element);
-    await waitFor(() => expect(dialog.getByRole("button", { name: "Copy link" })).toBeVisible());
+    await waitFor(() => expect(dialog.getByRole("button", { name: "Copy invitation link" })).toBeVisible());
     await expect(dialog.getByText("Friday, 6 November 2026")).toBeVisible();
-    await expect(dialog.getByText("0 of 8 players joined")).toBeVisible();
-    await expect(dialog.getByText("1 hr 30 min", { exact: false })).toBeVisible();
+    await expect(dialog.getByLabelText("0 of 8 players joined")).toBeVisible();
+    await expect(dialog.getByRole("group", { name: "Session visibility" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Public" })).toHaveAttribute("aria-pressed", "true");
     await expect(dialog.getAllByText(session.venueName, { exact: false })).toHaveLength(1);
     await expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth);
-    await waitFor(() => expect(element.getBoundingClientRect().width).toBeLessThanOrEqual(620));
+    await waitFor(() => expect(element.getBoundingClientRect().width).toBeLessThanOrEqual(640));
   },
 } satisfies Meta<typeof SessionsController>;
 export default meta;
@@ -61,7 +62,7 @@ export const CancelledHistory: Story = {
     const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
     await waitFor(() => expect(dialog.getByRole("link", { name: "View participants" })).toBeVisible());
     await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
-    await expect(dialog.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
+    await expect(dialog.queryByRole("button", { name: "Copy invitation link" })).not.toBeInTheDocument();
   },
 };
 
@@ -74,7 +75,7 @@ export const Joined: Story = {
     await waitFor(() => expect(dialog.getByRole("button", { name: "Leave session" })).toBeVisible());
     await expect(dialog.getByText(`${session.venueName} · Joined`)).toBeVisible();
     await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
-    await expect(dialog.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
+    await expect(dialog.queryByRole("button", { name: "Copy invitation link" })).not.toBeInTheDocument();
   },
 };
 

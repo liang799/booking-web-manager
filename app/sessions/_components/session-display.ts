@@ -36,6 +36,15 @@ export function sessionTime(session: Pick<SessionFeedItem, "startAt" | "endAt">)
   return `${time.format(start)} – ${date.format(start) === date.format(end) ? "" : `${date.format(end)}, `}${time.format(end)}`;
 }
 
+/** The host summary shares AM/PM within one day, preserving boundary context. */
+export function sessionSummaryTime(session: Pick<SessionFeedItem, "startAt" | "endAt">) {
+  const start = new Date(session.startAt);
+  const end = new Date(session.endAt);
+  const period = (value: Date) => time.formatToParts(value).find((part) => part.type === "dayPeriod")?.value;
+  if (date.format(start) !== date.format(end) || period(start) !== period(end)) return sessionTime(session);
+  return `${time.format(start).replace(/\s*(AM|PM)$/, "")} – ${time.format(end)}`;
+}
+
 export function sessionTitle(session: Pick<SessionFeedItem, "sport">) {
   return `${session.sport} ${session.sport === "Tennis" ? "Court Booking" : "Session"}`;
 }

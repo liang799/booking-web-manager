@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { SessionFeedItem } from "@/app/sessions/session-feed-contract";
-import { sessionCanLeave, sessionCalendarHref, sessionDate, sessionLongDate, sessionDuration, sessionStatus, sessionTime, timelineGroup } from "@/app/sessions/_components/session-display";
+import { sessionSummaryTime, sessionCanLeave, sessionCalendarHref, sessionDate, sessionLongDate, sessionDuration, sessionStatus, sessionTime, timelineGroup } from "@/app/sessions/_components/session-display";
 
 const session: SessionFeedItem = {
   sessionId: "10000000-0000-4000-8000-000000000001",
@@ -136,5 +136,14 @@ describe("participant leave availability", () => {
     expect(sessionCanLeave({ ...session, role: "HOST" }, before)).toBe(false);
     expect(sessionCanLeave({ ...session, status: "CANCELLED" }, before)).toBe(false);
     expect(sessionCanLeave({ ...session, participationStatus: "WITHDRAWN" }, before)).toBe(false);
+  });
+});
+
+
+describe("host summary time", () => {
+  test("shares the period only when both times are on the same Singapore day and period", () => {
+    expect(sessionSummaryTime({ startAt: "2026-11-06T09:50:00+08:00", endAt: "2026-11-06T11:20:00+08:00" })).toBe("9:50 – 11:20 AM");
+    expect(sessionSummaryTime({ startAt: "2026-11-06T11:30:00+08:00", endAt: "2026-11-06T13:00:00+08:00" })).toBe("11:30 AM – 1:00 PM");
+    expect(sessionSummaryTime({ startAt: "2026-11-06T23:30:00+08:00", endAt: "2026-11-07T01:00:00+08:00" })).toBe("11:30 PM – 7 Nov 2026, 1:00 AM");
   });
 });

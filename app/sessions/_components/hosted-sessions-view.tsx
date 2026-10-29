@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -94,10 +94,10 @@ function HostedSessionCard({ session, refreshing, onSetVisibility, onRefresh, on
 }
 
 /** Shares visibility submission guards and feedback between the list and Session Details. */
-export function HostedSessionControls({ session, refreshing, onSetVisibility, onRefresh, onCancel, participantSummary }: Pick<HostedSessionsViewProps, "refreshing" | "onSetVisibility" | "onRefresh"> & {
+export function HostedSessionControls({ session, refreshing, onSetVisibility, onRefresh, onCancel, participants }: Pick<HostedSessionsViewProps, "refreshing" | "onSetVisibility" | "onRefresh"> & {
   readonly session: HostedSessionItem;
   readonly onCancel?: (trigger: HTMLButtonElement) => void;
-  readonly participantSummary?: string;
+  readonly participants?: { readonly participantCount: number; readonly capacity: number };
 }) {
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<SessionVisibilityActionResult | null>(null);
@@ -123,28 +123,35 @@ export function HostedSessionControls({ session, refreshing, onSetVisibility, on
     }
   }
 
-  if (participantSummary !== undefined) return <>
-    <div className={details.row}>
-      <div><h3>Participants</h3><p>{participantSummary}</p></div>
-      <Button asChild variant="outline" className={details.quietButton}><Link href={`/sessions/${session.sessionId}/participants`}>Manage participants<ArrowUpRight className="ml-2 h-3.5 w-3.5" aria-hidden /></Link></Button>
+  if (participants !== undefined) return <>
+    <div className={details.managementRow}>
+      <div><h3>Participants</h3><p className={details.count} aria-label={`${participants.participantCount} of ${participants.capacity} players joined`}><strong>{participants.participantCount} / {participants.capacity}</strong><span>players joined</span></p></div>
+      <Button asChild variant="secondary" className={details.manageButton}><Link href={`/sessions/${session.sessionId}/participants`}>Manage players</Link></Button>
     </div>
-    <div className={details.row}>
-      <div><div className={details.visibility}><h3>Visibility</h3><span className={`${details.badge} ${session.visibility === "PUBLIC" ? details.public : ""}`}>{session.visibility === "PUBLIC" ? "Public" : "Private"}</span></div>
-        <p>{session.visibility === "PUBLIC" ? "Anyone can find this session in Discover." : "Hidden from Discover. Share an invitation link to invite players."}</p>
-        {!visibilityAction && <p>Visibility cannot be changed for this session.</p>}
+    <div className={details.managementRow}>
+      <div><h3>Visibility</h3>
+        <p className={details.visibilityDescription}>{session.visibility === "PUBLIC" ? "Listed in Discover. Anyone can find your session." : "Hidden from Discover. Invite players with your invitation link."}</p>
+        {!visibilityAction && <p className={details.visibilityDescription}>Visibility cannot be changed for this session.</p>}
       </div>
-      {visibilityAction && <Button variant="outline" className={details.quietButton} disabled={pending || refreshing} onClick={changeVisibility}
-        aria-label={pending ? "Saving visibility" : `Change visibility to ${visibilityAction.inputs.visibility.toLowerCase()}`}>
-        {pending ? "Saving…" : "Change"}
-      </Button>}
+      <div role="group" aria-label="Session visibility" className={details.segment}>
+        {(["PUBLIC", "PRIVATE"] as const).map((visibility) => <button key={visibility} type="button" aria-pressed={session.visibility === visibility}
+          aria-label={session.visibility === visibility ? visibility === "PUBLIC" ? "Public" : "Private" : `Change visibility to ${visibility.toLowerCase()}`}
+          disabled={pending || refreshing || (session.visibility !== visibility && visibilityAction?.inputs.visibility !== visibility)}
+          onClick={() => { if (session.visibility !== visibility && visibilityAction?.inputs.visibility === visibility) void changeVisibility(); }}>
+          {visibility === "PUBLIC" ? "Public" : "Private"}
+        </button>)}
+      </div>
     </div>
+    {pending && <p role="status" className={details.feedback}>Saving visibility…</p>}
     {result?.status === "error" && <div className="mb-4"><ErrorMessage>{result.message}</ErrorMessage></div>}
     {result?.status === "saved" && result.visibility === session.visibility && <p role="status" className="mb-4 text-sm text-muted-foreground">Session is now {result.visibility.toLowerCase()}.</p>}
-    <SessionInvitationShare sessionId={session.sessionId} disabled={pending || refreshing} presentation="details" />
-    {onCancel && cancellationAction && <div className={details.danger}>
-      <button type="button" disabled={pending || refreshing} onClick={(event) => onCancel(event.currentTarget)}>Cancel session</button>
-      <p>The venue booking must be cancelled separately.</p>
-    </div>}
+    <div className={details.hostFooter}>
+      <SessionInvitationShare sessionId={session.sessionId} disabled={pending || refreshing} presentation="details" />
+      {onCancel && cancellationAction && <>
+        <button type="button" className={details.cancelButton} disabled={pending || refreshing} onClick={(event) => onCancel(event.currentTarget)}><Trash2 aria-hidden /><span>Cancel session</span></button>
+        <p className={details.cancellationNote}>The venue booking must be cancelled separately.</p>
+      </>}
+    </div>
   </>;
   return <>
     <p className="mt-3 text-sm">{session.visibility === "PUBLIC" ? "Visible in Discover." : "Hidden from Discover."}</p>

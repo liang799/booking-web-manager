@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the feed and server-selected host actions authoritative. Share host control state between the existing list and the new dialog. Reuse withdrawal and waitlist confirmation flows for participants; keep their recoverable requests and refund previews.
 
-**Design:** A 600px dialog with 28px desktop padding, a 24px session title, role badge, readable Singapore date/time and duration, and venue shown once. Use dividers between participants, visibility, invitation, and destructive actions. Keep dark navy tokens and readable secondary text. Retain participant detail tabs and URL selection behavior. Cancellation closes the booking room and refunds held shares; venue cancellation is separate.
+**Design:** Follow the organising reference in a 640px host dialog with 40px desktop padding, a 40px session title, Sessions / Organising context, venue subtitle, and Singapore date/time. Use left vertical rules for participant and visibility sections, a prominent player count, a server-confirmed Public/Private switch, and full-width invitation/cancellation buttons. Keep the original Joined 680px photo/details modal. Preserve dark navy tokens and readable secondary text. Cancellation closes the booking room and refunds held shares; venue cancellation remains separate.
 
 **Review focus:** Overnight Singapore dates; long venue names on mobile; full/private sessions with unavailable actions; ended/cancelled sessions; loading, failure, and confirmation focus restoration.
 
