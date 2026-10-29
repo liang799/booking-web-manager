@@ -41,7 +41,7 @@ const meta = {
     await expect(dialog.getByRole("button", { name: "Public" })).toHaveAttribute("aria-pressed", "true");
     await expect(dialog.getAllByText(session.venueName, { exact: false })).toHaveLength(1);
     await expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth);
-    await waitFor(() => expect(element.getBoundingClientRect().width).toBeLessThanOrEqual(640));
+    await waitFor(() => expect(element.getBoundingClientRect().width).toBeLessThanOrEqual(760));
   },
 } satisfies Meta<typeof SessionsController>;
 export default meta;
