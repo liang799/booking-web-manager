@@ -70,9 +70,9 @@ export const Joined: Story = {
   args: { loadFeed: async () => ({ sessions: [{ ...session, role: "PARTICIPANT", participationStatus: "COMMITTED", participantCount: 3 }], nextCursor: null, asOf: "2026-10-29T08:00:00+08:00", upcomingCount: 1, pastCount: 0 }) },
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: window.innerWidth < 768 ? `View Tennis Court Booking at ${session.venueName}, 6 Nov 2026` : "View details" }));
-    const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
     await waitFor(() => expect(dialog.getByRole("button", { name: "Leave session" })).toBeVisible());
-    await expect(dialog.getByText("Joined", { exact: true })).toBeVisible();
+    await expect(dialog.getByText(`${session.venueName} · Joined`)).toBeVisible();
     await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
     await expect(dialog.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
   },
@@ -83,8 +83,37 @@ export const InProgress: Story = {
   args: { loadFeed: async () => ({ sessions: [{ ...session, role: "PARTICIPANT", participationStatus: "COMMITTED", participantCount: 3 }], nextCursor: null, asOf: "2026-11-06T10:15:00+08:00", upcomingCount: 1, pastCount: 0 }) },
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "View details" }));
-    const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
-    await waitFor(() => expect(dialog.getByText("Friday, 6 November 2026")).toBeVisible());
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
+    await waitFor(() => expect(dialog.getByRole("tabpanel")).toHaveTextContent("Fri, 6 Nov 2026"));
     await expect(dialog.queryByRole("button", { name: "Leave session" })).not.toBeInTheDocument();
   },
 };
+
+/** Protects the original Joined dialog independently of the host redesign. */
+export const JoinedCompleted: Story = {
+  ...Joined,
+  args: { loadFeed: async () => ({ sessions: [{ ...session, venueName: "CLEMENTI CASCADIA", role: "PARTICIPANT", participationStatus: "COMMITTED", participantCount: 4, capacity: 4, status: "SETTLED", section: "past", startAt: "2026-10-29T10:19:00+08:00", endAt: "2026-10-29T11:19:00+08:00" }], nextCursor: null, asOf: "2026-10-29T12:00:00+08:00", upcomingCount: 0, pastCount: 1 }) },
+  play: async ({ canvas }) => {
+    const trigger = await canvas.findByRole("button", { name: window.innerWidth < 768 ? "View Tennis Court Booking at CLEMENTI CASCADIA, 29 Oct 2026" : "View details" });
+    await userEvent.click(trigger);
+    const element = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const dialog = within(element);
+    await waitFor(() => expect(dialog.getByText("CLEMENTI CASCADIA · Completed")).toBeVisible());
+    const photo = element.querySelector("img");
+    await expect(photo).not.toBeNull();
+    await expect(photo).toBeVisible();
+    await expect(dialog.getByText("4 of 4 places filled")).toBeVisible();
+    await expect(dialog.getByRole("link", { name: /View in calendar/ })).toHaveAttribute("href", expect.stringContaining("calendar.google.com"));
+    const participants = dialog.getByRole("tab", { name: "Participants (4)" });
+    await userEvent.click(participants);
+    await expect(dialog.getByRole("tabpanel")).toHaveTextContent("4 players have a place in this session.");
+    await userEvent.keyboard("{Home}");
+    await expect(dialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
+    await expect(dialog.queryByRole("button", { name: "Leave session" })).not.toBeInTheDocument();
+    await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
+    await userEvent.click(dialog.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};
+
+export const JoinedCompletedMobile: Story = { ...JoinedCompleted, globals: { viewport: { value: "phone", isRotated: false } } };

@@ -35,6 +35,7 @@
 .danger p { max-width: 250px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
 .dialog :is(button, a):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
 .dialog button:disabled { opacity: .5; cursor: not-allowed; }
+:global(.dark) .danger { --destructive: 0 85% 72%; }
 :global(.dark) .dialog { --muted-foreground: 220 10% 72%; --destructive: 0 85% 72%; --success: 141 40% 65%; }
 @media (max-width: 480px) {
   .dialog { padding: 24px 20px; }

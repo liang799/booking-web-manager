@@ -119,11 +119,11 @@ async function openSessionDetails(trigger: HTMLElement) {
   const row = trigger.closest<HTMLElement>("[data-session-id]");
   if (row) await waitFor(() => expect(Number(row.style.getPropertyValue("--expansion"))).toBe(1));
   await userEvent.click(trigger);
-  return within(await screen.findByRole("dialog", { name: "Tennis session" }));
+  return within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
 }
 
 async function closeSessionDetails() {
-  await userEvent.click(within(screen.getByRole("dialog", { name: "Tennis session" })).getByRole("button", { name: "Close" }));
+  await userEvent.click(within(screen.getByRole("dialog", { name: "Tennis Court Booking" })).getByRole("button", { name: "Close" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 }
 
@@ -393,7 +393,7 @@ export const AccountChangeClosesOpenSession: Story = {
   play: async ({ canvas }) => {
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
     await userEvent.click(first.getByRole("button", { name: "View details" }));
-    await screen.findByRole("dialog", { name: "Tennis session" });
+    await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     // Authentication can change while a modal is open, without using inert background controls.
     if (!changeAccount) throw new Error("The account harness has not mounted.");
     changeAccount("second-account");
@@ -403,7 +403,7 @@ export const AccountChangeClosesOpenSession: Story = {
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "View details" }));
-    await screen.findByRole("dialog", { name: "Tennis session" });
+    await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   },
@@ -442,7 +442,7 @@ export const ViewedSessionSurvivesPendingAndFailedRefresh: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
     await userEvent.click(first.getByRole("button", { name: "View details" }));
-    const dialog = await screen.findByRole("dialog", { name: "Tennis session" });
+    const dialog = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     // Finding the dialog can precede its opening animation becoming visible.
     await waitFor(() => expect(dialog).toBeVisible());
     const queryKey = [...sessionFeedQueryKey, "player", "joined"];
@@ -471,7 +471,7 @@ export const SuccessfulRefreshClosesMissingViewedSession: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
     const first = within(await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" }));
     await userEvent.click(first.getByRole("button", { name: "View details" }));
-    await screen.findByRole("dialog", { name: "Tennis session" });
+    await screen.findByRole("dialog", { name: "Tennis Court Booking" });
     const queryKey = [...sessionFeedQueryKey, "player", "joined"];
     reply = async () => response(joinedSessions.slice(1, 2));
     await client.refetchQueries({ queryKey, exact: true });
@@ -485,7 +485,7 @@ export const SuccessfulRefreshClosesMissingViewedSession: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }));
     await waitFor(() => expect(restored.getByRole("button", { name: "View details" })).toBeVisible());
     await openSessionDetails(restored.getByRole("button", { name: "View details" }));
-    const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
     await userEvent.click(dialog.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   },

@@ -19,3 +19,5 @@
 **Baseline:** `origin/main` at `22ae12f`. Typecheck already fails with 12 errors in `app/groups/page.tsx` (missing imports and `displayNames` export). Original checkout's unrelated files are outside this worktree.
 
 **Review outcomes:** Fixed withdrawal results disappearing on immediate feed refresh by refreshing after result dismissal; kept confirmation components mounted across eligibility changes. Restricted participant departures to pre-start active places using the server feed timestamp. Added regressions for both findings and keyboard focus restoration.
+
+**Joined preservation follow-up:** Per the user's screenshot, retain the original participant dialog layout (680px desktop width, court image, original header, full Details/Participants content and calendar link). The 600px redesign applies to host management. Add desktop/mobile completed-session regressions and screenshots; verify native scrolling, panel persistence and closing focus in Chromium and WebKit.

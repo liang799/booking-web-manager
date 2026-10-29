@@ -3,6 +3,7 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Money } from "@/components/ui/money";
@@ -19,7 +20,7 @@ import { hostedSessionsQueryKey } from "./hosted-sessions-controller";
 import { SessionDetails, SessionsView } from "./sessions-view";
 import { SessionsUiProvider, useSessionsUiStore } from "./sessions-ui-provider";
 import { createSessionsUrlStorage, readSessionsUrlState } from "./sessions-url-storage";
-import { sessionCanLeave, sessionStatus } from "./session-display";
+import { sessionArtwork, sessionCanLeave, sessionStatus, sessionTitle } from "./session-display";
 import styles from "./sessions.module.css";
 import details from "./session-details.module.css";
 import { SessionDetailsSummary } from "./session-details-summary";
@@ -130,24 +131,25 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
       loading={feed.isPending || signIn || (restoringSelection && !feed.isError)} error={!signIn && feed.isError ? feed.error instanceof SessionFeedLoadError && feed.error.kind === "unavailable" ? "Your sessions are temporarily unavailable." : "We couldn’t load your sessions. Please try again." : undefined}
       loadingMore={feed.isFetchingNextPage} hasMore={feed.hasNextPage} onLoadMore={loadMore} onRetry={retry} onOpenSession={(session) => { sessionTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; openSession(session.sessionId); }} />
     <Dialog open={mode.status === "viewingSession" && selected !== null} onOpenChange={(open) => { if (!open) closeSession(); }}>
-      <DialogContent className={`${styles.dialogContent} ${details.dialog}`} onCloseAutoFocus={(event) => {
+      <DialogContent className={selected?.role === "HOST" ? `${styles.dialogContent} ${details.dialog}` : `${styles.dialogContent} sm:max-w-[680px]`} onCloseAutoFocus={(event) => {
         event.preventDefault();
         if (sessionTrigger.current?.isConnected) sessionTrigger.current.focus({ preventScroll: true });
         else document.getElementById("sessions-heading")?.focus({ preventScroll: true });
       }}>
         {selected && <>
-          <DialogHeader className={details.header}>
+          {selected.role === "HOST" ? <DialogHeader className={details.header}>
             <p className={details.eyebrow}>Session details</p>
             <div className={details.titleRow}><DialogTitle className={details.title}>{selected.sport} session</DialogTitle>
-              <span className={details.badge}>{selected.role === "HOST" ? selected.section === "upcoming" ? "Hosting" : `Hosted · ${sessionStatus(selected)}` : sessionStatus(selected)}</span>
+              <span className={details.badge}>{selected.section === "upcoming" ? "Hosting" : `Hosted · ${sessionStatus(selected)}`}</span>
             </div>
             <DialogDescription className="sr-only">When and where you’re playing, and your session actions.</DialogDescription>
-          </DialogHeader>
+          </DialogHeader> : <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(selected)}</DialogTitle><DialogDescription>{selected.venueName} · {sessionStatus(selected)}</DialogDescription></DialogHeader>}
           {selected.role === "HOST" ? <>
             <SessionDetailsSummary session={selected} />
             <HostedSessionManagement userId={userId} session={selected} loadHosted={loadHosted} onRefresh={refresh} onCancel={(session, trigger) => { cancellationTrigger.current = trigger; setCancelling(session); }} />
           </> : <>
-            <SessionDetails session={selected} footer={false} compact />
+            <div className={styles.dialogHero}><Image src={sessionArtwork(selected)} alt="" fill sizes="680px" className={styles.photo} /></div>
+            <SessionDetails session={selected} footer={false} />
             <SessionParticipantControls userId={userId} session={selected} onRefresh={refresh} available={sessionCanLeave(selected, first?.asOf ?? new Date().toISOString())} />
           </>}
         </>}

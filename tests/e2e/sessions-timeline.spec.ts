@@ -462,7 +462,7 @@ test("URL-restored session details keep native dialog scrolling and restore focu
   await page.setViewportSize({ width: 1280, height: 420 });
   const trigger = current(page).getByRole("button", { name: "View details" });
   await trigger.click();
-  const dialog = page.getByRole("dialog", { name: "Tennis session" });
+  const dialog = page.getByRole("dialog", { name: "Tennis Court Booking" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("tab", { name: "Participants (3)" })).toHaveAttribute("aria-selected", "true");
   await expect.poll(() => dialog.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
