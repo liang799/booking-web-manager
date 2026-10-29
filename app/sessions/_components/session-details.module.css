@@ -2,32 +2,30 @@
 .header { text-align: left; margin-bottom: 36px; }
 .eyebrow { margin: 0 44px 44px 0; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 500; letter-spacing: .17em; text-transform: uppercase; }
 .titleRow { min-width: 0; }
-.title { margin: 0; font-size: 40px; line-height: 1.15; font-weight: 600; letter-spacing: -1.5px; text-transform: capitalize; }
-.subtitle { margin-top: 8px !important; color: hsl(var(--muted-foreground)); font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.title { margin: 0; font-size: 44px; line-height: 1.15; font-weight: 500; letter-spacing: -1.5px; text-transform: capitalize; }
+.subtitle { margin-top: 8px !important; color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.5; letter-spacing: .035em; overflow-wrap: anywhere; }
 .subtitle a:hover { text-decoration: underline; text-underline-offset: 4px; }
-.summary { display: grid; gap: 16px; padding-bottom: 48px; }
-.fact { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 24px; align-items: center; }
-.fact > svg { width: 24px; height: 24px; color: hsl(var(--muted-foreground)); stroke-width: 1.5; }
-.date, .time { font-size: 17px; line-height: 1.5; }
-.managementRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-left: 3px solid hsl(var(--border)); margin-bottom: 36px; padding: 10px 0 10px 24px; }
+.summary { display: flex; align-items: baseline; justify-content: space-between; gap: 16px 24px; padding-bottom: 36px; margin-bottom: 40px; border-bottom: 1px solid hsl(var(--border)); }
+.date, .time { font-size: 18px; line-height: 1.5; }
+.time { font-size: 17px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.managementRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-left: 3px solid hsl(var(--border)); min-height: 98px; margin-bottom: 36px; padding: 0 0 0 28px; }
 .managementRow > div:first-child { min-width: 0; }
 .managementRow h3 { margin-bottom: 10px; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 600; line-height: 1.4; letter-spacing: .12em; text-transform: uppercase; }
-.count { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 18px; }
-.count strong { color: hsl(var(--foreground)); font-size: 34px; font-weight: 600; letter-spacing: -.8px; line-height: 1.2; }
-.count > span { color: hsl(var(--muted-foreground)); font-size: 14px; }
-.manageButton { min-height: 48px; flex-shrink: 0; padding: 0 24px; border-radius: 6px; font-size: 14px; font-weight: 400; text-transform: capitalize; }
-.visibilityDescription { max-width: 310px; color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.5; }
+.count { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.count strong { color: hsl(var(--foreground)); font-size: 34px; font-weight: 500; letter-spacing: -.8px; line-height: 1.2; }
+.count > span { color: hsl(var(--muted-foreground)); font-size: 13px; letter-spacing: .035em; }
+.manageButton { min-height: 44px; flex-shrink: 0; padding: 0 20px; border-radius: 5px; font-size: 14px; font-weight: 400; text-transform: capitalize; }
+.visibilityDescription { max-width: 300px; color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.5; letter-spacing: .035em; }
 .segment { display: flex; flex-shrink: 0; padding: 4px; border-radius: 7px; background: hsl(var(--muted)); }
 .segment button { min-width: 76px; min-height: 44px; padding: 8px 12px; border-radius: 5px; color: hsl(var(--muted-foreground)); font-size: 14px; }
 .segment button[aria-pressed="true"] { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: 0 1px 3px hsl(var(--foreground) / .12); }
-.hostFooter { display: grid; gap: 16px; padding-top: 14px; }
+.hostFooter { display: grid; gap: 18px; padding-top: 40px; }
 .invitation, .inviteRow { width: 100%; }
-.inviteButton { position: relative; width: 100%; min-height: 58px; border-radius: 5px; font-size: 17px; font-weight: 400; text-transform: capitalize; }
-.inviteButton > svg { position: absolute; left: 26px; width: 23px; height: 23px; }
-.cancelButton { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 58px; padding: 12px 52px; border: 1px solid hsl(var(--input)); border-radius: 5px; color: hsl(var(--destructive)); font-size: 16px; text-transform: capitalize; }
-.cancelButton > svg { position: absolute; left: 26px; width: 23px; height: 23px; stroke-width: 1.6; }
-.cancelButton:hover { background: hsl(var(--destructive) / .04); }
-.cancellationNote { color: hsl(var(--muted-foreground)); font-size: 11px; line-height: 1.5; }
+.inviteButton { position: relative; width: 100%; min-height: 60px; border-radius: 4px; font-size: 18px; font-weight: 400; text-transform: capitalize; }
+.inviteButton > svg { position: static; width: 23px; height: 23px; margin-right: 12px; }
+.cancelButton { position: relative; display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; min-height: 60px; padding: 12px 52px; border: 1px solid hsl(var(--input)); border-radius: 4px; color: hsl(var(--foreground)); font-size: 18px; text-transform: capitalize; }
+.cancelButton > svg { position: static; width: 23px; height: 23px; stroke-width: 1.6; }
+.cancelButton:hover { background: hsl(var(--muted)); }
 .dialog > button:last-child { top: 24px; right: 24px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; opacity: 1; }
 .dialog > button:last-child svg { width: 23px; height: 23px; stroke-width: 1.6; }
 .dialog :is(button, a):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
@@ -49,19 +47,18 @@
   .dialog.dialog { padding: 28px 24px; }
   .eyebrow { margin-bottom: 30px; font-size: 10px; }
   .title { font-size: 32px; letter-spacing: -1px; }
-  .subtitle { font-size: 14px; }
+  .subtitle { font-size: 13px; }
   .header { margin-bottom: 28px; }
-  .summary { gap: 14px; padding-bottom: 32px; }
-  .fact { gap: 16px; }
+  .summary { flex-wrap: wrap; gap: 6px 16px; padding-bottom: 24px; margin-bottom: 28px; }
   .date, .time { font-size: 15px; }
   .managementRow { align-items: flex-start; flex-direction: column; gap: 16px; padding-left: 18px; margin-bottom: 28px; }
   .count strong { font-size: 30px; }
   .manageButton { min-height: 44px; padding: 0 20px; }
   .segment { align-self: stretch; }
   .segment button { flex: 1; }
-  .hostFooter { padding-top: 4px; gap: 12px; }
+  .hostFooter { padding-top: 24px; gap: 16px; }
   .inviteButton, .cancelButton { min-height: 54px; font-size: 15px; }
-  .inviteButton > svg, .cancelButton > svg { left: 18px; width: 21px; height: 21px; }
+  .inviteButton > svg, .cancelButton > svg { width: 21px; height: 21px; }
   .dialog > button:last-child { top: 14px; right: 14px; }
   .danger { align-items: flex-start; flex-direction: column; gap: 0; }
   .danger p { max-width: none; }

@@ -551,7 +551,6 @@ export const HostedManagementDialog: Story = {
     await expect(dialog.getByLabelText("2 of 4 players joined")).toBeVisible();
     await expect(dialog.getAllByText("Bukit Timah Community Club", { exact: true })).toHaveLength(1);
     await expect(dialog.getByText("Wednesday, 21 October 2026")).toBeVisible();
-    await expect(dialog.getByText("The venue booking must be cancelled separately.")).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Cancel session" })).toBeVisible();
     await expect(hostedCalls).toBe(1);
     await userEvent.click(dialog.getByRole("button", { name: "Close" }));

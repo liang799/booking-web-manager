@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -126,7 +126,7 @@ export function HostedSessionControls({ session, refreshing, onSetVisibility, on
   if (participants !== undefined) return <>
     <div className={details.managementRow}>
       <div><h3>Participants</h3><p className={details.count} aria-label={`${participants.participantCount} of ${participants.capacity} players joined`}><strong>{participants.participantCount} / {participants.capacity}</strong><span>players joined</span></p></div>
-      <Button asChild variant="secondary" className={details.manageButton}><Link href={`/sessions/${session.sessionId}/participants`}>Manage players</Link></Button>
+      <Button asChild variant="secondary" className={details.manageButton}><Link href={`/sessions/${session.sessionId}/participants`}>Manage players<ChevronRight aria-hidden className="ml-2 h-4 w-4" /></Link></Button>
     </div>
     <div className={details.managementRow}>
       <div><h3>Visibility</h3>
@@ -149,7 +149,6 @@ export function HostedSessionControls({ session, refreshing, onSetVisibility, on
       <SessionInvitationShare sessionId={session.sessionId} disabled={pending || refreshing} presentation="details" />
       {onCancel && cancellationAction && <>
         <button type="button" className={details.cancelButton} disabled={pending || refreshing} onClick={(event) => onCancel(event.currentTarget)}><Trash2 aria-hidden /><span>Cancel session</span></button>
-        <p className={details.cancellationNote}>The venue booking must be cancelled separately.</p>
       </>}
     </div>
   </>;
