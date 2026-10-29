@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { useState } from "react";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { AppShell } from "@/components/ui/app-shell";
+import { Button } from "@/components/ui/button";
 import type { TopUpTransport } from "../top-up-transport";
 import { TopUpPanel } from "./top-up-panel";
 import { firstTransactionsPage, walletSummary } from "./wallet-fixtures";
-import { WalletView } from "./wallet-view";
+import { WalletView, type WalletViewProps } from "./wallet-view";
 
 const meta = {
   title: "Wallet/Overview",
@@ -39,6 +41,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+async function chooseDateRange(trigger: HTMLElement, option: string) {
+  await userEvent.click(trigger);
+  await userEvent.click(within(document.body).getByRole("option", { name: option }));
+  await waitFor(() => expect(trigger).toHaveFocus());
+}
+
 export const Populated: Story = {
   play: async ({ args, canvas }) => {
     const balance = within(canvas.getByRole("region", { name: "Balance" }));
@@ -70,7 +78,7 @@ export const NewWallet: Story = {
     history: { status: "ready", data: { items: [], nextCursor: null } },
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText("Nothing held right now")).toBeVisible();
+    await expect(within(canvas.getByRole("region", { name: "Held for sessions" })).getByText("Nothing held right now")).toBeVisible();
     await expect(canvas.getByText("No transactions yet")).toBeVisible();
     const balance = within(canvas.getByRole("region", { name: "Balance" }));
     await expect(balance.getAllByText("$0.00")).toHaveLength(3);
@@ -160,6 +168,124 @@ export const DesktopSectionPagination: Story = {
     await userEvent.click(history.getByRole("tab", { name: "All transactions" }));
     await expect(history.getByRole("button", { name: "Page 2" })).toHaveAttribute("aria-current", "page");
     await expect(within(history.getByRole("table", { name: "Transactions" })).getAllByRole("row")).toHaveLength(3);
+  },
+};
+
+const pagedHolds = Array.from({ length: 19 }, (_, index) => ({
+  ...walletSummary.activeHolds[index % 2]!,
+  holdId: `paged-hold-${index}`,
+  sessionId: `paged-session-${index}`,
+  venueName: `Court ${index + 1}`,
+  startAt: new Date(Date.now() + (index < 10 ? 5 : 45) * 86_400_000).toISOString(),
+}));
+
+export const DesktopHoldsPagination: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "ready", data: { ...walletSummary, activeHolds: pagedHolds } } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    const table = within(panel.getByRole("table", { name: "Active holds" }));
+    await expect(table.getByRole("columnheader", { name: "Booking" })).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "Amount" })).toBeVisible();
+    await expect(table.getAllByRole("row")).toHaveLength(9);
+    await expect(panel.getByText("Showing 1–8 of 19 active holds")).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Previous holds page" })).toBeDisabled();
+    await userEvent.click(panel.getByRole("button", { name: "Holds page 3" }));
+    await expect(table.getAllByRole("row")).toHaveLength(4);
+    await expect(table.getByText("Court 17", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Showing 17–19 of 19 active holds")).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Next holds page" })).toBeDisabled();
+    await userEvent.click(canvas.getByRole("tab", { name: "All transactions" }));
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    await expect(panel.getByRole("button", { name: "Holds page 3" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(panel.getByRole("button", { name: "Previous holds page" }));
+    await expect(panel.getByText("Showing 9–16 of 19 active holds")).toBeVisible();
+  },
+};
+
+export const DesktopHoldsSearch: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "ready", data: { ...walletSummary, activeHolds: pagedHolds } } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    await userEvent.click(panel.getByRole("button", { name: "Holds page 3" }));
+    const search = canvas.getByRole("textbox", { name: "Search active holds" });
+    await userEvent.type(search, "Court 19");
+    const table = within(panel.getByRole("table", { name: "Active holds" }));
+    await expect(table.getAllByRole("row")).toHaveLength(2);
+    await expect(table.getByText("Court 19", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Showing 1–1 of 1 active hold")).toBeVisible();
+    await userEvent.click(canvas.getByRole("tab", { name: "All transactions" }));
+    await expect(canvas.getByRole("textbox", { name: "Search transactions" })).toHaveValue("");
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    await expect(search).toHaveValue("Court 19");
+    await userEvent.clear(search);
+    await userEvent.type(search, "no matching booking");
+    await expect(panel.getByText("No matching holds")).toBeVisible();
+    await userEvent.click(panel.getByRole("button", { name: "Clear hold filters" }));
+    await expect(search).toHaveValue("");
+    await expect(within(panel.getByRole("table", { name: "Active holds" })).getAllByRole("row")).toHaveLength(9);
+    await expect(panel.getByText("Showing 1–8 of 19 active holds")).toBeVisible();
+  },
+};
+
+export const DesktopHoldsDateFilter: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "ready", data: { ...walletSummary, activeHolds: pagedHolds } } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    await userEvent.click(panel.getByRole("button", { name: "Holds page 3" }));
+    await chooseDateRange(canvas.getByRole("combobox", { name: "Session date range" }), "Next 30 days");
+    await expect(await panel.findByText("Showing 1–8 of 10 active holds")).toBeVisible();
+    await userEvent.click(await panel.findByRole("button", { name: "Next holds page" }));
+    await expect(panel.getByText("Showing 9–10 of 10 active holds")).toBeVisible();
+    await expect(within(panel.getByRole("table", { name: "Active holds" })).getAllByRole("row")).toHaveLength(3);
+  },
+};
+
+function HoldsRefreshHarness(props: WalletViewProps) {
+  const [summary, setSummary] = useState(props.summary);
+  return <>
+    <Button onClick={() => {
+      if (summary.status === "ready") setSummary({ status: "ready", data: { ...summary.data, activeHolds: summary.data.activeHolds.slice(0, 2) } });
+    }}>Simulate hold release</Button>
+    <WalletView {...props} summary={summary} />
+  </>;
+}
+
+export const DesktopHoldsRefresh: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "ready", data: { ...walletSummary, activeHolds: pagedHolds } } },
+  render: (args) => <HoldsRefreshHarness {...args} />,
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    await userEvent.click(panel.getByRole("button", { name: "Holds page 3" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Simulate hold release" }));
+    await expect(await panel.findByText("Showing 1–2 of 2 active holds")).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Holds page 1" })).toHaveAttribute("aria-current", "page");
+    await expect(within(panel.getByRole("table", { name: "Active holds" })).getAllByRole("row")).toHaveLength(3);
+  },
+};
+
+export const DesktopHoldsWithoutSessionDetails: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "ready", data: { ...walletSummary, activeHolds: [{
+    ...walletSummary.activeHolds[1]!, venueName: undefined, sport: undefined, startAt: undefined, isBooker: true,
+  }] } } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    const table = within(panel.getByRole("table", { name: "Active holds" }));
+    await expect(table.getByText("Session", { exact: true, selector: "p" })).toBeVisible();
+    await expect(table.getByText("Partially held")).toBeVisible();
+    await expect(table.getByRole("link", { name: "View session" })).toHaveAttribute("href", "/sessions/s2/participants");
+    await chooseDateRange(canvas.getByRole("combobox", { name: "Session date range" }), "Next 30 days");
+    await expect(await panel.findByText("No matching holds")).toBeVisible();
   },
 };
 
@@ -269,16 +395,13 @@ export const FilterTransactions: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "See all" }));
     const history = within(canvas.getByRole("region", { name: "Transactions" }));
-    await userEvent.click(history.getByRole("combobox", { name: "Date range" }));
-    await userEvent.click(within(document.body).getByRole("option", { name: "Last 30 days" }));
+    await chooseDateRange(history.getByRole("combobox", { name: "Date range" }), "Last 30 days");
     await expect(within(await history.findByRole("list", { name: "Transactions" })).getByText("Refund", { exact: true })).toBeVisible();
     await expect(history.queryByText("Funds held")).not.toBeInTheDocument();
 
-    await userEvent.click(await history.findByRole("combobox", { name: "Date range" }));
-    await userEvent.click(within(document.body).getByRole("option", { name: "Last 90 days" }));
+    await chooseDateRange(await history.findByRole("combobox", { name: "Date range" }), "Last 90 days");
     await expect(within(await history.findByRole("list", { name: "Transactions" })).getAllByRole("listitem")).toHaveLength(2);
-    await userEvent.click(await history.findByRole("combobox", { name: "Date range" }));
-    await userEvent.click(within(document.body).getByRole("option", { name: "All time" }));
+    await chooseDateRange(await history.findByRole("combobox", { name: "Date range" }), "All time");
     await expect(within(await history.findByRole("list", { name: "Transactions" })).getAllByRole("listitem")).toHaveLength(2);
   },
 };

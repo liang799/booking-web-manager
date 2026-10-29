@@ -79,6 +79,7 @@
 .sectionNav { display: none; }
 .transactionPanel { margin-top: 0; }
 .holdsPanel { display: none; }
+.activityHeader .holdsFilters { display: none; }
 .activityHeader .filterToggle { height: 20px; min-height: 20px; gap: 3px; padding: 0; color: hsl(var(--muted-foreground)); font-size: 10px; font-weight: 400; }
 .filterToggle svg { width: 13px; height: 13px; }
 .filters { display: none; flex-basis: 100%; align-items: center; gap: 8px; padding: 6px 0; }
@@ -149,8 +150,9 @@
   .sectionNav a:focus-visible, .sectionNav button:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
   .sectionNav button[data-state="active"] { color: hsl(var(--foreground)); border-bottom-color: currentColor; background: transparent; box-shadow: none; font-weight: 500; }
   .transactionPanel[data-state="inactive"] { display: none; }
-  .holdsPanel[data-state="active"] { display: block; margin-top: 16px; }
-  .activityHeader[data-section="holds"] .filters { display: none; }
+  .holdsPanel[data-state="active"] { display: block; margin-top: 0; }
+  .activityHeader[data-section="holds"] .transactionFilters { display: none; }
+  .activityHeader[data-section="holds"] .holdsFilters { display: flex; }
   .desktopHistory { display: block; }
   .desktopRetry { display: inline-flex; min-height: 44px; margin-top: 12px; }
   .mobileHistory { display: none; }
@@ -163,6 +165,22 @@
   .dataTable th:nth-child(2) { width: 20.5%; }
   .dataTable th:last-child, .dataTable td:last-child { padding-right: 3px; width: 16%; text-align: right; white-space: nowrap; }
   .dataTable td:last-child { color: hsl(var(--foreground)); }
+  .dataTable.holdsTable th:first-child, .dataTable.holdsTable td:first-child { width: 54%; white-space: normal; }
+  .dataTable.holdsTable th:nth-child(2) { width: 24%; }
+  .holdsTable th:nth-child(3), .holdsTable td:nth-child(3) { text-align: right; white-space: nowrap; }
+  .dataTable.holdsTable th:last-child, .dataTable.holdsTable td:last-child { width: 44px; padding-left: 12px; }
+  .holdsTable tbody tr:hover { background: hsl(var(--muted) / .3); }
+  .holdBooking { display: flex; align-items: center; gap: 14px; min-height: 65px; padding: 4px 0; }
+  .holdBooking > div { min-width: 0; }
+  .holdBooking p { font-size: 12px; line-height: 19px; color: hsl(var(--muted-foreground)); overflow-wrap: anywhere; }
+  .holdBooking .holdBookingName { font-size: 14px; font-weight: 500; color: hsl(var(--foreground)); }
+  .holdBooking .holdPhoto { width: 64px; height: 58px; }
+  .holdStatus { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 999px; font-size: 11px; line-height: 16px; white-space: nowrap; background: #b7791f1a; color: #8a5a12; }
+  .holdStatus[data-partial="true"] { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+  :global(.dark) .holdStatus:not([data-partial="true"]) { background: #b7791f26; color: #f4cd80; }
+  .holdTableAmount { color: hsl(var(--foreground)); }
+  .holdTableAmount p { margin-top: 3px; color: hsl(var(--muted-foreground)); font-size: 11px; }
+  .holdTableAction { width: 40px; height: 44px; color: hsl(var(--muted-foreground)); }
   .tableType { display: flex; align-items: center; gap: 24px; color: hsl(var(--foreground)); white-space: nowrap; }
   .tableType > span { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 6px; background: hsl(var(--muted)); }
   .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }

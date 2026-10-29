@@ -11,7 +11,8 @@ import { InfoNote } from "@/components/ui/info-note";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { WalletSummary, WalletTransactionsPage } from "../wallet-transport";
 import { WalletTransactions } from "./wallet-transactions";
-import { singaporeDateTime } from "./wallet-activity";
+import { singaporeDateTime, walletHoldHref } from "./wallet-activity";
+import { useWalletHoldsTable } from "./wallet-holds-table";
 import { WalletMoney } from "./wallet-money";
 import styles from "./wallet-view.module.css";
 
@@ -35,6 +36,7 @@ export interface WalletViewProps {
 /** UC1-05 presentation and local filters. Data fetching and payment state stay with their owners. */
 export function WalletView({ summary, history, loadingMore, moreError, onRetry, onLoadMore, topUp }: WalletViewProps) {
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const holdsTable = useWalletHoldsTable(summary.status === "ready" ? summary.data.activeHolds : undefined);
   return (
     <div className={styles.page}>
       <header className={styles.heading}>
@@ -84,7 +86,8 @@ export function WalletView({ summary, history, loadingMore, moreError, onRetry, 
         {summary.status === "ready" && <Holds summary={summary.data} />}
       </div>
         <WalletTransactions history={history} loadingMore={loadingMore} moreError={moreError} onLoadMore={onLoadMore}
-          holds={summary.status === "ready" ? <Holds summary={summary.data} label="Active session holds" />
+          holdsControls={holdsTable.controls}
+          holds={summary.status === "ready" ? holdsTable.content
             : summary.status === "loading" ? <LoadingSpinner label="Loading active holds…" />
             : <LoadError message={summary.message} signIn={summary.signIn} onRetry={onRetry} />}
           error={history.status === "error" ? <LoadError message={history.message} signIn={history.signIn} onRetry={onRetry} /> : undefined} />
@@ -92,9 +95,9 @@ export function WalletView({ summary, history, loadingMore, moreError, onRetry, 
   );
 }
 
-function Holds({ summary, label = "Held for sessions" }: { readonly summary: WalletSummary; readonly label?: string }) {
+function Holds({ summary }: { readonly summary: WalletSummary }) {
   return (
-    <section aria-label={label} className={styles.holds}>
+    <section aria-label="Held for sessions" className={styles.holds}>
       <div className={styles.holdsHeader}>
         <div>
           <h2><span className={styles.mobileInline}>Funds in use</span><span className={styles.desktopInline}>Funds on hold</span><span className={styles.holdCount}>{summary.activeHolds.length}</span></h2>
@@ -107,8 +110,7 @@ function Holds({ summary, label = "Held for sessions" }: { readonly summary: Wal
         : <ul className={styles.holdList}>
           {summary.activeHolds.map((hold) => (
             <li key={hold.holdId}>
-              <Link href={hold.isBooker ? `/sessions/${encodeURIComponent(hold.sessionId)}/participants`
-                : `/sessions?tab=joined&session=${encodeURIComponent(hold.sessionId)}`} className={styles.holdLink}>
+              <Link href={walletHoldHref(hold)} className={styles.holdLink}>
                 <span className={styles.holdIcon} aria-hidden="true">{hold.sport === "Badminton" ? <Shuttlecock /> : <CircleDot size={22} strokeWidth={1.2} />}</span>
                 <span className={styles.holdPhoto} data-surface={hold.sport === "Tennis" ? "clay" : "grass"} aria-hidden="true">
                   <Image src={hold.sport === "Tennis" ? "/images/sports/tennis.jpg" : "/images/landing-court.webp"} fill sizes="64px" alt="" />

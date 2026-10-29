@@ -59,9 +59,15 @@ Payouts links open the existing
 per-session withdrawal flow; they do not withdraw the available wallet balance.
 
 Desktop All transactions and Active holds switch the activity panel with
-keyboard-accessible tabs. Returning to transactions preserves its filters and
-page. Active holds uses the summary's current holds and its independent loading
-and error states. Hold links open the Joined session through
+keyboard-accessible tabs. Each tab preserves its own filters and page. Active
+holds is a semantic Booking / Status / Amount table with eight rows per page,
+numbered navigation, booking/sport search and upcoming session-date filters.
+Its complete dataset comes from the summary, so pagination never requests
+transaction history. A refresh that releases holds keeps the current page in
+range. The overview card and mobile Funds in use remain compact lists.
+
+Active holds retains the summary's independent loading and error states.
+Hold links open the Joined session through
 `/sessions?tab=joined&session=…`.
 If the wallet owner booked the session, its hold opens the existing participant
 management page instead; hosted sessions are excluded from Joined. The read-only

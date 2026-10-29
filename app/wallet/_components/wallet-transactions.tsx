@@ -20,7 +20,7 @@ import type { WalletViewProps } from "./wallet-view";
 import styles from "./wallet-view.module.css";
 
 type Transaction = WalletTransactionsPage["items"][number];
-type Props = Pick<WalletViewProps, "history" | "loadingMore" | "moreError" | "onLoadMore"> & { readonly error?: ReactNode; readonly holds: ReactNode };
+type Props = Pick<WalletViewProps, "history" | "loadingMore" | "moreError" | "onLoadMore"> & { readonly error?: ReactNode; readonly holds: ReactNode; readonly holdsControls: ReactNode };
 const emptyTransactions: Transaction[] = [];
 const PAGE_SIZE = 8;
 
@@ -57,7 +57,7 @@ const columns: ColumnDef<Transaction>[] = [
 ];
 
 /** One React Query history, presented as a paginated table or an infinite mobile list. */
-export function WalletTransactions({ history, loadingMore, moreError, onLoadMore, error, holds }: Props) {
+export function WalletTransactions({ history, loadingMore, moreError, onLoadMore, error, holds, holdsControls }: Props) {
   const [section, setSection] = useState("transactions");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
@@ -159,7 +159,7 @@ export function WalletTransactions({ history, loadingMore, moreError, onLoadMore
           <Button variant="ghost" className={styles.filterToggle} aria-expanded={filtersOpen} aria-controls="wallet-filters" onClick={() => setFiltersOpen((open) => !open)}>
             See all<ChevronRight aria-hidden="true" />
           </Button>
-          <div id="wallet-filters" className={styles.filters} data-open={filtersOpen}>
+          <div id="wallet-filters" className={`${styles.filters} ${styles.transactionFilters}`} data-open={filtersOpen}>
             <div className={styles.search}>
               <Search size={16} aria-hidden="true" />
               <Input aria-label="Search transactions" placeholder="Search transactions…" value={search} onChange={(event) => changeSearch(event.target.value)} />
@@ -174,6 +174,7 @@ export function WalletTransactions({ history, loadingMore, moreError, onLoadMore
             </Select>
           </div>
         </>}
+        {holdsControls}
       </div>
       {/* Keep history mounted so switching sections preserves filters and pagination.
           CSS keeps mobile activity visible when resizing from the desktop holds tab. */}
