@@ -36,6 +36,7 @@ for the same destination on a different screen.
 | Sessions | `sessions` | `Calendar` |
 | Wallet | `wallet` | `WalletMinimal` |
 | Groups | `groups` | `UsersRound` |
+| Notifications | `notifications` | `Bell` |
 | Settings | `settings` | `Settings` |
 
 ```tsx

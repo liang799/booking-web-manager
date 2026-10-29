@@ -44,7 +44,7 @@ function hasUnsafeCharacters(value: string): boolean {
 const PUBLIC_PATHS: readonly string[] = ["/", "/login", "/register", "/terms", "/privacy", AUTH_CALLBACK_PATH];
 
 /** Protected sections, except the explicitly public invitation preview. */
-const PROTECTED_PATHS: readonly string[] = ["/discover", "/groups", "/payouts", "/profile", "/sessions", "/wallet"];
+const PROTECTED_PATHS: readonly string[] = ["/discover", "/groups", "/notifications", "/payouts", "/profile", "/sessions", "/wallet"];
 
 /** Signed-in visitors continue to their validated destination instead of these forms. */
 const AUTH_PATHS: readonly string[] = ["/login", "/register"];

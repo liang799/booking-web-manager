@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
+import { useUnreadNotificationCount } from "@/app/notifications/use-unread-count";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", icon: "home" },
@@ -27,6 +28,7 @@ const NAV_LINKS = [
   { href: "/sessions", label: "My sessions", icon: "sessions" },
   { href: "/wallet", label: "Wallet", icon: "wallet" },
   { href: "/groups", label: "Groups", icon: "groups" },
+  { href: "/notifications", label: "Notifications", icon: "notifications" },
   { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
@@ -56,11 +58,13 @@ function SidebarContents({
   logoutAction,
   onNavigate,
   searchHref,
+  unreadCount,
 }: {
   readonly user: ShellUser;
   readonly logoutAction?: () => Promise<void>;
   readonly onNavigate?: () => void;
   readonly searchHref: string;
+  readonly unreadCount: number | null;
 }) {
   const pathname = usePathname();
 
@@ -94,6 +98,7 @@ function SidebarContents({
             >
               <NavigationIcon name={link.icon} active={active} />
               {link.label}
+              {link.href === "/notifications" && unreadCount !== null && unreadCount > 0 && <span aria-label={`${unreadCount} unread`} className="ml-auto rounded-full bg-foreground px-1.5 py-0.5 text-[10px] font-semibold text-background">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </Link>
           );
         })}
@@ -135,6 +140,8 @@ function SidebarContents({
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const unreadCount = useUnreadNotificationCount(pathname);
+  const notificationsLayout = pathname === "/notifications";
   const walletLayout = pathname === "/wallet" || pathname.startsWith("/wallet/");
   const searchParams = useSearchParams();
   const query = searchParams.toString();
@@ -148,12 +155,12 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
     <div className="flex min-h-screen bg-card md:bg-background">
       {/* Desktop sidebar (hidden below 768px) */}
       <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
-        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} />
+        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} unreadCount={unreadCount} />
       </aside>
 
       <div className="relative isolate flex min-w-0 flex-1 flex-col">
         {/* The desktop court fades behind the page introduction without competing with its content. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && "md:block")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && !notificationsLayout && "md:block")} aria-hidden="true">
           <Image
             src="/images/mobile-hero.png"
             alt=""
@@ -165,7 +172,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0)_0%,hsl(var(--background)/0.2)_45%,hsl(var(--background))_100%)]" />
         </div>
         {/* Figma's hero: an oversized image at 50%, with left and bottom fades into the page. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", mobileVariant === "focused" && "hidden")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", (mobileVariant === "focused" || notificationsLayout) && "hidden")} aria-hidden="true">
           <div className="absolute -top-2.5 left-1/2 h-[295px] w-[calc(100%+148px)] -translate-x-1/2">
             <Image
               src="/images/mobile-hero.png"
@@ -185,6 +192,11 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
               className="inline-flex min-h-11 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <BookingLogo className={walletLayout ? "text-lg" : undefined} />
+            </Link>
+            <div className="flex items-center gap-2">
+            <Link href="/notifications" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`} aria-current={pathname === "/notifications" ? "page" : undefined} className="relative flex h-11 w-11 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <NavigationIcon name="notifications" active={pathname === "/notifications"} />
+              {unreadCount !== null && unreadCount > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-card" aria-hidden />}
             </Link>
             {walletLayout ? (
               <Link
@@ -245,6 +257,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             </Sheet>
             </div>
             )}
+            </div>
           </div>
 
           <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} compact={walletLayout} />

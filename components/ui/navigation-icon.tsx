@@ -1,4 +1,4 @@
-import { Calendar, House, Search, Settings, UsersRound, WalletMinimal } from "lucide-react";
+import { Bell, Calendar, House, Search, Settings, UsersRound, WalletMinimal } from "lucide-react";
 import styles from "./navigation-icon.module.css";
 
 const icons = {
@@ -7,6 +7,7 @@ const icons = {
   sessions: Calendar,
   wallet: WalletMinimal,
   groups: UsersRound,
+  notifications: Bell,
   settings: Settings,
 } as const;
 

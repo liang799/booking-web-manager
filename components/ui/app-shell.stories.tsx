@@ -80,7 +80,7 @@ export const Desktop: Story = {
     // The current page's link is marked for screen readers and highlighted.
     await expect(nav.querySelector('[aria-current="page"]')).toHaveTextContent("Groups");
     await expect(canvas.getByText("Reliability 4.8")).toBeInTheDocument();
-    await expect(within(nav).getAllByRole("link")).toHaveLength(6);
+    await expect(within(nav).getAllByRole("link")).toHaveLength(7);
     await expectNavigationIcons(nav);
     await expect(canvas.getByRole("link", { name: "Booking." })).toHaveAttribute("href", "/");
     await expect(canvas.queryByRole("link", { name: "+ Create session" })).not.toBeInTheDocument();

@@ -17,6 +17,16 @@ cookie authentication; top-up requires a bearer token. `/app` converts result
 dates to HTTP strings. Wallet lookup, pagination bounds and top-up sequencing
 belong to use cases, not configuration callbacks.
 
+## Notification inbox configuration
+
+`notifications.ts` assembles the recipient-scoped PostgreSQL inbox with active
+account bearer/read-only cookie authentication. Its `createCommitmentNotifier`
+is shared by commitment requests and scheduled jobs: it persists existing
+session alerts and optionally sends Web Push when VAPID settings exist. The
+scheduled sweep claims verification reminders for inbox delivery even without
+push settings; persistence failure releases the claim for retry. Apply migration
+0017 before deployment. See the [inbox guide](../app/notifications/README.md).
+
 ## Profile configuration
 
 `profiles.ts` assembles `UpdateProfile` with `SupabaseProfileStore` using the

@@ -36,6 +36,7 @@ most likely way this project loses an afternoon.
 | 0013 | `session_slot_limit` — session capacity raised from 8 to 30 slots | Neoh / Rishi |
 | 0014 | `commitment_sweep_schedule` — pg_cron + pg_net call to the scheduled commitment sweep every five minutes | Yajie |
 | 0016 | `user_handles` — unique public user IDs: generated for existing accounts, chosen at sign-up, set by `update_profile` | Joseph / Rishi |
+| 0017 | `notification_inbox` — recipient-scoped commitment alerts and persistent read state, independent of browser push | Yajie / Rishi |
 
 The deployed sequence ends at 0011. New migrations must use a unique number
 after it; do not reuse a deployed number or insert a file below it. Supabase's
