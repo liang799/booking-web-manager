@@ -19,6 +19,7 @@ export interface WithdrawalDialogProps {
   readonly onConfirm: () => void;
   readonly onRetryPreview: () => void;
   readonly onClose: () => void;
+  readonly onRestoreFocus?: () => void;
 }
 
 /**
@@ -26,7 +27,7 @@ export interface WithdrawalDialogProps {
  * `useWithdrawalFlow`. Shows the server's refund before anything happens, then how the place is
  * passed on (ADR-0006: open it to the waitlist, or invite one named person; unchangeable).
  */
-export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvitee, onConfirm, onRetryPreview, onClose }: WithdrawalDialogProps) {
+export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvitee, onConfirm, onRetryPreview, onClose, onRestoreFocus }: WithdrawalDialogProps) {
   if (state.step === "closed") return <Dialog open={false} />;
   const { session } = state;
   const submitting = (state.step === "choosing" || state.step === "unconfirmed") && state.submitting;
@@ -34,7 +35,7 @@ export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvi
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !submitting) onClose(); }}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md" onCloseAutoFocus={onRestoreFocus ? (event) => { event.preventDefault(); onRestoreFocus(); } : undefined}>
         <DialogHeader>
           <DialogTitle>{state.step === "withdrawn" ? "You've withdrawn" : "Withdraw from this session?"}</DialogTitle>
           <DialogDescription>

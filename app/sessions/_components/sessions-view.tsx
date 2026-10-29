@@ -1,5 +1,6 @@
 "use client";
 
+import { SessionDetailsSummary } from "./session-details-summary";
 import { ArrowRight, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, ExternalLink, MapPin, Plus, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -146,7 +147,7 @@ function Metadata({ session, reveal = true }: { readonly session: SessionFeedIte
   </span>;
 }
 
-export function SessionDetails({ session, footer = true, onOpenSession }: { readonly session: SessionFeedItem; readonly footer?: boolean; readonly onOpenSession?: (session: SessionFeedItem) => void }) {
+export function SessionDetails({ session, footer = true, compact = false, onOpenSession }: { readonly session: SessionFeedItem; readonly footer?: boolean; readonly compact?: boolean; readonly onOpenSession?: (session: SessionFeedItem) => void }) {
   const panel = useSessionsUiStore((state) => state.detailPanels[session.sessionId] ?? "details");
   const selectPanel = useSessionsUiStore((state) => state.selectDetailPanel);
   const setPanel = (next: SessionDetailsPanel) => selectPanel(session.sessionId, next);
@@ -165,7 +166,7 @@ export function SessionDetails({ session, footer = true, onOpenSession }: { read
       <button type="button" role="tab" data-panel="participants" tabIndex={panel === "participants" ? 0 : -1} aria-selected={panel === "participants"} onClick={() => setPanel("participants")} id={`${id}-participants-tab`} aria-controls={`${id}-panel`}>Participants ({session.participantCount})</button>
     </div>
     <div role="tabpanel" tabIndex={0} id={`${id}-panel`} aria-labelledby={`${id}-${panel}-tab`} className={styles.detailPanel}>
-      {panel === "details" ? <dl className={styles.details}>
+      {panel === "details" ? compact ? <SessionDetailsSummary session={session} /> : <dl className={styles.details}>
         <div><dt><CalendarDays aria-hidden />Sport</dt><dd>{session.sport}</dd></div>
         <div><dt><MapPin aria-hidden />Location</dt><dd><a href={`https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: `${session.venueName}, Singapore` })}`} target="_blank" rel="noreferrer">{session.venueName}<ExternalLink size={14} aria-hidden /><span className="sr-only"> (opens in a new tab)</span></a></dd></div>
         <div><dt><Clock3 aria-hidden />Date &amp; time</dt><dd>{sessionDate(session.startAt).weekday}, {sessionDate(session.startAt).full}<br />{sessionTime(session)}<span className={styles.timezone}> SGT</span></dd></div>

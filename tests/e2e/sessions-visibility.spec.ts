@@ -61,8 +61,8 @@ async function setThroughPage(page: Page, venue: string, visibility: Visibility)
     candidate.request().method() === "PATCH" &&
     /^\/api\/sessions\/[^/]+\/visibility$/.test(new URL(candidate.url()).pathname),
   );
-  await row(page, venue).getByRole("button", {
-    name: visibility === "PUBLIC" ? "Make public" : "Make private", exact: true,
+  await page.getByRole("dialog").getByRole("button", {
+    name: visibility === "PUBLIC" ? "Change visibility to public" : "Change visibility to private", exact: true,
   }).click();
   expect((await response).status()).toBe(200);
   return Date.now();
@@ -114,7 +114,7 @@ test("UC2-03a owner controls update an open discovery page within three seconds 
     expect(participantPage.url()).toBe(originalUrl);
     expect(await participantPage.evaluate(() => window.scrollY)).toBe(scroll);
     await expect(participantPage.getByRole("region", { name: "Upcoming sessions", exact: true })).toHaveAttribute("aria-busy", "false");
-    await expect(row(page, venue).getByRole("button", { name: "Make private", exact: true })).toBeEnabled();
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Change visibility to private", exact: true })).toBeEnabled();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("session-visibility-mobile.png"), fullPage: true });
 
@@ -123,7 +123,7 @@ test("UC2-03a owner controls update an open discovery page within three seconds 
     expect(Date.now() - privateAt).toBeLessThanOrEqual(3000);
     await page.reload();
     await openHostedSession(page, venue);
-    await expect(row(page, venue).getByRole("button", { name: "Make public", exact: true })).toBeVisible();
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Change visibility to public", exact: true })).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.screenshot({ path: testInfo.outputPath("session-visibility-desktop.png"), fullPage: true });
   } finally {
@@ -155,7 +155,7 @@ test("hosting separates upcoming and past sessions, blocks full ones, and enforc
     await expect(past.getByRole("listitem").filter({ hasText: `${prefix} past` })).toBeVisible();
     await expect(upcoming.getByRole("listitem").filter({ hasText: `${prefix} past` })).toHaveCount(0);
     await openHostedSession(page, `${prefix} full`);
-    await expect(row(page, `${prefix} full`).getByRole("button", { name: "Make public", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Change visibility to public", exact: true })).toHaveCount(0);
 
     expect((await request.patch(`/api/sessions/${sessionId}/visibility`, { data: { visibility: "PUBLIC" } })).status()).toBe(401);
     expect((await patch(request, other, sessionId, "PUBLIC")).status()).toBe(403);

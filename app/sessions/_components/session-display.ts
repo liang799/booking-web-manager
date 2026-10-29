@@ -7,6 +7,23 @@ const time = new Intl.DateTimeFormat("en-US", { ...zone, hour: "numeric", minute
 const weekday = new Intl.DateTimeFormat("en-SG", { ...zone, weekday: "short" });
 const month = new Intl.DateTimeFormat("en-SG", { ...zone, month: "short" });
 const day = new Intl.DateTimeFormat("en-SG", { ...zone, day: "numeric" });
+const longDate = new Intl.DateTimeFormat("en-GB", { ...zone, weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+export function sessionLongDate(value: string) {
+  return longDate.format(new Date(value));
+}
+
+export function sessionDuration(session: Pick<SessionFeedItem, "startAt" | "endAt">) {
+  const minutes = Math.round((Date.parse(session.endAt) - Date.parse(session.startAt)) / 60_000);
+  return [minutes >= 60 ? `${Math.floor(minutes / 60)} hr` : "", minutes % 60 ? `${minutes % 60} min` : ""].filter(Boolean).join(" ");
+}
+
+/** Upcoming includes games in progress; departure eligibility ends when play starts. */
+export function sessionCanLeave(session: SessionFeedItem, asOf: string) {
+  return session.role === "PARTICIPANT" && session.section === "upcoming" && session.status === "OPEN"
+    && (session.participationStatus === "COMMITTED" || session.participationStatus === "WAITLISTED")
+    && Date.parse(session.startAt) > Date.parse(asOf);
+}
 
 export function sessionDate(value: string) {
   const instant = new Date(value);
