@@ -8,6 +8,7 @@ export const idempotencyKeySchema = z.string().trim().min(1).max(200);
 export const activeHoldSchema = z.object({
   holdId: uuidSchema,
   sessionId: uuidSchema,
+  isBooker: z.boolean().optional().describe("Whether the wallet owner booked this session"),
   heldCents: centsSchema,
   originalCents: positiveCentsSchema,
   createdAt: z.string().datetime(),

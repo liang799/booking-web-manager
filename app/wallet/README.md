@@ -58,6 +58,15 @@ and pagination. Each hold links to its session. The mobile Withdraw and desktop
 Payouts links open the existing
 per-session withdrawal flow; they do not withdraw the available wallet balance.
 
+Desktop All transactions and Active holds switch the activity panel with
+keyboard-accessible tabs. Returning to transactions preserves its filters and
+page. Active holds uses the summary's current holds and its independent loading
+and error states. Hold links open the Joined session through
+`/sessions?tab=joined&session=…`.
+If the wallet owner booked the session, its hold opens the existing participant
+management page instead; hosted sessions are excluded from Joined. The read-only
+summary's optional `isBooker` flag selects that destination.
+
 Mobile Pending displays the total of this booker's `REQUESTED` payout attempts,
 aggregated without a page limit. It means withdrawals being processed, rather
 than available balance or funds held for attendance. An older server response

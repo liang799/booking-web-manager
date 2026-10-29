@@ -84,14 +84,17 @@ export function WalletView({ summary, history, loadingMore, moreError, onRetry, 
         {summary.status === "ready" && <Holds summary={summary.data} />}
       </div>
         <WalletTransactions history={history} loadingMore={loadingMore} moreError={moreError} onLoadMore={onLoadMore}
+          holds={summary.status === "ready" ? <Holds summary={summary.data} label="Active session holds" />
+            : summary.status === "loading" ? <LoadingSpinner label="Loading active holds…" />
+            : <LoadError message={summary.message} signIn={summary.signIn} onRetry={onRetry} />}
           error={history.status === "error" ? <LoadError message={history.message} signIn={history.signIn} onRetry={onRetry} /> : undefined} />
     </div>
   );
 }
 
-function Holds({ summary }: { readonly summary: WalletSummary }) {
+function Holds({ summary, label = "Held for sessions" }: { readonly summary: WalletSummary; readonly label?: string }) {
   return (
-    <section id="wallet-holds" aria-label="Held for sessions" className={styles.holds}>
+    <section aria-label={label} className={styles.holds}>
       <div className={styles.holdsHeader}>
         <div>
           <h2><span className={styles.mobileInline}>Funds in use</span><span className={styles.desktopInline}>Funds on hold</span><span className={styles.holdCount}>{summary.activeHolds.length}</span></h2>
@@ -104,7 +107,8 @@ function Holds({ summary }: { readonly summary: WalletSummary }) {
         : <ul className={styles.holdList}>
           {summary.activeHolds.map((hold) => (
             <li key={hold.holdId}>
-              <Link href={`/sessions/${encodeURIComponent(hold.sessionId)}`} className={styles.holdLink}>
+              <Link href={hold.isBooker ? `/sessions/${encodeURIComponent(hold.sessionId)}/participants`
+                : `/sessions?tab=joined&session=${encodeURIComponent(hold.sessionId)}`} className={styles.holdLink}>
                 <span className={styles.holdIcon} aria-hidden="true">{hold.sport === "Badminton" ? <Shuttlecock /> : <CircleDot size={22} strokeWidth={1.2} />}</span>
                 <span className={styles.holdPhoto} data-surface={hold.sport === "Tennis" ? "clay" : "grass"} aria-hidden="true">
                   <Image src={hold.sport === "Tennis" ? "/images/sports/tennis.jpg" : "/images/landing-court.webp"} fill sizes="64px" alt="" />

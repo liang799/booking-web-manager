@@ -123,6 +123,115 @@ export const Desktop: Story = {
   },
 };
 
+export const DesktopSectionSwitching: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  play: async ({ canvas }) => {
+    const history = within(canvas.getByRole("region", { name: "Transactions" }));
+    await expect(history.getByRole("tab", { name: "All transactions" })).toHaveAttribute("aria-selected", "true");
+    const table = history.getByRole("table", { name: "Transactions" });
+    await userEvent.type(history.getByRole("textbox", { name: "Search transactions" }), "refund");
+    await userEvent.click(history.getByText("Active holds", { exact: true }));
+    await expect(history.getByRole("tab", { name: "Active holds" })).toHaveAttribute("aria-selected", "true");
+    await expect(table).not.toBeVisible();
+    await expect(history.getByRole("textbox", { name: "Search transactions", hidden: true })).not.toBeVisible();
+    await expect(history.getByRole("link", { name: /Bishan Sports Hall/ })).toBeVisible();
+    await expect(history.getByRole("link", { name: "Payouts" })).toHaveAttribute("href", "/payouts");
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(history.getByRole("tab", { name: "All transactions" })).toHaveAttribute("aria-selected", "true");
+    await expect(table).toBeVisible();
+    await expect(history.getByRole("textbox", { name: "Search transactions" })).toHaveValue("refund");
+    await expect(within(table).getByText("Refund", { exact: true })).toBeVisible();
+    await expect(within(table).queryByText("Hold", { exact: true })).not.toBeInTheDocument();
+  },
+};
+
+export const DesktopSectionPagination: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { history: { status: "ready", data: {
+    items: Array.from({ length: 10 }, (_, index) => ({
+      ...firstTransactionsPage.items[0]!, transactionId: `section-page-${index}`,
+    })),
+    nextCursor: null,
+  } } },
+  play: async ({ canvas }) => {
+    const history = within(canvas.getByRole("region", { name: "Transactions" }));
+    await userEvent.click(history.getByRole("button", { name: "Page 2" }));
+    await userEvent.click(history.getByRole("tab", { name: "Active holds" }));
+    await userEvent.click(history.getByRole("tab", { name: "All transactions" }));
+    await expect(history.getByRole("button", { name: "Page 2" })).toHaveAttribute("aria-current", "page");
+    await expect(within(history.getByRole("table", { name: "Transactions" })).getAllByRole("row")).toHaveLength(3);
+  },
+};
+
+export const DesktopEmptyHolds: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "ready", data: { ...walletSummary, heldBalanceCents: 0, activeHolds: [] } } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    await expect(panel.getByText("Nothing held right now")).toBeVisible();
+    await expect(canvas.queryByRole("table", { name: "Transactions" })).not.toBeInTheDocument();
+  },
+};
+
+export const DesktopHoldsLoading: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "loading" } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    await expect(within(canvas.getByRole("tabpanel", { name: "Active holds" })).getByText("Loading active holds…")).toBeVisible();
+  },
+};
+
+export const DesktopHoldsUnavailable: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { summary: { status: "error", message: "The wallet is temporarily unavailable. Please try again later.", signIn: false } },
+  play: async ({ args, canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    await expect(panel.getByText(/wallet is temporarily unavailable/i)).toBeVisible();
+    await userEvent.click(panel.getByRole("button", { name: "Retry" }));
+    await expect(args.onRetry).toHaveBeenCalledOnce();
+    await userEvent.click(canvas.getByRole("tab", { name: "All transactions" }));
+    await expect(canvas.getByRole("table", { name: "Transactions" })).toBeVisible();
+  },
+};
+
+export const DesktopHoldsWithoutHistory: Story = {
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: { history: { status: "error", message: "Transaction history is temporarily unavailable.", signIn: false } },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Active holds" }));
+    const panel = within(canvas.getByRole("tabpanel", { name: "Active holds" }));
+    await expect(panel.getByRole("link", { name: /Bishan Sports Hall/ })).toBeVisible();
+    await expect(canvas.queryByText("Transaction history is temporarily unavailable.")).not.toBeVisible();
+  },
+};
+
+export const HeldSessionDestination: Story = {
+  args: { summary: { status: "ready", data: {
+    ...walletSummary,
+    activeHolds: [{ ...walletSummary.activeHolds[0]!, sessionId: "10000000-0000-4000-8000-000000000001" }],
+  } } },
+  play: async ({ canvas }) => {
+    const holds = within(canvas.getByRole("region", { name: "Held for sessions" }));
+    await expect(holds.getByRole("link", { name: /Bishan Sports Hall/ }))
+      .toHaveAttribute("href", "/sessions?tab=joined&session=10000000-0000-4000-8000-000000000001");
+  },
+};
+
+export const SelfBookedHoldDestination: Story = {
+  args: { summary: { status: "ready", data: {
+    ...walletSummary,
+    activeHolds: [{ ...walletSummary.activeHolds[0]!, sessionId: "10000000-0000-4000-8000-000000000001", isBooker: true }],
+  } } },
+  play: async ({ canvas }) => {
+    const holds = within(canvas.getByRole("region", { name: "Held for sessions" }));
+    await expect(holds.getByRole("link", { name: /Bishan Sports Hall/ }))
+      .toHaveAttribute("href", "/sessions/10000000-0000-4000-8000-000000000001/participants");
+  },
+};
+
 export const SearchTransactions: Story = {
   play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "See all" }));
@@ -182,8 +291,8 @@ export const FundsActions: Story = {
     await userEvent.click(balance.getByRole("button", { name: "Add funds" }));
     await expect(canvas.getByText("Topping up with PayNow is coming soon.")).toBeVisible();
     const holds = within(canvas.getByRole("region", { name: "Held for sessions" }));
-    await expect(holds.getByRole("link", { name: /Bishan Sports Hall/ })).toHaveAttribute("href", "/sessions/s1");
-    await expect(holds.getByRole("link", { name: /Jurong East Sports Hall/ })).toHaveAttribute("href", "/sessions/s2");
+    await expect(holds.getByRole("link", { name: /Bishan Sports Hall/ })).toHaveAttribute("href", "/sessions?tab=joined&session=s1");
+    await expect(holds.getByRole("link", { name: /Jurong East Sports Hall/ })).toHaveAttribute("href", "/sessions?tab=joined&session=s2");
   },
 };
 
