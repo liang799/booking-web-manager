@@ -555,6 +555,34 @@ export const HostedManagementDialog: Story = {
   },
 };
 
+/** An OPEN session remains in the Hosting feed and management response after its start time. */
+export const InProgressHostedManagement: Story = {
+  parameters: { nextjs: { navigation: { pathname: "/sessions", query: { tab: "hosting" } } } },
+  args: {
+    loadFeed: async () => response([{
+      ...hostedSessions[0]!, startAt: "2026-10-21T07:30:00+08:00", endAt: "2026-10-21T08:30:00+08:00",
+    }]),
+    loadHosted: async () => ({
+      sessions: [{
+        sessionId: hostedSessions[0]!.sessionId,
+        venueName: hostedSessions[0]!.venueName, sport: "Tennis", region: "Central",
+        startAt: "2026-10-21T07:30:00+08:00", endAt: "2026-10-21T08:30:00+08:00",
+        visibility: "PUBLIC", availableSlots: 0, actions: [],
+      }],
+      awaitingAttendance: [],
+    }),
+  },
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
+    const participants = await dialog.findByRole("link", { name: "Manage participants" });
+    await expect(participants).toHaveAttribute("href", `/sessions/${hostedSessions[0]!.sessionId}/participants`);
+    await expect(dialog.queryByRole("button", { name: "Make private" })).not.toBeInTheDocument();
+    await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
+    await expect(dialog.queryByText("No upcoming sessions to manage")).not.toBeInTheDocument();
+  },
+};
+
 export const HostedManagementLoadingCanClose: Story = {
   parameters: { nextjs: { navigation: { pathname: "/sessions", query: { tab: "hosting" } } } },
   args: { loadHosted: () => new Promise<HostedSessionsResponse>(() => {}) },

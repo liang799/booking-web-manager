@@ -60,7 +60,7 @@ function attendanceDue() {
     users: { get: getUser },
     sessions: {
       get: async (): Promise<Session | null> => null,
-      listUpcoming: async () => [],
+      listNotEndedOpen: async () => [],
       listEndedOpen,
       saveVisibility: async () => { throw new Error("Listing must not save"); },
     },

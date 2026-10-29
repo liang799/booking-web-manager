@@ -116,7 +116,7 @@ The application's active-account gate does not alter the Booker's domain policy.
 
 `ListHostedSessions.forBooker(bookerId)` returns `{ sessions, awaitingAttendance }`
 from one transaction, active-account check and clock value. `sessions` contains
-ordered summaries of owned, open, upcoming sessions, including full sessions;
+ordered summaries of owned, open, upcoming and in-progress sessions, including full sessions;
 `awaitingAttendance` contains ended open sessions with unverified participants.
 It derives available slots and offered operations from hydrated domain objects
 and exposes no room token, participant identities or payment details. The app

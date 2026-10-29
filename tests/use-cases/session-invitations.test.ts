@@ -107,7 +107,7 @@ function invitation(session = createTestSession()) {
   const saveVisibility = vi.fn<SessionManagementRepositories["sessions"]["saveVisibility"]>();
   const repositories: SessionManagementRepositories = {
     users: { get: getUser },
-    sessions: { get: getSession, listUpcoming: async () => [], listEndedOpen: async () => [], saveVisibility },
+    sessions: { get: getSession, listNotEndedOpen: async () => [], listEndedOpen: async () => [], saveVisibility },
   };
   const transaction: SessionManagementTransaction = { run: (work) => work(repositories) };
   const run = vi.spyOn(transaction, "run");
