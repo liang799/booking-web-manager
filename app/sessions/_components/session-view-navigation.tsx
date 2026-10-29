@@ -13,13 +13,13 @@ export function SessionViewNavigation(props: SessionViewNavigationProps) {
     <nav className={styles.tabs} aria-label="Session views">
       {props.active === "groups" ? (
         <>
-          <Link href="/sessions">Joined</Link>
-          <Link href="/sessions?tab=hosting">Hosting</Link>
+          <Link href="/sessions">I'm playing</Link>
+          <Link href="/sessions?tab=hosting">I'm organising</Link>
         </>
       ) : (
         <>
-          <button type="button" aria-current={props.active === "joined" ? "page" : undefined} onClick={() => props.onTabChange("joined")}>Joined</button>
-          <button type="button" aria-current={props.active === "hosting" ? "page" : undefined} onClick={() => props.onTabChange("hosting")}>Hosting</button>
+          <button type="button" aria-current={props.active === "joined" ? "page" : undefined} onClick={() => props.onTabChange("joined")}>I'm playing</button>
+          <button type="button" aria-current={props.active === "hosting" ? "page" : undefined} onClick={() => props.onTabChange("hosting")}>I'm organising</button>
         </>
       )}
       <Link href="/groups" className={styles.mobileGroups} aria-current={props.active === "groups" ? "page" : undefined}>Groups</Link>
