@@ -25,6 +25,7 @@ export interface WithdrawalDialogProps {
   readonly onConfirm: () => void;
   readonly onRetryPreview: () => void;
   readonly onClose: () => void;
+  readonly onRestoreFocus?: () => void;
 }
 
 /**
@@ -42,7 +43,7 @@ export function WithdrawalDialog({ state, inviteSearch, onSearchInvitee, onChoos
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !submitting) onClose(); }}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md" onCloseAutoFocus={onRestoreFocus ? (event) => { event.preventDefault(); onRestoreFocus(); } : undefined}>
         <DialogHeader>
           <DialogTitle>{state.step === "withdrawn" ? "You've withdrawn" : "Withdraw from this session?"}</DialogTitle>
           <DialogDescription>

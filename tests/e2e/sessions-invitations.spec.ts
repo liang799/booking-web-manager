@@ -65,7 +65,7 @@ test("a host creates a private session and shares a mobile invitation that a sec
     await expectLocation(page, "/sessions?created=1");
     await hostBrowser.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(page.url()).origin });
     await openHostedSession(page, venueName);
-    const card = page.getByRole("article", { name: `Tennis at ${venueName}`, exact: true });
+    const card = page.getByRole("dialog");
     const copy = card.getByRole("button", { name: "Copy invitation link", exact: true });
     await copy.focus();
     await page.keyboard.press("Enter");
@@ -177,7 +177,7 @@ test("clipboard denial leaves a selectable invitation and a lost join response r
     }));
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    const card = page.getByRole("article", { name: `Badminton at ${fixture.venueName}`, exact: true });
+    const card = page.getByRole("dialog");
     await card.getByRole("button", { name: "Copy invitation link", exact: true }).click();
     const field = card.getByLabel("Invitation link", { exact: true });
     await expect(field).toHaveAttribute("readonly", "");

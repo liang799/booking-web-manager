@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,6 +13,7 @@ import type { SessionCancellationResult } from "@/use-cases/sessions/session-can
 import { Money } from "@/components/ui/money";
 import type { SessionAccountAction, SetSessionVisibilityAction } from "../session-actions";
 import { SessionInvitationShare } from "./session-invitation-share";
+import details from "./session-details.module.css";
 
 export interface HostedSessionsViewProps {
   /** The overview opens the existing management workflow inside a session dialog. */
@@ -75,6 +76,29 @@ const singaporeDateTime = new Intl.DateTimeFormat("en-SG", {
 
 /** Displays confirmed session visibility with capacity guards and per-session save feedback. */
 function HostedSessionCard({ session, refreshing, onSetVisibility, onRefresh, onCancel }: Pick<HostedSessionsViewProps, "refreshing" | "onSetVisibility" | "onRefresh"> & { readonly session: HostedSessionItem; readonly onCancel?: (trigger: HTMLButtonElement) => void }) {
+  return (
+    <li className="rounded-lg border bg-card p-4 shadow-sm md:p-6">
+      <article aria-label={`${session.sport} at ${session.venueName}`} className="min-w-0">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="break-words text-lg font-semibold">{session.venueName}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{session.sport} · {session.region}</p>
+          </div>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{session.visibility === "PUBLIC" ? "Public" : "Private"}</span>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground"><time dateTime={session.startAt}>{singaporeDateTime.format(new Date(session.startAt))}</time> – <time dateTime={session.endAt}>{singaporeDateTime.format(new Date(session.endAt))}</time> SGT</p>
+        <HostedSessionControls session={session} refreshing={refreshing} onSetVisibility={onSetVisibility} onRefresh={onRefresh} onCancel={onCancel} />
+      </article>
+    </li>
+  );
+}
+
+/** Shares visibility submission guards and feedback between the list and Session Details. */
+export function HostedSessionControls({ session, refreshing, onSetVisibility, onRefresh, onCancel, participants }: Pick<HostedSessionsViewProps, "refreshing" | "onSetVisibility" | "onRefresh"> & {
+  readonly session: HostedSessionItem;
+  readonly onCancel?: (trigger: HTMLButtonElement) => void;
+  readonly participants?: { readonly participantCount: number; readonly capacity: number };
+}) {
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<SessionVisibilityActionResult | null>(null);
   const submitting = useRef(false);
@@ -99,18 +123,37 @@ function HostedSessionCard({ session, refreshing, onSetVisibility, onRefresh, on
     }
   }
 
-  return (
-    <li className="rounded-lg border bg-card p-4 shadow-sm md:p-6">
-      <article aria-label={`${session.sport} at ${session.venueName}`} className="min-w-0">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h2 className="break-words text-lg font-semibold">{session.venueName}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{session.sport} · {session.region}</p>
-          </div>
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{session.visibility === "PUBLIC" ? "Public" : "Private"}</span>
-        </div>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground"><time dateTime={session.startAt}>{singaporeDateTime.format(new Date(session.startAt))}</time> – <time dateTime={session.endAt}>{singaporeDateTime.format(new Date(session.endAt))}</time> SGT</p>
-        <p className="mt-3 text-sm">{session.visibility === "PUBLIC" ? "Visible in Discover." : "Hidden from Discover."}</p>
+  if (participants !== undefined) return <>
+    <div className={details.managementRow}>
+      <div><h3>Participants</h3><p className={details.count} aria-label={`${participants.participantCount} of ${participants.capacity} players joined`}><strong>{participants.participantCount} / {participants.capacity}</strong><span>players joined</span></p></div>
+      <Button asChild variant="secondary" className={details.manageButton}><Link href={`/sessions/${session.sessionId}/participants`}>Manage players<ChevronRight aria-hidden className="ml-2 h-4 w-4" /></Link></Button>
+    </div>
+    <div className={details.managementRow}>
+      <div><h3>Visibility</h3>
+        <p className={details.visibilityDescription}>{session.visibility === "PUBLIC" ? "Listed in Discover. Anyone can find your session." : "Hidden from Discover. Invite players with your invitation link."}</p>
+        {!visibilityAction && <p className={details.visibilityDescription}>Visibility cannot be changed for this session.</p>}
+      </div>
+      <div role="group" aria-label="Session visibility" className={details.segment}>
+        {(["PUBLIC", "PRIVATE"] as const).map((visibility) => <button key={visibility} type="button" aria-pressed={session.visibility === visibility}
+          aria-label={session.visibility === visibility ? visibility === "PUBLIC" ? "Public" : "Private" : `Change visibility to ${visibility.toLowerCase()}`}
+          disabled={pending || refreshing || (session.visibility !== visibility && visibilityAction?.inputs.visibility !== visibility)}
+          onClick={() => { if (session.visibility !== visibility && visibilityAction?.inputs.visibility === visibility) void changeVisibility(); }}>
+          {visibility === "PUBLIC" ? "Public" : "Private"}
+        </button>)}
+      </div>
+    </div>
+    {pending && <p role="status" className={details.feedback}>Saving visibility…</p>}
+    {result?.status === "error" && <div className="mb-4"><ErrorMessage>{result.message}</ErrorMessage></div>}
+    {result?.status === "saved" && result.visibility === session.visibility && <p role="status" className="mb-4 text-sm text-muted-foreground">Session is now {result.visibility.toLowerCase()}.</p>}
+    <div className={details.hostFooter}>
+      <SessionInvitationShare sessionId={session.sessionId} disabled={pending || refreshing} presentation="details" />
+      {onCancel && cancellationAction && <>
+        <button type="button" className={details.cancelButton} disabled={pending || refreshing} onClick={(event) => onCancel(event.currentTarget)}><Trash2 aria-hidden /><span>Cancel session</span></button>
+      </>}
+    </div>
+  </>;
+  return <>
+    <p className="mt-3 text-sm">{session.visibility === "PUBLIC" ? "Visible in Discover." : "Hidden from Discover."}</p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button asChild variant="outline" className="min-h-11"><Link href={`/sessions/${session.sessionId}/participants`}>Manage participants</Link></Button>
           {visibilityAction && <Button variant="outline" className="min-h-11" disabled={pending || refreshing} onClick={changeVisibility}>
@@ -122,9 +165,7 @@ function HostedSessionCard({ session, refreshing, onSetVisibility, onRefresh, on
         <SessionInvitationShare sessionId={session.sessionId} disabled={pending || refreshing} />
         {result?.status === "error" && <div className="mt-3"><ErrorMessage>{result.message}</ErrorMessage></div>}
         {result?.status === "saved" && result.visibility === session.visibility && <p role="status" className="mt-3 text-sm text-muted-foreground">Session is now {result.visibility.toLowerCase()}.</p>}
-      </article>
-    </li>
-  );
+  </>;
 }
 
 /** UC2-06: ended sessions whose committed players the booker still needs to mark attended or absent. */

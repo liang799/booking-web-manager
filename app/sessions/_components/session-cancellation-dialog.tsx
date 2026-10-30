@@ -143,8 +143,8 @@ export function SessionCancellationDialog({ selected, transport, onClose, onRest
           <DialogHeader>
             <DialogTitle>{recovery ? "Check cancellation result" : "Cancel session?"}</DialogTitle>
             <DialogDescription>
-              {recovery?.venueName ?? selected?.venueName}. Refunds return to participants' in-app wallets.
-              You must handle the venue booking cancellation separately.
+              {recovery?.venueName ?? selected?.venueName}. This closes the session and returns outstanding held shares to participants’ in-app wallets.
+              Your venue reservation is not cancelled. You must cancel it with the venue separately.
             </DialogDescription>
           </DialogHeader>
           {loading && <p role="status">Calculating refunds…</p>}

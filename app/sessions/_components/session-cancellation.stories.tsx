@@ -45,6 +45,7 @@ export const ConfirmRefunds: Story = {
     await waitFor(() => expect(within(dialog).getByText("Total wallet refunds")).toBeVisible());
     await expect(dialog).toHaveTextContent("10.00");
     await expect(dialog).toHaveTextContent("3 participants are affected");
+    await expect(dialog).toHaveTextContent("Your venue reservation is not cancelled. You must cancel it with the venue separately.");
     await expect(dialog).toHaveTextContent("2 participants will receive a refund");
     await expect(args.cancel).not.toHaveBeenCalled();
     await userEvent.click(within(dialog).getByRole("button", { name: "Confirm cancellation" }));

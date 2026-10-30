@@ -543,10 +543,14 @@ export const HostedManagementDialog: Story = {
   play: async ({ canvas }) => {
     const trigger = await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await userEvent.click(trigger);
-    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
-    const participants = await dialog.findByRole("link", { name: "Manage participants" });
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
+    const participants = await dialog.findByRole("link", { name: "Manage players" });
     await expect(participants).toHaveAttribute("href", `/sessions/${hostedSessions[0]!.sessionId}/participants`);
-    await waitFor(() => expect(dialog.getByRole("button", { name: "Make private" })).toBeVisible());
+    await waitFor(() => expect(dialog.getByRole("button", { name: "Change visibility to private" })).toBeVisible());
+    await expect(dialog.getByText("Sessions / Organising", { exact: true })).toBeVisible();
+    await expect(dialog.getByLabelText("2 of 4 players joined")).toBeVisible();
+    await expect(dialog.getAllByText("Bukit Timah Community Club", { exact: true })).toHaveLength(1);
+    await expect(dialog.getByText("Wednesday, 21 October 2026")).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Cancel session" })).toBeVisible();
     await expect(hostedCalls).toBe(1);
     await userEvent.click(dialog.getByRole("button", { name: "Close" }));
@@ -589,7 +593,7 @@ export const HostedManagementLoadingCanClose: Story = {
   play: async ({ canvas }) => {
     const trigger = await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await userEvent.click(trigger);
-    const dialogElement = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const dialogElement = await screen.findByRole("dialog", { name: "Tennis session" });
     const dialog = within(dialogElement);
     await expect(dialog.getByRole("status")).toHaveTextContent("Loading session controls…");
     const skeleton = dialogElement.querySelector<HTMLElement>("[data-session-controls-skeleton]");

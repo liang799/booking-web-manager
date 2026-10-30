@@ -7,16 +7,17 @@ import type { LeaveWaitlistState } from "../use-leave-waitlist-flow";
 import { singaporeStart } from "./joined-session-format";
 
 /** UC2-05 leave the waitlist, display only: one controlled dialog driven by `useLeaveWaitlistFlow`. */
-export function LeaveWaitlistDialog({ state, onConfirm, onClose }: {
+export function LeaveWaitlistDialog({ state, onConfirm, onClose, onRestoreFocus }: {
   readonly state: LeaveWaitlistState;
   readonly onConfirm: () => void;
   readonly onClose: () => void;
+  readonly onRestoreFocus?: () => void;
 }) {
   if (state.step === "closed") return <Dialog open={false} />;
   const { session, submitting, unresolved } = state;
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !submitting) onClose(); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onCloseAutoFocus={onRestoreFocus ? (event) => { event.preventDefault(); onRestoreFocus(); } : undefined}>
         <DialogHeader>
           <DialogTitle>Leave the waitlist?</DialogTitle>
           <DialogDescription>

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { Input } from "@/components/ui/input";
 import { loadSessionInvitation, type LoadSessionInvitation } from "../invitation-transport";
+import details from "./session-details.module.css";
 
 type ShareState =
   | { readonly status: "idle" | "loading" }
@@ -15,13 +16,14 @@ type ShareState =
 
 export interface SessionInvitationShareProps {
   readonly sessionId: string;
+  readonly presentation?: "default" | "details";
   readonly disabled?: boolean;
   readonly loadInvitation?: LoadSessionInvitation;
   readonly copyText?: (value: string) => Promise<void>;
 }
 
 /** Resolves the owner-only link on click; a rejected clipboard write leaves a selectable URL. */
-export function SessionInvitationShare({ sessionId, disabled, loadInvitation = loadSessionInvitation,
+export function SessionInvitationShare({ sessionId, disabled, presentation = "default", loadInvitation = loadSessionInvitation,
   copyText = (value) => navigator.clipboard.writeText(value) }: SessionInvitationShareProps) {
   const [state, setState] = useState<ShareState>({ status: "idle" });
   const busy = useRef(false);
@@ -46,18 +48,20 @@ export function SessionInvitationShare({ sessionId, disabled, loadInvitation = l
     } finally { busy.current = false; }
   }
 
-  return <div className="mt-4 space-y-3">
-    <Button type="button" variant="outline" className="min-h-11" disabled={disabled || state.status === "loading"} onClick={copyInvitation}>
-      <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+  return <div className={presentation === "details" ? details.invitation : "mt-4 space-y-3"}>
+    <div className={presentation === "details" ? details.inviteRow : undefined}>
+    <Button type="button" variant={presentation === "details" ? "default" : "outline"} className={presentation === "details" ? details.inviteButton : "min-h-11"} disabled={disabled || state.status === "loading"} onClick={copyInvitation}>
+      {presentation === "details" ? <LinkIcon aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
       {state.status === "loading" ? "Loading invitation…" : "Copy invitation link"}
     </Button>
-    {state.status === "ready" && <div className="space-y-2 rounded-lg bg-muted p-3">
+    </div>
+    {state.status === "ready" && <div className="mt-3 space-y-2 rounded-lg bg-muted p-3">
       <p role="status" className="text-sm">{state.clipboard === "copied" ? "Invitation link copied." : "Copy the invitation link below."}</p>
       <label htmlFor={inputId} className="sr-only">Invitation link</label>
       <Input id={inputId} value={state.url} readOnly onFocus={(event) => event.currentTarget.select()} className="min-h-11 bg-background" />
       <p className="text-xs leading-relaxed text-muted-foreground">Anyone with this link can view the session details and request to join.</p>
     </div>}
-    {state.status === "error" && <div className="space-y-2">
+    {state.status === "error" && <div className="mt-3 space-y-2">
       <ErrorMessage>{state.message}</ErrorMessage>
       {state.signIn && <Button asChild variant="link" className="h-auto p-0"><Link href="/login?next=%2Fsessions">Log in</Link></Button>}
     </div>}

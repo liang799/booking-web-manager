@@ -4,6 +4,6 @@ import { expect, type Page } from "@playwright/test";
 export async function openHostedSession(page: Page, venueName: string) {
   await page.getByRole("main").getByRole("button").filter({ hasText: venueName }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("link", { name: /^(Manage|View) participants$/ })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: /^(Manage players|View participants)$/ })).toBeVisible();
   return dialog;
 }

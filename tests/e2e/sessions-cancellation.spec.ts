@@ -45,14 +45,15 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await expect(row(page, fixture.venueName).getByRole("button", { name: "Make private" })).toHaveCount(0);
-    const trigger = row(page, fixture.venueName).getByRole("button", { name: "Cancel session", exact: true });
+    // The segmented control stays visible, but a fully booked session cannot change visibility.
+    await expect(page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Change visibility to private" })).toBeDisabled();
+    const trigger = page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session", exact: true });
     await trigger.focus();
     await page.keyboard.press("Enter");
     const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("10.00");
     await expect(dialog).toContainText("2 participants will receive a refund");
-    await expect(dialog).toContainText("venue booking cancellation separately");
+    await expect(dialog).toContainText("cancel it with the venue separately");
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();
@@ -94,7 +95,7 @@ test("changed roster requires a fresh preview and another confirmation", async (
     const fixture = await cancellationFixture(context);
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await row(page, fixture.venueName).getByRole("button", { name: "Cancel session" }).click();
+    await page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session" }).click();
     const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("5.00");
     await addCancellationParticipant(cancellationSql(context), fixture.sessionId, await context.identity(false));
@@ -117,7 +118,7 @@ test("lost committed response survives reload and replays the identical financia
     const fixture = await cancellationFixture(context);
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await row(page, fixture.venueName).getByRole("button", { name: "Cancel session" }).click();
+    await page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session" }).click();
     const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("5.00");
     let intercepted = false;
