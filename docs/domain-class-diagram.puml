@@ -60,6 +60,10 @@ class GroupMembership <<ImmutableChild>> {
   +userId : UUID
   +joinedAt : Date
 }
+class GroupInvitation <<ImmutableChild>> {
+  +inviteeId : UUID
+  +invitedAt : Date
+}
 class Booking <<ValueObject>> {
   +venueName : string
   +startAt : Date
@@ -92,6 +96,7 @@ Session "0..*" -up-> "0..1" RegularGroup : invited group
 User "1" *-down- "1" Wallet
 User "1" *-down- "0..1" PayoutAccount
 RegularGroup "1" *-left- "1..*" GroupMembership
+RegularGroup "1" *-left- "0..*" GroupInvitation
 Session "1" *-down- "1" Booking
 Session "1" *-down- "1" ParticipantList
 ParticipantList "1" *-down- "0..*" Participation

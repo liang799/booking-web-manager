@@ -31,6 +31,15 @@ unavailable capability otherwise; `app/profile/reliability-server-dependencies.t
 caches it. See the [profile guide](../app/profile/README.md) and
 [ADR-0014](../docs/adr/0014-account-policies-and-transaction-guards.md).
 
+## Group configuration
+
+`groups.ts` assembles `ManageGroup` (UC1-06) over `supabaseGroupStore()`, which
+reads and saves groups, memberships and invitations with the service-role
+client. Inviting by user ID ([ADR-0022](../docs/adr/0022-invite-players-to-groups-by-user-id.md))
+finds the player through `supabasePlayerDirectory()` on that same client, so
+group pages and actions open no database pool. Group pages and server actions
+call `createManageGroup()` for each request.
+
 ## User ID configuration
 
 `user-handles.ts` assembles `CheckUserHandle` and `FindUserByHandle` over one

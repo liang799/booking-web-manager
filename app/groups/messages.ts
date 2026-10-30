@@ -33,3 +33,35 @@ export function leaveGroupErrorMessage(error: unknown): string {
   if (error instanceof DomainError && error.code === "NOT_FOUND") return "You're no longer a member of this group.";
   return groupErrorMessage(error);
 }
+
+/** Inviting by user ID (ADR-0022): say why it didn't work and what to do instead. */
+export function inviteErrorMessage(error: unknown): string {
+  if (!(error instanceof DomainError)) return groupErrorMessage(error);
+  switch (error.code) {
+    case "ALREADY_MEMBER":
+      return "They're already a member of this group.";
+    case "INVALID_INVITATION":
+      return "This group's invitation link is turned off. Turn it on to invite players.";
+    case "INVALID_INPUT":
+      return "You can't invite yourself.";
+    case "UNAUTHORIZED":
+      return "Only members of this group can invite players.";
+    case "INVALID_STATE":
+      return "This group is archived, so it can't invite players.";
+    case "INACTIVE_ACCOUNT":
+      return "That player's account is no longer active.";
+    case "NOT_FOUND":
+      return "That player or group wasn't found.";
+    default:
+      return groupErrorMessage(error);
+  }
+}
+
+/** Answering an invitation: the usual reason it fails is that it ended in the meantime. */
+export function answerInvitationErrorMessage(error: unknown): string {
+  if (error instanceof DomainError && error.code === "INVALID_INVITATION") {
+    return "This invitation is no longer available. Ask a member for a new one.";
+  }
+  if (error instanceof DomainError && error.code === "INVALID_STATE") return "This group is archived, so it can't be joined.";
+  return groupErrorMessage(error);
+}

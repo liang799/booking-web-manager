@@ -6,10 +6,16 @@ import { inMemoryGroupDependencies } from "./support/in-memory-groups";
 const OWNER = "owner-marcus";
 const FRIEND = "friend-aisha";
 const STRANGER = "stranger-ben";
+/** Active accounts that can be found by user ID (ADR-0021). */
+const PLAYERS = [
+  { userId: FRIEND, handle: "aisha_tan", displayName: "Aisha Tan" },
+  { userId: STRANGER, handle: "ben_lee", displayName: "Ben Lee" },
+  { userId: OWNER, handle: "marcus_lim", displayName: "Marcus Lim" },
+];
 
 /** A ManageGroup over an empty in-memory store, plus one group owned by OWNER. */
 async function withGroup(options: { readonly unsettledLinkedSessions?: number } = {}) {
-  const { deps, rows } = inMemoryGroupDependencies(options);
+  const { deps, rows } = inMemoryGroupDependencies({ ...options, players: PLAYERS });
   const manageGroup = new ManageGroup(deps);
   const group = await manageGroup.create({ ownerId: OWNER, name: "Weekend Tennis Crew" });
   return { manageGroup, rows, group };
@@ -239,6 +245,136 @@ describe("UC1-06 Manage Group", () => {
 
       // Assert
       expect(code).toBe("NOT_FOUND");
+    });
+  });
+
+  describe("inviting by user ID (ADR-0022)", () => {
+    test("a member invites a player by user ID; the player sees it and joins by accepting", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+
+      // Act
+      const sent = await manageGroup.inviteByHandle({ actorId: OWNER, groupId: group.groupId, handle: "@Aisha_Tan" });
+      const pending = await manageGroup.listInvitations({ actorId: FRIEND });
+      const accepted = await manageGroup.acceptInvitation({ actorId: FRIEND, groupId: group.groupId });
+
+      // Assert
+      expect(sent).toEqual({ invitee: PLAYERS[0], result: "INVITED" });
+      expect(pending).toEqual([
+        {
+          groupId: group.groupId,
+          groupName: "Weekend Tennis Crew",
+          invitedBy: OWNER,
+          invitedAt: new Date("2026-10-01T08:00:00Z"),
+        },
+      ]);
+      expect(accepted).toBe("JOINED");
+      const saved = await manageGroup.viewAsMember({ actorId: FRIEND, groupId: group.groupId });
+      expect(saved.memberships.map((member) => member.userId)).toEqual([OWNER, FRIEND]);
+      expect(await manageGroup.listInvitations({ actorId: FRIEND })).toEqual([]);
+    });
+
+    test("an invitation doesn't make the player a member until they accept", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+
+      // Act
+      await manageGroup.inviteByHandle({ actorId: OWNER, groupId: group.groupId, handle: "aisha_tan" });
+
+      // Assert
+      expect(await errorCode(() => manageGroup.viewAsMember({ actorId: FRIEND, groupId: group.groupId }))).toBe("NOT_FOUND");
+      expect(await manageGroup.listMine({ actorId: FRIEND })).toEqual([]);
+    });
+
+    test("inviting the same player twice keeps one invitation", async () => {
+      // Arrange
+      const { manageGroup, group, rows } = await withGroup();
+      await manageGroup.inviteByHandle({ actorId: OWNER, groupId: group.groupId, handle: "aisha_tan" });
+
+      // Act
+      const repeated = await manageGroup.inviteByHandle({ actorId: OWNER, groupId: group.groupId, handle: "aisha_tan" });
+
+      // Assert
+      expect(repeated.result).toBe("ALREADY_INVITED");
+      expect(rows.get(group.groupId)?.invitations.map((invitation) => invitation.inviteeId)).toEqual([FRIEND]);
+    });
+
+    test.each([
+      ["nobody holds the user ID", OWNER, "nobody_here", "NOT_FOUND"],
+      ["the user ID is malformed", OWNER, "9lives", "INVALID_INPUT"],
+      ["the player invites themselves", OWNER, "marcus_lim", "INVALID_INPUT"],
+      ["the inviter isn't a member", STRANGER, "aisha_tan", "UNAUTHORIZED"],
+    ])("refuses when %s", async (_case, actorId, handle, expected) => {
+      // Arrange
+      const { manageGroup, group, rows } = await withGroup();
+
+      // Act
+      const code = await errorCode(() => manageGroup.inviteByHandle({ actorId, groupId: group.groupId, handle }));
+
+      // Assert
+      expect(code).toBe(expected);
+      expect(rows.get(group.groupId)?.invitations).toEqual([]);
+    });
+
+    test("refuses to invite someone who is already a member", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+      await manageGroup.join({ userId: FRIEND, invitationToken: group.invitationToken });
+
+      // Act
+      const code = await errorCode(() =>
+        manageGroup.inviteByHandle({ actorId: OWNER, groupId: group.groupId, handle: "aisha_tan" }),
+      );
+
+      // Assert
+      expect(code).toBe("ALREADY_MEMBER");
+    });
+
+    test("any member can invite while the link is on, and turning the link off ends pending invitations", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+      await manageGroup.join({ userId: FRIEND, invitationToken: group.invitationToken });
+      await manageGroup.inviteByHandle({ actorId: FRIEND, groupId: group.groupId, handle: "ben_lee" });
+
+      // Act
+      await manageGroup.revokeInvitation({ actorId: OWNER, groupId: group.groupId });
+
+      // Assert
+      expect(await manageGroup.listInvitations({ actorId: STRANGER })).toEqual([]);
+      expect(await errorCode(() => manageGroup.acceptInvitation({ actorId: STRANGER, groupId: group.groupId }))).toBe(
+        "INVALID_INVITATION",
+      );
+      expect(
+        await errorCode(() => manageGroup.inviteByHandle({ actorId: FRIEND, groupId: group.groupId, handle: "ben_lee" })),
+      ).toBe("INVALID_INVITATION");
+    });
+
+    test("declining removes the invitation without joining, and declining again is harmless", async () => {
+      // Arrange
+      const { manageGroup, group, rows } = await withGroup();
+      await manageGroup.inviteByHandle({ actorId: OWNER, groupId: group.groupId, handle: "aisha_tan" });
+
+      // Act
+      await manageGroup.declineInvitation({ actorId: FRIEND, groupId: group.groupId });
+      await manageGroup.declineInvitation({ actorId: FRIEND, groupId: group.groupId });
+
+      // Assert
+      expect(rows.get(group.groupId)?.invitations).toEqual([]);
+      expect(rows.get(group.groupId)?.memberships.map((member) => member.userId)).toEqual([OWNER]);
+      expect(await manageGroup.listInvitations({ actorId: FRIEND })).toEqual([]);
+    });
+
+    test("accepting a missing invitation is refused", async () => {
+      // Arrange
+      const { manageGroup, group } = await withGroup();
+
+      // Act
+      const code = await errorCode(() => manageGroup.acceptInvitation({ actorId: FRIEND, groupId: group.groupId }));
+      const unknownGroup = await errorCode(() => manageGroup.acceptInvitation({ actorId: FRIEND, groupId: "missing" }));
+
+      // Assert
+      expect(code).toBe("INVALID_INVITATION");
+      expect(unknownGroup).toBe("INVALID_INVITATION");
     });
   });
 
