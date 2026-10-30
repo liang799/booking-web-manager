@@ -6,14 +6,15 @@ import { Money } from "@/components/ui/money";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { useWithdrawalFlow } from "@/app/commit/use-withdrawal-flow";
 import { useLeaveWaitlistFlow } from "@/app/commit/use-leave-waitlist-flow";
+import { useReplacementSearch } from "@/app/commit/use-replacement-search";
 import { joinedSessionsQueryKey } from "@/app/commit/withdrawal-query-keys";
-import { leaveWaitlist, loadJoinedSessions, previewWithdrawal, withdrawFromSession } from "@/app/commit/withdrawal-transport";
+import { findReplacementCandidate, leaveWaitlist, loadJoinedSessions, previewWithdrawal, withdrawFromSession } from "@/app/commit/withdrawal-transport";
 import { WithdrawalDialog } from "@/app/commit/_components/withdrawal-dialog";
 import { LeaveWaitlistDialog } from "@/app/commit/_components/leave-waitlist-dialog";
 import type { SessionFeedItem } from "../session-feed-contract";
 import styles from "./session-details.module.css";
 
-const defaultTransport = { loadJoinedSessions, previewWithdrawal, withdrawFromSession, leaveWaitlist };
+const defaultTransport = { loadJoinedSessions, previewWithdrawal, withdrawFromSession, leaveWaitlist, findReplacementCandidate };
 
 /** Opens the existing refund preview or waitlist confirmation for this specific place. */
 export function SessionParticipantControls({ userId, session, onRefresh, available = true, transport = defaultTransport }: {
@@ -29,6 +30,7 @@ export function SessionParticipantControls({ userId, session, onRefresh, availab
   const trigger = useRef<HTMLButtonElement>(null);
   const sessions = useQuery({ queryKey: joinedSessionsQueryKey(userId), queryFn: transport.loadJoinedSessions, enabled: false, retry: false });
   const withdrawal = useWithdrawalFlow({ userId, sessions: sessions.data, previewWithdrawal: transport.previewWithdrawal, withdraw: transport.withdrawFromSession });
+  const inviteSearch = useReplacementSearch({ userId, findCandidate: transport.findReplacementCandidate, onChoose: withdrawal.chooseInvitee });
   const leaving = useLeaveWaitlistFlow({ userId, sessions: sessions.data, leaveWaitlist: async (request) => {
     const result = await transport.leaveWaitlist(request);
     if (result.status === "left") onRefresh();
@@ -48,7 +50,10 @@ export function SessionParticipantControls({ userId, session, onRefresh, availab
         setError("Your place has changed. Refresh your sessions to see the latest status.");
         onRefresh();
       } else if (current.status === "WAITLISTED") leaving.start(current);
-      else withdrawal.start(current);
+      else {
+        inviteSearch.reset();
+        withdrawal.start(current);
+      }
     } catch {
       setError("We couldn’t check your place. Please try again.");
     } finally {
@@ -69,7 +74,7 @@ export function SessionParticipantControls({ userId, session, onRefresh, availab
     </div>
     {error && <div className={styles.feedback}><ErrorMessage>{error}</ErrorMessage></div>}
     </>}
-    <WithdrawalDialog state={withdrawal.state} candidates={[]} onChooseMode={withdrawal.chooseMode} onChooseInvitee={withdrawal.chooseInvitee}
+    <WithdrawalDialog state={withdrawal.state} inviteSearch={inviteSearch.state} onSearchInvitee={inviteSearch.search} onChooseMode={withdrawal.chooseMode}
       onConfirm={withdrawal.confirm} onRetryPreview={withdrawal.retryPreview} onClose={() => {
         const succeeded = withdrawal.state.step === "withdrawn";
         withdrawal.close();

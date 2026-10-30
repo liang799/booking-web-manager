@@ -17,6 +17,8 @@ const mode = process.argv[2] ?? "db";
 if (!["db", "http", "discovery", "all"].includes(mode))
   throw new Error("Choose db, http, discovery or all");
 const migrations = "supabase/migrations";
+// Fail before starting services when two feature migrations use the same version.
+execFileSync("bash", ["scripts/check-migration-numbers.sh"], { stdio: "inherit" });
 const groupMigration = join(migrations, "0005_regular_groups.sql");
 const preview = process.env.SESSION_TEST_PREREQUISITE_SQL;
 if (!existsSync(groupMigration) && (!preview || !existsSync(preview))) {
@@ -93,7 +95,7 @@ try {
     );
   } catch (error) {
     const log = join(directory, "startup.log");
-    writeFileSync(log, String(error.stderr ?? "Supabase could not start"), {
+    writeFileSync(log, `${String(error.stdout ?? "")}\n${String(error.stderr ?? "Supabase could not start")}`, {
       mode: 0o600,
     });
     throw new Error(`Supabase startup failed; private diagnostic log: ${log}`);

@@ -87,7 +87,7 @@
 /lib/notifications/ @Wyjessie @rbrishi15
 /tests/app/notifications/ @Wyjessie @rbrishi15
 /docs/assets/notifications/ @Wyjessie @rbrishi15
-/supabase/migrations/0017_notification_inbox.sql @Wyjessie @rbrishi15
+/supabase/migrations/0018_notification_inbox.sql @Wyjessie @rbrishi15
 /tests/use-cases/scheduled-session-jobs.test.ts @Wyjessie
 /tests/use-cases/support/in-memory-unit-of-work.ts @Wyjessie
 /tests/use-cases/support/recording-notifier.ts @Wyjessie

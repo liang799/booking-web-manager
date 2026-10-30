@@ -34,7 +34,7 @@ export interface WithdrawalDialogProps {
  * passed on (ADR-0006: open it to the waitlist, or invite one named person, found by their user
  * ID; unchangeable).
  */
-export function WithdrawalDialog({ state, inviteSearch, onSearchInvitee, onChooseMode, onConfirm, onRetryPreview, onClose }: WithdrawalDialogProps) {
+export function WithdrawalDialog({ state, inviteSearch, onSearchInvitee, onChooseMode, onConfirm, onRetryPreview, onClose, onRestoreFocus }: WithdrawalDialogProps) {
   if (state.step === "closed") return <Dialog open={false} />;
   const { session } = state;
   const submitting = (state.step === "choosing" || state.step === "unconfirmed") && state.submitting;

@@ -13,7 +13,7 @@ export function registerNotificationsApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get", path: "/api/notifications", operationId: "listNotifications", tags: ["Notifications"],
     summary: "Read the signed-in user's notification inbox",
-    description: "Returns at most 30 newest-first items and the full unread count. Supply both before and id from nextCursor for the next page. All operations require migration 0017_notification_inbox and return Cache-Control: no-store.",
+    description: "Returns at most 30 newest-first items and the full unread count. Supply both before and id from nextCursor for the next page. All operations require migration 0018_notification_inbox and return Cache-Control: no-store.",
     security: [{ bearerAuth: [] }, { loginCookie: [] }],
     request: { query: z.object({ filter: z.enum(["all", "unread", "bookings", "groups", "payments", "system"]).optional(), before: z.string().datetime().optional(), id: z.string().uuid().optional() }) },
     responses: { ...failures, 200: { description: "Only this recipient's alerts.", content: { "application/json": { schema: z.object({

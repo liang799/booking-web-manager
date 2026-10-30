@@ -23,7 +23,7 @@ have empty states until their producers are implemented separately. There is
 no historical backfill, synthetic activity, new group/payment producer or
 message subsystem in this change.
 
-Migration `0017_notification_inbox.sql` adds the table and indexes. Apply it
+Migration `0018_notification_inbox.sql` adds the table and indexes. Apply it
 before deploying this app version. It retains existing tables and data. A
 rollback can leave the new table in place; do not delete inbox history.
 
