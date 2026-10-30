@@ -19,7 +19,7 @@ export function createNotificationDependencies(): NotificationDependencies {
   const settings = readSessionServerSettings();
   if (!settings) {
     const unavailable = async (): Promise<never> => { throw new NotificationsUnavailableError(); };
-    return { authenticate: unavailable, inbox: { list: unavailable, markRead: unavailable } };
+    return { authenticate: unavailable, inbox: { list: unavailable } };
   }
   return {
     authenticate: bearerOrLoginCookie(
