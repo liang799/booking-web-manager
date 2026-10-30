@@ -33,6 +33,12 @@ test("an existing unconfirmed account can browse, create and replay after option
     const created = await request.post("/api/sessions", { headers, data: body });
     expect(created.status()).toBe(201);
     const receipt = await created.json();
+    // Browsing shows another booker's game; this account already occupies its own.
+    const otherBooker = await context.identity();
+    const browsable = await request.post("/api/sessions", {
+      headers: { Authorization: `Bearer ${otherBooker.token}` }, data: submission(venue),
+    });
+    expect(browsable.status()).toBe(201);
 
     // Model a usable preexisting login whose email is no longer confirmed.
     // This disposable stack does not send emails; confirmation is simulated below.

@@ -69,7 +69,7 @@ test("unknown routes and missing groups show one signed-in shell with usable exi
     await expect(page.getByRole("main")).toHaveCount(1);
     await page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Settings", exact: true }).click();
     await expect(page).toHaveURL(/\/profile$/);
-    await page.getByRole("button", { name: "Log out", exact: true }).click();
+    await page.getByRole("main").getByRole("button", { name: "Log out", exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
     await page.goto("/wallet");
