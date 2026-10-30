@@ -49,6 +49,15 @@ export function sessionTitle(session: Pick<SessionFeedItem, "sport">) {
   return `${session.sport} ${session.sport === "Tennis" ? "Court Booking" : "Session"}`;
 }
 
+const venueAbbreviations = new Set(["PCF", "KN", "CC", "RC", "HDB", "ITE", "NUS", "NTU", "SMU", "SUTD", "SIT", "YMCA", "YWCA", "SAFRA"]);
+
+/** Soften uppercase venue feeds while preserving supplied brand casing and common abbreviations. */
+export function sessionVenueLabel(venueName: string) {
+  if (venueName !== venueName.toLocaleUpperCase("en-SG")) return venueName;
+  return venueName.replace(/\p{L}+(?:['’]\p{L}+)*/gu, (word) =>
+    venueAbbreviations.has(word) ? word : word.charAt(0) + word.slice(1).toLocaleLowerCase("en-SG"));
+}
+
 export function sessionArtwork(session: Pick<SessionFeedItem, "sport">, index = 0) {
   return session.sport === "Tennis" ? `/images/sessions/${index % 3 === 1 ? "bench" : "court"}.webp` : sportImage(session.sport);
 }

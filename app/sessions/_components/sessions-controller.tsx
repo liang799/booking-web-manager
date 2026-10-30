@@ -20,7 +20,7 @@ import { hostedSessionsQueryKey } from "./hosted-sessions-controller";
 import { SessionDetails, SessionsView } from "./sessions-view";
 import { SessionsUiProvider, useSessionsUiStore } from "./sessions-ui-provider";
 import { createSessionsUrlStorage, readSessionsUrlState } from "./sessions-url-storage";
-import { sessionArtwork, sessionCanLeave, sessionStatus, sessionTitle } from "./session-display";
+import { sessionArtwork, sessionCanLeave, sessionStatus, sessionTitle, sessionVenueLabel } from "./session-display";
 import styles from "./sessions.module.css";
 import details from "./session-details.module.css";
 import { SessionDetailsSummary } from "./session-details-summary";
@@ -145,7 +145,7 @@ function SessionsContent({ userId, actions, loadFeed = defaultLoadFeed, loadHost
             <p className={details.eyebrow}>Sessions / {dialogSession.section === "upcoming" ? "Organising" : "Hosted"}</p>
             <div className={details.titleRow}><DialogTitle className={details.title}>{dialogSession.sport} session</DialogTitle>
             </div>
-            <DialogDescription className={details.subtitle}><a href={`https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: `${dialogSession.venueName}, Singapore` })}`} target="_blank" rel="noreferrer">{dialogSession.venueName}<span className="sr-only"> (opens in a new tab)</span></a>{dialogSession.section === "past" && <span> · {sessionStatus(dialogSession)}</span>}</DialogDescription>
+            <DialogDescription className={details.subtitle}><a href={`https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: `${dialogSession.venueName}, Singapore` })}`} target="_blank" rel="noreferrer">{sessionVenueLabel(dialogSession.venueName)}<span className="sr-only"> (opens in a new tab)</span></a>{dialogSession.section === "past" && <span> · {sessionStatus(dialogSession)}</span>}</DialogDescription>
           </DialogHeader> : <DialogHeader><DialogTitle className={styles.dialogHeading}>{sessionTitle(dialogSession)}</DialogTitle><DialogDescription>{dialogSession.venueName} · {sessionStatus(dialogSession)}</DialogDescription></DialogHeader>}
           {dialogSession.role === "HOST" ? <>
             <SessionDetailsSummary session={dialogSession} />

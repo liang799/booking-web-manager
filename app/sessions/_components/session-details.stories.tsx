@@ -39,7 +39,7 @@ const meta = {
     await expect(dialog.getByLabelText("0 of 8 players joined")).toBeVisible();
     await expect(dialog.getByRole("group", { name: "Session visibility" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Public" })).toHaveAttribute("aria-pressed", "true");
-    await expect(dialog.getAllByText(session.venueName, { exact: false })).toHaveLength(1);
+    await expect(dialog.getAllByText("PCF Sparkletots Preschool @ Chua Chu Kang Blk 123 (KN)", { exact: true })).toHaveLength(1);
     await expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth);
     await waitFor(() => expect(element.getBoundingClientRect().width).toBeLessThanOrEqual(760));
   },
