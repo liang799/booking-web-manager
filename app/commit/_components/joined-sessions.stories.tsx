@@ -4,18 +4,18 @@ import { useRef, useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { AppShell } from "@/components/ui/app-shell";
 import { useLeaveWaitlistFlow } from "../use-leave-waitlist-flow";
+import { useReplacementSearch } from "../use-replacement-search";
 import { useWithdrawalFlow } from "../use-withdrawal-flow";
-import type { LeaveWaitlist, LoadJoinedSessions, PreviewWithdrawal, WithdrawFromSession } from "../withdrawal-ports";
+import type { FindReplacementCandidate, LeaveWaitlist, LoadJoinedSessions, PreviewWithdrawal, WithdrawFromSession } from "../withdrawal-ports";
 import { joinedSessionsQueryKey } from "../withdrawal-query-keys";
 import { memoryUnresolvedStore, type UnresolvedStore, type UnresolvedWithdrawal } from "../withdrawal-recovery";
 import { JoinedSessionsView, type JoinedSessionsState } from "./joined-sessions-view";
 import { LeaveWaitlistDialog } from "./leave-waitlist-dialog";
 import { WithdrawalDialog } from "./withdrawal-dialog";
 import {
-  candidates, earlySession, fakeLeaveWaitlist, fakeLoadJoinedSessions, fakePreviewWithdrawal, fakeWithdraw, lateSession, waitlistedSession,
+  candidates, earlySession, fakeFindReplacementCandidate, fakeLeaveWaitlist, fakeLoadJoinedSessions, fakePreviewWithdrawal, fakeWithdraw,
+  lateSession, storyUserId as userId, waitlistedSession,
 } from "./withdrawal-fakes";
-
-const userId = "99999999-9999-4999-8999-999999999999";
 
 /**
  * What the page will render, as its composition root: React Query loads the list (and refreshes
@@ -23,12 +23,12 @@ const userId = "99999999-9999-4999-8999-999999999999";
  * presentational list and dialogs display it. Here the transport is fake and unresolved requests
  * are kept in memory; a session the fake withdraws or removes drops out of the next list load.
  */
-function JoinedSessionsPageHarness({ loadJoinedSessions, previewWithdrawal, withdraw, leaveWaitlist, inviteCandidates = candidates, withdrawalStore, departureStore }: {
+function JoinedSessionsPageHarness({ loadJoinedSessions, previewWithdrawal, withdraw, leaveWaitlist, findCandidate, withdrawalStore, departureStore }: {
   readonly loadJoinedSessions: LoadJoinedSessions;
   readonly previewWithdrawal: PreviewWithdrawal;
   readonly withdraw: WithdrawFromSession;
   readonly leaveWaitlist: LeaveWaitlist;
-  readonly inviteCandidates?: typeof candidates;
+  readonly findCandidate: FindReplacementCandidate;
   readonly withdrawalStore?: UnresolvedStore<UnresolvedWithdrawal>;
   readonly departureStore?: UnresolvedStore<string>;
 }) {
@@ -50,14 +50,16 @@ function JoinedSessionsPageHarness({ loadJoinedSessions, previewWithdrawal, with
   }));
   const withdrawal = useWithdrawalFlow({ userId, sessions: list.data, store: stores.withdrawals, previewWithdrawal: transports.previewWithdrawal, withdraw: transports.withdraw });
   const leaving = useLeaveWaitlistFlow({ userId, sessions: list.data, store: stores.departures, leaveWaitlist: transports.leaveWaitlist });
+  const inviteSearch = useReplacementSearch({ userId, findCandidate, onChoose: withdrawal.chooseInvitee });
   const state: JoinedSessionsState = list.isPending ? { status: "loading" }
     : list.isError ? { status: "error", message: "We couldn't load your sessions. Check your connection and try again." }
     : { status: "ready", sessions: list.data };
   return (
     <>
-      <JoinedSessionsView state={state} onRetry={() => { void list.refetch(); }} onWithdraw={withdrawal.start} onLeaveWaitlist={leaving.start} />
-      <WithdrawalDialog state={withdrawal.state} candidates={inviteCandidates} onChooseMode={withdrawal.chooseMode}
-        onChooseInvitee={withdrawal.chooseInvitee} onConfirm={withdrawal.confirm} onRetryPreview={withdrawal.retryPreview} onClose={withdrawal.close} />
+      <JoinedSessionsView state={state} onRetry={() => { void list.refetch(); }}
+        onWithdraw={(session) => { inviteSearch.reset(); withdrawal.start(session); }} onLeaveWaitlist={leaving.start} />
+      <WithdrawalDialog state={withdrawal.state} inviteSearch={inviteSearch.state} onSearchInvitee={inviteSearch.search}
+        onChooseMode={withdrawal.chooseMode} onConfirm={withdrawal.confirm} onRetryPreview={withdrawal.retryPreview} onClose={withdrawal.close} />
       <LeaveWaitlistDialog state={leaving.state} onConfirm={leaving.confirm} onClose={leaving.close} />
     </>
   );
@@ -82,6 +84,7 @@ const meta = {
     previewWithdrawal: fn(fakePreviewWithdrawal),
     withdraw: fn(fakeWithdraw),
     leaveWaitlist: fn(fakeLeaveWaitlist),
+    findCandidate: fn(fakeFindReplacementCandidate),
   },
 } satisfies Meta<typeof JoinedSessionsPageHarness>;
 
@@ -158,7 +161,7 @@ export const WithdrawWithFullRefund: Story = {
   },
 };
 
-/** Less than 30 hours before the start: nothing comes back now; the player names one replacement. */
+/** Less than 30 hours before the start: nothing comes back now; the player names one replacement by user ID. */
 export const LateWithdrawalInvitingSomeone: Story = {
   play: async ({ args, canvas }) => {
     await openWithdraw(canvas, "Kallang Tennis Centre");
@@ -166,7 +169,9 @@ export const LateWithdrawalInvitingSomeone: Story = {
     await expect(within(dialog()).getByText("S$0.00")).toBeVisible();
     await userEvent.click(within(dialog()).getByRole("radio", { name: /invite one person/i }));
     await expect(within(dialog()).getByRole("button", { name: "Withdraw" })).toBeDisabled();
-    await userEvent.click(within(dialog()).getByRole("radio", { name: "Priya Lim" }));
+    await userEvent.type(within(dialog()).getByRole("textbox", { name: "Their user ID" }), "@Priya_Lim{Enter}");
+    await waitFor(() => expect(within(dialog()).getByText(/will be invited to take your place/)).toHaveTextContent("Priya Lim @priya_lim"));
+    await expect(args.findCandidate).toHaveBeenCalledWith("priya_lim");
     await userEvent.click(within(dialog()).getByRole("button", { name: "Withdraw" }));
     await waitFor(() => expect(within(dialog()).getByRole("status")).toHaveTextContent("stays held until Priya Lim accepts"));
     await expect(args.withdraw).toHaveBeenCalledWith(expect.objectContaining({
@@ -175,12 +180,89 @@ export const LateWithdrawalInvitingSomeone: Story = {
   },
 };
 
-export const NoOneToInvite: Story = {
-  args: { inviteCandidates: [] },
+/** The found player is shown and named; Withdraw becomes available. */
+export const InviteeFound: Story = {
+  play: async ({ canvas }) => {
+    await openWithdraw(canvas, "Kallang Tennis Centre");
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /invite one person/i }));
+    await userEvent.type(within(dialog()).getByRole("textbox", { name: "Their user ID" }), "alex_tan{Enter}");
+
+    await expect(await within(dialog()).findByText(/will be invited to take your place/)).toHaveTextContent("Alex Tan @alex_tan");
+    await expect(within(dialog()).getByRole("button", { name: "Withdraw" })).toBeEnabled();
+  },
+};
+
+/** Nobody holds the user ID: nothing is chosen, so Withdraw stays off until someone is found. */
+export const InviteeNotFound: Story = {
   play: async ({ canvas }) => {
     await openWithdraw(canvas, "Bishan Sports Hall");
-    await waitFor(() => expect(within(dialog()).getByRole("radio", { name: /invite one person/i })).toBeDisabled());
-    await waitFor(() => expect(within(dialog()).getByText("There's no one you can invite yet.")).toBeVisible());
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /invite one person/i }));
+    await userEvent.type(within(dialog()).getByRole("textbox", { name: "Their user ID" }), "nobody_here");
+    await userEvent.click(within(dialog()).getByRole("button", { name: "Find" }));
+
+    await expect(await within(dialog()).findByText("No player has the user ID @nobody_here.")).toBeVisible();
+    await expect(within(dialog()).getByRole("button", { name: "Withdraw" })).toBeDisabled();
+  },
+};
+
+/** The player's own user ID is found but can't be named (ADR-0006). */
+export const InvitingYourself: Story = {
+  play: async ({ canvas }) => {
+    await openWithdraw(canvas, "Bishan Sports Hall");
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /invite one person/i }));
+    await userEvent.type(within(dialog()).getByRole("textbox", { name: "Their user ID" }), "joseph_w{Enter}");
+
+    await expect(await within(dialog()).findByText(/That's your own user ID/)).toBeVisible();
+    await expect(within(dialog()).getByRole("button", { name: "Withdraw" })).toBeDisabled();
+  },
+};
+
+/** A malformed user ID is explained at once, without asking the server. */
+export const MalformedInviteeId: Story = {
+  play: async ({ args, canvas }) => {
+    await openWithdraw(canvas, "Bishan Sports Hall");
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /invite one person/i }));
+    const input = within(dialog()).getByRole("textbox", { name: "Their user ID" });
+    await userEvent.type(input, "9lives{Enter}");
+
+    await expect(within(dialog()).getByText("Start with a letter")).toBeVisible();
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    await expect(args.findCandidate).not.toHaveBeenCalled();
+  },
+};
+
+/** Searching again forgets the earlier person until the new one is found. */
+export const SearchingAgainClearsTheChoice: Story = {
+  play: async ({ args, canvas }) => {
+    await openWithdraw(canvas, "Kallang Tennis Centre");
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /invite one person/i }));
+    const input = within(dialog()).getByRole("textbox", { name: "Their user ID" });
+    await userEvent.type(input, "alex_tan{Enter}");
+    await within(dialog()).findByText(/will be invited/);
+    await userEvent.clear(input);
+    await userEvent.type(input, "nobody_here{Enter}");
+
+    await expect(await within(dialog()).findByText("No player has the user ID @nobody_here.")).toBeVisible();
+    await expect(within(dialog()).getByRole("button", { name: "Withdraw" })).toBeDisabled();
+    await expect(args.withdraw).not.toHaveBeenCalled();
+  },
+};
+
+/** Without the lookup, say so and point to the waitlist instead. */
+export const LookupUnavailable: Story = {
+  args: {
+    findCandidate: fn<FindReplacementCandidate>(async () => ({
+      status: "error",
+      message: "Finding players by user ID isn't available right now. You can open your place to the waitlist instead.",
+    })),
+  },
+  play: async ({ canvas }) => {
+    await openWithdraw(canvas, "Bishan Sports Hall");
+    await userEvent.click(await within(dialog()).findByRole("radio", { name: /invite one person/i }));
+    await userEvent.type(within(dialog()).getByRole("textbox", { name: "Their user ID" }), "alex_tan{Enter}");
+
+    await expect(await within(dialog()).findByText(/isn't available right now/)).toBeVisible();
+    await expect(within(dialog()).getByRole("button", { name: "Withdraw" })).toBeDisabled();
   },
 };
 

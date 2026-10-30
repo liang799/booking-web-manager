@@ -41,6 +41,15 @@ unavailable capability otherwise; `app/profile/reliability-server-dependencies.t
 caches it. See the [profile guide](../app/profile/README.md) and
 [ADR-0014](../docs/adr/0014-account-policies-and-transaction-guards.md).
 
+## Group configuration
+
+`groups.ts` assembles `ManageGroup` (UC1-06) over `supabaseGroupStore()`, which
+reads and saves groups, memberships and invitations with the service-role
+client. Inviting by user ID ([ADR-0022](../docs/adr/0022-invite-players-to-groups-by-user-id.md))
+finds the player through `supabasePlayerDirectory()` on that same client, so
+group pages and actions open no database pool. Group pages and server actions
+call `createManageGroup()` for each request.
+
 ## User ID configuration
 
 `user-handles.ts` assembles `CheckUserHandle` and `FindUserByHandle` over one
@@ -52,6 +61,16 @@ account's user ID, UUID and name. Without server settings every capability throw
 continues (the trigger still enforces uniqueness), and the lookup route answers
 503. `app/users/user-handle-server-dependencies.ts` caches the assembly. See
 [ADR-0021](../docs/adr/0021-user-ids-for-finding-players.md).
+
+## Registered email check
+
+`registered-emails.ts` assembles `PostgresRegisteredEmails` over the validated
+`DATABASE_URL` and a lazy pool. The UC1-01 register action calls it directly
+before sign-up (a technical read under ADR-0016, with no use-case wrapper) to
+refuse an email that already has an account, including an unconfirmed one.
+Without `DATABASE_URL` it throws `RegisteredEmailsUnavailableError` and sign-up
+relies on Supabase Auth's own duplicate response.
+`app/(auth)/register/registered-emails-server.ts` caches the assembly.
 
 ## Discovery configuration
 
@@ -309,7 +328,7 @@ against the full checked-in ordered migration sequence before accepting integrat
 `session-management.ts` assembles `ToggleSessionVisibility` and
 `ListHostedSessions` using the existing Supabase/PostgreSQL settings, lazy pool,
 complete User reader and a dedicated `PostgresSessionManagementTransaction`.
-`ListHostedSessions.forBooker` returns both upcoming sessions and those awaiting
+`ListHostedSessions.forBooker` returns upcoming/in-progress sessions and those awaiting
 attendance from one transaction, account check and clock value. App-owned
 serializers convert dates for the API response.
 The management getter has the same retryable initialization boundary as creation.

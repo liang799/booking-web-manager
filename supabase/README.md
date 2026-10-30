@@ -36,7 +36,7 @@ most likely way this project loses an afternoon.
 | 0013 | `session_slot_limit` — session capacity raised from 8 to 30 slots | Neoh / Rishi |
 | 0014 | `commitment_sweep_schedule` — pg_cron + pg_net call to the scheduled commitment sweep every five minutes | Yajie |
 | 0016 | `user_handles` — unique public user IDs: generated for existing accounts, chosen at sign-up, set by `update_profile` | Joseph / Rishi |
-| 0017 | `notification_inbox` — recipient-scoped commitment alerts and persistent read state, independent of browser push | Yajie / Rishi |
+| 0017 | `group_invitations` — invitations to a regular group by user ID; `save_regular_group` saves them with memberships | Joseph / Rishi |
 
 The deployed sequence ends at 0011. New migrations must use a unique number
 after it; do not reuse a deployed number or insert a file below it. Supabase's
@@ -49,7 +49,10 @@ against the current main sequence.
 Apply 0011 before deploying the profile action, which calls its `update_profile`
 operation. 0016 replaces `update_profile` with a version whose new `p_handle`
 parameter defaults to null, so the previous app keeps working while the new
-version deploys; deploy the app that sends user IDs after applying 0016. These migrations retain existing rows; rollback requires restoring
+version deploys; deploy the app that sends user IDs after applying 0016.
+0017 replaces `save_regular_group` with a version whose two invitation
+parameters default to "no change" and which clears invitations ended by the
+previous app's saves; apply it before the app that reads `group_invitations`. These migrations retain existing rows; rollback requires restoring
 the previous function/privilege definitions, not deleting account or group data.
 
 Apply 0007 before deploying session management. It locks the session and

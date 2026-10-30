@@ -174,12 +174,17 @@ accepting it. The screen follows the same split as the withdrawal screens.
 screens: React Query loads the invitations and joined sessions through the real transports, the
 flow hooks drive the dialogs, and unresolved requests are kept in this browser's storage.
 "Places reserved for you" appears above the joined sessions only when there is an invitation or
-the list failed to load. No API lists who a player may invite as their replacement yet, so the
-withdrawal dialog gets no candidates: "Invite one person" stays disabled with its explanation and
-the place can be opened to the waitlist. The contract tests
+the list failed to load. "Invite one person" finds the replacement by their exact user ID
+([ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md)): the dialog checks the ID's form,
+[`findReplacementCandidate`](./withdrawal-transport.ts) asks `GET /api/users/{handle}` as the
+signed-in player, and [`useReplacementSearch`](./use-replacement-search.ts) names the found player
+as the withdrawal's `inviteeId`. Each new search clears the invitee first, only the latest search
+can name someone, and the player's own user ID is refused ("That's your own user ID"), so Withdraw
+stays disabled until someone else is found. Not found, unavailable and failed lookups name nobody.
+The server still decides whether that person may take the place (ADR-0006). The contract tests
 ([withdrawal](../../tests/app/commit/withdrawal-contract.test.ts),
-[replacement](../../tests/app/commit/replacement-contract.test.ts)) run both list transports
-against the real route handlers.
+[replacement](../../tests/app/commit/replacement-contract.test.ts)) run both list transports,
+and the user ID lookup followed by a `DIRECT_INVITE` withdrawal, against the real route handlers.
 
 ### Player lists
 

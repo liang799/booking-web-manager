@@ -6,12 +6,21 @@ import { RedirectCalled } from "../../use-cases/support/fake-supabase-auth";
 const mocks = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
   listMine: vi.fn(),
-  displayNames: vi.fn(),
+  listInvitations: vi.fn(),
+  memberProfiles: vi.fn(),
 }));
 vi.mock("@/lib/supabase/current-user", () => ({ getCurrentUser: mocks.getCurrentUser }));
-vi.mock("@/lib/supabase/profile-names", () => ({ displayNames: mocks.displayNames }));
-vi.mock("@/use-case-config/groups", () => ({ createManageGroup: () => ({ listMine: mocks.listMine }) }));
+vi.mock("@/lib/supabase/profile-names", () => ({ memberProfiles: mocks.memberProfiles }));
+vi.mock("@/use-case-config/groups", () => ({
+  createManageGroup: () => ({ listMine: mocks.listMine, listInvitations: mocks.listInvitations }),
+}));
 vi.mock("@/app/groups/_components/group-controls", () => ({ CreateGroupForm: () => null }));
+vi.mock("@/app/users/find-player-action", () => ({ findPlayer: vi.fn() }));
+vi.mock("@/app/groups/actions", () => ({
+  invitePlayer: vi.fn(),
+  acceptGroupInvitation: vi.fn(),
+  declineGroupInvitation: vi.fn(),
+}));
 vi.mock("next/navigation", () => ({
   redirect: (path: string) => { throw new RedirectCalled(path); },
 }));
@@ -25,8 +34,12 @@ describe("UC1-06 groups overview", () => {
       invitationToken: "private-invitation-token", invitationActive: true,
       memberships: ["owner", "aisha", "marcus", "jo", "lee"].map((userId) => ({ userId })),
     }]);
-    mocks.displayNames.mockResolvedValue(new Map([
-      ["owner", "Tian Pok Neoh"], ["aisha", "Aisha Tan"], ["marcus", "Marcus Lim"], ["jo", "Jo Lee"],
+    mocks.listInvitations.mockResolvedValue([]);
+    mocks.memberProfiles.mockResolvedValue(new Map([
+      ["owner", { name: "Tian Pok Neoh", handle: "tianpok" }],
+      ["aisha", { name: "Aisha Tan", handle: "aisha_tan" }],
+      ["marcus", { name: "Marcus Lim", handle: "marcus_lim" }],
+      ["jo", { name: "Jo Lee", handle: "jo_lee" }],
     ]));
   });
 
@@ -40,9 +53,51 @@ describe("UC1-06 groups overview", () => {
     expect(html).toContain("AT");
     expect(html).toContain("+1");
     expect(mocks.listMine).toHaveBeenCalledExactlyOnceWith({ actorId: "owner" });
-    expect(mocks.displayNames).toHaveBeenCalledExactlyOnceWith(["owner", "aisha", "marcus", "jo"]);
+    expect(mocks.memberProfiles).toHaveBeenCalledExactlyOnceWith(["owner", "aisha", "marcus", "jo"]);
     expect(JSON.stringify(page)).not.toContain("private-invitation-token");
     expect(JSON.stringify(page)).not.toContain("invitationActive");
+  });
+
+  test("shows Find a player above the groups, without sending user IDs from the previews", async () => {
+    const page = await GroupsPage({ searchParams: Promise.resolve({}) });
+    const html = renderToStaticMarkup(page);
+
+    expect(html).toContain("Find a player");
+    expect(html).toContain('role="search"');
+    expect(html.indexOf("Find a player")).toBeLessThan(html.indexOf("Weekend Tennis Club"));
+    expect(JSON.stringify(page)).not.toContain("aisha_tan");
+  });
+
+  test("shows invitations by user ID with who sent them, before the search", async () => {
+    mocks.listInvitations.mockResolvedValue([{
+      groupId: "friday", groupName: "Friday Futsal", invitedBy: "dana", invitedAt: new Date("2026-10-27T04:00:00Z"),
+    }]);
+    mocks.memberProfiles.mockResolvedValue(new Map([["dana", { name: "Dana Ong", handle: "dana_ong" }]]));
+
+    const page = await GroupsPage({ searchParams: Promise.resolve({}) });
+    const html = renderToStaticMarkup(page);
+
+    expect(html).toContain("Dana Ong");
+    expect(html).toContain("@dana_ong");
+    expect(html).toContain("Friday Futsal");
+    expect(html).toContain("Sent <time");
+    expect(html.indexOf("Friday Futsal")).toBeLessThan(html.indexOf("Find a player"));
+    expect(mocks.listInvitations).toHaveBeenCalledExactlyOnceWith({ actorId: "owner" });
+    expect(mocks.memberProfiles).toHaveBeenCalledExactlyOnceWith(["owner", "aisha", "marcus", "jo", "dana"]);
+    expect(JSON.stringify(page)).not.toContain('"invitedBy"');
+  });
+
+  test("offers only active groups with their link on for inviting", async () => {
+    mocks.listMine.mockResolvedValue([
+      { groupId: "open", name: "Open", ownerId: "owner", status: "ACTIVE", invitationActive: true, memberships: [{ userId: "owner" }] },
+      { groupId: "link-off", name: "Link off", ownerId: "owner", status: "ACTIVE", invitationActive: false, memberships: [{ userId: "owner" }] },
+      { groupId: "old", name: "Old", ownerId: "owner", status: "ARCHIVED", invitationActive: false, memberships: [{ userId: "owner" }] },
+    ]);
+
+    const page = await GroupsPage({ searchParams: Promise.resolve({}) });
+
+    expect(page.props.findPlayer.props.inviteGroups).toEqual([{ groupId: "open", name: "Open" }]);
+    expect(page.props.invitations).toBeUndefined();
   });
 
   test("keeps the leave confirmation visible on the overview", async () => {
@@ -56,6 +111,6 @@ describe("UC1-06 groups overview", () => {
 
     await expect(GroupsPage({ searchParams: Promise.resolve({}) })).rejects.toEqual(new RedirectCalled("/login"));
     expect(mocks.listMine).not.toHaveBeenCalled();
-    expect(mocks.displayNames).not.toHaveBeenCalled();
+    expect(mocks.memberProfiles).not.toHaveBeenCalled();
   });
 });

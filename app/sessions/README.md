@@ -297,8 +297,10 @@ states without provider dependencies.
 
 ## Personal sessions feed
 
-`/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
-creation with `?created=1` selects Hosting and announces success. Joined always
+`/sessions` opens **I’m playing**; `?tab=hosting` opens **I’m organising**.
+The shared navigation uses these labels on Sessions and mobile Groups; URL and
+store values remain `joined` and `hosting`. Returning from creation with
+`?created=1` selects I’m organising and announces success. Joined always
 links **Manage my places** to `/sessions/joined` (UC2-05: withdraw, leave a
 waitlist, accept a replacement place), even with no joined sessions, because a
 replacement invitation can exist first. Desktop shows it in the sticky header
@@ -429,10 +431,11 @@ attendance counts, and tied timestamps across multiple page boundaries.
 
 ## UC2-03a: visibility management
 
-`GET /api/sessions/hosted` supplies management actions for every open, upcoming
+`GET /api/sessions/hosted` supplies management actions for every open, upcoming or in-progress
 session hosted by the signed-in user, ordered by start time and session ID. It
 includes full sessions; their action list omits visibility changes. Availability includes direct-invitation reservations
-through `Session.getAvailableSlots`; the UI does not calculate capacity itself.
+through `Session.getAvailableSlots`; in-progress sessions retain participant management
+while their action list omits visibility changes and cancellation. The UI does not calculate capacity itself.
 Rows display confirmed visibility with per-row saving, success and error feedback.
 The UI follows the returned HTTP actions. Existing cookie-authenticated server
 actions and bearer APIs invoke the same use cases directly.

@@ -33,7 +33,7 @@ export function registerSessionManagementApi(registry: OpenAPIRegistry): void {
     operationId: "listHostedSessions",
     tags: ["Sessions"],
     summary: "UC2-03 / UC2-06 List the booker's hosted sessions",
-    description: "Requires an active authenticated booker. Returns their OPEN, upcoming hosted sessions in start order, each with the actions the booker may take now (`set-visibility`, `preview-cancellation`), and their ended OPEN sessions that still have unverified committed participants (`awaitingAttendance`). Read-only; no money moves. Identity comes from the bearer token or, when no `Authorization` header is sent, from the Supabase login cookies sent by this site's pages.",
+    description: "Requires an active authenticated booker. Returns their OPEN, upcoming and in-progress hosted sessions in start order, each with the actions the booker may take now (`set-visibility`, `preview-cancellation`). In-progress sessions retain participant management but offer neither visibility changes nor cancellation. Also returns their ended OPEN sessions that still have unverified committed participants (`awaitingAttendance`). Read-only; no money moves. Identity comes from the bearer token or, when no `Authorization` header is sent, from the Supabase login cookies sent by this site's pages.",
     security: [{ bearerAuth: [] }, { loginCookie: [] }],
     responses: {
       200: { description: "The booker's hosted sessions and sessions awaiting attendance.", content: { "application/json": { schema: hosted } } },
