@@ -9,6 +9,10 @@ The current implementation's [domain UML class diagram](./domain-class-diagram.m
 is available as [PlantUML source](./domain-class-diagram.puml) and a
 [scalable SVG](./assets/domain-class-diagram.svg).
 
+Every diagram, including SRS and lab-report figures, is listed in
+[`docs/diagrams`](./diagrams/README.md). Add new diagrams there, with their
+editable source, and add a row to its table.
+
 [Session testing](./testing/session-testing/README.md) covers UC2-01, UC2-02
 and UC2-03a/b/c with an editable Word report, black-box cases, white-box
 control-flow diagrams and recorded execution evidence.

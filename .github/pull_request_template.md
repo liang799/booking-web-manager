@@ -21,6 +21,8 @@
       peer for any area I own
 - [ ] Required dependencies are on `main`, or the unresolved handoff and integration
       criteria are documented; source-branch imports have explicit authorization
+- [ ] If this changes behaviour shown in a diagram, the diagram and its export in
+      `docs/diagrams/` are updated and listed in its README
 - [ ] If this adds a migration, its owner and sequence/merge order are coordinated
       with Rishi
 
