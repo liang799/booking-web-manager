@@ -129,8 +129,8 @@ export const Mobile: Story = {
   play: async ({ canvas, canvasElement }) => {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
-    await expect(views.getByRole("link", { name: "Joined" })).toHaveAttribute("href", "/sessions");
-    await expect(views.getByRole("link", { name: "Hosting" })).toHaveAttribute("href", "/sessions?tab=hosting");
+    await expect(views.getByRole("link", { name: "I'm playing" })).toHaveAttribute("href", "/sessions");
+    await expect(views.getByRole("link", { name: "I'm organising" })).toHaveAttribute("href", "/sessions?tab=hosting");
     await expect(canvas.queryByRole("button", { name: "Create group" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tablist", { name: "Filter groups" })).not.toBeInTheDocument();
     await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
