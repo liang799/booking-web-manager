@@ -19,3 +19,5 @@ These images show presentation, not a live user's inbox or hosted acceptance.
 
 Interaction and accessibility checks live in
 `app/notifications/_components/notifications.stories.tsx`.
+
+`lifecycle-desktop.png` — real disposable-stack browser evidence, 30 October 2026: a committed group invitation appears through a private Broadcast hint and authenticated HTTP refresh; read metadata remains browser-local.
