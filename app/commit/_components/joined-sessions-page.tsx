@@ -4,21 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 import { loadReplacementInvitations, acceptReplacement } from "../replacement-transport";
 import { useAcceptReplacementFlow } from "../use-accept-replacement-flow";
 import { useLeaveWaitlistFlow } from "../use-leave-waitlist-flow";
+import { useReplacementSearch } from "../use-replacement-search";
 import { useWithdrawalFlow } from "../use-withdrawal-flow";
-import type { ReplacementCandidate } from "../withdrawal-ports";
 import { joinedSessionsQueryKey, replacementInvitationsQueryKey } from "../withdrawal-query-keys";
-import { leaveWaitlist, loadJoinedSessions, previewWithdrawal, withdrawFromSession } from "../withdrawal-transport";
+import {
+  findReplacementCandidate, leaveWaitlist, loadJoinedSessions, previewWithdrawal, withdrawFromSession,
+} from "../withdrawal-transport";
 import { AcceptReplacementDialog } from "./accept-replacement-dialog";
 import { JoinedSessionsView, type JoinedSessionsState } from "./joined-sessions-view";
 import { LeaveWaitlistDialog } from "./leave-waitlist-dialog";
 import { ReplacementInvitationsView, type ReplacementInvitationsState } from "./replacement-invitations-view";
 import { WithdrawalDialog } from "./withdrawal-dialog";
-
-/**
- * No API lists who a player may name as their replacement yet, so "Invite one person" stays
- * disabled with its explanation and the place can only be opened to the waitlist.
- */
-const NO_INVITE_CANDIDATES: readonly ReplacementCandidate[] = [];
 
 /**
  * UC2-05 composition root for /sessions/joined: React Query loads the player's invitations and
@@ -31,6 +27,8 @@ export function JoinedSessionsPage({ userId }: { readonly userId: string }) {
   const invitations = useQuery({ queryKey: replacementInvitationsQueryKey(userId), queryFn: loadReplacementInvitations });
 
   const withdrawal = useWithdrawalFlow({ userId, sessions: sessions.data, previewWithdrawal, withdraw: withdrawFromSession });
+  // "Invite one person" names the player found by user ID (ADR-0021).
+  const inviteSearch = useReplacementSearch({ userId, findCandidate: findReplacementCandidate, onChoose: withdrawal.chooseInvitee });
   const leaving = useLeaveWaitlistFlow({ userId, sessions: sessions.data, leaveWaitlist });
   const accepting = useAcceptReplacementFlow({ userId, invitations: invitations.data, acceptReplacement });
 
@@ -50,10 +48,10 @@ export function JoinedSessionsPage({ userId }: { readonly userId: string }) {
         <ReplacementInvitationsView state={invitationsState} onRetry={() => { void invitations.refetch(); }} onAccept={accepting.start} />
       )}
       <JoinedSessionsView state={sessionsState} onRetry={() => { void sessions.refetch(); }}
-        onWithdraw={withdrawal.start} onLeaveWaitlist={leaving.start} />
+        onWithdraw={(session) => { inviteSearch.reset(); withdrawal.start(session); }} onLeaveWaitlist={leaving.start} />
       <AcceptReplacementDialog state={accepting.state} onConfirm={accepting.confirm} onClose={accepting.close} />
-      <WithdrawalDialog state={withdrawal.state} candidates={NO_INVITE_CANDIDATES} onChooseMode={withdrawal.chooseMode}
-        onChooseInvitee={withdrawal.chooseInvitee} onConfirm={withdrawal.confirm} onRetryPreview={withdrawal.retryPreview} onClose={withdrawal.close} />
+      <WithdrawalDialog state={withdrawal.state} inviteSearch={inviteSearch.state} onSearchInvitee={inviteSearch.search}
+        onChooseMode={withdrawal.chooseMode} onConfirm={withdrawal.confirm} onRetryPreview={withdrawal.retryPreview} onClose={withdrawal.close} />
       <LeaveWaitlistDialog state={leaving.state} onConfirm={leaving.confirm} onClose={leaving.close} />
     </>
   );
