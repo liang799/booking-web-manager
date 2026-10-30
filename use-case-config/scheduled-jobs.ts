@@ -1,8 +1,8 @@
+import { createNotificationPublisher } from "./notification-publisher";
 import { randomUUID } from "node:crypto";
 import type { ScheduledJobsDependencies } from "@/app/commit/scheduled-jobs-dependencies";
 import { SessionManagementUnavailableError } from "@/app/sessions/session-management-unavailable";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
-import { createCommitmentNotifier } from "./notifications";
 import { createPostgresSchedulingQueries } from "@/lib/commit/postgres-scheduling-queries";
 import { createPostgresPoolProvider } from "@/lib/database/postgres-pool";
 import { PostgresCommitmentUnitOfWork } from "@/lib/sessions/postgres-commitment-unit-of-work";
@@ -37,19 +37,17 @@ export function createScheduledJobsDependencies(): ScheduledJobsDependencies {
     };
   }
   const getPool = createPostgresPoolProvider(settings.databaseUrl);
-  const { dueSessions, verificationReminders } = createPostgresSchedulingQueries(getPool);
+  const { dueSessions, verificationReminders } = createPostgresSchedulingQueries(getPool, createNotificationPublisher());
   const clock = { now: () => new Date() };
-  const unitOfWork = new PostgresCommitmentUnitOfWork(getPool, clock);
-  const notifier = createCommitmentNotifier(getPool);
+  const unitOfWork = new PostgresCommitmentUnitOfWork(getPool, clock, createNotificationPublisher());
   return {
     cronSecret,
     ids,
     runner: new RunScheduledSessionJobs({
       dueSessions,
       verificationReminders,
-      notifier,
-      expireReplacements: new ExpireReplacements({ unitOfWork, clock, notifier }),
-      promote: new PromoteFromWaitlist({ unitOfWork, clock, ids, notifier }),
+      expireReplacements: new ExpireReplacements({ unitOfWork, clock }),
+      promote: new PromoteFromWaitlist({ unitOfWork, clock, ids }),
       autoVerify: new AutoVerifyAttendance({ unitOfWork, clock }),
       clock,
       batchSize: SCHEDULED_JOBS_BATCH_SIZE,

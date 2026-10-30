@@ -1,8 +1,8 @@
+import { createNotificationPublisher } from "./notification-publisher";
 import { randomUUID } from "node:crypto";
 import type { CommitmentDependencies } from "@/app/commit/commitment-dependencies";
 import { SessionManagementUnavailableError } from "@/app/sessions/session-management-unavailable";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
-import { createCommitmentNotifier } from "./notifications";
 import { createPostgresPoolProvider } from "@/lib/database/postgres-pool";
 import { PostgresCommitmentUnitOfWork } from "@/lib/sessions/postgres-commitment-unit-of-work";
 import { createSupabaseIdentityAuthenticator } from "@/lib/supabase/bearer-auth";
@@ -41,16 +41,15 @@ export function createCommitmentDependencies(): CommitmentDependencies {
   const getPool = createPostgresPoolProvider(settings.databaseUrl);
   const clock = { now: () => new Date() };
   const ids = { next: randomUUID };
-  const unitOfWork = new PostgresCommitmentUnitOfWork(getPool, clock);
-  const notifier = createCommitmentNotifier(getPool);
-  const promote = new PromoteFromWaitlist({ unitOfWork, clock, ids, notifier });
+  const unitOfWork = new PostgresCommitmentUnitOfWork(getPool, clock, createNotificationPublisher());
+  const promote = new PromoteFromWaitlist({ unitOfWork, clock, ids });
   return {
     authenticate: createSupabaseIdentityAuthenticator(
       settings.supabaseUrl,
       settings.supabaseAnonKey,
     ),
     commitToSession: new CommitToSession({ unitOfWork, clock, ids }),
-    withdrawFromSession: new WithdrawFromSession({ unitOfWork, clock, promote, notifier }),
+    withdrawFromSession: new WithdrawFromSession({ unitOfWork, clock, promote }),
     acceptReplacement: new AcceptReplacement({ unitOfWork, clock, ids }),
     leaveWaitlist: new LeaveWaitlist({ unitOfWork, clock, promote }),
     verifyAttendance: new VerifyAttendance({ unitOfWork, clock }),

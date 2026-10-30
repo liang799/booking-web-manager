@@ -49,3 +49,5 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 Product decisions and remaining discussion:
 
 - [Waitlists and replacements: confirmed scope, historical options, and remaining policy questions](./discussions/waitlist-and-replacement-options.md). The waitlist and fixed either/or departure choice are confirmed; unrelated financial and rejoining proposals remain under review.
+
+- [ADR-0023: Durable notifications and browser-local read state](./adr/0023-durable-notifications-and-local-read-state.md) — atomic inbox/push persistence, 30-day retention and private Realtime invalidation after commit.

@@ -1,6 +1,6 @@
 // Web Push service worker for commitment notifications (UC2-04/05/06).
 // Shows each pushed payload and opens the app at its URL when clicked.
-// Payload: { title, body, url, kind, sessionId } from lib/commit/web-push-notifier.ts.
+// Payload: canonical notificationId/title/body/url/kind; legacy sessionId payloads remain supported.
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -15,8 +15,10 @@ self.addEventListener("push", (event) => {
   const title = typeof payload.title === "string" ? payload.title : "Booking Web Manager";
   const options = {
     body: typeof payload.body === "string" ? payload.body : "",
-    // One notification per event and session; a repeat replaces, not stacks.
-    tag: `${payload.kind ?? "update"}:${payload.sessionId ?? ""}`,
+    // A replay of one occurrence replaces itself, while distinct messages keep distinct tags.
+    tag: typeof payload.notificationId === "string" && payload.notificationId
+      ? payload.notificationId
+      : `${payload.kind ?? "update"}:${payload.sessionId ?? ""}`,
     data: { url: sameOriginPath(payload.url) },
   };
   event.waitUntil(self.registration.showNotification(title, options));

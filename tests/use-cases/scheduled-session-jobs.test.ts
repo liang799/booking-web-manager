@@ -139,7 +139,7 @@ describe("Scheduled session jobs (UC2-05, UC2-06)", () => {
 
   test("reminds each claimed booker to verify attendance", async () => {
     // Arrange
-    const { runner, notifier } = sweepScenario([], hoursAfterSessionEnd(1), {
+    const { runner, enqueued } = sweepScenario([], hoursAfterSessionEnd(1), {
       reminders: [
         { sessionId: "s1", bookerId: "booker-1" },
         { sessionId: "s2", bookerId: "booker-2" },
@@ -151,26 +151,22 @@ describe("Scheduled session jobs (UC2-05, UC2-06)", () => {
 
     // Assert
     expect(report.verificationReminders).toEqual(["s1", "s2"]);
-    expect(notifier.deliveries()).toEqual([
-      ["VERIFICATION_REMINDER", "booker-1"],
-      ["VERIFICATION_REMINDER", "booker-2"],
-    ]);
+    expect(enqueued).toEqual([{ sessionId: "s1", bookerId: "booker-1" }, { sessionId: "s2", bookerId: "booker-2" }]);
   });
 
-  test("releases claimed reminders for a retry when they cannot be handed off", async () => {
+  test("records a failed atomic reminder enqueue for the next sweep", async () => {
     // Arrange
-    const { runner, notifier, released } = sweepScenario(
+    const { runner, enqueued } = sweepScenario(
       [],
       hoursAfterSessionEnd(1),
-      { reminders: [{ sessionId: "s1", bookerId: "booker-1" }] },
+      { reminders: [{ sessionId: "s1", bookerId: "booker-1" }], failReminderClaim: true },
     );
-    notifier.failNext = true;
 
     // Act
     const report = await runner.run("run-1");
 
     // Assert
-    expect(released).toEqual(["s1"]);
+    expect(enqueued).toEqual([]);
     expect(report.verificationReminders).toEqual([]);
     expect(report.failures).toEqual([{ job: "VERIFICATION_REMINDERS" }]);
   });
@@ -266,6 +262,7 @@ function sweepScenario(
   let nextId = 0;
   const notifier = new RecordingNotifier();
   const released: string[] = [];
+  const enqueued: VerificationReminder[] = [];
   const dependencies = {
     unitOfWork,
     clock: { now: () => now },
@@ -280,12 +277,10 @@ function sweepScenario(
       },
     },
     verificationReminders: {
-      claimVerificationReminders: async () => {
+      enqueueVerificationReminders: async () => {
         if (options.failReminderClaim) throw new Error("database unavailable");
+        enqueued.push(...(options.reminders ?? []));
         return options.reminders ?? [];
-      },
-      releaseVerificationReminders: async (sessionIds) => {
-        released.push(...sessionIds);
       },
     },
     notifier,
@@ -295,5 +290,5 @@ function sweepScenario(
     clock: dependencies.clock,
     batchSize: options.batchSize ?? 50,
   });
-  return { runner, unitOfWork, notifier, released };
+  return { runner, unitOfWork, notifier, released, enqueued };
 }

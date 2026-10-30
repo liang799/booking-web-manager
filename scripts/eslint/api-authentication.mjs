@@ -6,7 +6,7 @@ const methods = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIO
 // GET sessions uses its own stage-aware authenticated discovery action. The other
 // exceptions are public metadata/readiness, a Stripe signature, or a cron secret.
 const exceptions = new Set([
-  "GET /api/sessions", "GET /api/openapi", "GET /api/health", "POST /api/webhooks/stripe", "GET /api/cron/commitments",
+  "GET /api/sessions", "GET /api/openapi", "GET /api/health", "POST /api/webhooks/stripe", "GET /api/cron/commitments", "GET /api/cron/notifications",
 ]);
 const extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"];
 const nameOf = (node) => node?.name ?? node?.value;

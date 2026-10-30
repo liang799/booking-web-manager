@@ -245,7 +245,9 @@ export class ManageGroup {
     const group = await this.#load(command.groupId);
     const unsettledLinkedSessions = await this.#deps.queries.countUnsettledLinkedSessions(command.groupId);
     const ended = group.invitations.map((entry) => notice(group, "GROUP_INVITATION_ENDED", entry.inviteeId));
+    const wasArchived = group.status === "ARCHIVED";
     group.archive({ actorId: command.actorId, unsettledLinkedSessions });
+    if (wasArchived) return;
     await this.#deps.groups.save(group, [...group.memberships.filter((entry) => entry.userId !== command.actorId).map((entry) => notice(group, "GROUP_ARCHIVED", entry.userId)), ...ended]);
   }
 

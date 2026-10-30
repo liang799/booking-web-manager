@@ -57,6 +57,15 @@ describe("group notification audiences", () => {
     return { manage, group, save, notices, rows };
   }
 
+  test("retrying an archived group sends no duplicate activity or save", async () => {
+    const { manage, group, save } = await scenario();
+    await manage.join({ userId: "alice", invitationToken: group.invitationToken });
+    await manage.archive({ actorId: "owner", groupId: group.groupId });
+    save.mockClear();
+    await manage.archive({ actorId: "owner", groupId: group.groupId });
+    expect(save).not.toHaveBeenCalled();
+  });
+
   test("acceptance reaches the inviter and owner once each, while repeated invitation and acceptance create no activity", async () => {
     const { manage, group, save, notices } = await scenario();
     await manage.join({ userId: "bob", invitationToken: group.invitationToken });

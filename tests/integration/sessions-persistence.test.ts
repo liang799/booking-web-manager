@@ -182,9 +182,10 @@ describe("UC2-02 PostgreSQL persistence", () => {
       const parsed = boundInput(booker.userId, key);
       const actual = new PostgresSessionCreationTransaction(context.pool, parsed.submission, clock);
       const failure: SessionCreationTransaction = {
-        runForBooker: (userId, work) => actual.runForBooker(userId, ({ users, sessions }) =>
+        runForBooker: (userId, work) => actual.runForBooker(userId, ({ users, sessions, notifications }) =>
           work({
             users,
+            notifications,
             sessions: {
               save: async (session) => {
                 await sessions.save(session);
@@ -406,9 +407,10 @@ describe("UC2-02 PostgreSQL persistence", () => {
     const key = randomUUID();
     const failure: SessionCreationTransaction = {
       runForBooker: (userId, work) =>
-        transaction(key).runForBooker(userId, ({ users, sessions }) =>
+        transaction(key).runForBooker(userId, ({ users, sessions, notifications }) =>
           work({
             users,
+            notifications,
             sessions: {
               save: async (session) => {
                 await sessions.save(session);

@@ -19,13 +19,7 @@ belong to use cases, not configuration callbacks.
 
 ## Notification inbox configuration
 
-`notifications.ts` assembles the recipient-scoped PostgreSQL inbox with active
-account bearer/read-only cookie authentication. Its `createCommitmentNotifier`
-is shared by commitment requests and scheduled jobs: it persists existing
-session alerts and optionally sends Web Push when VAPID settings exist. The
-scheduled sweep claims verification reminders for inbox delivery even without
-push settings; persistence failure releases the claim for retry. Apply migration
-0017 before deployment. See the [inbox guide](../app/notifications/README.md).
+`notifications.ts` assembles the recipient-scoped, read-only 30-day inbox. Transaction adapters provide `NotificationWriter` for atomic message/push-job persistence. `notification-publisher.ts` assembles the optional after-commit private HTTP Broadcast publisher with a Next `after()` scheduler; `notification-dispatch.ts` assembles the leased push worker. Browser read state remains local. Apply migrations 0020/0021 before deployment; retain the legacy read column until a separate cleanup release. See the [inbox guide](../app/notifications/README.md).
 
 ## Profile configuration
 
