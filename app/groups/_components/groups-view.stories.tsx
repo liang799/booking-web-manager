@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FindPlayerState } from "@/app/users/find-player-action";
 import { FindPlayer } from "@/app/users/_components/find-player";
+import { GroupInvitations } from "./group-invitations";
 import { GroupsView, type GroupOverview } from "./groups-view";
 
 const members = ["Marcus Lim", "Aisha Tan", "Daniel Wong", "Jo Lee"];
@@ -128,8 +129,8 @@ export const Mobile: Story = {
   play: async ({ canvas, canvasElement }) => {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
-    await expect(views.getByRole("link", { name: "Joined" })).toHaveAttribute("href", "/sessions");
-    await expect(views.getByRole("link", { name: "Hosting" })).toHaveAttribute("href", "/sessions?tab=hosting");
+    await expect(views.getByRole("link", { name: "I'm playing" })).toHaveAttribute("href", "/sessions");
+    await expect(views.getByRole("link", { name: "I'm organising" })).toHaveAttribute("href", "/sessions?tab=hosting");
     await expect(canvas.queryByRole("button", { name: "Create group" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tablist", { name: "Filter groups" })).not.toBeInTheDocument();
     await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
@@ -148,7 +149,7 @@ export const LongNamesMobile: Story = { ...LongNames, globals: { viewport: { val
 
 const foundPlayer = fn<(previous: FindPlayerState, formData: FormData) => Promise<FindPlayerState>>(async () => ({
   status: "found",
-  player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 92 },
+  player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 92, isSelf: false },
 }));
 
 /** Production passes the FindPlayer search (ADR-0021); this stand-in action always finds Marcus. */
@@ -172,4 +173,32 @@ export const WithFindPlayerMobile: Story = {
     await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
     await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
+};
+
+/** Invitations by user ID (ADR-0022) come first, then the search. */
+export const WithInvitations: Story = {
+  args: {
+    findPlayer: <FindPlayer action={foundPlayer} />,
+    invitations: (
+      <GroupInvitations
+        invitations={[{
+          groupId: "friday",
+          groupName: "Friday Futsal",
+          inviterName: "Dana Ong",
+          inviterHandle: "dana_ong",
+          invitedAt: "2026-10-27T04:00:00.000Z",
+        }]}
+        accept={fn(async () => ({}))}
+        decline={fn(async () => ({}))}
+      />
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "Invitations" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Join Friday Futsal" })).toBeVisible();
+  },
+};
+export const WithInvitationsMobile: Story = {
+  ...WithInvitations,
+  globals: { viewport: { value: "phone", isRotated: false } },
 };

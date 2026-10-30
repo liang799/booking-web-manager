@@ -2,13 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { DomainError } from "@/domain";
 import { createManageGroup } from "@/use-case-config/groups";
+import { GroupChangedError } from "@/use-cases/groups/manage-group";
 import { createClient } from "@/lib/supabase/server";
-import { groupErrorMessage, leaveGroupErrorMessage } from "./messages";
-import { groupIdSchema, groupNameSchema } from "./schemas";
+import { answerInvitationErrorMessage, groupErrorMessage, inviteErrorMessage, leaveGroupErrorMessage } from "./messages";
+import { groupIdSchema, groupNameSchema, invitePlayerSchema } from "./schemas";
 
 export interface GroupFormState {
   readonly status: "idle" | "error" | "saved";
+  readonly message?: string;
+}
+
+/** What the Invite dialog shows after sending (ADR-0022). */
+export interface InvitePlayerState {
+  readonly status: "idle" | "sent" | "error";
   readonly message?: string;
 }
 
@@ -142,4 +150,62 @@ export async function joinGroup(invitationToken: string): Promise<GroupActionRes
   }
   refresh(groupId);
   redirect(`/groups/${groupId}`);
+}
+/**
+ * ADR-0022: a member invites a player, found by user ID, to one of their groups. The
+ * player joins only by accepting on their Groups page.
+ */
+export async function invitePlayer(_previous: InvitePlayerState, formData: FormData): Promise<InvitePlayerState> {
+  const parsed = invitePlayerSchema.safeParse({ handle: formData.get("handle") ?? "", groupId: formData.get("groupId") ?? "" });
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message ?? "Check the details and try again." };
+
+  const userId = await currentUserId();
+  if (userId === null) return { status: "error", message: "Please log in again." };
+
+  try {
+    const { invitee, result } = await createManageGroup().inviteByHandle({ actorId: userId, ...parsed.data });
+    return {
+      status: "sent",
+      message: result === "INVITED"
+        ? `Invitation sent. ${invitee.displayName} will see it on their Groups page.`
+        : `${invitee.displayName} already has an invitation to this group.`,
+    };
+  } catch (error) {
+    if (!(error instanceof DomainError) && !(error instanceof GroupChangedError)) console.error("UC1-06 invite failed:", error);
+    return { status: "error", message: inviteErrorMessage(error) };
+  }
+}
+
+/** ADR-0022: the invited player joins, then opens the group. */
+export async function acceptGroupInvitation(groupId: string): Promise<GroupActionResult> {
+  const id = groupIdSchema.safeParse(groupId);
+  if (!id.success) return { error: "That invitation wasn't found." };
+
+  const userId = await currentUserId();
+  if (userId === null) return { error: "Please log in again." };
+
+  try {
+    await createManageGroup().acceptInvitation({ actorId: userId, groupId: id.data });
+  } catch (error) {
+    return { error: answerInvitationErrorMessage(error) };
+  }
+  refresh(id.data);
+  redirect(`/groups/${id.data}`);
+}
+
+/** ADR-0022: the invited player says no; the invitation disappears from their Groups page. */
+export async function declineGroupInvitation(groupId: string): Promise<GroupActionResult> {
+  const id = groupIdSchema.safeParse(groupId);
+  if (!id.success) return { error: "That invitation wasn't found." };
+
+  const userId = await currentUserId();
+  if (userId === null) return { error: "Please log in again." };
+
+  try {
+    await createManageGroup().declineInvitation({ actorId: userId, groupId: id.data });
+  } catch (error) {
+    return { error: groupErrorMessage(error) };
+  }
+  revalidatePath("/groups");
+  return {};
 }
