@@ -28,14 +28,25 @@ export class LocalNotificationReads {
       const value: unknown = JSON.parse(
         this.storage?.getItem(this.key) ?? "null",
       );
-      this.state =
+      if (
         value &&
         typeof value === "object" &&
         "read" in value &&
-        typeof value.read === "object" &&
-        value.read !== null
-          ? (value as State)
-          : { read: {} };
+        value.read &&
+        typeof value.read === "object"
+      ) {
+        this.state = {
+          read: Object.fromEntries(
+            Object.entries(value.read).filter(
+              (entry): entry is [string, string] =>
+                typeof entry[1] === "string" &&
+                Number.isFinite(Date.parse(entry[1])),
+            ),
+          ),
+          through: watermark("through" in value ? value.through : undefined),
+          visited: watermark("visited" in value ? value.visited : undefined),
+        };
+      } else this.state = { read: {} };
     } catch {
       /* Browser storage is optional. */
     }
@@ -61,20 +72,44 @@ export class LocalNotificationReads {
   }
   markAll(item?: NotificationItem) {
     if (item) {
-      this.state.through = item;
+      this.state.through = { id: item.id, createdAt: item.createdAt };
       this.state.read = {};
       this.save();
     }
   }
   visit(item?: NotificationItem) {
     if (item && newer(item, this.state.visited)) {
-      this.state.visited = item;
+      this.state.visited = { id: item.id, createdAt: item.createdAt };
       this.save();
     }
   }
   prune(cutoff: string) {
     for (const [id, time] of Object.entries(this.state.read))
-      if (time < cutoff) delete this.state.read[id];
+      if (Date.parse(time) < Date.parse(cutoff)) delete this.state.read[id];
+    if (
+      this.state.through &&
+      Date.parse(this.state.through.createdAt) < Date.parse(cutoff)
+    )
+      delete this.state.through;
+    if (
+      this.state.visited &&
+      Date.parse(this.state.visited.createdAt) < Date.parse(cutoff)
+    )
+      delete this.state.visited;
     this.save();
   }
+}
+
+function watermark(value: unknown): Watermark | undefined {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("id" in value) ||
+    typeof value.id !== "string" ||
+    !("createdAt" in value) ||
+    typeof value.createdAt !== "string" ||
+    !Number.isFinite(Date.parse(value.createdAt))
+  )
+    return undefined;
+  return { id: value.id, createdAt: new Date(value.createdAt).toISOString() };
 }

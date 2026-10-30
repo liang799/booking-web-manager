@@ -46,7 +46,13 @@ export function startNotificationUpdates(options: {
       unsubscribe = undefined;
       return;
     }
-    if (!unsubscribe) unsubscribe = options.subscribe(invalidate);
+    if (!unsubscribe) {
+      try {
+        unsubscribe = options.subscribe(invalidate);
+      } catch {
+        /* HTTP reconciliation remains available if subscription setup fails. */
+      }
+    }
     invalidate();
   }
   const interval = setInterval(resume, 120_000);

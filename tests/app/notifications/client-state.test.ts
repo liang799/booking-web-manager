@@ -89,3 +89,26 @@ test("clearing local storage resets read styling on the next storage event", () 
   reads.reload();
   expect(reads.isRead(item(2))).toBe(false);
 });
+test("watermarks store only IDs and timestamps, normalize legacy message copies, and expire", () => {
+  const values = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => values.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      values.set(k, v);
+    },
+  };
+  const reads = new LocalNotificationReads("one", storage);
+  reads.visit(item(2));
+  reads.markAll(item(2));
+  expect(values.get(reads.key)).not.toContain("Notice 2");
+  expect(values.get(reads.key)).not.toContain("/groups");
+  storage.setItem(
+    reads.key,
+    JSON.stringify({ read: {}, visited: item(2), through: item(2) }),
+  );
+  reads.reload();
+  reads.prune("2026-10-01T00:00:00.000Z");
+  expect(values.get(reads.key)).not.toContain("Notice 2");
+  reads.prune("2026-11-01T00:00:00.000Z");
+  expect(JSON.parse(values.get(reads.key)!)).toEqual({ read: {} });
+});

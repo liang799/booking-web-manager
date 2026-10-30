@@ -51,3 +51,19 @@ test("coalesces hints, retains an in-flight hint, and polls only visible online 
   finish();
   stop();
 });
+test("subscription setup failure keeps HTTP recovery available", async () => {
+  vi.useFakeTimers();
+  const surfaces = surface();
+  const refresh = vi.fn(async () => {});
+  const stop = startNotificationUpdates({
+    ...surfaces,
+    online: () => true,
+    subscribe: () => {
+      throw Error("Realtime unavailable");
+    },
+    refresh,
+  });
+  await vi.advanceTimersByTimeAsync(250);
+  expect(refresh).toHaveBeenCalledOnce();
+  stop();
+});
