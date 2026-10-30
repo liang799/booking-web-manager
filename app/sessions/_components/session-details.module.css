@@ -11,15 +11,15 @@
 .summary { display: flex; align-items: baseline; justify-content: space-between; gap: 16px 24px; padding-bottom: 28px; margin-bottom: 32px; border-bottom: 1px solid hsl(var(--border)); }
 .date, .time { font-size: 18px; line-height: 1.5; }
 .date { font-size: 13px; font-weight: 400; letter-spacing: .14em; line-height: 1.6; text-transform: uppercase; }
-.time { flex: none; text-align: right; font-size: 14px; line-height: 1.6; letter-spacing: .04em; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.time { flex: none; text-align: right; font-size: 14px; font-weight: 300; line-height: 1.6; letter-spacing: .04em; color: hsl(var(--muted-foreground)); white-space: nowrap; }
 .managementRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-left: 1px solid hsl(var(--muted-foreground) / .7); min-height: 98px; margin-bottom: 52px; padding: 0 0 0 38px; }
 .managementRow > div:first-child { min-width: 0; }
 .managementRow h3 { margin-bottom: 10px; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 500; line-height: 1.4; letter-spacing: .13em; text-transform: uppercase; }
 .count { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .count strong { color: hsl(var(--foreground)); font-family: Georgia, "Times New Roman", serif; font-size: 42px; font-weight: 400; letter-spacing: -.8px; line-height: 1.2; }
-.count > span { color: hsl(var(--muted-foreground)); font-size: 15px; letter-spacing: -.01em; }
+.count > span { color: hsl(var(--muted-foreground)); font-size: 15px; font-weight: 300; letter-spacing: -.01em; }
 .manageButton { min-width: 208px; min-height: 44px; flex-shrink: 0; justify-content: space-between; padding: 0 20px; border-radius: 5px; font-size: 16px; font-weight: 400; text-transform: capitalize; }
-.visibilityDescription { max-width: 280px; color: hsl(var(--muted-foreground)); font-size: 16px; line-height: 1.5; letter-spacing: -.01em; }
+.visibilityDescription { max-width: 280px; color: hsl(var(--muted-foreground)); font-size: 16px; font-weight: 300; line-height: 1.5; letter-spacing: -.01em; }
 .segment { display: flex; flex-shrink: 0; min-width: 208px; padding: 4px; border-radius: 7px; background: hsl(var(--muted)); }
 .segment button { flex: 1; min-width: 76px; min-height: 44px; padding: 8px 12px; border-radius: 5px; color: hsl(var(--muted-foreground)); font-size: 14px; }
 .segment button[aria-pressed="true"] { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: 0 1px 3px hsl(var(--foreground) / .12); }
