@@ -8,6 +8,8 @@ UC1-06 Manage Group: creation, invitation links, membership management.
 | --- | --- | --- |
 | Create, rename, archive, link on/off | Owner | Only the owner; an archived group can't change. |
 | Join | Anyone with a current link | Joining twice is harmless. |
+| Invite by user ID | Any member, while the link is on | The player joins only by accepting. See [ADR-0022](../../docs/adr/0022-invite-players-to-groups-by-user-id.md). |
+| Accept or decline an invitation | The invited player | Accepting twice is harmless; turning the link off or archiving ends invitations. |
 | Remove a member | Owner | The owner can't be removed. |
 | Leave | Any member except the owner | The owner archives the group instead. Leaving works like a removal: rejoin only with a current link; joined sessions are unaffected. See [ADR-0017](../../docs/adr/0017-members-leave-regular-groups.md). |
 
@@ -23,6 +25,16 @@ see [ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md). The overvie
 passes it to `GroupsView` as a slot, like the create form. On desktop it sits
 between the header and the filters; on mobile only its search row shows, under
 the Joined / Hosting / Groups navigation, with the heading kept for screen readers.
+
+**Invite** appears beside a found player who isn't you (`GroupFindPlayer` wraps
+the search with `InvitePlayer`). Its dialog lists your ACTIVE groups whose link
+is on and sends `invitePlayer` with the player's user ID and the chosen group.
+Invitations to you appear first on the page (`GroupInvitations`), with who sent
+them; **Join** runs `acceptGroupInvitation` and opens the group, **Decline** runs
+`declineGroupInvitation`. Invitations are stored by migration 0017; see
+[ADR-0022](../../docs/adr/0022-invite-players-to-groups-by-user-id.md). Storybook:
+**Groups / InvitePlayer**, **Groups / Invitations** and **Groups / Overview**
+(`WithInvitations`).
 
 ## Groups overview
 

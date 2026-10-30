@@ -21,6 +21,10 @@ export {
   type FundHoldDetails,
 } from "./sessions/fund-hold";
 export {
+  GroupInvitation,
+  type GroupInvitationDetails,
+} from "./groups/group-invitation";
+export {
   GroupMembership,
   type GroupMembershipDetails,
 } from "./groups/group-membership";
@@ -48,6 +52,7 @@ export {
 export {
   RegularGroup,
   type GroupJoinResult,
+  type GroupInviteResult,
   type GroupCreation,
   type RegularGroupDetails,
 } from "./groups/regular-group";

@@ -43,7 +43,8 @@ export interface WithdrawalFlow {
   readonly state: WithdrawalState;
   readonly start: (session: JoinedSessionItem) => void;
   readonly chooseMode: (mode: Replacement["mode"]) => void;
-  readonly chooseInvitee: (inviteeId: string) => void;
+  /** null clears the invitee, e.g. while another person is being looked up. */
+  readonly chooseInvitee: (inviteeId: string | null) => void;
   readonly confirm: () => void;
   readonly retryPreview: () => void;
   readonly close: () => void;

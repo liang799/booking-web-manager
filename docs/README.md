@@ -17,7 +17,7 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 
 - [ADR-0001: Use-case-driven development](./adr/0001-use-case-driven-development.md) — session factory output superseded by ADR-0011.
 - [ADR-0002: Constructor-based domain hydration](./adr/0002-constructor-based-domain-hydration.md).
-- [ADR-0003: Aggregate roots and boundaries](./adr/0003-aggregate-roots-and-boundaries.md) — current role routing is defined by ADR-0009; members leaving a group is defined by ADR-0017.
+- [ADR-0003: Aggregate roots and boundaries](./adr/0003-aggregate-roots-and-boundaries.md) — current role routing is defined by ADR-0009; members leaving a group is defined by ADR-0017; invitations by user ID by ADR-0022.
 - [ADR-0004: Participant join and session admission](./adr/0004-participant-join-and-session-admission.md) — admission routing updated by ADR-0007 and ADR-0009.
 - [ADR-0004: Append-only double-entry ledger](./adr/0004-append-only-double-entry-ledger.md) — independently recorded with the same historical number; the filename distinguishes this storage decision from participant admission.
 - [ADR-0005: Domain unit-test structure](./adr/0005-domain-unit-test-structure.md) — phase-comment requirement superseded by ADR-0018.
@@ -38,6 +38,7 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0019: Domain result tables follow the lecture format](./adr/0019-domain-result-table-layout.md) — individual input columns, Expected Result and Test Result, with source links on the first input value and execution counts above each table.
 - [ADR-0020: Payout request idempotency belongs to application transactions](./adr/0020-payout-request-idempotency.md) — supersedes only payout request-key ownership in ADRs 0003, 0008 and 0009; terminal receipts prevent payment redispatch.
 - [ADR-0021: User IDs for finding players](./adr/0021-user-ids-for-finding-players.md) — a unique, changeable, Telegram-style user ID on every active account: chosen at sign-up, generated from the name for existing accounts, editable in Edit profile, freed on deletion, and found only by exact signed-in lookup.
+- [ADR-0022: Invite players to groups by user ID](./adr/0022-invite-players-to-groups-by-user-id.md) — any member invites a found player while the group's link is on; only the player accepts or declines; turning the link off or archiving ends invitations.
 
 Product decisions and remaining discussion:
 

@@ -210,10 +210,10 @@ export const EntranceDoesNotReplayAfterHosting: Story = {
     const firstTimeline = await canvas.findByRole("region", { name: "Joined session timeline" });
     await waitFor(() => expect(firstTimeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm organising" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await expect(await canvas.findByRole("region", { name: "Joined session timeline" })).toHaveAttribute("data-timeline-entrance", "complete");
   },
 };
@@ -248,10 +248,10 @@ export const AccountAndTabCaches: Story = {
     await expect(secondDialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await closeSessionDetails();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm organising" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
     await expect(new URL(window.location.href).searchParams.get("tab")).toBe("hosting");
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
@@ -277,9 +277,9 @@ export const TimelineSelectionSurvivesTabChanges: Story = {
     await userEvent.click(dialog.getByRole("tab", { name: "Participants (3)" }));
     await closeSessionDetails();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm organising" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await expect(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const restoredDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
@@ -531,8 +531,8 @@ export const CreatedSessionOpensHosting: Story = {
     await expect(canvas.getByRole("status")).toHaveTextContent("Your session was created successfully.");
     await expect(requests[0]).toMatchObject({ tab: "hosting", cursor: null });
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await expect(navigation.getByRole("button", { name: "Hosting" })).toHaveAttribute("aria-current", "page");
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await expect(navigation.getByRole("button", { name: "I'm organising" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await expect(new URL(window.location.href).searchParams.get("tab")).toBe("joined");
     await expect(new URL(window.location.href).searchParams.has("created")).toBe(false);
   },

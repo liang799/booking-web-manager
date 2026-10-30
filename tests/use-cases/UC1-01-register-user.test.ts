@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { headers } from "next/headers";
 import { HOME_PATH } from "@/app/(auth)/redirect-path";
 import { registerUser } from "@/app/(auth)/register/actions";
+import { RegisteredEmailsUnavailableError } from "@/app/(auth)/register/registered-emails";
 import { passwordStrength } from "@/app/(auth)/register/password-strength";
 import { registerSchema } from "@/app/(auth)/schemas";
 import { createClient } from "@/lib/supabase/server";
@@ -15,6 +16,10 @@ vi.mock("next/headers", () => ({ headers: vi.fn() }));
 const handles = vi.hoisted(() => ({ availability: vi.fn() }));
 vi.mock("@/app/users/user-handle-server-dependencies", () => ({
   getUserHandleDependencies: async () => ({ checkUserHandle: { availability: handles.availability } }),
+}));
+const emails = vi.hoisted(() => ({ hasAccount: vi.fn() }));
+vi.mock("@/app/(auth)/register/registered-emails-server", () => ({
+  getRegisteredEmails: async () => ({ hasAccount: emails.hasAccount }),
 }));
 vi.mock("next/navigation", async () => {
   const { RedirectCalled } = await import("./support/fake-supabase-auth");
@@ -31,6 +36,7 @@ describe("UC1-01 Register User", () => {
     vi.mocked(createClient).mockReset();
     vi.mocked(headers).mockResolvedValue(new Headers({ origin: "https://booking-web-manager.vercel.app" }) as never);
     handles.availability.mockReset().mockResolvedValue("AVAILABLE");
+    emails.hasAccount.mockReset().mockResolvedValue(false);
   });
 
   test("registers a new user with a unique email", async () => {
@@ -84,6 +90,48 @@ describe("UC1-01 Register User", () => {
 
     // Assert
     expect(result.emailTaken).toBe(true);
+  });
+
+  test("rejects an email whose account isn't confirmed yet, before asking Supabase", async () => {
+    // Arrange: Supabase would resend that account's confirmation email and answer like a new sign-up.
+    emails.hasAccount.mockResolvedValue(true);
+    const supabase = fakeSupabase({
+      signUp: { data: { user: { id: "existing", identities: [{}] }, session: null }, error: null },
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as never);
+
+    // Act
+    const result = await registerUser({ status: "idle" }, formDataOf(validRegistration({ email: " Marcus@Example.com " })));
+
+    // Assert
+    expect(result).toEqual({
+      status: "error",
+      message: "An account with this email already exists.",
+      emailTaken: true,
+    });
+    expect(emails.hasAccount).toHaveBeenCalledExactlyOnceWith("marcus@example.com");
+    expect(handles.availability).not.toHaveBeenCalled();
+    expect(supabase.auth.signUp).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ["the server has no database settings", new RegisteredEmailsUnavailableError(), false],
+    ["the email check fails", new Error("database unreachable"), true],
+  ])("still signs up when %s, leaving confirmed duplicates to Supabase", async (_case, failure, logged) => {
+    // Arrange
+    emails.hasAccount.mockRejectedValue(failure);
+    const logError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const supabase = fakeSupabase({
+      signUp: { data: { user: { id: "marcus", identities: [{}] }, session: {} }, error: null },
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as never);
+
+    // Act & Assert
+    await expect(registerUser({ status: "idle" }, formDataOf(validRegistration()))).rejects.toMatchObject({ path: HOME_PATH });
+    expect(supabase.auth.signUp).toHaveBeenCalledOnce();
+    expect(logError).toHaveBeenCalledTimes(logged ? 1 : 0);
+    expect(JSON.stringify(logError.mock.calls)).not.toContain("marcus@example.com");
+    logError.mockRestore();
   });
 
   test("asks the user to confirm their email when sign-up gives no session yet", async () => {

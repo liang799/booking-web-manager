@@ -297,8 +297,10 @@ states without provider dependencies.
 
 ## Personal sessions feed
 
-`/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
-creation with `?created=1` selects Hosting and announces success. Joined always
+`/sessions` opens **I’m playing**; `?tab=hosting` opens **I’m organising**.
+The shared navigation uses these labels on Sessions and mobile Groups; URL and
+store values remain `joined` and `hosting`. Returning from creation with
+`?created=1` selects I’m organising and announces success. Joined always
 links **Manage my places** to `/sessions/joined` (UC2-05: withdraw, leave a
 waitlist, accept a replacement place), even with no joined sessions, because a
 replacement invitation can exist first. Desktop shows it in the sticky header
