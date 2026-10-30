@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
 import type { GroupActionResult } from "../actions";
@@ -18,6 +18,7 @@ export interface GroupInvitationView {
 
 interface GroupInvitationsProps {
   readonly invitations: readonly GroupInvitationView[];
+  readonly focusedGroupId?: string;
   /** The acceptGroupInvitation and declineGroupInvitation server actions. */
   readonly accept: (groupId: string) => Promise<GroupActionResult>;
   readonly decline: (groupId: string) => Promise<GroupActionResult>;
@@ -26,13 +27,15 @@ interface GroupInvitationsProps {
 const sentOn = new Intl.DateTimeFormat("en-SG", { day: "numeric", month: "short", timeZone: "Asia/Singapore" });
 
 /** ADR-0022: invitations by user ID waiting for the signed-in player's answer. */
-export function GroupInvitations({ invitations, accept, decline }: GroupInvitationsProps) {
+export function GroupInvitations({ invitations, accept, decline, focusedGroupId }: GroupInvitationsProps) {
+  useEffect(() => { if (focusedGroupId) document.getElementById(`group-invitation-${focusedGroupId}`)?.focus(); }, [focusedGroupId]);
   return (
     <section aria-labelledby="group-invitations-heading" className="space-y-3">
       <h2 id="group-invitations-heading" className="text-xl font-semibold">Invitations</h2>
+      {focusedGroupId && !invitations.some(item => item.groupId === focusedGroupId) && <p role="status">This invitation is no longer available.</p>}
       <ul className="divide-y rounded-lg border bg-card">
         {invitations.map((invitation) => (
-          <InvitationRow key={invitation.groupId} invitation={invitation} accept={accept} decline={decline} />
+          <InvitationRow key={invitation.groupId} invitation={invitation} highlighted={invitation.groupId === focusedGroupId} accept={accept} decline={decline} />
         ))}
       </ul>
     </section>
@@ -41,10 +44,12 @@ export function GroupInvitations({ invitations, accept, decline }: GroupInvitati
 
 function InvitationRow({
   invitation,
+  highlighted,
   accept,
   decline,
 }: {
   readonly invitation: GroupInvitationView;
+  readonly highlighted?: boolean;
   readonly accept: GroupInvitationsProps["accept"];
   readonly decline: GroupInvitationsProps["decline"];
 }) {
@@ -63,7 +68,7 @@ function InvitationRow({
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 p-4">
+    <li id={`group-invitation-${invitation.groupId}`} tabIndex={-1} className={`flex flex-wrap items-center gap-3 p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${highlighted ? "ring-2 ring-ring" : ""}`}>
       <div className="min-w-0 flex-1 basis-56">
         <p className="break-words">
           <span className="font-semibold">{invitation.inviterName}</span>

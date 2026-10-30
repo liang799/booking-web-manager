@@ -1,3 +1,5 @@
+"use client";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
@@ -15,6 +17,7 @@ export type ReplacementInvitationsState =
 
 export interface ReplacementInvitationsViewProps {
   readonly state: ReplacementInvitationsState;
+  readonly focusedSessionId?: string;
   readonly onRetry: () => void;
   /** Opens the (single) accept dialog for this invitation. */
   readonly onAccept: (invitation: ReplacementInvitation) => void;
@@ -25,7 +28,8 @@ export interface ReplacementInvitationsViewProps {
  * Presentational: it shows the invitations it is given and reports which one the player wants
  * to accept. Each shows the share that accepting would hold.
  */
-export function ReplacementInvitationsView({ state, onRetry, onAccept }: ReplacementInvitationsViewProps) {
+export function ReplacementInvitationsView({ state, onRetry, onAccept, focusedSessionId }: ReplacementInvitationsViewProps) {
+  useEffect(() => { if (focusedSessionId && state.status === "ready") document.getElementById(`replacement-invitation-${focusedSessionId}`)?.focus(); }, [focusedSessionId,state]);
   return (
     <section aria-labelledby="invitations-heading" className="mx-auto w-full max-w-3xl px-6 pb-10 pt-6 md:px-8 md:pt-10">
       <header className="mb-6">
@@ -35,6 +39,7 @@ export function ReplacementInvitationsView({ state, onRetry, onAccept }: Replace
         </p>
       </header>
 
+      {state.status === "ready" && focusedSessionId && !state.invitations.some(item=>item.sessionId===focusedSessionId) && <p role="status">This invitation is no longer available.</p>}
       {state.status === "loading" && <LoadingSpinner label="Loading your invitations…" />}
       {state.status === "error" && (
         <div className="space-y-3">
@@ -48,7 +53,7 @@ export function ReplacementInvitationsView({ state, onRetry, onAccept }: Replace
       {state.status === "ready" && state.invitations.length > 0 && (
         <ul aria-label="Replacement invitations" className="space-y-3">
           {state.invitations.map((invitation) => (
-            <li key={invitation.sessionId} className="rounded-lg border bg-card p-4 md:p-6">
+            <li key={invitation.sessionId} id={`replacement-invitation-${invitation.sessionId}`} tabIndex={-1} className={`rounded-lg border bg-card p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring md:p-6 ${focusedSessionId === invitation.sessionId ? "ring-2 ring-ring" : ""}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h2 className="break-words text-lg font-semibold">{invitation.venueName}</h2>

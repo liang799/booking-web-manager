@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { NotificationProvider } from "@/app/notifications/provider";
 import { AppShell } from "@/components/ui/app-shell";
 import { loadReliabilityScore } from "@/app/profile/reliability";
 import { getCurrentUser } from "@/lib/supabase/current-user";
@@ -12,13 +13,13 @@ export async function SignedInShell({ children, mobileVariant = "standard" }: { 
   const reliabilityScore = await loadReliabilityScore(user.id);
 
   return (
-    <AppShell
+    <NotificationProvider userId={user.id}><AppShell
       user={{ name: user.displayName, reliabilityScore }}
       logoutAction={logOut}
       mobileVariant={mobileVariant}
     >
       <SignedInVerificationPrompt user={user} />
       {children}
-    </AppShell>
+    </AppShell></NotificationProvider>
   );
 }

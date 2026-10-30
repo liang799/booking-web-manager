@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { loadReplacementInvitations, acceptReplacement } from "../replacement-transport";
 import { useAcceptReplacementFlow } from "../use-accept-replacement-flow";
@@ -23,6 +24,7 @@ import { WithdrawalDialog } from "./withdrawal-dialog";
  * display it. Unresolved requests are kept in this browser's storage for the user.
  */
 export function JoinedSessionsPage({ userId }: { readonly userId: string }) {
+  const focusedSessionId = useSearchParams().get("invitation") ?? undefined;
   const sessions = useQuery({ queryKey: joinedSessionsQueryKey(userId), queryFn: loadJoinedSessions });
   const invitations = useQuery({ queryKey: replacementInvitationsQueryKey(userId), queryFn: loadReplacementInvitations });
 
@@ -39,13 +41,13 @@ export function JoinedSessionsPage({ userId }: { readonly userId: string }) {
     : invitations.isError ? { status: "error", message: invitations.error.message }
     : { status: "ready", invitations: invitations.data };
   // Most players have no invitations: show the section only when there is one, or it failed to load.
-  const showInvitations = invitationsState.status === "error"
+  const showInvitations = Boolean(focusedSessionId) || invitationsState.status === "error"
     || (invitationsState.status === "ready" && invitationsState.invitations.length > 0);
 
   return (
     <>
       {showInvitations && (
-        <ReplacementInvitationsView state={invitationsState} onRetry={() => { void invitations.refetch(); }} onAccept={accepting.start} />
+        <ReplacementInvitationsView focusedSessionId={focusedSessionId} state={invitationsState} onRetry={() => { void invitations.refetch(); }} onAccept={accepting.start} />
       )}
       <JoinedSessionsView state={sessionsState} onRetry={() => { void sessions.refetch(); }}
         onWithdraw={(session) => { inviteSearch.reset(); withdrawal.start(session); }} onLeaveWaitlist={leaving.start} />

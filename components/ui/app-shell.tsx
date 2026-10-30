@@ -12,7 +12,7 @@ import { MobileNavigation } from "@/components/ui/mobile-navigation";
 import { toFivePoint } from "@/components/ui/reliability-badge";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
-import { useUnreadNotificationCount } from "@/app/notifications/use-unread-count";
+import { useNewNotifications } from "@/app/notifications/provider";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", icon: "home" },
@@ -50,13 +50,13 @@ function SidebarContents({
   logoutAction,
   onNavigate,
   searchHref,
-  unreadCount,
+  hasNewNotifications,
 }: {
   readonly user: ShellUser;
   readonly logoutAction?: () => Promise<void>;
   readonly onNavigate?: () => void;
   readonly searchHref: string;
-  readonly unreadCount: number | null;
+  readonly hasNewNotifications: boolean;
 }) {
   const pathname = usePathname();
 
@@ -90,7 +90,7 @@ function SidebarContents({
             >
               <NavigationIcon name={link.icon} active={active} />
               {link.label}
-              {link.href === "/notifications" && unreadCount !== null && unreadCount > 0 && <span aria-label={`${unreadCount} unread`} className="ml-auto rounded-full bg-foreground px-1.5 py-0.5 text-[10px] font-semibold text-background">{unreadCount > 99 ? "99+" : unreadCount}</span>}
+              {link.href === "/notifications" && hasNewNotifications && <span aria-label="New notifications" className="ml-auto rounded-full bg-foreground px-1.5 py-0.5 text-[10px] font-semibold text-background">New</span>}
             </Link>
           );
         })}
@@ -131,7 +131,7 @@ function SidebarContents({
 /** Frames signed-in content with a desktop sidebar, mobile navigation and a direct notification shortcut. */
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
   const pathname = usePathname();
-  const unreadCount = useUnreadNotificationCount(pathname);
+  const hasNewNotifications = useNewNotifications();
   const notificationsLayout = pathname === "/notifications";
   const walletLayout = pathname === "/wallet" || pathname.startsWith("/wallet/");
   const searchParams = useSearchParams();
@@ -146,7 +146,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
     <div className="flex min-h-screen bg-card md:bg-background">
       {/* Desktop sidebar (hidden below 768px) */}
       <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
-        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} unreadCount={unreadCount} />
+        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} hasNewNotifications={hasNewNotifications} />
       </aside>
 
       <div className="relative isolate flex min-w-0 flex-1 flex-col">
@@ -199,11 +199,11 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
               <Button asChild variant="ghost" size="icon" className="relative h-11 w-11 rounded-md [&_svg]:size-5">
                 <Link
                   href="/notifications"
-                  aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+                  aria-label={hasNewNotifications ? "Notifications, new updates" : "Notifications"}
                   aria-current={notificationsLayout ? "page" : undefined}
                 >
                   <NavigationIcon name="notifications" active={notificationsLayout} />
-                  {unreadCount !== null && unreadCount > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden />}
+                  {hasNewNotifications && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden />}
                 </Link>
               </Button>
             </div>
