@@ -155,7 +155,8 @@ test("hosting separates upcoming and past sessions, blocks full ones, and enforc
     await expect(past.getByRole("listitem").filter({ hasText: `${prefix} past` })).toBeVisible();
     await expect(upcoming.getByRole("listitem").filter({ hasText: `${prefix} past` })).toHaveCount(0);
     await openHostedSession(page, `${prefix} full`);
-    await expect(page.getByRole("dialog").getByRole("button", { name: "Change visibility to public", exact: true })).toHaveCount(0);
+    // A full session still displays both segments, but must not allow becoming public.
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Change visibility to public", exact: true })).toBeDisabled();
 
     expect((await request.patch(`/api/sessions/${sessionId}/visibility`, { data: { visibility: "PUBLIC" } })).status()).toBe(401);
     expect((await patch(request, other, sessionId, "PUBLIC")).status()).toBe(403);
