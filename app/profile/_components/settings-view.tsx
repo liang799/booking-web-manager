@@ -1,4 +1,4 @@
-import { CalendarDays, CircleHelp, FileText, Pencil, Plus, ReceiptText, ShieldCheck, Target, Trash2, UserRound } from "lucide-react";
+import { CalendarDays, CircleHelp, FileText, LogOut, Pencil, Plus, ReceiptText, ShieldCheck, Target, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -17,6 +17,7 @@ interface SettingsViewProps {
     readonly preferredRegions: readonly string[];
   };
   readonly notifications?: ReactNode;
+  readonly logoutAction?: () => Promise<void>;
 }
 
 const panelClassName = "overflow-hidden rounded-lg border bg-card shadow-[0_2px_3px_hsl(var(--foreground)/0.02),0_6px_14px_-6px_hsl(var(--foreground)/0.1)]";
@@ -46,7 +47,7 @@ function PreferenceLink({ icon, title, values }: {
 }
 
 /** Settings presentation; authentication and browser notification state stay with their owners. */
-export function SettingsView({ user, notifications }: SettingsViewProps) {
+export function SettingsView({ user, notifications, logoutAction }: SettingsViewProps) {
   return (
     <div className="mx-auto max-w-[1280px] px-6 pb-10 pt-2 md:px-8 md:pb-12 md:pt-10 lg:px-12 lg:pt-12">
       <header className="mb-7 hidden items-start justify-between gap-6 md:flex lg:mb-8">
@@ -132,6 +133,14 @@ export function SettingsView({ user, notifications }: SettingsViewProps) {
             tone="danger"
           />
         </div>
+        {logoutAction && (
+          <form action={logoutAction} className="mt-4">
+            <Button type="submit" variant="outline" className="min-h-11 w-full gap-2">
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Log out
+            </Button>
+          </form>
+        )}
       </section>
     </div>
   );

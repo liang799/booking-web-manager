@@ -96,16 +96,12 @@ export const Overnight: Story = {
     await expect(canvas.getByText(/1 Jan 2036/, { selector: "time" })).toBeVisible();
   },
 };
-export const AccountMenu: Story = {
-  play: async ({ canvas, canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const trigger = canvas.getByRole("button", { name: "Open account menu" });
-    await userEvent.click(trigger);
-    await expect(page.getByRole("dialog", { name: "Your account" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(page.queryByRole("dialog")).not.toBeInTheDocument());
-    await waitFor(() => expect(trigger).toHaveFocus());
+export const NotificationsShortcut: Story = {
+  play: async ({ canvas }) => {
+    const notifications = canvas.getByRole("link", { name: /^Notifications/ });
+    await expect(notifications).toBeVisible();
+    await expect(notifications).toHaveAttribute("href", "/notifications");
+    await expect(canvas.queryByRole("button", { name: "Open account menu" })).not.toBeInTheDocument();
   },
 };
 export const Dark: Story = { globals: { theme: "dark" } };

@@ -5,6 +5,11 @@ the existing AppShell and theme tokens, a desktop sidebar link and a mobile
 bell. The page groups dates in Asia/Singapore and supports category/unread
 filters, individual read state, mark all read, refresh and older-page loading.
 
+On mobile, the filled bell replaces the former account-menu button to the right
+of Search. Account details and logout are available from the Settings tab;
+Groups remains available from Sessions. There is one notification shortcut in
+the mobile header.
+
 ## Events and persistence
 
 The existing UC2-04/05/06 commitment alerts are saved by `InboxNotifier` after
@@ -99,3 +104,12 @@ Full Supabase migration-sequence acceptance remains for CI, and hosted migration
 or deployment was not performed. The PR remains a draft while the existing
 Groups failures block required repository checks; independent owner reviews
 and Rishi's merge coordination are still required.
+
+### Mobile shortcut update — 30 October 2026
+
+Replaced the account shortcut with the bell and moved the existing logout action
+to Settings. All 48 relevant Chromium stories passed across AppShell, mobile
+Home, Settings and Notifications, including keyboard access, 44px touch targets,
+the notification destination and the Settings logout action. The full unit run
+still reports 3,286 passed and the same two Groups failures; typecheck and lint
+retain only the previously recorded Groups diagnostics.

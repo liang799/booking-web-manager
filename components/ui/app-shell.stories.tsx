@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { AppShell } from "./app-shell";
 import { BookingLogo } from "./booking-logo";
 import { PageHeader } from "./page-header";
@@ -17,7 +17,7 @@ const meta = {
           "Booking. sidebar with icon navigation, account details and logout. A softly faded court image sits behind the page introduction. " +
           "Below that, it shows a Booking. header, decorative sport photo and floating Home / Sessions / Wallet / Settings navigation. " +
           "Only the active mobile destination shows its label; the other icons retain accessible names. Groups belongs to the Sessions area " +
-          "and remains reachable from the account sheet. The account button opens that accessible sheet with account details, settings and logout. " +
+          "and remains reachable from its Groups tab. The mobile header pairs Search with a direct Notifications button; account details and logout are available in Settings. " +
           "The current page is highlighted and marked `aria-current=\"page\"`. Every navigation icon uses the same 20px size and 1.8px stroke. " +
           "The selected icon plays a short, single animation when its route becomes active or its page mounts; reduced-motion preferences disable that animation. " +
           "Mobile links and controls have 44px touch targets. Choose another route story to preview its arrival animation, or change the " +
@@ -240,7 +240,13 @@ export const PhoneSearchPreservesOrigin: Story = {
     await expect(destination.searchParams.get("returnTo")).toBe("/?sport=Tennis&region=East");
     await expectNavigationIcon(search);
     await expect(search.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-    await expect(canvas.getByRole("button", { name: "Open account menu" })).toBeVisible();
+    const notifications = canvas.getByRole("link", { name: /^Notifications/ });
+    await expect(notifications).toHaveAttribute("href", "/notifications");
+    await expect(notifications).toBeVisible();
+    await expectNavigationIcon(notifications);
+    await expect(notifications.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await expect(notifications.getBoundingClientRect().left).toBeGreaterThan(search.getBoundingClientRect().left);
+    await expect(canvas.queryByRole("button", { name: "Open account menu" })).not.toBeInTheDocument();
   },
 };
 
@@ -312,74 +318,17 @@ export const PhoneDark: Story = {
   globals: { theme: "dark", viewport: { value: "phone", isRotated: false } },
 };
 
-/** Account settings is available in the sheet and choosing it closes the sheet. */
-export const PhoneAccountClosesAfterChoosingSettings: Story = {
-  globals: { viewport: { value: "phone", isRotated: false } },
-  play: async ({ canvas, step }) => {
-    const menuButton = canvas.getByRole("button", { name: "Open account menu" });
-    await expect(menuButton).toBeVisible();
-
-    await step("Open the account sheet", async () => {
-      await userEvent.click(menuButton);
-      const menu = await screen.findByRole("dialog", { name: "Your account" });
-      await expect(menu).toBeVisible();
-      await expect(within(menu).getByText("Marcus Lim")).toBeVisible();
-      await expect(within(menu).getByText("Reliability 4.8")).toBeVisible();
-    });
-
-    await step("Choose account settings: the sheet closes", async () => {
-      const menu = screen.getByRole("dialog", { name: "Your account" });
-      await userEvent.click(within(menu).getByRole("link", { name: "Account settings" }));
-      await waitFor(() => expect(screen.queryByRole("dialog", { name: "Your account" })).not.toBeInTheDocument());
-    });
-  },
-};
-
-export const PhoneAccountGroups: Story = {
+/** The former account shortcut opens Notifications directly. */
+export const PhoneNotifications: Story = {
   ...PhoneHome,
+  parameters: { nextjs: { navigation: { pathname: "/notifications" } } },
   play: async ({ canvas }) => {
-    await userEvent.click(canvas.getByRole("button", { name: "Open account menu" }));
-    const menu = await screen.findByRole("dialog", { name: "Your account" });
-    const groups = within(menu).getByRole("link", { name: "My groups" });
-    await expect(groups).toHaveAttribute("href", "/groups");
-    await expect(groups.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-    await userEvent.click(groups);
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Your account" })).not.toBeInTheDocument());
-  },
-};
-
-/** Escape and Close restore keyboard focus to the account trigger. */
-export const PhoneAccountDismissalRestoresFocus: Story = {
-  globals: { viewport: { value: "phone", isRotated: false } },
-  play: async ({ canvas }) => {
-    const menuButton = canvas.getByRole("button", { name: "Open account menu" });
-    await userEvent.click(menuButton);
-    await screen.findByRole("dialog", { name: "Your account" });
-
-    await userEvent.keyboard("{Escape}");
-
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Your account" })).not.toBeInTheDocument());
-    await waitFor(() => expect(menuButton).toHaveFocus());
-
-    await userEvent.click(menuButton);
-    const menu = await screen.findByRole("dialog", { name: "Your account" });
-    await userEvent.click(within(menu).getByRole("button", { name: "Close" }));
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Your account" })).not.toBeInTheDocument());
-    await waitFor(() => expect(menuButton).toHaveFocus());
-  },
-};
-
-export const PhoneAccountLogout: Story = {
-  globals: { viewport: { value: "phone", isRotated: false } },
-  args: { logoutAction: fn().mockResolvedValue(undefined) },
-  play: async ({ canvas, args }) => {
-    await userEvent.click(canvas.getByRole("button", { name: "Open account menu" }));
-    const menu = await screen.findByRole("dialog", { name: "Your account" });
-    const logoutButton = within(menu).getByRole("button", { name: "Log out" });
-    await expect(logoutButton).toBeVisible();
-    await expect(logoutButton.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-    await userEvent.click(logoutButton);
-    await expect(args.logoutAction).toHaveBeenCalledOnce();
-    await userEvent.keyboard("{Escape}");
+    const notifications = canvas.getByRole("link", { name: /^Notifications/ });
+    await expect(notifications).toHaveAttribute("href", "/notifications");
+    await expect(notifications).toHaveAttribute("aria-current", "page");
+    await expectNavigationIcon(notifications);
+    notifications.focus();
+    await expect(notifications).toHaveFocus();
+    await expect(canvas.queryByRole("button", { name: "Open account menu" })).not.toBeInTheDocument();
   },
 };
