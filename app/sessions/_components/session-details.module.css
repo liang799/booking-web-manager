@@ -5,7 +5,7 @@
 .eyebrow { margin: 0 44px 30px 0; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; }
 .titleRow { min-width: 0; }
 .title { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 50px; line-height: 1.15; font-weight: 400; letter-spacing: -.025em; text-transform: capitalize; }
-.subtitle { margin-top: 8px !important; color: hsl(var(--muted-foreground)); font-size: 16px; line-height: 1.5; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.subtitle { margin-top: 8px !important; color: hsl(var(--muted-foreground)); font-size: 16px; font-weight: 300; line-height: 1.5; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .subtitle a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .date { flex: 1; }
 .summary { display: flex; align-items: baseline; justify-content: space-between; gap: 16px 24px; padding-bottom: 28px; margin-bottom: 32px; border-bottom: 1px solid hsl(var(--border)); }
