@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  JOINED_SESSIONS_LOAD_MESSAGE, JOINED_SESSIONS_URL, leaveWaitlist, loadJoinedSessions, previewWithdrawal, UNCONFIRMED_LEAVE_MESSAGE,
-  UNCONFIRMED_WITHDRAWAL_MESSAGE, WITHDRAWAL_ERROR_MESSAGES, withdrawalPreviewUrl, withdrawFromSession,
+  FIND_REPLACEMENT_ERROR_MESSAGES, FIND_REPLACEMENT_FAILED_MESSAGE, findReplacementCandidate, JOINED_SESSIONS_LOAD_MESSAGE, JOINED_SESSIONS_URL,
+  leaveWaitlist, loadJoinedSessions, previewWithdrawal, UNCONFIRMED_LEAVE_MESSAGE, UNCONFIRMED_WITHDRAWAL_MESSAGE, userLookupUrl,
+  WITHDRAWAL_ERROR_MESSAGES, withdrawalPreviewUrl, withdrawFromSession,
 } from "@/app/commit/withdrawal-transport";
 import { createClient } from "@/lib/supabase/client";
 
@@ -168,6 +169,68 @@ describe("UC2-05 withdrawal transport", () => {
 
       // Act & Assert
       await expect(loadJoinedSessions()).rejects.toThrow(JOINED_SESSIONS_LOAD_MESSAGE);
+    });
+  });
+
+  describe("finding the person to invite by user ID (ADR-0021)", () => {
+    const priya = { userId: "55555555-5555-4555-8555-555555555555", handle: "priya_lim", displayName: "Priya Lim" };
+
+    test("looks up the exact user ID as the signed-in player and maps the found player", async () => {
+      // Arrange
+      fetcher.mockResolvedValueOnce(Response.json({ user: priya }));
+
+      // Act
+      const result = await findReplacementCandidate("priya_lim");
+
+      // Assert
+      expect(result).toEqual({ status: "found", candidate: priya });
+      const [url, init] = fetcher.mock.calls[0]!;
+      expect(url).toBe("/api/users/priya_lim");
+      expect(init).toMatchObject({ method: "GET", cache: "no-store", headers: { Authorization: "Bearer player-token" } });
+    });
+
+    test("reports nobody holding the user ID as not found", async () => {
+      // Arrange
+      fetcher.mockResolvedValueOnce(Response.json({ error: { code: "NOT_FOUND", message: "No player has this user ID" } }, { status: 404 }));
+
+      // Act & Assert
+      expect(await findReplacementCandidate("nobody_here")).toEqual({ status: "not-found" });
+    });
+
+    test.each([
+      ["lookup unavailable", 503, "USER_IDS_UNAVAILABLE", FIND_REPLACEMENT_ERROR_MESSAGES.USER_IDS_UNAVAILABLE],
+      ["a malformed user ID", 400, "INVALID_INPUT", FIND_REPLACEMENT_ERROR_MESSAGES.INVALID_INPUT],
+      ["a signed-out player", 401, "UNAUTHENTICATED", WITHDRAWAL_ERROR_MESSAGES.UNAUTHENTICATED],
+      ["a server failure", 500, "INTERNAL_ERROR", FIND_REPLACEMENT_FAILED_MESSAGE],
+    ])("explains %s", async (_case, status, code, message) => {
+      // Arrange
+      fetcher.mockResolvedValueOnce(Response.json({ error: { code, message: "server text" } }, { status }));
+
+      // Act & Assert
+      expect(await findReplacementCandidate("priya_lim")).toEqual({ status: "error", message });
+    });
+
+    test.each([
+      ["no player", {}],
+      ["an ID that isn't a UUID", { user: { ...priya, userId: "priya" } }],
+    ])("never names someone from a reply with %s", async (_case, body) => {
+      // Arrange
+      fetcher.mockResolvedValueOnce(Response.json(body));
+
+      // Act & Assert
+      expect(await findReplacementCandidate("priya_lim")).toEqual({ status: "error", message: FIND_REPLACEMENT_FAILED_MESSAGE });
+    });
+
+    test("reports a network failure without naming anyone", async () => {
+      // Arrange
+      fetcher.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+      // Act & Assert
+      expect(await findReplacementCandidate("priya_lim")).toEqual({ status: "error", message: FIND_REPLACEMENT_FAILED_MESSAGE });
+    });
+
+    test("encodes the user ID in the path", () => {
+      expect(userLookupUrl("a/b")).toBe("/api/users/a%2Fb");
     });
   });
 });

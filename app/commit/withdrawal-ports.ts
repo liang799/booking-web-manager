@@ -42,11 +42,20 @@ export type Replacement =
   | { readonly mode: "OPEN_SLOT" }
   | { readonly mode: "DIRECT_INVITE"; readonly inviteeId: string };
 
-/** Someone the player may name as their replacement. */
+/** Someone the player may name as their replacement, found by their user ID (ADR-0021). */
 export interface ReplacementCandidate {
   readonly userId: string;
+  /** Their user ID without "@". */
+  readonly handle: string;
   readonly displayName: string;
 }
+
+/** Finds the active player holding exactly this user ID, to name as the replacement. */
+export type FindReplacementCandidate = (handle: string) => Promise<
+  | { readonly status: "found"; readonly candidate: ReplacementCandidate }
+  | { readonly status: "not-found" }
+  | { readonly status: "error"; readonly message: string }
+>;
 
 /** A failed action. `unconfirmed`: it may or may not have happened; retry with the same request. */
 export interface ActionError {
