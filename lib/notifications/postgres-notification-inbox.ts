@@ -27,7 +27,7 @@ export class PostgresNotificationInbox implements NotificationInbox {
       `with cutoff as (select statement_timestamp()-interval '30 days' as value),
        actor as (select user_id as id from profiles where user_id=$1 and account_status='ACTIVE'),
        page as (
-         select n.* from notification_inbox n join actor on actor.id=n.recipient_id
+         select n.id,n.category,n.title,n.body,n.destination,n.created_at from notification_inbox n join actor on actor.id=n.recipient_id
          where ($2='all' or n.category=$2) and n.created_at>=(select value from cutoff)
            and ($3::timestamptz is null or (n.created_at,n.id)<($3::timestamptz,$4::uuid))
          order by n.created_at desc,n.id desc limit $5
