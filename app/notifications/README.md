@@ -8,6 +8,8 @@ Signed-in users receive group and booking activity through a 30-day inbox. The a
 
 After commit, a deferred HTTP publisher sends an empty `notifications_changed` Broadcast to `user:<userId>:notifications`. Private-channel policies restrict receiving to the active recipient and deny client publishing. The shared browser provider treats messages as hints and reads authoritative data from `GET /api/notifications`. Direct browser access to the inbox stays revoked. Existing public discovery channels retain their behavior.
 
+Broadcast requests contain at most 100 unique recipient hints. All chunks share a two-second deadline; a failed chunk does not prevent later chunks from being attempted within that deadline. HTTP reconciliation recovers signals that could not be sent.
+
 A missed Broadcast cannot lose a saved message. The client reconciles after subscription establishment, reconnection, focus and visible/online resume; a two-minute foreground HTTP poll also repairs missed events. Events coalesce over 250 ms with a one-second refresh floor. Catch-up follows pages until cached results overlap, preserving every intervening message after long disconnects. Every response supplies `retentionCutoff` to prune older cached messages.
 
 The push worker leases up to 100 jobs for two minutes, runs for at most 45 seconds and sends outside transactions. Delivery is at-least-once; stable notification IDs provide browser tags. Retries stop at 24 hours or an earlier action deadline. Relevance, account and subscription generation are rechecked. Completed, expired and terminal jobs are deleted. Permission/configuration is optional and never prevents inbox persistence.

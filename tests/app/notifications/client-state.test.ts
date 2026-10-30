@@ -44,6 +44,50 @@ test("retention cutoff removes cached tail messages even when the first fresh pa
   );
   expect(result.items.map((x) => x.id)).toEqual(["id-3", "id-2"]);
 });
+
+test("recovery reaches the end without overlap and replaces the stale cache", async () => {
+  const fresh = Array.from({ length: 65 }, (_, index) => item(65 - index));
+  const previous = page([item(100), item(99)], true);
+  const original = structuredClone(previous);
+  const cursors: InboxPage["nextCursor"][] = [];
+
+  const result = await reconcileNotificationPages(previous, async (before) => {
+    cursors.push(before);
+    const start = before ? fresh.findIndex((entry) => entry.id === before.id) + 1 : 0;
+    return page(fresh.slice(start, start + 30), start + 30 < fresh.length);
+  });
+
+  expect(cursors).toEqual([null, page(fresh.slice(0, 30), true).nextCursor, page(fresh.slice(30, 60), true).nextCursor]);
+  expect(result.items).toEqual(fresh);
+  expect(result.nextCursor).toBeNull();
+  expect(previous).toEqual(original);
+});
+
+test("an entirely expired cache is replaced by the fresh page with its continuation intact", async () => {
+  const expired = { ...item(100), createdAt: "2026-09-01T00:00:00Z" };
+  const previous = page([expired], true);
+  const fresh = page([item(3), item(2)], true);
+  const cursors: InboxPage["nextCursor"][] = [];
+
+  const result = await reconcileNotificationPages(previous, async (before) => {
+    cursors.push(before);
+    return fresh;
+  });
+
+  expect(cursors).toEqual([null]);
+  expect(result).toEqual(fresh);
+  expect(result.nextCursor).not.toEqual(previous.nextCursor);
+  expect(previous.items).toEqual([expired]);
+});
+
+test("an empty authoritative inbox clears cached items and their old continuation", async () => {
+  const previous = page([item(2)], true);
+  const result = await reconcileNotificationPages(previous, async () => page([]));
+
+  expect(result.items).toEqual([]);
+  expect(result.nextCursor).toBeNull();
+  expect(previous.items).toEqual([item(2)]);
+});
 test("local read state is per account and receipt does not mark notifications read", () => {
   const values = new Map<string, string>();
   const storage = {
