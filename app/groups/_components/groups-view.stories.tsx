@@ -4,6 +4,9 @@ import { AppShell } from "@/components/ui/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { FindPlayerState } from "@/app/users/find-player-action";
+import { FindPlayer } from "@/app/users/_components/find-player";
+import { GroupInvitations } from "./group-invitations";
 import { GroupsView, type GroupOverview } from "./groups-view";
 
 const members = ["Marcus Lim", "Aisha Tan", "Daniel Wong", "Jo Lee"];
@@ -126,8 +129,8 @@ export const Mobile: Story = {
   play: async ({ canvas, canvasElement }) => {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
     await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
-    await expect(views.getByRole("link", { name: "Joined" })).toHaveAttribute("href", "/sessions");
-    await expect(views.getByRole("link", { name: "Hosting" })).toHaveAttribute("href", "/sessions?tab=hosting");
+    await expect(views.getByRole("link", { name: "I'm playing" })).toHaveAttribute("href", "/sessions");
+    await expect(views.getByRole("link", { name: "I'm organising" })).toHaveAttribute("href", "/sessions?tab=hosting");
     await expect(canvas.queryByRole("button", { name: "Create group" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tablist", { name: "Filter groups" })).not.toBeInTheDocument();
     await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
@@ -143,3 +146,59 @@ export const LongNames: Story = {
   args: { groups: [{ ...groups[0], name: "Weekend tennis players from the North Spine residences club", ownerName: "Alexandria Wei Ling Tan", memberCount: 1234 }] },
 };
 export const LongNamesMobile: Story = { ...LongNames, globals: { viewport: { value: "phone", isRotated: false } } };
+
+const foundPlayer = fn<(previous: FindPlayerState, formData: FormData) => Promise<FindPlayerState>>(async () => ({
+  status: "found",
+  player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 92, isSelf: false },
+}));
+
+/** Production passes the FindPlayer search (ADR-0021); this stand-in action always finds Marcus. */
+export const WithFindPlayer: Story = {
+  args: { findPlayer: <FindPlayer action={foundPlayer} /> },
+  play: async ({ canvas }) => {
+    const search = canvas.getByRole("search", { name: "Find a player" });
+    await expect(canvas.getByRole("heading", { name: "Find a player" })).toBeVisible();
+    await expect(canvas.getByText("Search by their exact user ID.")).toBeVisible();
+    await userEvent.type(within(search).getByRole("textbox", { name: "User ID" }), "marcus_lim");
+    await userEvent.click(within(search).getByRole("button", { name: "Find" }));
+    await expect(await canvas.findByText("@marcus_lim")).toBeVisible();
+    await expect(canvas.getByRole("tab", { name: "All" })).toBeVisible();
+  },
+};
+export const WithFindPlayerMobile: Story = {
+  ...WithFindPlayer,
+  globals: { viewport: { value: "phone", isRotated: false } },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.getByRole("search", { name: "Find a player" })).toBeVisible();
+    await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
+    await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+/** Invitations by user ID (ADR-0022) come first, then the search. */
+export const WithInvitations: Story = {
+  args: {
+    findPlayer: <FindPlayer action={foundPlayer} />,
+    invitations: (
+      <GroupInvitations
+        invitations={[{
+          groupId: "friday",
+          groupName: "Friday Futsal",
+          inviterName: "Dana Ong",
+          inviterHandle: "dana_ong",
+          invitedAt: "2026-10-27T04:00:00.000Z",
+        }]}
+        accept={fn(async () => ({}))}
+        decline={fn(async () => ({}))}
+      />
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "Invitations" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Join Friday Futsal" })).toBeVisible();
+  },
+};
+export const WithInvitationsMobile: Story = {
+  ...WithInvitations,
+  globals: { viewport: { value: "phone", isRotated: false } },
+};

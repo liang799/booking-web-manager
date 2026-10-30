@@ -75,6 +75,7 @@ export class ExpireReplacements {
         kind: "FORFEITURE_DUE" as const,
         recipientId: entry.userId,
         sessionId: result.sessionId,
+        occurrenceKey: key,
       })),
     );
     return result;

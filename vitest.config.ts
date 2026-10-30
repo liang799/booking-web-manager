@@ -37,6 +37,7 @@ export default defineConfig({
         // makes tests fail with "Failed to fetch dynamically imported module"). Add new packages here.
         optimizeDeps: {
           include: [
+            "@supabase/supabase-js",
             "@radix-ui/react-checkbox",
             "@radix-ui/react-dialog",
             "@radix-ui/react-label",

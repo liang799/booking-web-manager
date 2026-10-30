@@ -32,9 +32,24 @@ describe("findPlayer", () => {
     const result = await search("@Marcus_Lim");
 
     // Assert
-    expect(result).toEqual({ status: "found", player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 96 } });
+    expect(result).toEqual({
+      status: "found",
+      player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 96, isSelf: false },
+    });
     expect(mocks.forHandle).toHaveBeenCalledExactlyOnceWith("marcus_lim");
     expect(mocks.reliability).toHaveBeenCalledExactlyOnceWith(MARCUS.userId);
+  });
+
+  test("tells the searcher when the user ID is their own, so nobody is offered to invite", async () => {
+    // Arrange
+    mocks.getUser.mockResolvedValue({ data: { user: { id: MARCUS.userId } } });
+
+    // Act
+    const result = await search("marcus_lim");
+
+    // Assert
+    expect(result).toMatchObject({ status: "found", player: { handle: "marcus_lim", isSelf: true } });
+    expect(JSON.stringify(result)).not.toContain(MARCUS.userId);
   });
 
   test("passes on an unavailable score as null", async () => {

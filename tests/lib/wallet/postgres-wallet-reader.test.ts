@@ -5,7 +5,7 @@ import { PostgresWalletReader } from "@/lib/wallet/postgres-wallet-reader";
 
 const createdAt = new Date("2026-10-17T03:00:00Z");
 const hold = { hold_id: "hold-a", session_id: "session-a", held_cents: "350",
-  original_cents: "500", created_at: createdAt, venue_name: "Sports Hall", sport: "Badminton", start_at: createdAt };
+  original_cents: "500", created_at: createdAt, venue_name: "Sports Hall", sport: "Badminton", start_at: createdAt, booker_id: "booker-a" };
 const ledgerEntry = {
   entry_id: "entry-a", kind: "LOCK", amount_cents: "1250", occurred_at: createdAt,
   idempotency_key: "lock-a", external_reference: null, wallet_id: "wallet-a",
@@ -109,15 +109,16 @@ describe("Postgres wallet reads", () => {
     const { reader, query } = setup([hold]);
     const result = await reader.listActiveHolds("wallet-a");
     expect(query).toHaveBeenCalledWith(expect.stringContaining("where h.wallet_id = $1 and h.held_cents > 0"), ["wallet-a"]);
-    expect(result[0]).toMatchObject({ holdId: "hold-a", sessionId: "session-a", venueName: "Sports Hall", createdAt });
+    expect(query.mock.calls[0]?.[0]).toContain("s.booker_id");
+    expect(result[0]).toMatchObject({ holdId: "hold-a", sessionId: "session-a", venueName: "Sports Hall", createdAt, bookerId: "booker-a" });
     expect(result[0]!.heldAmount.toCents()).toBe(350);
     expect(result[0]!.originalAmount.toCents()).toBe(500);
   });
 
   test("retains a hold when joined session details are absent", async () => {
-    const { reader } = setup([{ ...hold, venue_name: null, sport: null, start_at: null }]);
+    const { reader } = setup([{ ...hold, venue_name: null, sport: null, start_at: null, booker_id: null }]);
     expect((await reader.listActiveHolds("wallet-a"))[0]).toMatchObject({
-      holdId: "hold-a", venueName: undefined, sport: undefined, startAt: undefined,
+      holdId: "hold-a", venueName: undefined, sport: undefined, startAt: undefined, bookerId: undefined,
     });
   });
 
@@ -131,6 +132,7 @@ describe("Postgres wallet reads", () => {
   test.each([
     ["hold_id", null],
     ["session_id", ""],
+    ["booker_id", 123],
     ["created_at", new Date("invalid")],
     ["created_at", null],
     ["venue_name", 123],

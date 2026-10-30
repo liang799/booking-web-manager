@@ -8,13 +8,19 @@ import { userHandleSchema } from "./schemas";
 import { UserHandlesUnavailableError } from "./user-handle-dependencies";
 import { getUserHandleDependencies } from "./user-handle-server-dependencies";
 
-/** What the search shows: a found player, nobody, or a message. No internal user UUID leaves the server. */
+/** A found player as the browser sees them: no internal user UUID leaves the server. */
+export interface FoundPlayer {
+  readonly handle: string;
+  readonly displayName: string;
+  readonly reliabilityScore: number | null;
+  /** The searcher found their own user ID, so there is nobody to invite (ADR-0022). */
+  readonly isSelf: boolean;
+}
+
+/** What the search shows: a found player, nobody, or a message. */
 export type FindPlayerState =
   | { readonly status: "idle" }
-  | {
-      readonly status: "found";
-      readonly player: { readonly handle: string; readonly displayName: string; readonly reliabilityScore: number | null };
-    }
+  | { readonly status: "found"; readonly player: FoundPlayer }
   | { readonly status: "not-found"; readonly handle: string }
   | { readonly status: "error"; readonly message: string };
 
@@ -38,7 +44,10 @@ export async function findPlayer(_previous: FindPlayerState, formData: FormData)
   try {
     const found = await (await getUserHandleDependencies()).findUserByHandle.forHandle(handle);
     const reliabilityScore = await loadReliabilityScore(found.userId);
-    return { status: "found", player: { handle: found.handle, displayName: found.displayName, reliabilityScore } };
+    return {
+      status: "found",
+      player: { handle: found.handle, displayName: found.displayName, reliabilityScore, isSelf: found.userId === user.id },
+    };
   } catch (error) {
     if (error instanceof DomainError && error.code === "NOT_FOUND") return { status: "not-found", handle };
     if (error instanceof UserHandlesUnavailableError) return { status: "error", message: "Player search isn't available right now." };

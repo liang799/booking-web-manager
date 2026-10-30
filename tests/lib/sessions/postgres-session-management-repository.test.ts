@@ -60,17 +60,17 @@ test.each([167, 334, 666])("preserves the saved %i-cent custom price and histori
   const rows = [sessionRow({ booking_share_cents: String(price) })];
   const participants = [participantRow()];
   const session = await scenario(rows, participants).repository.get("s");
-  const upcoming = await scenario(rows, participants).repository.listUpcoming("booker", now);
+  const upcoming = await scenario(rows, participants).repository.listNotEndedOpen("booker", now);
   for (const loaded of [session, upcoming[0]]) {
     expect(loaded?.bookingShare.toCents()).toBe(price);
     expect(loaded?.participantList.participations[0]?.hold?.amount.toCents()).toBe(333);
   }
 });
 
-test("lists only the owner's upcoming open sessions, including full sessions, without update locks", async () => {
+test("lists the owner's upcoming and in-progress open sessions until their end time, including full sessions", async () => {
   const { query, repository } = scenario();
-  await repository.listUpcoming("booker", now);
-  expect(query.mock.calls[0]?.[0]).toContain("booker_id = $1 and status = 'OPEN' and start_at > $2");
+  await repository.listNotEndedOpen("booker", now);
+  expect(query.mock.calls[0]?.[0]).toContain("booker_id = $1 and status = 'OPEN' and end_at > $2");
   expect(query.mock.calls[0]?.[0]).not.toMatch(/for update|visibility =|count\(/i);
   expect(query.mock.calls[0]?.[1]).toEqual(["booker", now]);
 });

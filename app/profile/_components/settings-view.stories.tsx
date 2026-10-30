@@ -54,10 +54,12 @@ const meta = {
   )],
   argTypes: {
     notifications: { control: false },
+    logoutAction: { control: false },
   },
   args: {
     user: exampleUser,
     notifications: <NotificationsFixture />,
+    logoutAction: fn().mockResolvedValue(undefined),
   },
 } satisfies Meta<typeof SettingsView>;
 
@@ -109,7 +111,7 @@ export const Desktop: Story = {
 
 export const Phone: Story = {
   globals: { viewport: { value: "phone", isRotated: false } },
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas, canvasElement, args }) => {
     const main = canvas.getByRole("main");
     const page = within(main);
     await expect(page.getByRole("heading", { name: "Marcus Lim" })).toBeVisible();
@@ -119,6 +121,11 @@ export const Phone: Story = {
     await expect(navigation.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
     await expectSettingsLinks(main);
     await expectNoHorizontalOverflow(canvasElement);
+    const logout = page.getByRole("button", { name: "Log out" });
+    await expect(logout).toBeVisible();
+    await expect(logout.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await userEvent.click(logout);
+    await expect(args.logoutAction).toHaveBeenCalledOnce();
   },
 };
 

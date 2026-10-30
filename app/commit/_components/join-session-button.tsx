@@ -28,7 +28,7 @@ const singaporeStart = new Intl.DateTimeFormat("en-SG", {
  * even if the dialog is closed and reopened, so a retry can never hold the share twice. A new
  * key is made only after a confirmed outcome or an explicit rejection.
  */
-export function JoinSessionButton({ session, joinSession = defaultJoinSession, loginHref = "/login?next=%2Fdiscover", emailHref = "/profile/email", roomToken }: {
+export function JoinSessionButton({ session, joinSession = defaultJoinSession, loginHref = "/login?next=%2Fdiscover", emailHref = "/profile/email", roomToken, triggerLabel = "Join" }: {
   readonly session: JoinableSession;
   /** Injected in stories and tests; production calls POST /api/sessions/commit. */
   readonly joinSession?: JoinSession;
@@ -36,6 +36,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
   /** Keeps contextual previews reachable after adding the email required for admission. */
   readonly emailHref?: string;
   readonly roomToken?: string;
+  readonly triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -73,7 +74,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
       <Dialog open={open} onOpenChange={(next) => { if (!pending) { if (next) openDialog(); else setOpen(false); } }}>
         <DialogTrigger asChild>
           <Button type="button" className="min-h-11" aria-label={`Join ${session.sport} session at ${session.venueName}`}>
-            Join
+            {triggerLabel}
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">

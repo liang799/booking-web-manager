@@ -82,6 +82,16 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
     return sessionId;
   }
 
+  test("identifies holds for sessions the wallet owner booked", async () => {
+    const fixture = await cancellationFixture(context, 1);
+    const participant = fixture.participants[0]!;
+    expect((await summary(participant.userId)).activeHolds).toMatchObject([{ isBooker: false }]);
+
+    await context.pool.query("update sessions set booker_id = $1 where session_id = $2", [participant.userId, fixture.sessionId]);
+
+    expect((await summary(participant.userId)).activeHolds).toMatchObject([{ isBooker: true }]);
+  });
+
   async function saveAttempt(userId: string, sessionId: string, amountCents: number) {
     const attempt = PayoutAttempt.create({
       payoutId: randomUUID(), sessionId,

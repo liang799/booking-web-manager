@@ -1,12 +1,12 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { initials } from "@/components/ui/initials";
 import { Input } from "@/components/ui/input";
 import { ReliabilityBadge } from "@/components/ui/reliability-badge";
-import type { FindPlayerState } from "../find-player-action";
+import type { FindPlayerState, FoundPlayer } from "../find-player-action";
 import { normalizeUserHandle, userHandleProblem } from "../schemas";
 
 const initialState: FindPlayerState = { status: "idle" };
@@ -14,10 +14,12 @@ const initialState: FindPlayerState = { status: "idle" };
 interface FindPlayerProps {
   /** The findPlayer server action; Storybook passes a stand-in. */
   readonly action: (previous: FindPlayerState, formData: FormData) => Promise<FindPlayerState>;
+  /** Shown at the right of a found player, e.g. Invite (ADR-0022); never for the searcher themselves. */
+  readonly playerAction?: (player: FoundPlayer) => ReactNode;
 }
 
 /** Search for one player by exact user ID (ADR-0021) and show their name, @id and reliability. */
-export function FindPlayer({ action }: FindPlayerProps) {
+export function FindPlayer({ action, playerAction }: FindPlayerProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [, startTransition] = useTransition();
   const [problem, setProblem] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export function FindPlayer({ action }: FindPlayerProps) {
           <p className="text-sm text-muted-foreground">No player has the user ID @{state.handle}.</p>
         )}
         {problem === null && state.status === "found" && (
-          <div className="flex items-center gap-4 rounded-lg border bg-card p-4">
+          <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-lg text-white" aria-hidden="true">
               {initials(state.player.displayName)}
             </span>
@@ -82,6 +84,9 @@ export function FindPlayer({ action }: FindPlayerProps) {
                 <ReliabilityBadge score={state.player.reliabilityScore} className="mt-2" />
               )}
             </div>
+            {state.player.isSelf
+              ? <p className="text-sm text-muted-foreground">This is you.</p>
+              : playerAction?.(state.player)}
           </div>
         )}
       </div>
