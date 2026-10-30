@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Money } from "@/components/ui/money";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { WalletTransactionsPage } from "../wallet-transport";
 import { mobileActivityDate, tableDateTime, transactionDetails } from "./wallet-activity";
 import { WalletMoney } from "./wallet-money";
@@ -19,7 +20,7 @@ import type { WalletViewProps } from "./wallet-view";
 import styles from "./wallet-view.module.css";
 
 type Transaction = WalletTransactionsPage["items"][number];
-type Props = Pick<WalletViewProps, "history" | "loadingMore" | "moreError" | "onLoadMore"> & { readonly error?: ReactNode };
+type Props = Pick<WalletViewProps, "history" | "loadingMore" | "moreError" | "onLoadMore"> & { readonly error?: ReactNode; readonly holds: ReactNode; readonly holdsControls: ReactNode };
 const emptyTransactions: Transaction[] = [];
 const PAGE_SIZE = 8;
 
@@ -56,7 +57,8 @@ const columns: ColumnDef<Transaction>[] = [
 ];
 
 /** One React Query history, presented as a paginated table or an infinite mobile list. */
-export function WalletTransactions({ history, loadingMore, moreError, onLoadMore, error }: Props) {
+export function WalletTransactions({ history, loadingMore, moreError, onLoadMore, error, holds, holdsControls }: Props) {
+  const [section, setSection] = useState("transactions");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -142,19 +144,22 @@ export function WalletTransactions({ history, loadingMore, moreError, onLoadMore
   const visiblePages = table.getPageOptions().filter((page) => Math.abs(page - pagination.pageIndex) <= 2);
 
   return (
+    <Tabs value={section} onValueChange={setSection} asChild>
     <section id="wallet-transactions" aria-label="Transactions" className={styles.transactions}>
-      <div className={styles.activityHeader}>
+      <div className={styles.activityHeader} data-section={section}>
         <h2 className={styles.mobileInline}>Recent activity</h2>
         <nav className={styles.sectionNav} aria-label="Wallet sections">
-          <a href="#wallet-transactions" className={styles.currentSection}>All transactions</a>
-          <a href="#wallet-holds">Active holds</a>
+          <TabsList aria-label="Wallet activity" className={styles.sectionTabs}>
+            <TabsTrigger value="transactions">All transactions</TabsTrigger>
+            <TabsTrigger value="holds">Active holds</TabsTrigger>
+          </TabsList>
           <Link href="/payouts">Payouts</Link>
         </nav>
         {history.status === "ready" && data.length > 0 && <>
           <Button variant="ghost" className={styles.filterToggle} aria-expanded={filtersOpen} aria-controls="wallet-filters" onClick={() => setFiltersOpen((open) => !open)}>
             See all<ChevronRight aria-hidden="true" />
           </Button>
-          <div id="wallet-filters" className={styles.filters} data-open={filtersOpen}>
+          <div id="wallet-filters" className={`${styles.filters} ${styles.transactionFilters}`} data-open={filtersOpen}>
             <div className={styles.search}>
               <Search size={16} aria-hidden="true" />
               <Input aria-label="Search transactions" placeholder="Search transactions…" value={search} onChange={(event) => changeSearch(event.target.value)} />
@@ -169,7 +174,11 @@ export function WalletTransactions({ history, loadingMore, moreError, onLoadMore
             </Select>
           </div>
         </>}
+        {holdsControls}
       </div>
+      {/* Keep history mounted so switching sections preserves filters and pagination.
+          CSS keeps mobile activity visible when resizing from the desktop holds tab. */}
+      <TabsContent value="transactions" forceMount className={styles.transactionPanel}>
       {history.status === "loading" && <LoadingSpinner label="Loading transactions…" />}
       {history.status === "error" && error}
       {history.status === "ready" && (data.length === 0
@@ -234,6 +243,9 @@ export function WalletTransactions({ history, loadingMore, moreError, onLoadMore
             <Button variant="outline" className={styles.desktopRetry} disabled={loadingMore} onClick={onLoadMore}>Retry loading transactions</Button>
           </div>}
         </>)}
+      </TabsContent>
+      <TabsContent value="holds" className={styles.holdsPanel}>{holds}</TabsContent>
     </section>
+    </Tabs>
   );
 }

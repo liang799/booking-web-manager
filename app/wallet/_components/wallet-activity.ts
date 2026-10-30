@@ -1,5 +1,10 @@
 import { ArrowDown, ArrowUpRight, CircleArrowDown, CirclePlus, CreditCard, LockKeyhole, RotateCcw, type LucideIcon } from "lucide-react";
-import type { WalletTransactionKind } from "../wallet-transport";
+import type { WalletSummary, WalletTransactionKind } from "../wallet-transport";
+
+export function walletHoldHref(hold: Pick<WalletSummary["activeHolds"][number], "sessionId" | "isBooker">) {
+  return hold.isBooker ? `/sessions/${encodeURIComponent(hold.sessionId)}/participants`
+    : `/sessions?tab=joined&session=${encodeURIComponent(hold.sessionId)}`;
+}
 
 export const transactionDetails: Readonly<Record<WalletTransactionKind, {
   label: string; tableLabel: string; description: string; icon: LucideIcon; mobileIcon?: LucideIcon; direction: "in" | "out" | "neutral";
