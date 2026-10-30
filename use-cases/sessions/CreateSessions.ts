@@ -1,3 +1,4 @@
+import { sessionNotificationFacts } from "./session-notification-facts";
 import {
   Booking,
   DomainError,
@@ -102,6 +103,10 @@ export class CreateSessions {
       });
 
       await repositories.sessions.save(session);
+      if (session.invitedGroupId) {
+        const members = await repositories.notifications.groupMembers(session.invitedGroupId);
+        await repositories.notifications.append(members.filter((id) => id !== bookerId).map((recipientId) => ({ ...sessionNotificationFacts(session), kind: "GROUP_BOOKING_CREATED", recipientId, groupId: session.invitedGroupId, expiresAt: session.booking.startAt })));
+      }
       return {
         sessionId: session.sessionId,
         roomToken: session.roomToken,

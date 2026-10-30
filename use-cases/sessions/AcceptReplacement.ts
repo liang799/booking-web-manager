@@ -1,3 +1,5 @@
+import { sessionNotificationFacts } from "./session-notification-facts";
+import type { NotificationIntent } from "../notifications/notification-intents";
 import type { UUID } from "@/domain";
 import type { UseCaseDependencies } from "../shared/dependencies";
 import { appendInstructions, requireAggregate } from "../shared/helpers";
@@ -60,6 +62,7 @@ export class AcceptReplacement {
         "Session",
       );
       const existing = session.participantList.findByUserId(user.userId);
+      const departing = session.participantList.personalReplacementForInvitee(user.userId);
 
       const result = user.asParticipant().acceptReplacement(session, {
         participationId: existing?.participationId ?? ids.next(),
@@ -69,6 +72,10 @@ export class AcceptReplacement {
 
       await transaction.sessions.save(session);
       await appendInstructions(transaction, result.instructions);
+      const notices: NotificationIntent[] = [{ ...sessionNotificationFacts(session), kind: "BOOKING_JOINED", recipientId: user.userId, occurrenceKey: key }];
+      if (departing) notices.push({ ...sessionNotificationFacts(session), kind: "REPLACEMENT_ACCEPTED", recipientId: departing.userId, occurrenceKey: key,
+        refundCents: result.instructions.filter((entry) => entry.kind === "REFUND" && entry.participationId === departing.participationId).reduce((sum, entry) => sum + entry.amount.toCents(), 0) });
+      await transaction.notifications.append(notices);
       return {
         sessionId: session.sessionId,
         participationId: result.participationId,

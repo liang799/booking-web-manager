@@ -1,3 +1,4 @@
+import type { NotificationWriter } from "../notifications/notification-intents";
 import type {
   DeactivationInput,
   FinancialInstruction,
@@ -54,6 +55,7 @@ export interface DomainTransaction {
   readonly deactivationInput: DeactivationInputPort;
   readonly ledger: LedgerWritePort;
   readonly payoutIntents: DurablePayoutIntentPort;
+  readonly notifications: NotificationWriter;
 }
 
 /** Implementations provide transaction rollback and idempotent replay semantics. */

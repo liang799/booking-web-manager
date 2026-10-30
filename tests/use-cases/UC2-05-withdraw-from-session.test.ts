@@ -376,7 +376,7 @@ describe("UC2-05 Withdraw from Session", () => {
       });
 
       // Assert
-      expect(scenario.notifier.deliveries()).toEqual([
+      expect(scenario.unitOfWork.notifications.filter((entry) => !["BOOKING_JOINED", "WAITLIST_ENTERED"].includes(entry.kind)).map((entry) => [entry.kind, entry.recipientId])).toEqual([
         ["REPLACEMENT_INVITATION", "dave"],
         ["FORFEITURE_WARNING", "alice"],
       ]);
@@ -394,16 +394,16 @@ describe("UC2-05 Withdraw from Session", () => {
       await scenario.withdraw("alice", openSlot);
 
       // Assert
-      expect(scenario.notifier.deliveries()).toEqual([["PROMOTED", "carol"]]);
+      expect(scenario.unitOfWork.notifications.filter((entry) => !["BOOKING_JOINED", "WAITLIST_ENTERED"].includes(entry.kind)).map((entry) => [entry.kind, entry.recipientId])).toEqual([["PROMOTED", "carol"]]);
     });
 
-    test("the forfeiture sweep tells the withdrawer their share was forfeited", async () => {
+    test("the forfeiture sweep records that the share is due for forfeiture", async () => {
       // Arrange
       const scenario = withdrawalScenario();
       await scenario.commit("alice");
       scenario.setTime(hoursBeforeSessionStart(10));
       await scenario.withdraw("alice", openSlot);
-      scenario.notifier.sent.length = 0;
+      scenario.unitOfWork.notifications.length = 0;
       scenario.setTime(sessionStartsAt);
 
       // Act
@@ -413,12 +413,12 @@ describe("UC2-05 Withdraw from Session", () => {
       });
 
       // Assert
-      expect(scenario.notifier.deliveries()).toEqual([
+      expect(scenario.unitOfWork.notifications.filter((entry) => !["BOOKING_JOINED", "WAITLIST_ENTERED"].includes(entry.kind)).map((entry) => [entry.kind, entry.recipientId])).toEqual([
         ["FORFEITURE_DUE", "alice"],
       ]);
     });
 
-    test("keeps a committed withdrawal when its notification cannot be delivered", async () => {
+    test("persists a withdrawal independently of the legacy external notifier", async () => {
       // Arrange
       const scenario = withdrawalScenario();
       await scenario.commit("alice");
@@ -499,3 +499,40 @@ function withdrawalScenario({ totalSlots = 3 } = {}) {
     },
   };
 }
+
+
+describe("replacement notification receipts", () => {
+  test.each([48, 10])("acceptance %sh before start sends one departing-person outcome and never claims an earlier refund again", async (hours) => {
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(hours));
+    await scenario.withdraw("alice", { mode: "DIRECT_INVITE", inviteeId: "dave" });
+    scenario.unitOfWork.notifications.length = 0;
+    await scenario.acceptReplacement("dave");
+    expect(scenario.unitOfWork.notifications).toEqual([
+      expect.objectContaining({ kind: "BOOKING_JOINED", recipientId: "dave" }),
+      expect.objectContaining({ kind: "REPLACEMENT_ACCEPTED", recipientId: "alice", refundCents: hours === 10 ? 500 : 0 }),
+    ]);
+  });
+
+  test("an ordinary entrant replacing a late withdrawal sends the actual refund receipt", async () => {
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(10));
+    await scenario.withdraw("alice", openSlot);
+    scenario.unitOfWork.notifications.length = 0;
+    await scenario.commit("dave");
+    expect(scenario.unitOfWork.notifications).toContainEqual(expect.objectContaining({ kind: "REPLACEMENT_REFUNDED", recipientId: "alice", refundCents: 500 }));
+  });
+
+  test("failed invitation persistence leaves the held share and participation committed", async () => {
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(10));
+    scenario.unitOfWork.failNextNotificationAppend = true;
+    await expect(scenario.withdraw("alice", { mode: "DIRECT_INVITE", inviteeId: "dave" })).rejects.toThrow("Notification append failed");
+    expect(scenario.participation("id-1").status).toBe("COMMITTED");
+    expect(scenario.participation("id-1").hold?.state).toBe("HELD");
+    expect(scenario.unitOfWork.notifications).toHaveLength(1);
+  });
+});

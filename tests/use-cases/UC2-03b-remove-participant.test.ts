@@ -1,3 +1,4 @@
+import type { NotificationIntent } from "@/use-cases/notifications/notification-intents";
 import { describe, expect, test, vi } from "vitest";
 import { FundHold, Money, Participation, Session, type User } from "@/domain";
 import { ListSessionParticipants } from "@/use-cases/sessions/ListSessionParticipants";
@@ -276,6 +277,9 @@ function copy(session: Session, override: { visibility?: "PRIVATE" | "PUBLIC" } 
 }
 function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
   let persisted = initial;
+  const notices: NotificationIntent[] = [];
+  const saveNotices = vi.fn<(intents: readonly NotificationIntent[]) => Promise<void>>().mockResolvedValue(undefined);
+  const groupMembers = vi.fn<(groupId: string) => Promise<readonly string[]>>().mockResolvedValue([]);
   let response: SessionParticipantRemovalResult | undefined;
   let commitFailure: Error | undefined;
   const clock = { now: vi.fn(() => hoursBeforeSessionStart(3)) };
@@ -287,6 +291,7 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
   const append = vi.fn<SessionRemovalRepositories["ledger"]["append"]>().mockResolvedValue(undefined);
   const once = vi.fn<SessionRemovalRepositories["submission"]["once"]>();
   const transaction: SessionRemovalTransaction = { run: async (work) => {
+    const stagedNotices: NotificationIntent[] = [];
     let candidate: Session | undefined;
     let candidateResult: SessionParticipantRemovalResult | undefined;
     once.mockImplementation(async (_actor, _session, _participation, _version, perform) => {
@@ -295,10 +300,11 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
     });
     const result = await work({ users: { get: getUser }, sessions: { get: getSession,
       saveRemoval: async (session, id) => { await save(session, id); candidate = session; } },
-      ledger: { append }, submission: { once } });
+      ledger: { append }, submission: { once }, notifications: { append: async (intents) => { await saveNotices(intents); stagedNotices.push(...intents); }, groupMembers } });
     if (commitFailure) throw commitFailure;
     if (candidate) persisted = candidate;
     if (candidateResult) response = candidateResult;
+    notices.push(...stagedNotices);
     return result;
   } };
   const readTransaction: SessionRemovalReadTransaction = { run: (work) => work({
@@ -307,7 +313,7 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
   const list = new ListSessionParticipants({ transaction: readTransaction, clock });
   const preview = new PreviewParticipantRemoval({ transaction: readTransaction, clock, versioner });
   const remove = new RemoveParticipant({ transaction, clock, versioner });
-  return { list, preview, remove, clock, getUser, getSession, names, save, append, once,
+  return { saveNotices, groupMembers, notices, list, preview, remove, clock, getUser, getSession, names, save, append, once,
     stored: () => persisted, replace: (session: Session) => { persisted = session; },
     cached: () => response, failCommit: (error: Error) => { commitFailure = error; },
     submit: async (participationId = "p-alice") => remove.forBooker("booker", "s", participationId,
@@ -316,3 +322,21 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
       : entry === "preview" ? preview.forBooker("booker", "s", "p-alice") : remove.forBooker("booker", "s", "p-alice", "version"),
   };
 }
+
+
+test("removal stores the removed participant's actual refund and replays without another notice", async () => {
+  const scenario = removal();
+  const version = (await scenario.preview.forBooker("booker", "s", "p-alice")).previewVersion;
+  await scenario.remove.forBooker("booker", "s", "p-alice", version);
+  await scenario.remove.forBooker("booker", "s", "p-alice", version);
+  expect(scenario.notices).toEqual([expect.objectContaining({ kind: "PARTICIPANT_REMOVED", recipientId: "alice", refundCents: 500 })]);
+});
+
+test("removal rolls back when its canonical message cannot be saved", async () => {
+  const scenario = removal();
+  scenario.saveNotices.mockRejectedValue(new Error("Notification persistence failed"));
+  await expect(scenario.submit()).rejects.toThrow("Notification persistence failed");
+  expect(scenario.stored().participantList.requireParticipation("p-alice").status).toBe("COMMITTED");
+  expect(scenario.cached()).toBeUndefined();
+  expect(scenario.notices).toEqual([]);
+});

@@ -1,3 +1,4 @@
+import { sessionNotificationFacts } from "./session-notification-facts";
 import { DomainError, type UUID } from "@/domain";
 import type { Clock } from "../shared/contracts";
 import { requireAggregate } from "../shared/helpers";
@@ -13,7 +14,7 @@ export class RemoveParticipant {
   }) {}
 
   async forBooker(bookerId: UUID, sessionId: UUID, participationId: UUID, previewVersion: string): Promise<SessionParticipantRemovalResult> {
-    return this.dependencies.transaction.run(async ({ users, sessions, ledger, submission }) => {
+    return this.dependencies.transaction.run(async ({ users, sessions, ledger, submission, notifications }) => {
       const user = await requireAggregate(users, bookerId, "User");
       DomainError.require(user.accountStatus === "ACTIVE", "INACTIVE_ACCOUNT", "An inactive account cannot manage sessions");
       return submission.once(bookerId, sessionId, participationId, previewVersion, async () => {
@@ -25,6 +26,7 @@ export class RemoveParticipant {
         if (previewVersion !== currentVersion) throw new ParticipantRemovalConflict();
         await ledger.append(result.instructions);
         await sessions.saveRemoval(session, participationId);
+        await notifications.append([{ ...sessionNotificationFacts(session), kind: "PARTICIPANT_REMOVED", recipientId: session.participantList.requireParticipation(participationId).userId, refundCents: participantRemovalRefundCents(result) }]);
         return { sessionId, participationId, status: "REMOVED", refundCents: participantRemovalRefundCents(result) };
       });
     });
