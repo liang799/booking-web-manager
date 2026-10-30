@@ -1,6 +1,6 @@
 import type { PromotionResult, UUID } from "@/domain";
 
-export type CommitmentNotification =
+export type CommitmentNotification = (
   /** A waiting participant took a place; their share is now held. */
   | {
       readonly kind: "PROMOTED";
@@ -37,6 +37,9 @@ export type CommitmentNotification =
       readonly kind: "VERIFICATION_REMINDER";
       readonly recipientId: UUID;
       readonly sessionId: UUID;
+    }) & {
+      /** Stable committed action identity for inbox deduplication; reused on replay. */
+      readonly occurrenceKey?: string;
     };
 
 /** Delivers notifications to users, for example by Web Push. */

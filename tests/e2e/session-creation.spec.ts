@@ -169,7 +169,7 @@ test("desktop creation restores a saved draft and creates a custom-duration sess
     });
     await expect(page).toHaveURL(/\/sessions\?created=1$/);
     // The redesigned Sessions agenda selects Hosting after creation and renders a management card.
-    await expect(page.getByRole("navigation", { name: "Session views", exact: true }).getByRole("button", { name: "Hosting", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("navigation", { name: "Session views", exact: true }).getByRole("button", { name: "I'm organising", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("button", { name: `Manage Tennis Court Booking at ${venue}`, exact: true })).toBeVisible();
     expect((await context.pool.query("select booking_share_cents, total_slots, minimum_headcount, start_at, end_at from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{
       booking_share_cents: "1000", total_slots: 9, minimum_headcount: 5,

@@ -10,6 +10,8 @@ public discovery feed. See [`app/home/README.md`](../home/README.md).
 `/discover` is the dedicated authenticated search page for public-visibility sessions. It lists upcoming, public,
 open sessions, including full sessions, using the stored region. Cards show venue,
 sport, region, Singapore timing, total capacity and the participant share in SGD.
+Sessions where the viewer is already committed or waitlisted are excluded. Past
+participation (including withdrawal or leaving the waitlist) does not hide a session.
 Cards use the shared join confirmation. Signed-out visitors sign in before
 browsing; full sessions can accept waitlist requests without holding funds.
 
@@ -22,8 +24,8 @@ live OneMap availability. Private sessions are accessible through valid
 
 `GET /api/sessions` and `/discover` require an authenticated ACTIVE account.
 The API validates a bearer token or same-origin Supabase login cookie before
-parsing the query and calling `DiscoverSessions.searchPublic(criteria)`.
-The page checks the viewer before querying; middleware redirects signed-out
+parsing the query and calling `DiscoverSessions.searchPublic(criteria, viewerId)`.
+The page checks and passes the viewer before querying; middleware redirects signed-out
 visitors to login, keeping search filters. Unverified emails may browse, but
 inactive or missing profiles are rejected.
 
@@ -51,10 +53,13 @@ page and form continue to use the shared query parser directly.
 Optional query parameters are `q`, `sport`, `region`, `date`, `timeFrom`, `timeTo` and
 `cursor`. Sport and region use the existing registration picker vocabulary.
 Blank filters mean no restriction; repeated known parameters are rejected and
-unknown parameters are ignored. `q` is trimmed, limited to 100 characters, and matches
+unknown parameters are ignored. Viewer identity always comes from authentication,
+never a query parameter. `q` is trimmed, limited to 100 characters, and matches
 a case-insensitive literal substring of sport or venue name. SQL wildcard characters
 are treated literally. Search combines with all other filters, preserving the same
-ordering and pagination. A repeatable-read transaction loads only public summaries;
+ordering and pagination. Active participation is excluded in the database before
+pagination, so joined sessions do not leave gaps in a page. A repeatable-read
+transaction checks the viewer's participation status and loads only public summaries;
 no wallet, membership, payout or reliability facts are loaded. An ACTIVE profile is required before the search.
 
 Dates use `YYYY-MM-DD`; times use `HH:mm`. Date and time refer to
@@ -163,8 +168,10 @@ local sport photos, Singapore timing (including the end date for overnight sessi
 and informational session data. Photo sources and credits are in
 [`public/images/sports/README.md`](../../public/images/sports/README.md).
 
-The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus a Search
-button alongside the account menu. Search opens the focused `/discover` view with
+The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus an
+outline notification bell. Mobile Home embeds its own React Query infinite
+discovery feed below Upcoming Bookings, with no separate Search shortcut.
+Desktop navigation and existing direct `/discover` links retain the focused view with
 a back arrow, tennis hero, mounted search/filter form, sport chips and compact cards.
 The search field is labelled "Search sessions by sport or venue". The desktop sidebar
 has separate Home and Discover destinations.
@@ -195,8 +202,8 @@ Enter keeps an applied sport filter. Editing search does not open advanced filte
 
 The shared mobile navigation keeps its existing active-state behavior. Only the
 active destination shows a visible label; all four retain accessible names.
-Groups are part of the Sessions area and remain reachable through the account
-sheet, alongside settings and logout. Sessions now opens the UC2-03a hosted-session
+Groups are part of the Sessions area and remain reachable through its Groups
+tab; account details and logout are in Settings. Sessions opens the UC2-03a hosted-session
 management page. Wallet retains its existing route destination.
 The creation wizard is available at `/sessions/create`. Join confirmation reuses
 the commitment endpoint; private-session details require a valid invitation.

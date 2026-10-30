@@ -149,11 +149,13 @@ export class PromoteFromWaitlist {
         kind: "PROMOTED" as const,
         recipientId: entry.userId,
         sessionId: result.sessionId,
+        occurrenceKey: key,
       })),
       ...result.skipped.map((entry) => ({
         kind: "REMOVED_FROM_WAITLIST" as const,
         recipientId: entry.userId,
         sessionId: result.sessionId,
+        occurrenceKey: key,
         reason: entry.reason,
       })),
     ]);

@@ -15,6 +15,10 @@ vi.mock("next/headers", () => ({ headers: vi.fn() }));
 vi.mock("@/app/users/user-handle-server-dependencies", () => ({
   getUserHandleDependencies: async () => ({ checkUserHandle: { availability: async () => "AVAILABLE" } }),
 }));
+// The email check before sign-up came after these basis paths too; it finds no account on every path.
+vi.mock("@/app/(auth)/register/registered-emails-server", () => ({
+  getRegisteredEmails: async () => ({ hasAccount: async () => false }),
+}));
 vi.mock("next/navigation", async () => {
   const { RedirectCalled } = await import("../use-cases/support/fake-supabase-auth");
   return { redirect: (target: string) => { throw new RedirectCalled(target); } };

@@ -14,6 +14,7 @@ const walletSummarySchema = z.object({
   activeHolds: z.array(z.object({
     holdId: z.string(),
     sessionId: z.string(),
+    isBooker: z.boolean().optional(),
     heldCents: cents,
     originalCents: cents,
     venueName: z.string().optional(),

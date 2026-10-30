@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { actionFailure, sendAsSignedInUser, type SentRequest } from "./session-action-request";
-import type { JoinedSessionItem, LeaveWaitlist, LoadJoinedSessions, PreviewWithdrawal, WithdrawFromSession } from "./withdrawal-ports";
+import type {
+  FindReplacementCandidate, JoinedSessionItem, LeaveWaitlist, LoadJoinedSessions, PreviewWithdrawal, WithdrawFromSession,
+} from "./withdrawal-ports";
 
 /**
  * UC2-05 production adapters. Each one calls an existing API, validates the reply with Zod, and
@@ -12,6 +14,7 @@ import type { JoinedSessionItem, LeaveWaitlist, LoadJoinedSessions, PreviewWithd
  * | GET /api/sessions/{sessionId}/withdrawal-preview `{ kind, refundCents, heldCents, … }` | `{ status: "ready", preview: { kind, refundCents, heldCents } }` |
  * | POST /api/sessions/withdraw `{ kind, refundedCents, promotion, … }` | `{ status: "withdrawn", kind, refundedCents }` |
  * | POST /api/sessions/waitlist/leave `{ sessionId, participationId, promotion }` | `{ status: "left" }` |
+ * | GET /api/users/{handle} `{ user: { userId, handle, displayName } }` | `{ status: "found", candidate }` (404: `not-found`) |
  *
  * Fields the screens do not use (participation IDs, promotion results) are validated but dropped.
  */
@@ -19,12 +22,17 @@ export const withdrawalPreviewUrl = (sessionId: string) => `/api/sessions/${enco
 export const JOINED_SESSIONS_URL = "/api/sessions/joined";
 export const WITHDRAW_URL = "/api/sessions/withdraw";
 export const LEAVE_WAITLIST_URL = "/api/sessions/waitlist/leave";
+/** ADR-0021's signed-in exact lookup, which returns the player's ID for invite flows. */
+export const userLookupUrl = (handle: string) => `/api/users/${encodeURIComponent(handle)}`;
 
 const cents = z.number().int().safe().nonnegative();
 const kind = z.enum(["REFUNDED", "AWAITING_REPLACEMENT"]);
 const previewResponseSchema = z.object({ sessionId: z.string(), participationId: z.string(), kind, refundCents: cents, heldCents: cents });
 const withdrawResponseSchema = z.object({ sessionId: z.string(), participationId: z.string(), kind, refundedCents: cents });
 const leaveResponseSchema = z.object({ sessionId: z.string(), participationId: z.string() });
+const userLookupResponseSchema = z.object({
+  user: z.object({ userId: z.string().uuid(), handle: z.string(), displayName: z.string() }),
+});
 const joinedResponseSchema = z.object({
   sessions: z.array(z.object({
     sessionId: z.string(), venueName: z.string(), sport: z.string(), region: z.string(),
@@ -112,4 +120,29 @@ export const leaveWaitlist: LeaveWaitlist = async (request) => {
   if (sent.status === "error") return sent;
   if (sent.response.ok && leaveResponseSchema.safeParse(sent.body).success) return { status: "left" };
   return failure(sent, UNCONFIRMED_LEAVE_MESSAGE, "We couldn't take you off the waitlist. Please try again.");
+};
+
+export const FIND_REPLACEMENT_FAILED_MESSAGE = "We couldn't look up that user ID. Check your connection and try again.";
+
+/** What the player is told when a user ID can't be looked up. */
+export const FIND_REPLACEMENT_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  UNAUTHENTICATED: WITHDRAWAL_ERROR_MESSAGES.UNAUTHENTICATED!,
+  INVALID_INPUT: "Check the user ID and try again.",
+  INVALID_REQUEST: "Check the user ID and try again.",
+  USER_IDS_UNAVAILABLE: "Finding players by user ID isn't available right now. You can open your place to the waitlist instead.",
+};
+
+/** UC2-05 with ADR-0021: finds the player to name as the replacement by exact user ID. Read-only. */
+export const findReplacementCandidate: FindReplacementCandidate = async (handle) => {
+  const sent = await send(userLookupUrl(handle), { method: "GET" }, FIND_REPLACEMENT_FAILED_MESSAGE);
+  if (sent.status === "error") return { status: "error", message: sent.message };
+  if (sent.response.ok) {
+    const parsed = userLookupResponseSchema.safeParse(sent.body);
+    if (parsed.success) return { status: "found", candidate: { ...parsed.data.user } };
+    return { status: "error", message: FIND_REPLACEMENT_FAILED_MESSAGE };
+  }
+  if (sent.response.status === 404) return { status: "not-found" };
+  // A lookup changes nothing, so a failed one is never "unconfirmed": just say so.
+  const code = failure(sent, FIND_REPLACEMENT_FAILED_MESSAGE, FIND_REPLACEMENT_FAILED_MESSAGE).code;
+  return { status: "error", message: FIND_REPLACEMENT_ERROR_MESSAGES[code] ?? FIND_REPLACEMENT_FAILED_MESSAGE };
 };

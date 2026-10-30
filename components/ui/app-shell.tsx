@@ -1,25 +1,18 @@
 "use client";
 
-import { LogOut, Plus, UserRound } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookingLogo } from "@/components/ui/booking-logo";
 import { initials } from "@/components/ui/initials";
 import { NavigationIcon } from "@/components/ui/navigation-icon";
 import { MobileNavigation } from "@/components/ui/mobile-navigation";
 import { toFivePoint } from "@/components/ui/reliability-badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
+import { useUnreadNotificationCount } from "@/app/notifications/use-unread-count";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", icon: "home" },
@@ -27,6 +20,7 @@ const NAV_LINKS = [
   { href: "/sessions", label: "My sessions", icon: "sessions" },
   { href: "/wallet", label: "Wallet", icon: "wallet" },
   { href: "/groups", label: "Groups", icon: "groups" },
+  { href: "/notifications", label: "Notifications", icon: "notifications" },
   { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
@@ -56,11 +50,13 @@ function SidebarContents({
   logoutAction,
   onNavigate,
   searchHref,
+  unreadCount,
 }: {
   readonly user: ShellUser;
   readonly logoutAction?: () => Promise<void>;
   readonly onNavigate?: () => void;
   readonly searchHref: string;
+  readonly unreadCount: number | null;
 }) {
   const pathname = usePathname();
 
@@ -94,6 +90,7 @@ function SidebarContents({
             >
               <NavigationIcon name={link.icon} active={active} />
               {link.label}
+              {link.href === "/notifications" && unreadCount !== null && unreadCount > 0 && <span aria-label={`${unreadCount} unread`} className="ml-auto rounded-full bg-foreground px-1.5 py-0.5 text-[10px] font-semibold text-background">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </Link>
           );
         })}
@@ -131,10 +128,11 @@ function SidebarContents({
 }
 
 
-/** Frames signed-in content with a desktop sidebar and mobile navigation plus an account sheet. */
+/** Frames signed-in content with a desktop sidebar, mobile navigation and a direct notification shortcut. */
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const unreadCount = useUnreadNotificationCount(pathname);
+  const notificationsLayout = pathname === "/notifications";
   const walletLayout = pathname === "/wallet" || pathname.startsWith("/wallet/");
   const searchParams = useSearchParams();
   const query = searchParams.toString();
@@ -148,12 +146,12 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
     <div className="flex min-h-screen bg-card md:bg-background">
       {/* Desktop sidebar (hidden below 768px) */}
       <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
-        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} />
+        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} unreadCount={unreadCount} />
       </aside>
 
       <div className="relative isolate flex min-w-0 flex-1 flex-col">
         {/* The desktop court fades behind the page introduction without competing with its content. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && "md:block")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && !notificationsLayout && "md:block")} aria-hidden="true">
           <Image
             src="/images/mobile-hero.png"
             alt=""
@@ -165,7 +163,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0)_0%,hsl(var(--background)/0.2)_45%,hsl(var(--background))_100%)]" />
         </div>
         {/* Figma's hero: an oversized image at 50%, with left and bottom fades into the page. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", mobileVariant === "focused" && "hidden")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", (mobileVariant === "focused" || notificationsLayout) && "hidden")} aria-hidden="true">
           <div className="absolute -top-2.5 left-1/2 h-[295px] w-[calc(100%+148px)] -translate-x-1/2">
             <Image
               src="/images/mobile-hero.png"
@@ -186,65 +184,29 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             >
               <BookingLogo className={walletLayout ? "text-lg" : undefined} />
             </Link>
-            {walletLayout ? (
-              <Link
-                href="/sessions/create"
-                aria-label="Create session"
-                className="flex h-11 w-11 items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground">
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                </span>
-              </Link>
-            ) : (
             <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="icon" className="h-11 w-11 [&_svg]:size-5" aria-label="Search sessions">
-              <Link href={searchHref}><NavigationIcon name="search" active={pathname === "/discover"} /></Link>
-            </Button>
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button size="icon" className="h-11 w-11 rounded-md" aria-label="Open account menu">
-                  <UserRound className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-72 bg-card p-6 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center"
-              >
-                <SheetTitle className="pr-10">Your account</SheetTitle>
-                <SheetDescription className="sr-only">Account details, settings, and logout</SheetDescription>
-                <div className="mt-8 flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                    {initials(user.name)}
+              {walletLayout ? (
+                <Link
+                  href="/sessions/create"
+                  aria-label="Create session"
+                  className="flex h-11 w-11 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground">
+                    <Plus className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <div className="min-w-0">
-                    <p className="break-words text-sm font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {reliabilityText(user.reliabilityScore)}
-                    </p>
-                  </div>
-                </div>
-                <Button asChild variant="outline" className="mt-6 min-h-11 w-full">
-                  <Link href="/groups" onClick={() => setMenuOpen(false)}>
-                    My groups
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="mt-3 min-h-11 w-full">
-                  <Link href="/profile" onClick={() => setMenuOpen(false)}>
-                    Account settings
-                  </Link>
-                </Button>
-                {logoutAction !== undefined && (
-                  <form action={logoutAction} className="mt-3">
-                    <Button type="submit" variant="ghost" className="min-h-11 w-full">
-                      Log out
-                    </Button>
-                  </form>
-                )}
-              </SheetContent>
-            </Sheet>
+                </Link>
+              ) : null}
+              <Button asChild variant="ghost" size="icon" className="relative h-11 w-11 rounded-md [&_svg]:size-5">
+                <Link
+                  href="/notifications"
+                  aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+                  aria-current={notificationsLayout ? "page" : undefined}
+                >
+                  <NavigationIcon name="notifications" active={notificationsLayout} />
+                  {unreadCount !== null && unreadCount > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden />}
+                </Link>
+              </Button>
             </div>
-            )}
           </div>
 
           <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} compact={walletLayout} />

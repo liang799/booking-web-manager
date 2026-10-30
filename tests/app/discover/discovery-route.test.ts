@@ -251,7 +251,7 @@ describe("GET /api/sessions", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({ items: [], nextCursor: null });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Jurong", sport: "Badminton", region: "West", startsWithin: { from: new Date("2030-01-02T10:00:00Z"), before: new Date("2030-01-02T12:00:00Z") } });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Jurong", sport: "Badminton", region: "West", startsWithin: { from: new Date("2030-01-02T10:00:00Z"), before: new Date("2030-01-02T12:00:00Z") } }, userId);
   });
 
   test("serializes safe listing fields and creates an opaque cursor for further matches", async () => {
@@ -276,7 +276,7 @@ describe("GET /api/sessions", () => {
     const cursor = btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const response = await GET(request(`cursor=${cursor}`));
     expect(response.status).toBe(200);
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({});
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({}, userId);
     expect(await response.json()).toMatchObject({ items: [{ sessionId: nextId }], nextCursor: null });
   });
 

@@ -100,6 +100,9 @@ class RegularGroup <<AggregateRoot>> {
   --
   {static} +create(...) : RegularGroup
   +join(...) : GroupJoinResult
+  +invite(...) : GroupInviteResult
+  +acceptInvitation(...) : GroupJoinResult
+  +declineInvitation(...) : void
   +removeMember(...) : void
   +leave(...) : void
   +rotateInvitation(...) : void
@@ -111,6 +114,12 @@ class GroupMembership <<ImmutableChild>> {
   +joinedAt : Date
 }
 
+class GroupInvitation <<ImmutableChild>> {
+  +inviteeId : UUID
+  +invitedBy : UUID
+  +invitedAt : Date
+}
+
 Booker "0..*" -down-> "1" User : wraps
 Participant "0..*" -down-> "1" User : wraps
 User "1" *-down- "1" Wallet : wallet
@@ -119,10 +128,15 @@ User -down-> "0..1" Email : email
 RegularGroup "1" *-down- "1..*" GroupMembership : memberships
 RegularGroup "0..*" -left-> "1" User : ownerId {ID reference}
 GroupMembership "0..*" -left-> "1" User : userId {ID reference}
+RegularGroup "1" *-down- "0..*" GroupInvitation : invitations
+GroupInvitation "0..*" -left-> "1" User : inviteeId, invitedBy {ID references}
 
 note bottom of RegularGroup
   Membership user IDs are unique within a group.
   The owner is always a member and cannot be removed or leave.
+  Any member may invite a player by user ID while the link is on;
+  only that player accepts or declines. Turning the link off or
+  archiving ends invitations, and a member is never invited (ADR-0022).
 end note
 
 note bottom of User

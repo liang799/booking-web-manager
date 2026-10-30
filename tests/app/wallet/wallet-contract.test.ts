@@ -27,7 +27,7 @@ describe("UC1-05 wallet page against the wallet API routes", () => {
         activeHolds: [{
           holdId: "33333333-3333-4333-8333-333333333333", sessionId: "44444444-4444-4444-8444-444444444444",
           heldCents: 1500, originalCents: 1500, createdAt: new Date("2026-10-09T10:00:00.000Z"),
-          venueName: "Kallang Tennis Centre", sport: "Tennis", startAt: new Date("2026-10-12T18:00:00.000Z"),
+          venueName: "Kallang Tennis Centre", sport: "Tennis", startAt: new Date("2026-10-12T18:00:00.000Z"), isBooker: true,
         }],
       }) },
       walletTransactions: { forUser: async () => ({
@@ -49,7 +49,10 @@ describe("UC1-05 wallet page against the wallet API routes", () => {
     const result = await walletTransport.loadSummary();
 
     // Assert
-    expect(result).toMatchObject({ status: "ready", data: { availableBalanceCents: 10000, heldBalanceCents: 1500, pendingPayoutCents: 1850 } });
+    expect(result).toMatchObject({ status: "ready", data: {
+      availableBalanceCents: 10000, heldBalanceCents: 1500, pendingPayoutCents: 1850,
+      activeHolds: [{ isBooker: true }],
+    } });
   });
 
   test("reads a transactions page and passes its cursor back to the route", async () => {

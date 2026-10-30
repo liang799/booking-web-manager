@@ -6,8 +6,8 @@ export interface SessionManagementRepositories {
   readonly users: Pick<Repository<User>, "get">;
   readonly sessions: {
     get(sessionId: UUID): Promise<Session | null>;
-    /** All owned OPEN sessions strictly after now, ordered by start time and ID. */
-    listUpcoming(bookerId: UUID, now: Date): Promise<readonly Session[]>;
+    /** All owned OPEN sessions ending strictly after now, ordered by start time and ID. */
+    listNotEndedOpen(bookerId: UUID, now: Date): Promise<readonly Session[]>;
     /** UC2-06: owned OPEN sessions that ended at or before now, most recently ended first. */
     listEndedOpen(bookerId: UUID, now: Date): Promise<readonly Session[]>;
     /** Persists visibility only, preserving all other aggregate state. */

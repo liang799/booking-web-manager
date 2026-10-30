@@ -57,6 +57,12 @@
   outline-offset: -5px;
 }
 
+/* Same as the register selects: theme colours for the browser-drawn list. */
+.ending option {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
 .ending svg {
   position: absolute;
   top: 50%;

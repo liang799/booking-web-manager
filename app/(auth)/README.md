@@ -12,6 +12,9 @@ The auth pages share a monochrome court backdrop and a form card. Desktop and
 mobile use separate decorative images reconstructed from the supplied design
 references; the [asset notes](../../public/images/auth-court.md) record their
 provenance. Styles are scoped to these pages and reuse the existing controls.
+The region, sport and email-ending selects give their options the theme's popover
+colours, because the browser draws the open list itself: inherited dark-mode text
+was white on a white list until an option was hovered.
 
 Headers use the shared `BookingLogo` navigation size (20px); brand typography is
 owned by that module rather than auth-specific overrides. The small wordmark on
@@ -31,6 +34,16 @@ sign-up trigger keeps IDs unique even if two people race for one, by adding a
 number to the later sign-up's ID. All steps remain
 mounted so Back and validation errors preserve the draft. Terms and privacy links
 appear before the final submission.
+
+An email that already has an account is refused with "An account with this email
+already exists." and a login link (UC1-01 exception 4a). Supabase Auth reports a
+confirmed duplicate itself, but for an account that was never confirmed (for
+example one created while confirmations were enabled) it answers like a new
+sign-up. So the server action first asks `PostgresRegisteredEmails` whether any
+undeleted account in `auth.users` uses the email, ignoring case, and never calls
+`signUp` for one. Deleted accounts don't count, because deletion scrambles their
+email. Without `DATABASE_URL`, or if that read fails, sign-up continues and
+Supabase's own duplicate answer still applies.
 
 Both forms set `method="post"`. After hydration the client handler submits them,
 but a submission before JavaScript loads uses the browser default. Without a

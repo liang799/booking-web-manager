@@ -94,7 +94,10 @@ export default async function GroupPage({ params }: GroupPageProps) {
                 </h2>
                 {group.invitationActive ? (
                   <>
-                    <p className="text-sm text-muted-foreground">Anyone with this link can join the group.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Anyone with this link can join the group. Members can also invite players by user ID from
+                      the Groups page; turning the link off cancels those invitations too.
+                    </p>
                     <InvitationLink url={invitationUrl} />
                   </>
                 ) : (

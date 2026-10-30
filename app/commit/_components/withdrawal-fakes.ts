@@ -1,5 +1,6 @@
 import type {
-  JoinedSessionItem, LeaveWaitlist, LoadJoinedSessions, PreviewWithdrawal, ReplacementCandidate, WithdrawFromSession, WithdrawalPreview,
+  FindReplacementCandidate, JoinedSessionItem, LeaveWaitlist, LoadJoinedSessions, PreviewWithdrawal, ReplacementCandidate,
+  WithdrawFromSession, WithdrawalPreview,
 } from "../withdrawal-ports";
 
 /**
@@ -21,9 +22,13 @@ export const waitlistedSession: JoinedSessionItem = {
 };
 export const joinedSessions: readonly JoinedSessionItem[] = [lateSession, earlySession, waitlistedSession];
 
+/** The signed-in player in stories; looking up their own user ID finds them. */
+export const storyUserId = "99999999-9999-4999-8999-999999999999";
+
 export const candidates: readonly ReplacementCandidate[] = [
-  { userId: "44444444-4444-4444-8444-444444444444", displayName: "Alex Tan" },
-  { userId: "55555555-5555-4555-8555-555555555555", displayName: "Priya Lim" },
+  { userId: "44444444-4444-4444-8444-444444444444", handle: "alex_tan", displayName: "Alex Tan" },
+  { userId: "55555555-5555-4555-8555-555555555555", handle: "priya_lim", displayName: "Priya Lim" },
+  { userId: storyUserId, handle: "joseph_w", displayName: "Joseph" },
 ];
 
 /** At least 30 hours before start the share comes back; closer to start it stays held awaiting a replacement. */
@@ -50,3 +55,9 @@ export const fakeWithdraw: WithdrawFromSession = async (request) => {
 };
 
 export const fakeLeaveWaitlist: LeaveWaitlist = async () => ({ status: "left" });
+
+/** Finds a sample player by exact user ID, like GET /api/users/{handle}. */
+export const fakeFindReplacementCandidate: FindReplacementCandidate = async (handle) => {
+  const candidate = candidates.find((sample) => sample.handle === handle);
+  return candidate === undefined ? { status: "not-found" } : { status: "found", candidate };
+};

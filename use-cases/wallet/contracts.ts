@@ -18,6 +18,7 @@ export type WalletHistoryTransaction = Pick<LedgerTransaction, keyof LedgerTrans
 export interface ActiveWalletHold {
   readonly holdId: UUID;
   readonly sessionId: UUID;
+  readonly bookerId?: UUID;
   readonly heldAmount: Money;
   readonly originalAmount: Money;
   readonly createdAt: Date;
@@ -45,6 +46,7 @@ export interface WalletSummary {
   readonly activeHolds: readonly {
     readonly holdId: UUID;
     readonly sessionId: UUID;
+    readonly isBooker?: boolean;
     readonly heldCents: number;
     readonly originalCents: number;
     readonly createdAt: Date;

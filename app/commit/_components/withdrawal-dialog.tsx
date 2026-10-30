@@ -1,21 +1,27 @@
 "use client";
 
+import { Search } from "lucide-react";
+import { useState } from "react";
+import { normalizeUserHandle, userHandleProblem } from "@/app/users/schemas";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { InfoNote } from "@/components/ui/info-note";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Money } from "@/components/ui/money";
+import type { ReplacementSearchState } from "../use-replacement-search";
 import type { WithdrawalState } from "../use-withdrawal-flow";
-import type { Replacement, ReplacementCandidate, WithdrawalPreview } from "../withdrawal-ports";
+import type { Replacement, WithdrawalPreview } from "../withdrawal-ports";
 import { singaporeStart } from "./joined-session-format";
 
 export interface WithdrawalDialogProps {
   readonly state: WithdrawalState;
-  /** People the player may name as their replacement. */
-  readonly candidates: readonly ReplacementCandidate[];
+  /** Finding the person to name by their user ID (ADR-0021); the found player becomes the invitee. */
+  readonly inviteSearch: ReplacementSearchState;
+  readonly onSearchInvitee: (handle: string) => void;
   readonly onChooseMode: (mode: Replacement["mode"]) => void;
-  readonly onChooseInvitee: (inviteeId: string) => void;
   readonly onConfirm: () => void;
   readonly onRetryPreview: () => void;
   readonly onClose: () => void;
@@ -25,13 +31,15 @@ export interface WithdrawalDialogProps {
 /**
  * UC2-05 Withdraw from Session, display only: one controlled dialog for the whole list, driven by
  * `useWithdrawalFlow`. Shows the server's refund before anything happens, then how the place is
- * passed on (ADR-0006: open it to the waitlist, or invite one named person; unchangeable).
+ * passed on (ADR-0006: open it to the waitlist, or invite one named person, found by their user
+ * ID; unchangeable).
  */
-export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvitee, onConfirm, onRetryPreview, onClose, onRestoreFocus }: WithdrawalDialogProps) {
+export function WithdrawalDialog({ state, inviteSearch, onSearchInvitee, onChooseMode, onConfirm, onRetryPreview, onClose }: WithdrawalDialogProps) {
   if (state.step === "closed") return <Dialog open={false} />;
   const { session } = state;
   const submitting = (state.step === "choosing" || state.step === "unconfirmed") && state.submitting;
-  const name = (id: string) => candidates.find((candidate) => candidate.userId === id)?.displayName ?? "the person you invited";
+  const name = (id: string) =>
+    inviteSearch.status === "found" && inviteSearch.candidate.userId === id ? inviteSearch.candidate.displayName : "the person you invited";
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !submitting) onClose(); }}>
@@ -65,19 +73,9 @@ export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvi
               <ChoiceOption name="withdraw-mode" checked={state.mode === "OPEN_SLOT"} onChange={() => onChooseMode("OPEN_SLOT")}
                 label="Open it to the waitlist" hint="The next eligible player in the queue gets it." />
               <ChoiceOption name="withdraw-mode" checked={state.mode === "DIRECT_INVITE"} onChange={() => onChooseMode("DIRECT_INVITE")}
-                disabled={candidates.length === 0} label="Invite one person"
-                hint={candidates.length === 0 ? "There's no one you can invite yet." : "Only they can take it, once they accept."} />
+                label="Invite one person" hint="Find them by their user ID. Only they can take it, once they accept." />
               {state.mode === "DIRECT_INVITE" && (
-                <fieldset className="ml-6 space-y-2">
-                  <legend className="sr-only">Person to invite</legend>
-                  {candidates.map((candidate) => (
-                    <label key={candidate.userId} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-accent has-[:disabled]:cursor-not-allowed">
-                      <input type="radio" name="withdraw-invitee" className="h-4 w-4" checked={state.inviteeId === candidate.userId}
-                        onChange={() => onChooseInvitee(candidate.userId)} />
-                      <span className="min-w-0 break-words">{candidate.displayName}</span>
-                    </label>
-                  ))}
-                </fieldset>
+                <InviteeSearch search={inviteSearch} chosen={state.inviteeId !== null} onSearch={onSearchInvitee} />
               )}
             </fieldset>
             <InfoNote icon>You can&apos;t change this choice after withdrawing.</InfoNote>
@@ -132,6 +130,75 @@ export function WithdrawalDialog({ state, candidates, onChooseMode, onChooseInvi
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Finds the person to name by exact user ID, the same way as Find a player on the Groups page. */
+function InviteeSearch({ search, chosen, onSearch }: {
+  readonly search: ReplacementSearchState;
+  /** The found player is the withdrawal's invitee. */
+  readonly chosen: boolean;
+  readonly onSearch: (handle: string) => void;
+}) {
+  const [handle, setHandle] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+
+  // Check the ID's form here, so a typo never waits for the server.
+  function find() {
+    if (search.status === "searching") return;
+    const normalized = normalizeUserHandle(handle);
+    const issue = userHandleProblem(normalized);
+    setProblem(issue);
+    if (issue === null) onSearch(normalized);
+  }
+
+  const message = problem ?? (search.status === "not-found" ? `No player has the user ID @${search.handle}.`
+    : search.status === "self" ? "That's your own user ID. Enter the user ID of the person you want to invite."
+    : search.status === "error" ? search.message : null);
+
+  return (
+    <div className="ml-6 space-y-2">
+      <Label htmlFor="withdraw-invitee-handle">Their user ID</Label>
+      <div className="flex flex-wrap gap-2">
+        <div className="relative min-w-0 flex-1 basis-40">
+          <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+          <Input
+            id="withdraw-invitee-handle"
+            value={handle}
+            // The "@" is already shown in front of the field.
+            onChange={(event) => setHandle(event.target.value.replace(/^\s*@+/u, ""))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                find();
+              }
+            }}
+            placeholder="user_id"
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={33}
+            className="min-h-11 pl-8"
+            aria-invalid={message !== null}
+            aria-describedby="withdraw-invitee-result"
+          />
+        </div>
+        <Button type="button" variant="outline" className="min-h-11 gap-2" onClick={find} disabled={search.status === "searching"}>
+          <Search className="h-4 w-4" aria-hidden="true" focusable="false" />
+          {search.status === "searching" ? "Finding…" : "Find"}
+        </Button>
+      </div>
+      <div id="withdraw-invitee-result" aria-live="polite" className="text-sm">
+        {message !== null && <p className="text-destructive">{message}</p>}
+        {problem === null && search.status === "found" && chosen && (
+          <p className="rounded-md border border-primary bg-accent px-3 py-2">
+            <span className="font-medium">{search.candidate.displayName}</span>{" "}
+            <span className="break-all text-muted-foreground">@{search.candidate.handle}</span> will be invited to take your place.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 

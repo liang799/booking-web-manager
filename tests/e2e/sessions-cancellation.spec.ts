@@ -29,16 +29,19 @@ function mutationResponse(page: Page, sessionId: string) {
 test("UC2-03c full session cancellation refunds wallets and disappears from open discovery within three seconds", async ({ page, browser }, testInfo) => {
   test.setTimeout(60_000);
   const context = sessionTestContext();
-  const participantBrowser = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const observerBrowser = await browser.newContext({ viewport: { width: 390, height: 844 } });
   try {
     const fixture = await cancellationFixture(context, 2);
-    const participantPage = await participantBrowser.newPage();
-    await login(participantPage, fixture.participants[0]!, `/discover?q=${fixture.venueName}&returnTo=%2Fsessions`);
-    await expect(row(participantPage, fixture.venueName)).toBeVisible();
-    const search = participantPage.getByRole("searchbox");
+    // A committed participant is intentionally excluded from Discover. Use a non-participant
+    // to verify the session disappears from public discovery when it is cancelled.
+    const observer = await context.identity(false);
+    const observerPage = await observerBrowser.newPage();
+    await login(observerPage, observer, `/discover?q=${fixture.venueName}&returnTo=%2Fsessions`);
+    await expect(row(observerPage, fixture.venueName)).toBeVisible();
+    const search = observerPage.getByRole("searchbox");
     await search.fill("Unsubmitted cancellation draft");
     await search.focus();
-    const url = participantPage.url();
+    const url = observerPage.url();
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
@@ -67,11 +70,11 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     await dialog.getByRole("button", { name: "Confirm cancellation" }).click();
     expect((await response).status()).toBe(200);
     const committedAt = Date.now();
-    await expect(row(participantPage, fixture.venueName)).toHaveCount(0, { timeout: Math.max(1, 3000 - (Date.now() - committedAt)) });
+    await expect(row(observerPage, fixture.venueName)).toHaveCount(0, { timeout: Math.max(1, 3000 - (Date.now() - committedAt)) });
     expect(Date.now() - committedAt).toBeLessThanOrEqual(3000);
     await expect(search).toHaveValue("Unsubmitted cancellation draft");
     await expect(search).toBeFocused();
-    expect(participantPage.url()).toBe(url);
+    expect(observerPage.url()).toBe(url);
     await expect(page.getByRole("status")).toContainText("Session cancelled");
     await expect(page.getByRole("button", { name: "Cancel session", exact: true })).toHaveCount(0);
     await expect(row(page, fixture.venueName)).toContainText("Cancelled");
@@ -80,7 +83,7 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     }
     expect((await context.pool.query("select count(*)::int as count from ledger_entries where session_id=$1 and kind='REFUND'", [fixture.sessionId])).rows[0].count).toBe(2);
   } finally {
-    await participantBrowser.close();
+    await observerBrowser.close();
     await context.pool.end();
   }
 });

@@ -1,3 +1,4 @@
+import type { UUID } from "@/domain";
 import type { DiscoveryExpiry } from "./_components/discovery-updates";
 import type { DiscoveryOutcome } from "./_components/discovery-state";
 import { toDiscoveryPage } from "./contracts";
@@ -7,8 +8,8 @@ import { getDiscoveryDependencies } from "./server-dependencies";
 
 export type PageSearchParams = Record<string, string | string[] | undefined>;
 
-/** The calling page verifies an active viewer; filters do not depend on viewer identity. */
-export async function loadDiscoveryScreen(searchParams: PageSearchParams) {
+/** The calling page verifies the viewer, whose active participation is excluded from results. */
+export async function loadDiscoveryScreen(searchParams: PageSearchParams, viewerId: UUID) {
   const params = new URLSearchParams();
   for (const [name, value] of Object.entries(searchParams)) {
     if (name === "returnTo") continue;
@@ -21,7 +22,7 @@ export async function loadDiscoveryScreen(searchParams: PageSearchParams) {
   else {
     try {
       const { discoverSessions } = await getDiscoveryDependencies();
-      const sessions = await discoverSessions.searchPublic(parsed.criteria);
+      const sessions = await discoverSessions.searchPublic(parsed.criteria, viewerId);
       outcome = { status: "ready", page: toDiscoveryPage(sessions, parsed.after) };
     } catch (error) {
       outcome = { status: "error", kind: error instanceof DiscoveryApiUnavailableError ? "unavailable" : "unexpected" };

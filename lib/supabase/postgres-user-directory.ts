@@ -13,6 +13,16 @@ export class UserDirectoryReadError extends Error {
 
 const summaryRow = z.object({ user_id: z.string(), handle: z.string(), display_name: z.string() });
 
+/** Turns a stored profile row into the public summary; a blank name shows as Unnamed player. */
+export function userSummaryFromRow(row: unknown): UserSummary {
+  try {
+    const stored = summaryRow.parse(row);
+    return { userId: stored.user_id, handle: stored.handle, displayName: stored.display_name.trim() || "Unnamed player" };
+  } catch (cause) {
+    throw new UserDirectoryReadError("Stored user ID could not be read", { cause });
+  }
+}
+
 /**
  * Reads user IDs over the server's database connection. The lookup returns only the
  * user's ID, user ID and name, and only for ACTIVE accounts (ADR-0021).
@@ -32,13 +42,7 @@ export class PostgresUserDirectory implements UserDirectory {
       [handle.toString()],
     );
     const row = rows[0];
-    if (row === undefined) return null;
-    // Keep SQL failures outside this wrapper so they are not reported as bad stored data.
-    try {
-      const stored = summaryRow.parse(row);
-      return { userId: stored.user_id, handle: stored.handle, displayName: stored.display_name.trim() || "Unnamed player" };
-    } catch (cause) {
-      throw new UserDirectoryReadError("Stored user ID could not be read", { cause });
-    }
+    // SQL failures stay outside userSummaryFromRow so they are not reported as bad stored data.
+    return row === undefined ? null : userSummaryFromRow(row);
   }
 }

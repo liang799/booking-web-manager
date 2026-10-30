@@ -13,9 +13,11 @@ import { registerUserLookupApi } from "@/app/users/openapi";
 import { registerVenueApi } from "@/app/venues/openapi";
 import { registerWalletApi } from "@/app/wallet/openapi";
 import { createOpenApiDocument } from "./document";
+import { registerNotificationsApi } from "@/app/notifications/openapi";
 
 /** Add feature documentation here; the public route and Swagger UI stay generic. */
 export const openApiDocument = createOpenApiDocument([
+  registerNotificationsApi,
   registerSessionApi,
   registerDiscoveryApi,
   registerHealthApi,

@@ -305,3 +305,7 @@ Requirements, use cases, data dictionary and the class diagram live in the SRS
 (`/docs`). When behaviour and the SRS disagree, the SRS wins — fix the code or
 raise it, don't silently diverge. Use case IDs (`UC1-05`, `UC2-04`) are the
 shared vocabulary; reference them in commit messages and PR titles.
+
+Diagrams live in [docs/diagrams](./docs/diagrams/README.md), one folder per
+diagram type, each with its editable source and listed in that README. Update
+a diagram in the same PR as the behaviour it shows.
