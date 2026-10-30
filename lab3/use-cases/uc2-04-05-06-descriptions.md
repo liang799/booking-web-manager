@@ -1,6 +1,6 @@
 # Use case descriptions: UC2-04, UC2-05, UC2-06
 
-Use case model for the commitment, withdrawal and attendance part of Booking Web Manager, as submitted in the SRS (Lab 1 and Lab 2 deliverables, last updated 19/10/2026). The use-case diagram for all of UC2 is [uc2-session-management-use-case-diagram.png](./uc2-session-management-use-case-diagram.png).
+Use case model for the commitment, withdrawal and attendance part of Booking Web Manager, as submitted in the SRS (Lab 1 and Lab 2 deliverables, last updated 19/10/2026). The use-case diagram for all of UC2 is [uc2-session-management.png](../../docs/diagrams/use-case/uc2-session-management.png).
 
 Author: Yajie Wang (UC2-04, UC2-05, UC2-06).
 
