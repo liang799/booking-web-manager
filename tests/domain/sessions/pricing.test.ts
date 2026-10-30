@@ -189,13 +189,8 @@ describe("Session pricing", () => {
       );
     });
 
-    test("sessionPricing_WhenCapacityIsOne_RejectsInvalidCapacity", () => {
-      const costCents = 1000;
-      const slots = 1;
-
-      expect(() => sessionPricing(costCents, slots)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
+    test("sessionPricing_WhenCapacityIsOne_PricesTheBookersPlace", () => {
+      expect(sessionPricing(1000, 1)).toEqual({ suggestedCents: 1000, minimumCents: 500, maximumCents: 2000 });
     });
 
     test("sessionPricing_WhenCapacityExceedsThirty_RejectsInvalidCapacity", () => {

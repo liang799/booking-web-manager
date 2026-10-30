@@ -13,6 +13,7 @@ const session: SessionParticipants = {
   sessionId: "20000000-0000-4000-8000-000000000001", venueName: "Bishan Sports Hall",
   sport: "Badminton", startAt: "2045-04-02T10:00:00Z", endAt: "2045-04-02T12:00:00Z",
   status: "OPEN", availableSlots: 0, canVerifyAttendance: false,
+  booker: { displayName: "Casey Tan" },
   participants: [
     { participationId: "30000000-0000-4000-8000-000000000001", displayName: "Alex Tan", status: "COMMITTED", attendance: "UNVERIFIED", canRemove: true },
     { participationId: "30000000-0000-4000-8000-000000000002", displayName: "Priya Lim", status: "WAITLISTED", attendance: "UNVERIFIED", canRemove: false },
@@ -66,7 +67,7 @@ async function openRemoval(canvas: ReturnType<typeof within>) {
 export const ConfirmHistoricalRefund: Story = {
   play: async ({ canvas, args }) => {
     const list = canvas.getByRole("list", { name: "Participants" });
-    await expect(within(list).getAllByRole("heading").map((heading) => heading.textContent)).toEqual(["Alex Tan", "Priya Lim", "Sam Lee", "Taylor Chan"]);
+    await expect(within(list).getAllByRole("heading").map((heading) => heading.textContent)).toEqual(["Casey Tan", "Alex Tan", "Priya Lim", "Sam Lee", "Taylor Chan"]);
     await expect(within(list).getAllByRole("button")).toHaveLength(1);
     const dialog = await openRemoval(canvas);
     await expect(dialog.getByText(/Removal prevents them from rejoining/)).toHaveTextContent("Alex Tan");
@@ -298,7 +299,31 @@ export const StartedSession: Story = {
   },
 };
 
-export const EmptyRoster: Story = { args: { outcome: { status: "ready", session: { ...session, availableSlots: 8, participants: [] } } } };
+export const BookerOnly: Story = {
+  args: { outcome: { status: "ready", session: { ...session, availableSlots: 0, participants: [] } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "Participants (1)" })).toBeVisible();
+    const booker = within(canvas.getByRole("article", { name: "Casey Tan" }));
+    await expect(booker.getByText("Booker · You")).toBeVisible();
+    await expect(booker.queryByRole("button")).not.toBeInTheDocument();
+    await expect(canvas.queryByText("No participants yet")).not.toBeInTheDocument();
+  },
+};
+
+export const LegacyFundedBooker: Story = {
+  args: { outcome: { status: "ready", session: { ...session, canVerifyAttendance: true,
+    booker: { displayName: "Casey Tan", participationId: "30000000-0000-4000-8000-000000000005" },
+    participants: [{ participationId: "30000000-0000-4000-8000-000000000005", displayName: "Casey Tan", status: "COMMITTED", attendance: "UNVERIFIED", canRemove: false }, ...session.participants],
+  } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("heading", { name: "Participants (5)" })).toBeVisible();
+    await expect(canvas.getAllByRole("article", { name: "Casey Tan" })).toHaveLength(1);
+    const booker = within(canvas.getByRole("article", { name: "Casey Tan" }));
+    await expect(booker.getByText(/Booker · You/)).toBeVisible();
+    await expect(booker.queryByRole("button")).not.toBeInTheDocument();
+    await expect(within(canvas.getByRole("region", { name: "Check attendance" })).getByRole("group", { name: "Casey Tan" })).toBeVisible();
+  },
+};
 export const Unavailable: Story = { args: { outcome: { status: "error", code: "SESSION_REMOVAL_UNAVAILABLE", message: "Participant management is temporarily unavailable.", refresh: false, retrySameRequest: true } } };
 export const Desktop: Story = { globals: { viewport: { value: "desktop", isRotated: false } } };
 
@@ -309,6 +334,7 @@ export const AttendanceCheckOpen: Story = {
     const form = within(canvas.getByRole("region", { name: "Check attendance" }));
     await expect(form.getByRole("group", { name: "Alex Tan" })).toBeVisible();
     await expect(form.queryByRole("group", { name: "Priya Lim" })).not.toBeInTheDocument();
+    await expect(form.queryByRole("group", { name: "Casey Tan" })).not.toBeInTheDocument();
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
 };

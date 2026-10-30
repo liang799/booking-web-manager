@@ -58,6 +58,15 @@ test("converts safe bigint cents and projects only listing fields", async () => 
   expect(item).not.toHaveProperty("room_token");
 });
 
+test("excludes the viewers own sessions because the booker already participates", async () => {
+  const { query, reader } = scenario();
+
+  await reader.search({}, new Date("2030-01-01T00:00:00Z"), "booker");
+
+  expect(query.mock.calls[0]?.[0]).toContain("booker_id <> $2");
+  expect(query.mock.calls[0]?.[1]).toEqual([new Date("2030-01-01T00:00:00Z"), "booker"]);
+});
+
 test("rejects unsafe stored monetary values without rounding", async () => {
   const { query, reader } = scenario();
   query.mockResolvedValue([{

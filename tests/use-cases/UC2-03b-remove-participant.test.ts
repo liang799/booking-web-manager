@@ -178,13 +178,49 @@ describe("UC2-03b Remove Participant", () => {
 });
 
 describe("Session participant list", () => {
+  test("links a legacy funded booker to their existing participation without allowing removal", async () => {
+    const scenario = removal(createTestSession({ committedUserIds: ["booker", "alice"] }));
+    scenario.names.mockResolvedValue(new Map([["booker", "Casey Tan"], ["alice", "Alice"]]));
+
+    const list = await scenario.list.forBooker("booker", "s");
+
+    expect(list.booker).toEqual({ displayName: "Casey Tan", participationId: "p-booker" });
+    expect(list.participants[0]).toEqual({ participationId: "p-booker", displayName: "Casey Tan", status: "COMMITTED", attendance: "UNVERIFIED", canRemove: false });
+    expect(list.canVerifyAttendance).toBe(false);
+    scenario.clock.now.mockReturnValue(hoursAfterSessionEnd(1));
+    expect((await scenario.list.forBooker("booker", "s")).canVerifyAttendance).toBe(true);
+  });
+
+  test("shows the booker separately when no funded guests have joined", async () => {
+    const scenario = removal(createTestSession());
+    scenario.names.mockResolvedValue(new Map([["booker", "Casey Tan"]]));
+
+    const list = await scenario.list.forBooker("booker", "s");
+
+    expect(list).toMatchObject({ booker: { displayName: "Casey Tan" }, participants: [] });
+    expect(list.booker).not.toHaveProperty("participationId");
+    expect(list.booker).not.toHaveProperty("attendance");
+    expect(list.booker).not.toHaveProperty("canRemove");
+  });
+
+  test("keeps the legacy booker linked to their existing record after cancellation", async () => {
+    const initial = createTestSession({ committedUserIds: ["booker"] });
+    readyBooker().cancel(initial, hoursBeforeSessionStart(48));
+    const scenario = removal(initial);
+
+    const list = await scenario.list.forBooker("booker", "s");
+
+    expect(list.booker).toMatchObject({ participationId: "p-booker" });
+    expect(list.participants).toEqual([{ participationId: "p-booker", displayName: "Unnamed player", status: "CANCELLED", attendance: "UNVERIFIED", canRemove: false }]);
+  });
+
   test("shows names, statuses and historical rows in participant-list order without private identities", async () => {
     const initial = createTestSession({ committedUserIds: ["alice", "ben"], waitlistedUserIds: ["waiting"] });
     readyBooker().removeParticipant(initial, "p-ben", hoursBeforeSessionStart(48));
     const scenario = removal(initial);
     expect(await scenario.list.forBooker("booker", "s")).toEqual({
       sessionId: "s", venueName: "Court", sport: "Badminton", startAt: initial.booking.startAt, endAt: initial.booking.endAt,
-      status: "OPEN", availableSlots: 1, canVerifyAttendance: false, participants: [
+      status: "OPEN", availableSlots: 1, canVerifyAttendance: false, booker: { displayName: "Unnamed player" }, participants: [
         { participationId: "p-alice", displayName: "Alice", status: "COMMITTED", attendance: "UNVERIFIED", canRemove: true },
         { participationId: "p-ben", displayName: "Deleted user", status: "REMOVED", attendance: "UNVERIFIED", canRemove: false },
         { participationId: "p-waiting", displayName: "Unnamed player", status: "WAITLISTED", attendance: "UNVERIFIED", canRemove: false },

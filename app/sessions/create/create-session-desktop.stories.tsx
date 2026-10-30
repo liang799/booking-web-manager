@@ -112,12 +112,11 @@ export const ManualVenueValidation: Story = {
 export const Settings: Story = {
   args: { initialStep: 2 },
   play: async ({ canvas }) => {
-    const minimum = within(canvas.getByRole("group", { name: "Minimum viable headcount" }));
-    for (let index = 0; index < 6; index++) await userEvent.click(canvas.getByRole("button", { name: "Decrease Number of slots" }));
+    await expect(canvas.queryByRole("group", { name: "Minimum viable headcount" })).not.toBeInTheDocument();
+    await waitFor(() => expect(canvas.getByText("Includes you as the booker.")).toBeVisible());
+    for (let index = 0; index < 7; index++) await userEvent.click(canvas.getByRole("button", { name: "Decrease Number of slots" }));
     await expect(canvas.getByRole("button", { name: "Decrease Number of slots" })).toBeDisabled();
-    await expect(minimum.getByRole("status")).toHaveTextContent("2");
-    await expect(minimum.getByRole("button", { name: "Increase Minimum viable headcount" })).toBeDisabled();
-    await expect(minimum.getByRole("button", { name: "Decrease Minimum viable headcount" })).toBeDisabled();
+    await expect(within(canvas.getByRole("group", { name: "Number of slots" })).getByRole("status")).toHaveTextContent("1");
   },
 };
 
@@ -232,12 +231,12 @@ export const FourStepCreation: Story = {
     slider.focus();
     await userEvent.keyboard("{ArrowRight}");
     await expect(price).toHaveValue("12.02");
-    await expect(within(canvas.getByRole("region", { name: "Session form" })).getByRole("status")).toHaveTextContent("S$96.16");
+    await expect(within(canvas.getByRole("region", { name: "Session form" })).getByRole("status")).toHaveTextContent("S$84.14");
     await userEvent.click(canvas.getByRole("button", { name: "Create session" }));
     await expect(args.create).toHaveBeenCalledOnce();
     await expect(args.create).toHaveBeenCalledWith(expect.objectContaining({
       booking: expect.objectContaining({ totalCostCents: 6000, venueName: complete.venueName }),
-      config: expect.objectContaining({ visibility: "PUBLIC", totalSlots: 8, minimumHeadcount: 4, pricePerSlotCents: 1202 }),
+      config: expect.objectContaining({ visibility: "PUBLIC", totalSlots: 8, pricePerSlotCents: 1202 }),
     }));
     await waitFor(() => expect(args.onCreated).toHaveBeenCalledOnce());
   },

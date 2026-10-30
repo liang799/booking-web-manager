@@ -24,7 +24,7 @@ const submission = { idempotencyKey: "30000000-0000-4000-8000-000000000001", pre
 const preview = { ...params, refundCents: 501, previewVersion: submission.previewVersion };
 const committed = { ...params, status: "REMOVED", refundCents: 501 };
 const session = { sessionId, venueName: "Sports Hall", sport: "BADMINTON", startAt: new Date("2026-10-07T12:00:00Z"),
-  endAt: new Date("2026-10-07T14:00:00Z"), status: "OPEN", availableSlots: 0,
+  endAt: new Date("2026-10-07T14:00:00Z"), status: "OPEN", availableSlots: 0, booker: { displayName: "Casey Tan" },
   participants: [{ participationId, displayName: "A Player", status: "COMMITTED", canRemove: true }] };
 const serializedSession = { ...session, startAt: session.startAt.toISOString(), endAt: session.endAt.toISOString() };
 

@@ -31,7 +31,6 @@ class Session <<AggregateRoot>> {
   +visibility : Visibility
   +roomToken : string
   +totalSlots : number
-  +minimumHeadcount : number
   +bookingShare : Money {readOnly}
   +minimumReliability : ReliabilityScore [0..1]
   +participantList : ParticipantListView
@@ -50,6 +49,12 @@ class Session <<AggregateRoot>> {
   +completeSettlement(...) : FinancialResult
   +failSettlement(...) : void
 }
+
+note right of Session
+  Capacity includes the prepaid booker.
+  Guest holds use remaining places.
+  No minimum viable headcount.
+end note
 
 class Participant <<RoleView>> {
   +userId : UUID

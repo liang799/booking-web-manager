@@ -16,8 +16,8 @@ async function insertOverviewSession(context: SessionTestContext, input: {
   const startAt = new Date(Date.UTC(2045, 5, 17, 10, input.minute ?? 0));
   await context.pool.query(
     `insert into sessions(session_id,booker_id,venue_name,region,sport,start_at,end_at,total_cost_cents,
-      total_slots,minimum_headcount,booking_share_cents,visibility,room_token,holding_account_id)
-      values ($1,$2,$3,'West','Tennis',$4,$5,2000,4,2,500,$6,$7,$8)`,
+      total_slots,booking_share_cents,visibility,room_token,holding_account_id)
+      values ($1,$2,$3,'West','Tennis',$4,$5,2000,5,500,$6,$7,$8)`,
     [sessionId, input.bookerId, input.venueName, startAt, new Date(startAt.getTime() + 3_600_000),
       input.visibility ?? "PRIVATE", randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
   );

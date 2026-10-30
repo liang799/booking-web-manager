@@ -37,7 +37,6 @@ const savedSessionDraftSchema = z.object({
     endTime: z.string(),
     cost: z.string(),
     totalSlots: z.number().finite(),
-    minimumHeadcount: z.number().finite(),
     visibility: z.enum(["PRIVATE", "PUBLIC"]),
     reliability: z.string(),
     price: z.string(),

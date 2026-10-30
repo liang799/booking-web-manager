@@ -47,7 +47,7 @@ test("authenticated discovery filters real sessions without exposing private det
             venueName: config.venueName ?? "Discovery API fixture", region: config.region ?? "West", sport: config.sport ?? "Badminton",
             startAt, endAt: new Date(new Date(startAt).getTime() + 2 * 60 * 60 * 1000).toISOString(), totalCostCents: 1001,
           },
-          config: { totalSlots: 3, minimumHeadcount: 2, visibility: config.visibility ?? "PUBLIC" },
+          config: { totalSlots: 3, visibility: config.visibility ?? "PUBLIC" },
         },
       });
       expect(response.status()).toBe(201);
@@ -120,8 +120,8 @@ test("discovery requires an active profile but not a wallet or confirmed email",
     const venueName = `Public hydration fixture ${randomUUID()}`;
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-       total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, room_token, holding_account_id)
-       values ($1,$2,$3,'West','Badminton','2041-07-12T10:00:00Z','2041-07-12T12:00:00Z',1001,3,2,333,'PUBLIC',$4,$5)`,
+       total_cost_cents, total_slots, booking_share_cents, visibility, room_token, holding_account_id)
+       values ($1,$2,$3,'West','Badminton','2041-07-12T10:00:00Z','2041-07-12T12:00:00Z',1001,4,333,'PUBLIC',$4,$5)`,
       [sessionId, owner.userId, venueName, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );
     const params = { q: venueName };
@@ -131,7 +131,13 @@ test("discovery requires an active profile but not a wallet or confirmed email",
       headers: { Authorization: `Bearer ${owner.token}` }, params,
     });
     expect(ownerResponse.status()).toBe(200);
-    const body: DiscoveryPage = await ownerResponse.json();
+    expect(await ownerResponse.json()).toEqual({ items: [], nextCursor: null });
+    const viewer = await context.identity(false);
+    const viewerResponse = await request.get("/api/sessions", {
+      headers: { Authorization: `Bearer ${viewer.token}` }, params,
+    });
+    expect(viewerResponse.status()).toBe(200);
+    const body: DiscoveryPage = await viewerResponse.json();
     expect(body.items.map((item) => item.sessionId)).toEqual([sessionId]);
 
     const missing = await context.identity(false);
@@ -165,6 +171,7 @@ test("rejects invalid discovery queries and pages tied start times without repea
   const context = sessionTestContext();
   try {
     const viewer = await context.identity(false);
+    const booker = await context.identity(false);
     const headers = { Authorization: `Bearer ${viewer.token}` };
     for (const query of [
       "q=tennis&q=badminton", `q=${"a".repeat(101)}`,
@@ -180,9 +187,9 @@ test("rejects invalid discovery queries and pages tied start times without repea
     for (const id of [...ids].reverse()) {
       await context.pool.query(
         `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-         total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, room_token, holding_account_id)
-         values ($1,$2,'Paged discovery venue','West','Badminton','2041-07-10T10:00:00Z','2041-07-10T12:00:00Z',1001,3,2,333,'PUBLIC',$3,$4)`,
-        [id, viewer.userId, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
+         total_cost_cents, total_slots, booking_share_cents, visibility, room_token, holding_account_id)
+         values ($1,$2,'Paged discovery venue','West','Badminton','2041-07-10T10:00:00Z','2041-07-10T12:00:00Z',1001,4,333,'PUBLIC',$3,$4)`,
+        [id, booker.userId, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
       );
     }
     // Keep this window separate from the preceding test's next-day boundary fixture.

@@ -124,6 +124,7 @@ export class Participant {
     requireId(command.participationId, "participationId");
     if (command.holdId !== undefined) requireId(command.holdId, "holdId");
     assertOpenBefore(session.status, session.booking, command.now);
+    DomainError.require(this.userId !== session.bookerId, "ALREADY_PARTICIPATING", "The booker already has a place in this session");
     const participantList = session.participantList;
     if (personalReplacement === undefined) {
       this.assertAccess(session, command);
@@ -338,6 +339,8 @@ export class Participant {
       session.sessionId,
     );
     if (command.replacementMode === "DIRECT_INVITE") {
+      DomainError.require(command.replacementInviteeId !== session.bookerId,
+        "INVALID_STATE", "The booker already has a place in this session");
       const invitee =
         command.replacementInviteeId === undefined
           ? undefined

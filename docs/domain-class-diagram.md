@@ -60,8 +60,11 @@ abbreviated.
   `session.participantList` exposes only `ParticipantListView` queries; the focused
   diagram distinguishes that public interface from the internal implementation.
   Private maps and candidate-building methods are omitted.
-  Active commitments plus reserved replacement seats are limited by `totalSlots`
-  (at most eight). Departure chooses either one named replacement or the ordinary
+  The booker automatically occupies one prepaid place; guest commitments plus
+  reserved replacement seats share the remaining `totalSlots` capacity. New
+  sessions allow 1–30 total places, with no minimum viable headcount. Historical
+  30-guest rooms retain 31 places including the booker under
+  [ADR-0022](./adr/0022-booker-inclusive-session-capacity.md). Departure chooses either one named replacement or the ordinary
   waitlist; that choice cannot change after withdrawal. See
   [ADR-0006](./adr/0006-personal-replacement-reservations.md).
   A direct invitation names one user ID and reserves the seat until that user

@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { bookingAccountIneligibility, DomainError, type UUID } from "@/domain";
 import { PostgresTransactor } from "@/lib/database/postgres-transactor";
 import { LedgerError } from "@/lib/money/errors";
+import { fingerprintOf, PostgresIdempotencyStore } from "@/lib/money/idempotency";
 import { LedgerUnitOfWork } from "@/lib/money/ledger-unit-of-work";
 import type { SqlExecutor } from "@/lib/money/sql";
 import type { Clock } from "@/use-cases/shared/contracts";
@@ -40,39 +41,65 @@ export class PostgresSessionCreationTransaction
       throw new SessionPersistenceError("Submission identity does not match the booker");
     }
     const key = JSON.stringify(["UC2-02", bookerId, this.idempotencyKey]);
+    const operation = { idempotencyKey: key, scope: "UC2-02" };
+    const legacyRequest = { idempotencyKey: key };
     // Authorize every transaction attempt before a durable replay can reveal its room token.
     // Keep payout and booking-time rules inside new creation, preserving eligible replay.
     const unitOfWork = new LedgerUnitOfWork({
       transaction: (perform) => this.transactor.transaction(async (sql) => {
         await assertCurrentBookerAccess(sql, bookerId);
-        return perform(sql);
+        try {
+          return await perform(sql);
+        } catch (error) {
+          if (this.request === undefined || !(error instanceof LedgerError) || error.code !== "IDEMPOTENCY_CONFLICT") {
+            throw error;
+          }
+          // A fingerprint conflict leaves the SQL transaction usable. Probe
+          // historical successful formats under this attempt's authorization;
+          // the surrounding unit of work still retries whole transactions.
+          const existing = (await sql.query(
+            `select status, request_fingerprint from idempotency_keys
+             where idempotency_key = $1 for share`,
+            [key],
+          ))[0];
+          const compatible = existing?.status === "SUCCEEDED"
+            ? requestWithRetiredHeadcount(this.request, existing.request_fingerprint)
+            : undefined;
+          const claim = await new PostgresIdempotencyStore(sql).claim({
+            ...operation,
+            fingerprint: fingerprintOf(compatible ?? legacyRequest),
+          });
+          // Never run work for a historical probe, even if the key disappears
+          // or a failed key is reclaimed. Throwing rolls back such a claim.
+          if (claim.status !== "REPLAY") throw error;
+          return claim.value as Awaited<ReturnType<typeof perform>>;
+        }
       }),
     });
-    const operation = { idempotencyKey: key, scope: "UC2-02" };
-    const legacyRequest = { idempotencyKey: key };
-    try {
-      return await unitOfWork.execute(
-        { ...operation, request: this.request ?? legacyRequest },
-        ({ sql }) =>
-          work({
-            users: new PostgresUserReader(sql, this.clock),
-            sessions: new PostgresSessionWriter(sql, bookerId),
-          }),
-      );
-    } catch (error) {
-      if (this.request === undefined || !(error instanceof LedgerError) || error.code !== "IDEMPOTENCY_CONFLICT") {
-        throw error;
-      }
-      // Older successful keys never stored the payload. Probe their original
-      // fingerprint for replay only, retaining the same actor-scoped key.
-      // A new payload-bound key still conflicts here. If the row disappears or
-      // was not successful, this callback must NEVER create another session.
-      return unitOfWork.execute(
-        { ...operation, request: legacyRequest },
-        async () => { throw error; },
-      );
-    }
+    return unitOfWork.execute(
+      { ...operation, request: this.request ?? legacyRequest },
+      ({ sql }) =>
+        work({
+          users: new PostgresUserReader(sql, this.clock),
+          sessions: new PostgresSessionWriter(sql, bookerId),
+        }),
+    );
   }
+}
+
+/** Only the retired, historically valid field may differ from the parsed retry. */
+function requestWithRetiredHeadcount(
+  request: NonNullable<SessionCreationSubmission["request"]>,
+  fingerprint: unknown,
+): SessionCreationSubmission["request"] {
+  const { totalSlots } = request.config;
+  // The old creation contract allowed 2–30 places and headcounts 2–capacity.
+  if (!Number.isInteger(totalSlots) || totalSlots < 2 || totalSlots > 30) return undefined;
+  for (let minimumHeadcount = 2; minimumHeadcount <= totalSlots; minimumHeadcount += 1) {
+    const candidate = { ...request, config: { ...request.config, minimumHeadcount } };
+    if (fingerprintOf(candidate) === fingerprint) return candidate;
+  }
+  return undefined;
 }
 
 /** Only trusted account facts are read before replay; complete hydration remains creation-owned. */

@@ -166,16 +166,17 @@ const parsed = parseRequestBoundCreateSessionInput(authenticatedUserId, {
 Direct use-case callers continue to supply Date-valued booking details.
 Successful creation and replay return 201 with
 `{ sessionId, roomToken, bookingShareCents }`. Omitted `config.pricePerSlotCents` rounds down equally:
-1001 cents over three slots means 333 cents each, 999 cents collected when full,
-and a 2-cent shortfall borne by the booker. An optional safe integer chosen price
+1001 cents over three participant places means 333 cents each. The other two
+participants contribute 666 cents, leaving 335 cents covered by the booker.
+An optional safe integer chosen price
 is validated against `[max(1, ceil(s / 2)), min(2 × s, floor(MAX_SAFE_INTEGER / slots))]`,
 where `s = floor(cost / slots)`. Above-cost collection is allowed. The accepted
 price is immutable Session state hydrated from `booking_share_cents`; participation,
 refund and settlement use that price and historical holds. Apply migration 0008
 before deploying this behavior. See [ADR-0012](../../docs/adr/0012-booker-selected-session-pricing.md).
-Creation moves no funds. `config.minimumHeadcount` remains required and is
-persisted as `minimum_headcount`; it must be an integer between two and
-`config.totalSlots`.
+Creation moves no funds. `config.totalSlots` is the total participant capacity
+from one to thirty, including the booker. There is no minimum participant
+requirement; the booker can create a session for themselves.
 
 | Status | Outcome |
 | --- | --- |

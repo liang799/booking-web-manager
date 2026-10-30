@@ -5,7 +5,7 @@ import type { FinancialResult, PayoutBatch } from "../../shared/operations";
 import type { SessionStatus, Visibility } from "../../shared/statuses";
 import type { UUID } from "../../shared/types";
 import type { Booking } from "../booking";
-import { resolveBookingShare } from "../pricing";
+import { resolveBookingShare, restoreBookingShare } from "../pricing";
 import type { Participation } from "../participation";
 import { ParticipantList, type ParticipantListView } from "./participant-list";
 import { completeSettlement } from "./session-settlement";
@@ -34,7 +34,6 @@ export interface SessionDetails {
   /** Omission preserves the equal-split default for existing domain callers. */
   readonly bookingShare?: Money;
   readonly totalSlots: number;
-  readonly minimumHeadcount: number;
   readonly visibility: Visibility;
   readonly status: SessionStatus;
   readonly minimumReliability?: ReliabilityScore;
@@ -78,7 +77,6 @@ export class Session {
   readonly #booking: Booking;
   readonly #bookingShare: Money;
   readonly #totalSlots: number;
-  readonly #minimumHeadcount: number;
   readonly #roomToken: string;
   readonly #holdingAccountId: UUID;
   readonly #minimumReliability?: ReliabilityScore;
@@ -96,7 +94,6 @@ export class Session {
     this.#bookerId = details.bookerId;
     this.#booking = details.booking;
     this.#totalSlots = details.totalSlots;
-    this.#minimumHeadcount = details.minimumHeadcount;
     this.#roomToken = details.roomToken;
     this.#holdingAccountId = details.holdingAccountId;
     this.#visibility = details.visibility;
@@ -112,16 +109,21 @@ export class Session {
       status: this.#status,
       visibility: this.#visibility,
       totalSlots: this.#totalSlots,
-      minimumHeadcount: this.#minimumHeadcount,
     });
-    this.#bookingShare = resolveBookingShare(this.#booking.totalCost, this.#totalSlots, details.bookingShare);
+    this.#bookingShare = details.bookingShare === undefined
+      ? resolveBookingShare(this.#booking.totalCost, this.#totalSlots)
+      : restoreBookingShare(details.bookingShare, this.#totalSlots);
+    // Historical paid booker records already occupy the booker’s place.
+    const bookerHasFundedPlace = details.participations.some(
+      (p) => p.userId === details.bookerId && p.status === "COMMITTED",
+    );
     this.#participantList = new ParticipantList(
       {
         participations: details.participations,
         nextQueueSequence: details.nextQueueSequence,
       },
       {
-        totalSlots: this.#totalSlots,
+        totalSlots: this.#totalSlots - (bookerHasFundedPlace ? 0 : 1),
         holdingAccountId: this.#holdingAccountId,
       },
     );
@@ -134,6 +136,7 @@ export class Session {
     now: Date,
   ): void {
     assertOpenBefore(this.#status, this.#booking, now);
+    DomainError.require(admission.userId !== this.#bookerId, "ALREADY_PARTICIPATING", "The booker already has a place in this session");
     const next = this.#participantList.withAdmission(
       admission,
       completedReplacement,
@@ -149,6 +152,10 @@ export class Session {
     replacement: Participation,
     now?: Date,
   ): void {
+    DomainError.require(existing.userId !== this.#bookerId || existing.status !== "COMMITTED",
+      "INVALID_STATE", "The booker must cancel the session to leave their place");
+    DomainError.require(replacement.replacementInviteeId !== this.#bookerId,
+      "INVALID_STATE", "The booker already has a place in this session");
     assertOpen(this.#status);
     if (now !== undefined) assertOpenBefore(this.#status, this.#booking, now);
     const next = this.#participantList.withParticipationTransition(
@@ -315,9 +322,6 @@ export class Session {
   get totalSlots(): number {
     return this.#totalSlots;
   }
-  get minimumHeadcount(): number {
-    return this.#minimumHeadcount;
-  }
   get bookingShare(): Money {
     return this.#bookingShare;
   }
@@ -358,9 +362,11 @@ export class Session {
       const at = validDate(now, "now");
       if (this.#booking.hasStarted(at)) return 0;
     }
+    const bookerHasFundedPlace =
+      this.#participantList.findByUserId(this.#bookerId)?.status === "COMMITTED";
     return Math.max(
       0,
-      this.#totalSlots -
+      this.#totalSlots - (bookerHasFundedPlace ? 0 : 1) -
         this.#participantList.committedCount -
         this.#participantList.reservedCount,
     );

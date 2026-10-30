@@ -161,6 +161,7 @@
 /supabase/migrations/0007_session_management.sql @liang799
 /supabase/migrations/0008_session_pricing.sql @liang799 @harr008
 /supabase/migrations/0013_session_slot_limit.sql @liang799
+/supabase/migrations/0019_booker_participation.sql @liang799 @harr008 @rbrishi15
 /supabase/migrations/0015_discovery_realtime.sql @liang799 @rbrishi15
 /domain/sessions/capacity.ts @rbrishi15 @liang799
 

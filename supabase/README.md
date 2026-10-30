@@ -37,12 +37,14 @@ most likely way this project loses an afternoon.
 | 0014 | `commitment_sweep_schedule` — pg_cron + pg_net call to the scheduled commitment sweep every five minutes | Yajie |
 | 0016 | `user_handles` — unique public user IDs: generated for existing accounts, chosen at sign-up, set by `update_profile` | Joseph / Rishi |
 | 0017 | `group_invitations` — invitations to a regular group by user ID; `save_regular_group` saves them with memberships | Joseph / Rishi |
+| 0018 | `notification_inbox` — persistent session notifications (renumbered from duplicate 0017 before deployment) | Yajie / Rishi |
+| 0019 | `booker_participation` — remove minimum headcount, include prepaid booker in capacity, preserve accepted guest prices | Neoh / Rishi |
 
 The deployed sequence ends at 0011. New migrations must use a unique number
 after it; do not reuse a deployed number or insert a file below it. Supabase's
 ordinary migration push rejects later-arriving files below an applied number.
 The superseded `0009_session_capacity.sql` was removed before deployment because
-sessions still require `minimum_headcount`; do not restore or renumber it.
+it was not an approved migration; do not restore or renumber it. Migration 0019 now removes minimum headcount and counts the booker in capacity.
 
 Migrations 0010/0011 use tables already created by 0004/0005 and can be tested
 against the current main sequence.
@@ -72,6 +74,8 @@ disposable stack; see [the integration guide](../use-case-config/README.md#valid
 because the tables they reference belong to other members and do not exist yet.
 The indexes are already there, so adding each constraint is one line in the
 migration that creates the referenced table.
+
+Apply 0019 together with the matching application release: the old app refers to the removed column. It preserves all guest places and accepted prices, allowing legacy capacity 31 while new creation is capped at 30.
 
 ## Hosted project
 

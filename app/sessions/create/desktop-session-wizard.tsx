@@ -105,10 +105,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
               <div className={styles.field}><label htmlFor="visibility">Room visibility</label><Select value={draft.visibility} disabled={locked} onValueChange={(visibility: "PRIVATE" | "PUBLIC") => change({ visibility })}>
                 <SelectTrigger id="visibility"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PRIVATE">Private</SelectItem><SelectItem value="PUBLIC">Public</SelectItem></SelectContent>
               </Select><p className={styles.help}>{draft.visibility === "PRIVATE" ? "Private sessions are shared by invitation." : "People can find this session in Discover."}</p></div>
-              <div className={styles.pair}>
-                <CountField id="totalSlots" label="Number of slots" value={draft.totalSlots} min={MIN_SESSION_SLOTS} max={MAX_SESSION_SLOTS} disabled={locked} help="Total places available." error={errors.totalSlots} onChange={(totalSlots) => change({ totalSlots })} />
-                <CountField id="minimumHeadcount" label="Minimum viable headcount" value={draft.minimumHeadcount} min={2} max={draft.totalSlots} disabled={locked} help="The minimum needed to play." error={errors.minimumHeadcount} onChange={(minimumHeadcount) => change({ minimumHeadcount })} />
-              </div>
+              <CountField id="totalSlots" label="Number of slots" value={draft.totalSlots} min={MIN_SESSION_SLOTS} max={MAX_SESSION_SLOTS} disabled={locked} help="Includes you as the booker." error={errors.totalSlots} onChange={(totalSlots) => change({ totalSlots })} />
               <div className={`${styles.field} ${styles.shortField}`}><label htmlFor="reliability">Minimum reliability score</label><Select value={draft.reliability} disabled={locked} onValueChange={(reliability) => change({ reliability })}>
                 <SelectTrigger id="reliability" aria-invalid={!!errors.reliability}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No minimum</SelectItem>{[60, 70, 80, 90, 100].map((score) => <SelectItem key={score} value={String(score)}>{(score / 20).toFixed(1)} / 5.0</SelectItem>)}</SelectContent>
               </Select>{errors.reliability && <p role="alert" className={styles.error}>{errors.reliability}</p>}</div>
@@ -127,7 +124,7 @@ export function DesktopSessionWizard({ store, search, onNext, onSubmit, formRef 
                   if (target !== undefined) { event.preventDefault(); change({ price: decimalCents(Math.max(range.minimumCents, Math.min(range.maximumCents, target))) }); }
                 }} />
                 <p id="price-range"><Money cents={range.minimumCents} /><Money cents={range.maximumCents} /></p></div>}
-              <div className={styles.revenue}><p>Revenue at full capacity ({draft.totalSlots} slots)</p><output aria-live="polite"><Money cents={range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents ? price * draft.totalSlots : 0} /></output><p className={styles.help}>Based on paid bookings.</p></div>
+              <div className={styles.revenue}><p>Estimated collected revenue at full capacity ({draft.totalSlots} slots)</p><output aria-live="polite"><Money cents={range && price !== undefined && price >= range.minimumCents && price <= range.maximumCents ? price * (draft.totalSlots - 1) : 0} /></output><p className={styles.help}>Excludes your place, which is covered by your venue payment.</p></div>
             </>}
             {failure && <div key={`${failure.code}:${failure.message}`} ref={failureRef} tabIndex={-1} className={styles.failure}><ErrorMessage>{failure.message}</ErrorMessage>
               {recoveryRequired && <><Button asChild variant="link"><Link href="/sessions" target="_blank" rel="noopener noreferrer">Check hosted sessions (new tab)</Link></Button><p className={styles.help}>Starting again keeps a backup of the saved details. Only continue if you have confirmed the session was not created.</p><Button type="button" variant="outline" onClick={restartAfterRecovery}>I checked my sessions; start again</Button></>}
@@ -193,7 +190,7 @@ function SessionSummary({ draft, stage }: { readonly draft: SessionDraft; readon
     <div className={styles.summaryDetails}>
       <p>{start ? dateFormat.format(new Date(start)) : "Choose a date"}{start && end && <> · {compactTimeLabel(start)} – {compactTimeLabel(end)} SGT</>}</p>
       {start && end && draft.endDate !== draft.startDate && <p>Ends {dateFormat.format(new Date(end))}</p>}
-      {stage >= 3 && <p>{draft.totalSlots} slots · Minimum {draft.minimumHeadcount}</p>}
+      {stage >= 3 && <p>{draft.totalSlots} {draft.totalSlots === 1 ? "participant" : "participants"}, including you</p>}
       {stage === 2 && draft.selectedVenue && <p>{draft.selectedVenue.address}</p>}
     </div>
   </aside>;

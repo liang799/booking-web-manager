@@ -30,7 +30,7 @@ describe("private session invitation persistence", () => {
     expect(summary).toEqual({
       sessionId: fixture.sessionId, venueName: fixture.venueName, sport: "Badminton", region: "West",
       startAt: new Date("2045-06-17T10:00:00Z"), endAt: new Date("2045-06-17T12:00:00Z"),
-      totalSlots: 2, bookingShareCents: 500,
+      totalSlots: 3, bookingShareCents: 500,
     });
     for (const wrong of [token.toLowerCase(), ` ${token}`, `${token} `, `${token}' OR true --`]) {
       expect(await preview().byToken(fixture.sessionId, wrong)).toBeNull();
@@ -68,7 +68,7 @@ describe("private session invitation persistence", () => {
     const invitations = new GetSessionInvitation({ transaction: new PostgresSessionManagementTransaction(() => context.pool, clock), clock });
     expect(await invitations.forBooker(fixture.booker.userId, fixture.sessionId)).toEqual({ sessionId: fixture.sessionId, roomToken: fixture.roomToken });
     expect(await invitations.forBooker(fixture.booker.userId, fixture.sessionId)).toEqual({ sessionId: fixture.sessionId, roomToken: fixture.roomToken });
-    expect(await preview().byToken(fixture.sessionId, fixture.roomToken)).toMatchObject({ sessionId: fixture.sessionId, totalSlots: 2, bookingShareCents: 500 });
+    expect(await preview().byToken(fixture.sessionId, fixture.roomToken)).toMatchObject({ sessionId: fixture.sessionId, totalSlots: 3, bookingShareCents: 500 });
     expect(await snapshot()).toEqual(before);
   });
 });
