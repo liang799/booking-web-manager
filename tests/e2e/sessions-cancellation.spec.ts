@@ -42,7 +42,8 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await expect(page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Change visibility to private" })).toHaveCount(0);
+    // Full sessions retain the visibility segment, but the unavailable action must be disabled.
+    await expect(page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Change visibility to private" })).toBeDisabled();
     const trigger = page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session", exact: true });
     await trigger.focus();
     await page.keyboard.press("Enter");
