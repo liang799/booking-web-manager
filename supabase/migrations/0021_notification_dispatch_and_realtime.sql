@@ -59,7 +59,7 @@ begin
   create extension if not exists pg_cron;
   perform cron.schedule('notification-dispatch-every-minute','* * * * *','select public.request_notification_dispatch();');
   perform cron.schedule('notification-history-daily','10 19 * * *',
-    'do $cleanup$ begin for batch in 1..100 loop exit when public.cleanup_notification_history(1000)=0; end loop; end $cleanup$;');
+    'do $cleanup$ begin for batch in 1..100 loop exit when public.cleanup_notification_history(1000)=0; end loop; end; $cleanup$;');
 exception when others then
   raise notice 'Notification cron unavailable; configure external dispatch and retention cleanup (%).',sqlstate;
 end;

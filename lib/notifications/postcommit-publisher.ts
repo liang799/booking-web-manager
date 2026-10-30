@@ -20,6 +20,6 @@ export function createPostCommitNotificationPublisher(
           await response.body?.cancel();
         } catch { console.warn("Notification invalidation unavailable"); }
       });
-    } catch { /* A finished request cannot undo already committed messages. HTTP reconciliation recovers. */ }
+    } catch { console.warn("Notification invalidation could not be scheduled"); }
   };
 }

@@ -27,14 +27,17 @@ export type NotificationPushSender = (job: NotificationPushJob, payload: string,
 /** Claims commit before sending; acknowledgements are fenced by a unique lease token. */
 export async function dispatchNotificationPush(store: NotificationPushStore, send: NotificationPushSender | undefined, now = Date.now) {
   const report = { delivered:0,expired:0,retrying:0,failed:0,disabled:!send };
+  const startedAt=now();
   await store.prune();
   if (!send) return { ...report,...await store.stats() };
-  const token = randomUUID(), startedAt = now();
+  const token = randomUUID();
   const jobs = await store.claim(token);
   try {
     for (const claimed of jobs) {
       if (now()-startedAt >= 40_000) break;
       const job = await store.current(claimed,token);
+      // Eligibility reads can wait on database work. Reserve five seconds for the send.
+      if (now()-startedAt >= 40_000) break;
       if (!job || job.expiresAt.getTime()<=now()) {
         await store.complete(claimed,token); report.expired++; continue;
       }

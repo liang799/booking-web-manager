@@ -1,8 +1,7 @@
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
 import { readPushSettings } from "@/app/commit/push-environment";
 import { createPostgresPoolProvider } from "@/lib/database/postgres-pool";
-import { createPostgresExecutor } from "@/lib/database/postgres-executor";
-import { PostgresNotificationPushStore } from "@/lib/notifications/postgres-notification-push-store";
+import { createNotificationPushStore } from "@/lib/notifications/postgres-notification-push-store";
 import { NotificationPushDispatcher } from "@/lib/notifications/push-dispatcher";
 import { createNotificationPushSender } from "@/lib/notifications/web-push-delivery";
 import { NotificationsUnavailableError } from "@/app/notifications/dependencies";
@@ -16,7 +15,7 @@ export function createNotificationDispatchDependencies() {
   if (!settings) return {cronSecret:process.env.CRON_SECRET ?? "",runner:new UnavailableDispatcher()};
   const getPool=createPostgresPoolProvider(settings.databaseUrl),push=readPushSettings();
   return {cronSecret:process.env.CRON_SECRET ?? "",runner:new NotificationPushDispatcher(
-    new PostgresNotificationPushStore(createPostgresExecutor(getPool)),
+    createNotificationPushStore(getPool),
     push ? createNotificationPushSender(push) : undefined,
   )};
 }

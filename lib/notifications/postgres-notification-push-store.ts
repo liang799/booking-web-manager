@@ -1,3 +1,4 @@
+import type { Pool,QueryConfig } from "pg";
 import type { SqlExecutor, SqlRow } from "@/lib/money/sql";
 import type { NotificationPushJob, NotificationPushStore } from "./push-dispatcher";
 
@@ -61,4 +62,19 @@ export class PostgresNotificationPushStore implements NotificationPushStore {
 function fromRow(row: SqlRow): NotificationPushJob {
   return { notificationId:String(row.notification_id),endpoint:String(row.endpoint),attempts:Number(row.attempts),expiresAt:new Date(String(row.expires_at)),
     kind:String(row.kind),title:String(row.title),body:String(row.body),url:String(row.destination),p256dh:String(row.p256dh),auth:String(row.auth) };
+}
+
+/** Request-scoped worker executor: pool acquisition is bounded to 5s by the shared pool. */
+export function createNotificationPushStore(getPool:()=>Pool,now=Date.now):PostgresNotificationPushStore {
+  const deadline=now()+45_000;
+  return new PostgresNotificationPushStore({
+    async query<TRow extends SqlRow = SqlRow>(statement:string,values?:readonly unknown[]) {
+      // Reserve the pool's maximum connection wait before allowing a query to begin.
+      const remaining=deadline-now()-5_000;
+      if (remaining<=0) throw new Error("Notification dispatch database deadline exceeded");
+      const config:QueryConfig & {query_timeout:number}={text:statement,values:values ? [...values] : undefined,query_timeout:Math.min(5_000,remaining)};
+      const result=await getPool().query<TRow>(config);
+      return result.rows;
+    },
+  });
 }

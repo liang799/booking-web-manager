@@ -29,3 +29,14 @@ it("leaves durable work available when push configuration is unavailable", async
 function job(endpoint: string): NotificationPushJob {
   return { notificationId:endpoint, endpoint, p256dh:"key", auth:"auth", title:"Title",body:"Body",url:"/groups", kind:"GROUP_INVITATION",attempts:0,expiresAt:new Date(Date.now()+60_000) };
 }
+
+it("does not start a push after slow eligibility reads consume the run budget",async()=>{
+  let clock=0,sent=0,released=false;
+  const candidate=job("slow-read");
+  const store:NotificationPushStore={prune:async()=>{clock=20_000;return 0;},claim:async()=>[candidate],
+    current:async()=>{clock=41_000;return candidate;},complete:async()=>{},retry:async()=>{},expireSubscription:async()=>{},
+    release:async()=>{released=true;},stats:async()=>({pending:1,oldestPendingAt:null})};
+  await dispatchNotificationPush(store,async()=>{sent++;return "DELIVERED";},()=>clock);
+  expect(sent).toBe(0);
+  expect(released).toBe(true);
+});

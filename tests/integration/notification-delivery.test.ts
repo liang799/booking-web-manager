@@ -107,14 +107,26 @@ describe("private notification Broadcast",()=>{
     const own=client(),stranger=client(),anonymous=client(),publicClient=client();
     await own.realtime.setAuth(actor.token);await stranger.realtime.setAuth(other.token);
     const messages:unknown[]=[],publicMessages:unknown[]=[];
-    await joined(own.channel(topic,{config:{private:true}}).on("broadcast",{event:"notifications_changed"},message=>messages.push(message.payload)));
+    const ownChannel=own.channel(topic,{config:{private:true,broadcast:{ack:true}}}).on("broadcast",{event:"notifications_changed"},message=>messages.push(message.payload));
+    await joined(ownChannel);
     await joined(publicClient.channel(topic,{config:{private:false}}).on("broadcast",{event:"notifications_changed"},message=>publicMessages.push(message.payload)));
     await expect(joined(stranger.channel(topic,{config:{private:true}}))).rejects.toThrow();
     await expect(joined(anonymous.channel(topic,{config:{private:true}}))).rejects.toThrow();
     const response=await fetch(`${settings().supabaseUrl}/realtime/v1/api/broadcast`,{method:"POST",headers:{apikey:settings().anonKey,Authorization:`Bearer ${actor.token}`,"Content-Type":"application/json"},
       body:JSON.stringify({messages:[{topic,event:"notifications_changed",payload:{forbidden:true},private:true}]})});
-    expect(response.ok).toBe(false);
+    // The batch REST endpoint can acknowledge enqueueing with 202 even when
+    // asynchronous authorization drops the message. Delivery, not HTTP status,
+    // establishes that the private receive-only channel cannot be forged.
     await response.body?.cancel();
+    const sent=await ownChannel.send({type:"broadcast",event:"notifications_changed",payload:{forbidden:true}},{timeout:2_000});
+    expect(sent).not.toBe("ok");
+    const connection=await context.pool.connect();
+    try {
+      await connection.query("begin");
+      await connection.query("set local role authenticated");
+      await connection.query("select set_config('request.jwt.claims',$1,true),set_config('realtime.topic',$2,true)",[JSON.stringify({sub:actor.userId,role:"authenticated"}),topic]);
+      await expect(connection.query("insert into realtime.messages(topic,extension,event,payload,private) values($1,'broadcast','notifications_changed','{}',true)",[topic])).rejects.toMatchObject({code:"42501"});
+    } finally {await connection.query("rollback");connection.release();}
     const tasks:(()=>Promise<void>)[]=[];
     createPostCommitNotificationPublisher({url:settings().supabaseUrl,serviceRoleKey:settings().serviceKey},task=>tasks.push(task))([actor.userId]);
     await tasks[0]!();
