@@ -163,8 +163,10 @@ local sport photos, Singapore timing (including the end date for overnight sessi
 and informational session data. Photo sources and credits are in
 [`public/images/sports/README.md`](../../public/images/sports/README.md).
 
-The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus a Search
-button alongside the account menu. Search opens the focused `/discover` view with
+The shared mobile shell exposes Home, Sessions, Wallet and Settings, plus an
+outline notification bell. Mobile Home embeds its own React Query infinite
+discovery feed below Upcoming Bookings, with no separate Search shortcut.
+Desktop navigation and existing direct `/discover` links retain the focused view with
 a back arrow, tennis hero, mounted search/filter form, sport chips and compact cards.
 The search field is labelled "Search sessions by sport or venue". The desktop sidebar
 has separate Home and Discover destinations.
@@ -195,8 +197,8 @@ Enter keeps an applied sport filter. Editing search does not open advanced filte
 
 The shared mobile navigation keeps its existing active-state behavior. Only the
 active destination shows a visible label; all four retain accessible names.
-Groups are part of the Sessions area and remain reachable through the account
-sheet, alongside settings and logout. Sessions now opens the UC2-03a hosted-session
+Groups are part of the Sessions area and remain reachable through its Groups
+tab; account details and logout are in Settings. Sessions opens the UC2-03a hosted-session
 management page. Wallet retains its existing route destination.
 The creation wizard is available at `/sessions/create`. Join confirmation reuses
 the commitment endpoint; private-session details require a valid invitation.

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { PushNotificationsRow } from "@/app/commit/_components/push-notifications-row";
+import { logOut } from "@/app/(auth)/logout-action";
 import { SettingsView } from "./_components/settings-view";
 import { loadReliabilityScore } from "./reliability";
 
@@ -20,6 +21,7 @@ export default async function ProfilePage() {
         preferredRegions: user.preferredRegions,
       }}
       notifications={<PushNotificationsRow />}
+      logoutAction={logOut}
     />
   );
 }

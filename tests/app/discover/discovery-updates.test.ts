@@ -3,7 +3,7 @@ import { DISCOVERY_RECONCILE_MS, startDiscoveryUpdates } from "@/app/discover/_c
 
 afterEach(() => vi.useRealTimers());
 
-function scenario() {
+function scenario(options: { initialRefresh?: boolean } = {}) {
   vi.useFakeTimers({ toFake: ["Date", "performance", "setTimeout", "clearTimeout", "setInterval", "clearInterval"] });
   vi.setSystemTime(0);
   const documentEvents = new EventTarget();
@@ -16,6 +16,7 @@ function scenario() {
   const subscribe = vi.fn((invalidate: () => void) => { notify = invalidate; return unsubscribe; });
   const refresh = vi.fn();
   const updates = startDiscoveryUpdates({
+    initialRefresh: options.initialRefresh,
     refresh, subscribe, canRefresh: () => allowed, online: () => online,
     document: {
       get visibilityState() { return visible ? "visible" : "hidden"; },
@@ -37,6 +38,16 @@ function scenario() {
 }
 
 describe("discovery event-driven refresh", () => {
+  test("lets a fresh React Query read own initialization while retaining later invalidations", () => {
+    const s = scenario({ initialRefresh: false });
+    vi.advanceTimersByTime(500);
+    expect(s.refresh).not.toHaveBeenCalled();
+    s.notify();
+    vi.advanceTimersByTime(250);
+    expect(s.refresh).toHaveBeenCalledOnce();
+    s.updates.stop();
+  });
+
   test("does not poll every second; reconciles after thirty seconds", () => {
     const s = scenario();
     vi.advanceTimersByTime(250);

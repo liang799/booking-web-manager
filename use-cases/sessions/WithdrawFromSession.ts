@@ -120,12 +120,14 @@ export class WithdrawFromSession {
         kind: "REPLACEMENT_INVITATION",
         recipientId: request.replacement.inviteeId,
         sessionId: withdrawal.sessionId,
+        occurrenceKey: key,
       });
     if (withdrawal.kind === "AWAITING_REPLACEMENT")
       notifications.push({
         kind: "FORFEITURE_WARNING",
         recipientId: request.userId,
         sessionId: withdrawal.sessionId,
+        occurrenceKey: key,
       });
     await notifyBestEffort(notifier, notifications);
 

@@ -34,7 +34,7 @@ async function insertSession(context: SessionTestContext, bookerId: string, inpu
   );
 }
 
-test("mobile search preserves drafts and history, disables pending actions, and returns to Home", async ({ page }, testInfo) => {
+test("direct mobile Discover entry preserves drafts and history, disables pending actions, and returns to Home", async ({ page }, testInfo) => {
   test.setTimeout(60_000);
   const context = sessionTestContext();
   let releaseRequest: (() => void) | undefined;
@@ -48,7 +48,7 @@ test("mobile search preserves drafts and history, disables pending actions, and 
     const origin = "/?date=2043-04-01&region=West";
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, user, origin);
-    await page.getByRole("link", { name: "Search sessions", exact: true }).click();
+    await page.goto(`/discover?returnTo=${encodeURIComponent(origin)}`);
     await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.get("returnTo")).toBe(origin);
     await expect(page.getByRole("navigation", { name: "Main", exact: true })).toBeHidden();
@@ -155,7 +155,7 @@ test("search pagination preserves the query and return destination while sport c
     await page.setViewportSize({ width: 390, height: 844 });
     const origin = "/?date=2043-04-02";
     await login(page, user, origin);
-    await page.getByRole("link", { name: "Search sessions", exact: true }).click();
+    await page.goto(`/discover?returnTo=${encodeURIComponent(origin)}`);
     const input = page.getByRole("searchbox", { name: "Search sessions by sport or venue", exact: true });
     const results = page.getByRole("region", { name: "Upcoming sessions", exact: true });
     await input.fill(tag);
@@ -223,7 +223,7 @@ test("Discover returns to another app page and uses Home for direct or rejected 
     const origin = "/profile?from=discovery-search";
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, user, origin);
-    await page.getByRole("link", { name: "Search sessions", exact: true }).click();
+    await page.goto(`/discover?returnTo=${encodeURIComponent(origin)}`);
     await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.get("returnTo")).toBe(origin);
     await page.reload();

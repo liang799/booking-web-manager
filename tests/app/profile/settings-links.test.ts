@@ -63,6 +63,7 @@ test("every Settings row opens a page; none is left as coming soon", async () =>
   const html = renderToStaticMarkup(await ProfilePage());
 
   for (const href of ["/privacy", "/profile/help", "/terms"]) expect(html).toContain(`href="${href}"`);
+  expect(html).toContain("Log out");
   expect(html).not.toContain("Coming soon");
 });
 

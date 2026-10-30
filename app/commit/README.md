@@ -276,9 +276,8 @@ Supabase bearer-token identity check and the
 [`PostgresCommitmentUnitOfWork`](../../lib/sessions/postgres-commitment-unit-of-work.ts).
 Authentication only verifies identity; the unit of work loads the complete
 User, whose roles enforce account status, email presence and reliability.
-Until Web Push is configured, notifications go to a
-[`NoDeliveryNotifier`](../../lib/commit/no-delivery-notifier.ts) that accepts
-and discards them.
+Notifications are saved to the [persistent inbox](../notifications/README.md)
+even without Web Push settings; configured Web Push remains a second channel.
 
 Promotion, forfeiture expiry and auto-verification have no user route; the
 scheduler calls them.
@@ -310,8 +309,8 @@ who is not waiting on their own invitation. Sessions that cannot make progress
 are never selected, so they cannot fill a batch and starve later sessions.
 [`PostgresVerificationReminderQuery`](../../lib/commit/postgres-verification-reminder-query.ts)
 claims and releases reminders through `sessions.verification_reminded_at`
-(migration 0009). It is not wired in yet: until Web Push can deliver
-reminders, the sweep claims none, so none are marked as sent and lost.
+(migration 0009). The sweep delivers these to the persistent inbox, with optional
+Web Push. If persistence fails, the claim is released so a later sweep retries.
 
 ### Schedule
 
@@ -363,10 +362,12 @@ for players, `/wallet` for a late withdrawer's held or forfeited share, and
 [`PostgresPushSubscriptionStore`](../../lib/commit/postgres-push-subscription-store.ts)
 (`push_subscriptions`, migration 0009, at most 10 browsers per user) and the
 [`WebPushSender`](../../lib/commit/web-push-sender.ts) (`web-push`, VAPID,
-24-hour TTL). The commitment routes use it when `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+24-hour TTL). The commitment routes and scheduled sweep use it when `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
 `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` are set
-([`readPushSettings`](./push-environment.ts)); otherwise notifications go to
-`NoDeliveryNotifier`.
+([`readPushSettings`](./push-environment.ts)). Both configurations always save
+alerts to the inbox through `InboxNotifier` (migration 0017); they share this
+copy and these destination rules. The [inbox guide](../notifications/README.md)
+documents deduplication and the existing best-effort delivery limits.
 
 A browser registers through `POST /api/push/subscriptions` with the
 `PushSubscription.toJSON()` body and unregisters with `DELETE` and

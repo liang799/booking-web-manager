@@ -44,6 +44,11 @@
   .icon[data-active="true"] .settings {
     animation-name: settings-arrive;
   }
+
+  .icon[data-active="true"] .notifications {
+    animation-name: calendar-arrive;
+    transform-origin: center top;
+  }
 }
 
 @keyframes home-arrive {

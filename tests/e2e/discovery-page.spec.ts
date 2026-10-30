@@ -38,7 +38,7 @@ async function expectNoHomeFilters(page: Page) {
   await expect(page.getByRole("button", { name: "Next page", exact: true })).toHaveCount(0);
 }
 
-test("Home shows only owned or confirmed bookings without filters on mobile and desktop", async ({ page }, testInfo) => {
+test("Home separates personal bookings from mobile discovery and keeps desktop navigation", async ({ page }, testInfo) => {
   test.setTimeout(60_000);
   const context = sessionTestContext();
   try {
@@ -66,7 +66,7 @@ test("Home shows only owned or confirmed bookings without filters on mobile and 
     await expect(bookings.getByText("My private hosted court", { exact: true })).toBeVisible();
     await expect(bookings.getByText("My confirmed private court", { exact: true })).toBeVisible();
     for (const name of ["Someone else's private court", "An unrelated public court", "A waitlisted court"]) {
-      await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+      await expect(bookings.getByText(name, { exact: true })).toHaveCount(0);
     }
     await expect(page.getByRole("heading", { name: "Singapore weather", exact: true })).toHaveCount(0);
     await expect(bookings.getByText("2042", { exact: true })).toHaveCount(2);
@@ -78,20 +78,12 @@ test("Home shows only owned or confirmed bookings without filters on mobile and 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("home-bookings-mobile.png"), fullPage: true });
 
-    const accountButton = page.getByRole("button", { name: "Open account menu", exact: true });
-    await accountButton.click();
-    const accountMenu = page.getByRole("dialog", { name: "Your account", exact: true });
-    await expect(accountMenu.getByRole("button", { name: "Log out", exact: true })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(accountMenu).toBeHidden();
-    await expect(accountButton).toBeFocused();
-
-    await page.getByRole("link", { name: "Search sessions", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Find Your Next Game", exact: true })).toBeVisible();
-    expect(new URL(page.url()).searchParams.get("returnTo")).toBe(origin);
-    await page.getByRole("link", { name: "Back to previous page", exact: true }).click();
-    await expect(bookings.getByRole("listitem")).toHaveCount(2);
-    await expectNoHomeFilters(page);
+    await expect(page.getByRole("link", { name: /^Notifications/ })).toHaveAttribute("href", "/notifications");
+    await expect(page.getByRole("link", { name: "Search sessions", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Open account menu", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Discover Bookings", exact: true })).toBeVisible();
+    await expect(page.getByText("Someone else's private court", { exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(new URL(origin, page.url()).href);
 
     for (const width of [1280, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
@@ -117,7 +109,7 @@ test("Home shows only owned or confirmed bookings without filters on mobile and 
   }
 });
 
-test("an empty Home offers weather and search on both layouts, and account logout returns to the landing", async ({ page }, testInfo) => {
+test("an empty Home offers weather and discovery, and Settings logout returns to the landing", async ({ page }, testInfo) => {
   test.setTimeout(60_000);
   const context = sessionTestContext();
   try {
@@ -153,7 +145,7 @@ test("an empty Home offers weather and search on both layouts, and account logou
       await expect(findLinks).toHaveCount(mobile ? 1 : 2);
       await expect(hostLinks).toHaveCount(mobile ? 0 : 2);
       for (let index = 0; index < await findLinks.count(); index += 1) {
-        await expect(findLinks.nth(index)).toHaveAttribute("href", "/discover?returnTo=%2F");
+        await expect(findLinks.nth(index)).toHaveAttribute("href", mobile ? "#discover-bookings" : "/discover?returnTo=%2F");
       }
       for (let index = 0; index < await hostLinks.count(); index += 1) {
         await expect(hostLinks.nth(index)).toHaveAttribute("href", "/sessions/create");
@@ -168,8 +160,8 @@ test("an empty Home offers weather and search on both layouts, and account logou
     await page.getByRole("link", { name: "Back to previous page", exact: true }).click();
     await expect(page.getByText("You have no upcoming bookings.", { exact: true })).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole("button", { name: "Open account menu", exact: true }).click();
-    await page.getByRole("dialog", { name: "Your account", exact: true }).getByRole("button", { name: "Log out", exact: true }).click();
+    await page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Settings", exact: true }).click();
+    await page.getByRole("button", { name: "Log out", exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
     await page.getByLabel("Open navigation menu", { exact: true }).click();
     const signIn = page.getByRole("navigation", { name: "Mobile navigation", exact: true }).getByRole("link", { name: "Sign in", exact: true });

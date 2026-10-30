@@ -25,6 +25,8 @@ export function startDiscoveryUpdates(options: {
   readonly document: Pick<Document, "visibilityState" | "addEventListener" | "removeEventListener">;
   readonly window: Pick<Window, "addEventListener" | "removeEventListener">;
   readonly online: () => boolean;
+  /** Fresh query clients already fetch on mount; RSC-seeded pages catch up by default. */
+  readonly initialRefresh?: boolean;
 }): DiscoveryUpdates {
   let stopped = false;
   let inFlight = false;
@@ -104,7 +106,7 @@ export function startDiscoveryUpdates(options: {
   options.window.addEventListener("offline", connect);
   connect();
   // Initial RSC/hydration age is unknown. Catch up even when Realtime is unavailable.
-  invalidate();
+  if (options.initialRefresh !== false) invalidate();
 
   return {
     complete() {
