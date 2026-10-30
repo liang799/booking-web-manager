@@ -1,11 +1,13 @@
+import type { UUID } from "@/domain";
 import type { DiscoveredSession, SessionDiscoveryCriteria } from "./DiscoverSessions";
 
 /** All PUBLIC, OPEN, strictly upcoming summaries, ordered by start then ID.
  * Full sessions remain discoverable. Start bounds are inclusive/exclusive.
+ * A supplied viewer's COMMITTED and WAITLISTED sessions are excluded.
  * Readers do not hydrate Session aggregates or truncate the matching results.
  */
 export interface SessionDiscoveryReader {
-  search(criteria: SessionDiscoveryCriteria, now: Date): Promise<readonly DiscoveredSession[]>;
+  search(criteria: SessionDiscoveryCriteria, now: Date, viewerId?: UUID): Promise<readonly DiscoveredSession[]>;
 }
 
 export interface SessionDiscoveryReads {

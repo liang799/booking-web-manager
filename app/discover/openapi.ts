@@ -61,6 +61,7 @@ export function registerDiscoveryApi(registry: OpenAPIRegistry): void {
     summary: "UC2-01 Discover Sessions",
     description: [
       "Lists upcoming PUBLIC, OPEN sessions for signed-in users with ACTIVE profiles, including unverified emails and full sessions.",
+      "Sessions where the authenticated viewer is already COMMITTED or WAITLISTED are excluded before pagination. Past participation does not hide a session.",
       "Only sessions starting strictly after the server clock are returned; minimum reliability and current capacity do not hide listings.",
       "Optional q matches a case-insensitive literal substring of the sport or venue name and combines with every other filter. Percent signs, underscores, and backslashes are literal text, not wildcards. Search text is trimmed, blank text is omitted, and the maximum is 100 characters after trimming.",
       "For example, ?q=Jurong&sport=Badminton&region=West&date=2040-01-02 finds matching West-region badminton sessions starting on that Singapore day.",

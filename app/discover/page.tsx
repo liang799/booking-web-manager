@@ -21,7 +21,7 @@ export default async function DiscoveryPage({ searchParams }: {
     }
     redirect(pathWithNext("/login", `/discover${query.size ? `?${query}` : ""}`));
   }
-  const screen = await loadDiscoveryScreen(params);
+  const screen = await loadDiscoveryScreen(params, viewer.id);
   const returnTo = discoveryReturnTo(params.returnTo);
   return <DiscoveryController key={screen.queryKey} {...screen} returnTo={returnTo} />;
 }

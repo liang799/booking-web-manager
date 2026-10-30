@@ -26,9 +26,11 @@ dependency-boundary decisions remain in effect.
   (401), inactive accounts (403), and missing profiles (404); provider failures
   fail closed. Email confirmation and wallet setup are not browsing prerequisites.
 - The application and HTTP boundaries enforce access; the
-  `DiscoverSessions.searchPublic` use case remains an identity-independent
-  search of public-visibility summaries, without participant, wallet or
-  invitation details in the listing response.
+  `DiscoverSessions.searchPublic` use case searches public-visibility summaries.
+  Both authenticated entry points pass the verified viewer ID to exclude that
+  viewer's `COMMITTED` and `WAITLISTED` participation before pagination. Past
+  participation does not hide a session. Unscoped internal reads remain available;
+  participant, wallet and invitation details never enter the listing response.
 - The authenticated discovery action keeps distinct diagnostics for
   initialization, authentication, validation, query and serialization.
   Failed and successful discovery responses remain non-cacheable.
