@@ -195,19 +195,15 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
                     <Plus className="h-4 w-4" aria-hidden="true" />
                   </span>
                 </Link>
-              ) : (
-                <Button asChild variant="ghost" size="icon" className="h-11 w-11 [&_svg]:size-5" aria-label="Search sessions">
-                  <Link href={searchHref}><NavigationIcon name="search" active={pathname === "/discover"} /></Link>
-                </Button>
-              )}
-              <Button asChild size="icon" className="relative h-11 w-11 rounded-md [&_svg]:size-5">
+              ) : null}
+              <Button asChild variant="ghost" size="icon" className="relative h-11 w-11 rounded-md [&_svg]:size-5">
                 <Link
                   href="/notifications"
                   aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
                   aria-current={notificationsLayout ? "page" : undefined}
                 >
                   <NavigationIcon name="notifications" active={notificationsLayout} />
-                  {unreadCount !== null && unreadCount > 0 && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary-foreground ring-2 ring-primary" aria-hidden />}
+                  {unreadCount !== null && unreadCount > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden />}
                 </Link>
               </Button>
             </div>

@@ -24,7 +24,7 @@ photography and decorative artwork are separate from UI icons; continue to use
 ### Shared navigation icons
 
 Use [`NavigationIcon`](./navigation-icon.tsx) in desktop and mobile navigation,
-including the mobile Search shortcut. It owns the consistent **20px size**,
+including the mobile Notifications shortcut. It owns the consistent **20px size**,
 **`strokeWidth={1.8}`**, outline appearance and inherited `currentColor`.
 Keep the glyph mapping in that component rather than choosing another icon
 for the same destination on a different screen.

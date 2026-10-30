@@ -5,8 +5,9 @@ the existing AppShell and theme tokens, a desktop sidebar link and a mobile
 bell. The page groups dates in Asia/Singapore and supports category/unread
 filters, individual read state, mark all read, refresh and older-page loading.
 
-On mobile, the filled bell replaces the former account-menu button to the right
-of Search. Account details and logout are available from the Settings tab;
+On mobile, the transparent outline bell replaces the former account-menu button.
+An unread dot appears when needed; discovery is inline on Home, so the Search
+shortcut is removed. Account details and logout are available from the Settings tab;
 Groups remains available from Sessions. There is one notification shortcut in
 the mobile header.
 
@@ -113,3 +114,19 @@ Home, Settings and Notifications, including keyboard access, 44px touch targets,
 the notification destination and the Settings logout action. The full unit run
 still reports 3,286 passed and the same two Groups failures; typecheck and lint
 retain only the previously recorded Groups diagnostics.
+
+### Inline mobile discovery update — 30 October 2026
+
+Mobile Home now uses React Query for the infinite discovery feed below personal
+bookings. The header Search icon is removed and the bell uses an outline on a
+transparent background with an unread dot. Details open in a dialog, and joining
+retains the existing confirmation and retry contract. See the
+[Home guide](../home/README.md) for pagination and live-update behavior.
+
+All 70 relevant Chromium stories passed, including an actual browser scroll that
+loads the next page without clicking or changing the URL. The full unit run now
+has 3,290 passing tests and the same two Groups failures. Typecheck and lint retain
+the same Groups diagnostics; the production compiler succeeds before lint stops
+the build on those existing errors. Independent review of the new feed found no
+actionable blocker. The five updated service-backed browser scenarios were
+collected but not executed against a disposable Supabase stack.

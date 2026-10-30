@@ -17,7 +17,7 @@ const meta = {
           "Booking. sidebar with icon navigation, account details and logout. A softly faded court image sits behind the page introduction. " +
           "Below that, it shows a Booking. header, decorative sport photo and floating Home / Sessions / Wallet / Settings navigation. " +
           "Only the active mobile destination shows its label; the other icons retain accessible names. Groups belongs to the Sessions area " +
-          "and remains reachable from its Groups tab. The mobile header pairs Search with a direct Notifications button; account details and logout are available in Settings. " +
+          "and remains reachable from its Groups tab. The mobile header has a transparent outline Notifications bell with an unread dot; discovery is inline on Home, and account details and logout are available in Settings. " +
           "The current page is highlighted and marked `aria-current=\"page\"`. Every navigation icon uses the same 20px size and 1.8px stroke. " +
           "The selected icon plays a short, single animation when its route becomes active or its page mounts; reduced-motion preferences disable that animation. " +
           "Mobile links and controls have 44px touch targets. Choose another route story to preview its arrival animation, or change the " +
@@ -230,22 +230,17 @@ export const PhoneHome: Story = {
   },
 };
 
-export const PhoneSearchPreservesOrigin: Story = {
+export const PhoneNotificationsShortcut: Story = {
   ...PhoneHome,
   parameters: { nextjs: { navigation: { pathname: "/", query: { sport: "Tennis", region: "East" } } } },
   play: async ({ canvas }) => {
-    const search = canvas.getByRole("link", { name: "Search sessions" });
-    const destination = new URL(search.getAttribute("href")!, "https://booking.invalid");
-    await expect(destination.pathname).toBe("/discover");
-    await expect(destination.searchParams.get("returnTo")).toBe("/?sport=Tennis&region=East");
-    await expectNavigationIcon(search);
-    await expect(search.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await expect(canvas.queryByRole("link", { name: "Search sessions" })).not.toBeInTheDocument();
     const notifications = canvas.getByRole("link", { name: /^Notifications/ });
     await expect(notifications).toHaveAttribute("href", "/notifications");
     await expect(notifications).toBeVisible();
     await expectNavigationIcon(notifications);
     await expect(notifications.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-    await expect(notifications.getBoundingClientRect().left).toBeGreaterThan(search.getBoundingClientRect().left);
+    await expect(notifications.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
     await expect(canvas.queryByRole("button", { name: "Open account menu" })).not.toBeInTheDocument();
   },
 };
