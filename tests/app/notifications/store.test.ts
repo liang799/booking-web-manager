@@ -76,7 +76,7 @@ test("a fresh server cutoff prunes every inactive category and switching back re
     retentionCutoff: "2026-08-01T00:00:00.000Z",
     items: [
       {
-        ...first.items[0],
+        ...first.items[0]!,
         id: "expired",
         createdAt: "2026-09-01T00:00:00.000Z",
       },
