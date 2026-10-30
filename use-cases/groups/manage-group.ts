@@ -1,4 +1,12 @@
-import { DomainError, RegularGroup, type GroupJoinResult, type UUID } from "@/domain";
+import {
+  DomainError,
+  RegularGroup,
+  UserHandle,
+  type GroupInviteResult,
+  type GroupJoinResult,
+  type UUID,
+} from "@/domain";
+import type { UserDirectory, UserSummary } from "../accounts/user-handles";
 import type { Repository } from "../shared/contracts";
 
 /** Group lookups that the plain get/save Repository contract doesn't cover. */
@@ -8,6 +16,16 @@ export interface GroupQueries {
   listForMember(userId: UUID): Promise<readonly RegularGroup[]>;
   /** Sessions invited from this group that are not settled yet; archiving waits for these. */
   countUnsettledLinkedSessions(groupId: UUID): Promise<number>;
+  /** Every group with an unanswered invitation for the user (ADR-0022). */
+  listInvitingGroups(userId: UUID): Promise<readonly RegularGroup[]>;
+}
+
+/** An invitation the signed-in player hasn't answered yet, as their Groups page shows it. */
+export interface PendingGroupInvitation {
+  readonly groupId: UUID;
+  readonly groupName: string;
+  readonly invitedBy: UUID;
+  readonly invitedAt: Date;
 }
 
 /**
@@ -33,11 +51,14 @@ export interface ManageGroupDependencies {
   /** A long random value that is hard to guess; it becomes the invitation link. */
   readonly newInvitationToken: () => string;
   readonly now: () => Date;
+  /** Finds the player to invite by exact user ID (ADR-0021). */
+  readonly players: Pick<UserDirectory, "findActiveByHandle">;
 }
 
 /**
  * UC1-06 Manage Group: create a regular group, share and control its invitation link,
- * and manage its members, who may also leave on their own. RegularGroup (Rishi's domain)
+ * invite players by user ID (ADR-0022), and manage its members, who may also leave on
+ * their own. RegularGroup (Rishi's domain)
  * enforces the rules, such as "only the owner may remove members" and "the owner can't be
  * removed or leave"; this class loads the group, asks it to act, and saves it.
  */
@@ -101,6 +122,60 @@ export class ManageGroup {
     });
     if (result === "JOINED") await this.#deps.groups.save(group);
     return { group, result };
+  }
+
+  /**
+   * A member invites a player by exact user ID. The player joins only by accepting.
+   * Throws INVALID_INPUT for a malformed ID and NOT_FOUND when nobody active holds it.
+   */
+  async inviteByHandle(command: {
+    readonly actorId: UUID;
+    readonly groupId: UUID;
+    readonly handle: string;
+  }): Promise<{ readonly invitee: UserSummary; readonly result: GroupInviteResult }> {
+    const invitee = await this.#deps.players.findActiveByHandle(UserHandle.parse(command.handle));
+    if (invitee === null) throw new DomainError("NOT_FOUND", "No player has this user ID");
+
+    const group = await this.#load(command.groupId);
+    const result = group.invite({ actorId: command.actorId, inviteeId: invitee.userId, now: this.#deps.now() });
+    if (result === "INVITED") await this.#deps.groups.save(group);
+    return { invitee, result };
+  }
+
+  /** The signed-in player's unanswered invitations, newest first. */
+  async listInvitations(command: { readonly actorId: UUID }): Promise<readonly PendingGroupInvitation[]> {
+    const groups = await this.#deps.queries.listInvitingGroups(command.actorId);
+    return groups
+      .flatMap((group) =>
+        group.invitations
+          .filter((invitation) => invitation.inviteeId === command.actorId)
+          .map((invitation) => ({
+            groupId: group.groupId,
+            groupName: group.name,
+            invitedBy: invitation.invitedBy,
+            invitedAt: invitation.invitedAt,
+          })),
+      )
+      .sort((first, second) => second.invitedAt.getTime() - first.invitedAt.getTime());
+  }
+
+  /** The invited player joins. Accepting twice is harmless: the result is ALREADY_MEMBER. */
+  async acceptInvitation(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<GroupJoinResult> {
+    const group = await this.#deps.groups.get(command.groupId);
+    if (group === null) throw new DomainError("INVALID_INVITATION", "This invitation is no longer available");
+    const result = group.acceptInvitation({ userId: command.actorId, now: this.#deps.now() });
+    if (result === "JOINED") await this.#deps.groups.save(group);
+    return result;
+  }
+
+  /** The invited player says no. Declining an invitation that is already gone changes nothing. */
+  async declineInvitation(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<void> {
+    const group = await this.#deps.groups.get(command.groupId);
+    if (group === null) return;
+    const invited = group.invitations.some((invitation) => invitation.inviteeId === command.actorId);
+    if (!invited) return;
+    group.declineInvitation({ userId: command.actorId });
+    await this.#deps.groups.save(group);
   }
 
   /** Owner only: removes a member (never the owner). */
