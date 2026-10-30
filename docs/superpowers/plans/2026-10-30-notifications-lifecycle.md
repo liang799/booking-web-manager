@@ -27,3 +27,5 @@ New additive migrations after0019; legacy read column/index retained until later
 
 - Review complete: all actionable findings fixed. Superseded jobs are cancelled atomically; disabled push still prunes jobs; worker DB/send budgets enforced; archive retry is a no-op; SW uses notificationId with legacy fallback; category caches share authoritative retention cutoff; watermarks contain IDs/timestamps only.
 - Final unit3461 passed; typecheck/lint/build passed;77 focused Chromium checks passed. Fresh migration/database rehearsal138 passed; new live invitation browser scenario passed in1s, including no PATCH/no autojoin. Remaining authenticated suite is finishing.
+
+- Acceptance complete:74 authenticated production-browser checks passed; disposable stack removed. No hosted changes performed. Implementation complete and ready for stacked draft PR.
