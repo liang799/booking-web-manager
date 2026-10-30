@@ -52,6 +52,16 @@ continues (the trigger still enforces uniqueness), and the lookup route answers
 503. `app/users/user-handle-server-dependencies.ts` caches the assembly. See
 [ADR-0021](../docs/adr/0021-user-ids-for-finding-players.md).
 
+## Registered email check
+
+`registered-emails.ts` assembles `PostgresRegisteredEmails` over the validated
+`DATABASE_URL` and a lazy pool. The UC1-01 register action calls it directly
+before sign-up (a technical read under ADR-0016, with no use-case wrapper) to
+refuse an email that already has an account, including an unconfirmed one.
+Without `DATABASE_URL` it throws `RegisteredEmailsUnavailableError` and sign-up
+relies on Supabase Auth's own duplicate response.
+`app/(auth)/register/registered-emails-server.ts` caches the assembly.
+
 ## Discovery configuration
 
 UC2-01 assembles `DiscoverSessions.searchPublic` in `discovery.ts`, using only

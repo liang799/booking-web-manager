@@ -182,6 +182,7 @@
 /use-cases/groups/ @Jolingoes
 /use-case-config/profiles.ts @Jolingoes
 /use-case-config/user-handles.ts @Jolingoes
+/use-case-config/registered-emails.ts @Jolingoes
 /use-case-config/groups.ts @Jolingoes
 /tests/integration/group-account-guards.test.ts @Jolingoes @rbrishi15
 /tests/integration/profile*.test.ts @Jolingoes @rbrishi15
