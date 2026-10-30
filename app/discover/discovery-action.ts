@@ -1,3 +1,4 @@
+import type { UUID } from "@/domain";
 import { loadDependencies } from "@/app/http/load-dependencies";
 import { requireUserId } from "@/app/http/require-user-id";
 import type { DiscoveryDependencies } from "./dependencies";
@@ -7,7 +8,7 @@ import { discoveryErrorResponse, discoveryJson, type DiscoveryFailureStage } fro
 /** Authenticate before querying session listings while retaining stage-aware diagnostics. */
 export function discoveryAction<Input, Output>(action: {
   readonly parse: (request: Request) => Input;
-  readonly run: (dependencies: DiscoveryDependencies, input: Input) => Promise<Output>;
+  readonly run: (dependencies: DiscoveryDependencies, input: Input, viewerId: UUID) => Promise<Output>;
   readonly serialize: (output: Output, input: Input) => unknown;
 }): (request: Request) => Promise<Response> {
   return async (request) => {
@@ -15,11 +16,11 @@ export function discoveryAction<Input, Output>(action: {
     try {
       const dependencies = await loadDependencies(getDiscoveryDependencies);
       stage = "authentication";
-      await requireUserId(request, dependencies.authenticate);
+      const viewerId = await requireUserId(request, dependencies.authenticate);
       stage = "validation";
       const input = action.parse(request);
       stage = "query";
-      const result = await action.run(dependencies, input);
+      const result = await action.run(dependencies, input, viewerId);
       stage = "serialization";
       return discoveryJson(action.serialize(result, input));
     } catch (error) {

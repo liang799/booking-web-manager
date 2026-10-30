@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 export const GET = discoveryAction({
   parse: readDiscoveryRequest,
-  run: (dependencies, input) => dependencies.discoverSessions.searchPublic(input.criteria),
+  run: (dependencies, input, viewerId) => dependencies.discoverSessions.searchPublic(input.criteria, viewerId),
   serialize: (sessions, input) => toDiscoveryPage(sessions, input.after),
 });
 

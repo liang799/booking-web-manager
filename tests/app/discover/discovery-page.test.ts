@@ -79,7 +79,7 @@ describe("authenticated discovery server page", () => {
     searchPublic.mockRejectedValue(new Error("private infrastructure detail"));
     const result = await renderPage();
     expect(result.props.outcome).toEqual({ status: "error", kind: "unexpected" });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( {});
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({}, "viewer");
   });
 
   test("validates duplicate URL parameters before querying and retains their distinct controller key", async () => {
@@ -92,14 +92,14 @@ describe("authenticated discovery server page", () => {
 
   test("passes Singapore filter bounds directly to the use case without profile defaults", async () => {
     const result = await renderPage({ region: "West", date: "2035-05-12", timeFrom: "18:00", timeTo: "20:00" });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { region: "West", startsWithin: { from: new Date("2035-05-12T10:00:00Z"), before: new Date("2035-05-12T12:00:00Z") } });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ region: "West", startsWithin: { from: new Date("2035-05-12T10:00:00Z"), before: new Date("2035-05-12T12:00:00Z") } }, "viewer");
     expect(result.props.outcome).toEqual({ status: "ready", page: { items: [], nextCursor: null } });
     expect(result.props).toMatchObject({ returnTo: "/" });
   });
 
   test("passes normalized search to the use case while keeping return navigation UI-only", async () => {
     const result = await renderPage({ q: "  Jurong  ", sport: "Badminton", returnTo: "/?region=West&date=2035-05-12" });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { text: "Jurong", sport: "Badminton" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Jurong", sport: "Badminton" }, "viewer");
     expect(result.props).toMatchObject({
       returnTo: "/?region=West&date=2035-05-12",
       filters: { q: "Jurong", sport: "Badminton" }, queryKey: "q=Jurong&sport=Badminton",
@@ -110,13 +110,13 @@ describe("authenticated discovery server page", () => {
   test.each(["https://external.example", "/login", "/discover", ["/wallet", "/profile"]])("falls back to Home for invalid return destination %j without changing the search", async (returnTo) => {
     const result = await renderPage({ q: "Tennis", returnTo });
     expect(result.props.returnTo).toBe("/");
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { text: "Tennis" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Tennis" }, "viewer");
   });
 
   test("keeps the default query unfiltered and serializes public result props", async () => {
     searchPublic.mockResolvedValue([{ sessionId: "public-session", venueName: "Bishan Sports Hall", sport: "Badminton", region: "Central", startAt: new Date("2035-05-12T10:00:00Z"), endAt: new Date("2035-05-12T12:00:00Z"), totalSlots: 6, bookingShareCents: 750 }]);
     const result = await renderPage();
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( {});
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({}, "viewer");
     expect(result.props.outcome.page.items[0]).toEqual({ sessionId: "public-session", venueName: "Bishan Sports Hall", sport: "Badminton", region: "Central", startAt: "2035-05-12T10:00:00.000Z", endAt: "2035-05-12T12:00:00.000Z", totalSlots: 6, bookingShareCents: 750 });
   });
 
@@ -132,7 +132,7 @@ describe("authenticated discovery server page", () => {
 
     const result = await renderPage({ sport: "Badminton", cursor });
 
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { sport: "Badminton" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ sport: "Badminton" }, "viewer");
     expect(result.props.outcome.page.items.map((item: { sessionId: string }) => item.sessionId))
       .toEqual(sessions.slice(20, 40).map((item) => item.sessionId));
     expect(result.props.outcome.page.nextCursor).toBe(encodeDiscoveryCursor({ startAt, sessionId: sessions[39]!.sessionId }));

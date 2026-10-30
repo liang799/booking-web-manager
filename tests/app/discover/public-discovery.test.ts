@@ -42,7 +42,7 @@ describe("authenticated session discovery", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ items: [], nextCursor: null });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Badminton" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Badminton" }, userId);
   });
 
   test.each([
