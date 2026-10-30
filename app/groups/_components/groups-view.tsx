@@ -27,6 +27,8 @@ export interface GroupsViewProps {
   readonly createForm: ReactNode;
   /** Player search by user ID (ADR-0021), shown above the filters. */
   readonly findPlayer?: ReactNode;
+  /** Invitations by user ID waiting for an answer (ADR-0022), shown first. */
+  readonly invitations?: ReactNode;
   readonly leftGroup?: boolean;
 }
 
@@ -50,7 +52,7 @@ const isMobileScreen = () => window.matchMedia(mobileQuery).matches;
 const isServerScreenMobile = () => false;
 
 /** Synchronous UC1-06 overview; mutations remain in the server-owned form slot. */
-export function GroupsView({ groups, createForm, findPlayer, leftGroup = false }: GroupsViewProps) {
+export function GroupsView({ groups, createForm, findPlayer, invitations, leftGroup = false }: GroupsViewProps) {
   const [filterValue, setFilterValue] = useState("all");
   const mobile = useSyncExternalStore(subscribeToMobile, isMobileScreen, isServerScreenMobile);
   return (
@@ -79,6 +81,8 @@ export function GroupsView({ groups, createForm, findPlayer, leftGroup = false }
       </header>
 
       {leftGroup && <div className={styles.notice}><InfoNote icon><span role="status">You left the group.</span></InfoNote></div>}
+
+      {invitations !== undefined && <div className={styles.invitations}>{invitations}</div>}
 
       {findPlayer !== undefined && (
         <section className={styles.findPlayer} aria-labelledby="find-player-heading">

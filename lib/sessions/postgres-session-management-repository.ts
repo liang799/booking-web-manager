@@ -40,11 +40,11 @@ export class PostgresSessionManagementRepository {
     return (await this.hydrate(rows))[0] ?? null;
   }
 
-  /** Loads the booker's OPEN sessions starting strictly after now, ordered by start time and ID, including full sessions. */
-  async listUpcoming(bookerId: UUID, now: Date): Promise<readonly Session[]> {
+  /** Loads the booker's upcoming and in-progress OPEN sessions, ordered by start time and ID, including full sessions. */
+  async listNotEndedOpen(bookerId: UUID, now: Date): Promise<readonly Session[]> {
     const rows = await this.sql.query(
       `select ${sessionColumns} from sessions
-       where booker_id = $1 and status = 'OPEN' and start_at > $2
+       where booker_id = $1 and status = 'OPEN' and end_at > $2
        order by start_at, session_id`,
       [bookerId, now],
     );

@@ -1,10 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { CommitmentDependencies } from "@/app/commit/commitment-dependencies";
-import { readPushSettings } from "@/app/commit/push-environment";
 import { SessionManagementUnavailableError } from "@/app/sessions/session-management-unavailable";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
-import { NoDeliveryNotifier } from "@/lib/commit/no-delivery-notifier";
-import { createWebPush } from "@/lib/commit/web-push";
+import { createCommitmentNotifier } from "./notifications";
 import { createPostgresPoolProvider } from "@/lib/database/postgres-pool";
 import { PostgresCommitmentUnitOfWork } from "@/lib/sessions/postgres-commitment-unit-of-work";
 import { createSupabaseIdentityAuthenticator } from "@/lib/supabase/bearer-auth";
@@ -20,9 +18,9 @@ import { WithdrawFromSession } from "@/use-cases/sessions/WithdrawFromSession";
  * which claims each idempotency key and writes the session change and its
  * fund movements in one transaction. Authentication verifies identity only:
  * the unit of work loads the complete User, whose roles enforce account
- * status, email verification and reliability. Notifications go out by Web Push
- * when VAPID settings are present, and are accepted but not delivered
- * otherwise. Without server settings every call reports
+ * status, email verification and reliability. Notifications are saved to the
+ * inbox and also go out by Web Push when VAPID settings are present.
+ * Without server settings every call reports
  * SESSION_MANAGEMENT_UNAVAILABLE.
  */
 export function createCommitmentDependencies(): CommitmentDependencies {
@@ -44,8 +42,7 @@ export function createCommitmentDependencies(): CommitmentDependencies {
   const clock = { now: () => new Date() };
   const ids = { next: randomUUID };
   const unitOfWork = new PostgresCommitmentUnitOfWork(getPool, clock);
-  const push = readPushSettings();
-  const notifier = push ? createWebPush(getPool, push).notifier : new NoDeliveryNotifier();
+  const notifier = createCommitmentNotifier(getPool);
   const promote = new PromoteFromWaitlist({ unitOfWork, clock, ids, notifier });
   return {
     authenticate: createSupabaseIdentityAuthenticator(

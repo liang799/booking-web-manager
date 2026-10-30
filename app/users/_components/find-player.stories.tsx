@@ -19,7 +19,7 @@ const meta = {
     },
   },
   args: {
-    action: answering({ status: "found", player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 96 } }),
+    action: answering({ status: "found", player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 96, isSelf: false } }),
   },
 } satisfies Meta<typeof FindPlayer>;
 
@@ -52,13 +52,28 @@ export const NotFound: Story = {
 
 /** An unavailable score is said so, never shown as the starting score. */
 export const ScoreUnavailable: Story = {
-  args: { action: answering({ status: "found", player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: null } }) },
+  args: { action: answering({ status: "found", player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: null, isSelf: false } }) },
   play: async ({ canvas }) => {
     await userEvent.type(canvas.getByRole("textbox", { name: "User ID" }), "marcus_lim");
     await userEvent.click(canvas.getByRole("button", { name: "Find" }));
 
     await expect(await canvas.findByText("Reliability score unavailable right now.")).toBeVisible();
     await expect(canvas.queryByText(/Reliability 5\.0/)).not.toBeInTheDocument();
+  },
+};
+
+/** Your own user ID: say so, and show no player action such as Invite (ADR-0022). */
+export const OwnId: Story = {
+  args: {
+    action: answering({ status: "found", player: { handle: "marcus_lim", displayName: "Marcus Lim", reliabilityScore: 96, isSelf: true } }),
+    playerAction: () => <button type="button">Invite</button>,
+  },
+  play: async ({ canvas }) => {
+    await userEvent.type(canvas.getByRole("textbox", { name: "User ID" }), "marcus_lim");
+    await userEvent.click(canvas.getByRole("button", { name: "Find" }));
+
+    await expect(await canvas.findByText("This is you.")).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Invite" })).not.toBeInTheDocument();
   },
 };
 

@@ -174,12 +174,17 @@ accepting it. The screen follows the same split as the withdrawal screens.
 screens: React Query loads the invitations and joined sessions through the real transports, the
 flow hooks drive the dialogs, and unresolved requests are kept in this browser's storage.
 "Places reserved for you" appears above the joined sessions only when there is an invitation or
-the list failed to load. No API lists who a player may invite as their replacement yet, so the
-withdrawal dialog gets no candidates: "Invite one person" stays disabled with its explanation and
-the place can be opened to the waitlist. The contract tests
+the list failed to load. "Invite one person" finds the replacement by their exact user ID
+([ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md)): the dialog checks the ID's form,
+[`findReplacementCandidate`](./withdrawal-transport.ts) asks `GET /api/users/{handle}` as the
+signed-in player, and [`useReplacementSearch`](./use-replacement-search.ts) names the found player
+as the withdrawal's `inviteeId`. Each new search clears the invitee first, only the latest search
+can name someone, and the player's own user ID is refused ("That's your own user ID"), so Withdraw
+stays disabled until someone else is found. Not found, unavailable and failed lookups name nobody.
+The server still decides whether that person may take the place (ADR-0006). The contract tests
 ([withdrawal](../../tests/app/commit/withdrawal-contract.test.ts),
-[replacement](../../tests/app/commit/replacement-contract.test.ts)) run both list transports
-against the real route handlers.
+[replacement](../../tests/app/commit/replacement-contract.test.ts)) run both list transports,
+and the user ID lookup followed by a `DIRECT_INVITE` withdrawal, against the real route handlers.
 
 ### Player lists
 
@@ -271,9 +276,8 @@ Supabase bearer-token identity check and the
 [`PostgresCommitmentUnitOfWork`](../../lib/sessions/postgres-commitment-unit-of-work.ts).
 Authentication only verifies identity; the unit of work loads the complete
 User, whose roles enforce account status, email presence and reliability.
-Until Web Push is configured, notifications go to a
-[`NoDeliveryNotifier`](../../lib/commit/no-delivery-notifier.ts) that accepts
-and discards them.
+Notifications are saved to the [persistent inbox](../notifications/README.md)
+even without Web Push settings; configured Web Push remains a second channel.
 
 Promotion, forfeiture expiry and auto-verification have no user route; the
 scheduler calls them.
@@ -305,8 +309,8 @@ who is not waiting on their own invitation. Sessions that cannot make progress
 are never selected, so they cannot fill a batch and starve later sessions.
 [`PostgresVerificationReminderQuery`](../../lib/commit/postgres-verification-reminder-query.ts)
 claims and releases reminders through `sessions.verification_reminded_at`
-(migration 0009). It is not wired in yet: until Web Push can deliver
-reminders, the sweep claims none, so none are marked as sent and lost.
+(migration 0009). The sweep delivers these to the persistent inbox, with optional
+Web Push. If persistence fails, the claim is released so a later sweep retries.
 
 ### Schedule
 
@@ -358,10 +362,12 @@ for players, `/wallet` for a late withdrawer's held or forfeited share, and
 [`PostgresPushSubscriptionStore`](../../lib/commit/postgres-push-subscription-store.ts)
 (`push_subscriptions`, migration 0009, at most 10 browsers per user) and the
 [`WebPushSender`](../../lib/commit/web-push-sender.ts) (`web-push`, VAPID,
-24-hour TTL). The commitment routes use it when `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+24-hour TTL). The commitment routes and scheduled sweep use it when `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
 `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` are set
-([`readPushSettings`](./push-environment.ts)); otherwise notifications go to
-`NoDeliveryNotifier`.
+([`readPushSettings`](./push-environment.ts)). Both configurations always save
+alerts to the inbox through `InboxNotifier` (migration 0017); they share this
+copy and these destination rules. The [inbox guide](../notifications/README.md)
+documents deduplication and the existing best-effort delivery limits.
 
 A browser registers through `POST /api/push/subscriptions` with the
 `PushSubscription.toJSON()` body and unregisters with `DELETE` and

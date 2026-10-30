@@ -80,6 +80,14 @@
 /lib/commit/ @Wyjessie
 /tests/app/commit/ @Wyjessie
 /tests/lib/commit/ @Wyjessie
+/app/notifications/ @Wyjessie @rbrishi15
+/app/api/notifications/ @Wyjessie @rbrishi15
+/use-cases/notifications/ @Wyjessie @rbrishi15
+/use-case-config/notifications.ts @Wyjessie @rbrishi15
+/lib/notifications/ @Wyjessie @rbrishi15
+/tests/app/notifications/ @Wyjessie @rbrishi15
+/docs/assets/notifications/ @Wyjessie @rbrishi15
+/supabase/migrations/0017_notification_inbox.sql @Wyjessie @rbrishi15
 /tests/use-cases/scheduled-session-jobs.test.ts @Wyjessie
 /tests/use-cases/support/in-memory-unit-of-work.ts @Wyjessie
 /tests/use-cases/support/recording-notifier.ts @Wyjessie
@@ -182,12 +190,14 @@
 /use-cases/groups/ @Jolingoes
 /use-case-config/profiles.ts @Jolingoes
 /use-case-config/user-handles.ts @Jolingoes
+/use-case-config/registered-emails.ts @Jolingoes
 /use-case-config/groups.ts @Jolingoes
 /tests/integration/group-account-guards.test.ts @Jolingoes @rbrishi15
 /tests/integration/profile*.test.ts @Jolingoes @rbrishi15
 /tests/app/sessions/bearer-auth.test.ts @Jolingoes
 /supabase/migrations/0004_profiles.sql @Jolingoes
 /supabase/migrations/0016_user_handles.sql @Jolingoes @rbrishi15
+/supabase/migrations/0017_group_invitations.sql @Jolingoes @rbrishi15
 /supabase/migrations/0009_commitment_scheduling.sql @Wyjessie
 
 # Capability-specific adapters/tests override the broad session defaults.

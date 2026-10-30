@@ -535,7 +535,7 @@ describe("UC2-04 Commit to Session", () => {
 
     test("a repeated trigger key replays its result without locking again", async () => {
       // Arrange
-      const { promote, unitOfWork } = promotionScenario({
+      const { promote, unitOfWork, notifier } = promotionScenario({
         totalSlots: 2,
         committed: ["alice"],
         waitlisted: ["carol"],
@@ -549,6 +549,9 @@ describe("UC2-04 Commit to Session", () => {
       expect(retry).toEqual(first);
       expect(unitOfWork.ledgerInstructions).toHaveLength(1);
       expect(unitOfWork.availableCents("carol")).toBe(9_500);
+      expect(notifier.sent).toHaveLength(2);
+      expect(notifier.sent[0]?.occurrenceKey).toBe(JSON.stringify(["promote-from-waitlist", sessionId, "withdrawal-1"]));
+      expect(notifier.sent[1]?.occurrenceKey).toBe(notifier.sent[0]?.occurrenceKey);
     });
   });
 });

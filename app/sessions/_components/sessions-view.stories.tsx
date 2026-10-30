@@ -156,7 +156,7 @@ export const DesktopJoined: Story = {
     if (!overview) throw new globalThis.Error("The Joined overview was not rendered.");
     await expect(within(overview).getByText(/My sessions/)).toBeVisible();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
+    await expect(views.getByRole("button", { name: /^I'm playing$/ })).toHaveAttribute("aria-current", "page");
     await expect(canvas.getByRole("link", { name: "Manage my places" })).toHaveAttribute("href", "/sessions/joined");
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
     await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
@@ -374,7 +374,7 @@ export const MobileHosting: Story = {
   args: { tab: "hosting", sessions: hostedSessions },
   play: async ({ canvas }) => {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await expect(views.getByRole("button", { name: /^Hosting$/ })).toHaveAttribute("aria-current", "page");
+    await expect(views.getByRole("button", { name: /^I'm organising$/ })).toHaveAttribute("aria-current", "page");
     const list = within(canvas.getByRole("list", { name: "Hosting sessions" }));
     await expect(list.getAllByRole("listitem")).toHaveLength(10);
     await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("href", "/groups");
@@ -419,7 +419,7 @@ export const EmptyJoined: Story = {
     await expect(canvas.getByRole("link", { name: /^Play with a group/ })).toHaveAttribute("href", "/groups");
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(views.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(views.getByRole("button", { name: "I'm organising" }));
     await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     await expectNoHorizontalOverflow();
   },
@@ -501,7 +501,7 @@ export const Loading: Story = {
     await expect(canvas.queryByRole("heading", { name: "Your sessions will appear here." })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
     await expect(canvas.getByRole("link", { name: "New session" })).toBeVisible();
-    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "Hosting" }));
+    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "I'm organising" }));
     await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     await expectNoHorizontalOverflow();
   },
@@ -513,7 +513,7 @@ export const LoadingHosting: Story = {
     await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
     await expectFeedSkeleton(canvasElement, "hosting");
     await expect(canvas.queryByRole("heading", { name: "You haven’t created any sessions." })).not.toBeInTheDocument();
-    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "Joined" }));
+    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "I'm playing" }));
     await expect(args.onTabChange).toHaveBeenCalledWith("joined");
     await expectNoHorizontalOverflow();
   },
@@ -579,7 +579,7 @@ export const KeyboardAndSessionSummary: Story = {
     });
     await step("The hosting tab delegates the controlled tab change", async () => {
       const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-      await userEvent.click(views.getByRole("button", { name: /^Hosting$/ }));
+      await userEvent.click(views.getByRole("button", { name: /^I'm organising$/ }));
       await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     });
     await step("A selected historical date stays subdued while gaining the current date size", async () => {

@@ -12,7 +12,7 @@ and `app/profile` and reuse what is here.
 | [`schemas.ts`](./schemas.ts) | `userHandleSchema` for forms: the first broken rule as a readable message, then the stored lower-case form. |
 | [`_components/user-handle-field.tsx`](./_components/user-handle-field.tsx) | The `@` input with the rules, a live availability check and server errors. |
 | [`handle-availability-action.ts`](./handle-availability-action.ts) | Public server action: AVAILABLE, TAKEN, INVALID, or UNKNOWN when the check cannot run. |
-| [`find-player-action.ts`](./find-player-action.ts), [`_components/find-player.tsx`](./_components/find-player.tsx) | "Find a player" on the Groups page: signed-in exact search showing the player's name, `@id` and reliability score. |
+| [`find-player-action.ts`](./find-player-action.ts), [`_components/find-player.tsx`](./_components/find-player.tsx) | "Find a player" on the Groups page: signed-in exact search showing the player's name, `@id` and reliability score. The result says `isSelf` instead of sending UUIDs; for the searcher's own ID it shows "This is you." and no `playerAction` (the Groups page's Invite, [ADR-0022](../../docs/adr/0022-invite-players-to-groups-by-user-id.md)). |
 | [`user-lookup-action.ts`](./user-lookup-action.ts), [`user-lookup-response.ts`](./user-lookup-response.ts), [`openapi.ts`](./openapi.ts) | `GET /api/users/{handle}`: signed-in exact lookup, its error mapping and its API reference. |
 
 The live check waits 400 ms after the last keystroke and ignores answers to

@@ -30,6 +30,7 @@ vi.mock("@/app/wallet/server-dependencies", () => ({ getWalletDependencies: mock
 vi.mock("@/app/payouts/payout-server-dependencies", () => ({ getPayoutDependencies: mocks.protectedDependencies }));
 vi.mock("@/app/users/user-handle-server-dependencies", () => ({ getUserHandleDependencies: mocks.protectedDependencies }));
 vi.mock("@/app/venues/server-dependencies", () => ({ getVenueDependencies: mocks.protectedDependencies }));
+vi.mock("@/app/notifications/server-dependencies", () => ({ getNotificationDependencies: mocks.protectedDependencies }));
 vi.mock("@/app/discover/server-dependencies", () => ({ getDiscoveryDependencies: mocks.discoveryDependencies }));
 vi.mock("@/app/commit/scheduled-jobs-server-dependencies", () => ({ getScheduledJobsDependencies: mocks.cronDependencies }));
 vi.mock("@/app/api/webhooks/stripe-webhook-server-dependencies", () => ({ getStripeWebhookDependencies: mocks.webhookDependencies }));
@@ -60,6 +61,7 @@ import * as payoutSessions from "@/app/api/payouts/sessions/route";
 import * as payoutWithdraw from "@/app/api/payouts/withdraw/route";
 import * as userByHandle from "@/app/api/users/[handle]/route";
 import * as venues from "@/app/api/venues/route";
+import * as notifications from "@/app/api/notifications/route";
 import * as pushSubscriptions from "@/app/api/push/subscriptions/route";
 import * as cron from "@/app/api/cron/commitments/route";
 import * as webhook from "@/app/api/webhooks/stripe/route";
@@ -98,6 +100,7 @@ const routes: Route[] = [
   { path: "/api/payouts/withdraw", handlers: payoutWithdraw },
   { path: "/api/users/[handle]", handlers: userByHandle },
   { path: "/api/venues", handlers: venues },
+  { path: "/api/notifications", handlers: notifications },
   { path: "/api/push/subscriptions", handlers: pushSubscriptions },
   { path: "/api/cron/commitments", handlers: cron },
   { path: "/api/webhooks/stripe", handlers: webhook },

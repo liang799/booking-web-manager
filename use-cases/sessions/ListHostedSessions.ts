@@ -53,16 +53,16 @@ export class ListHostedSessions {
     readonly clock: Clock;
   }) {}
 
-  /** Returns upcoming management actions and ended sessions awaiting attendance for an active booker. */
+  /** Returns upcoming/in-progress sessions and ended sessions awaiting attendance for an active booker. */
   async forBooker(bookerId: UUID): Promise<HostedSessions> {
     return this.dependencies.transaction.run(async ({ users, sessions }) => {
       const user = await requireAggregate(users, bookerId, "User");
       DomainError.require(user.accountStatus === "ACTIVE", "INACTIVE_ACCOUNT", "An inactive account cannot manage sessions");
       const now = this.dependencies.clock.now();
-      const hosted = await sessions.listUpcoming(bookerId, now);
+      const hosted = await sessions.listNotEndedOpen(bookerId, now);
       const ended = await sessions.listEndedOpen(bookerId, now);
       const booker = user.asBooker();
-      const upcoming = hosted.map((session) => {
+      const managed = hosted.map((session) => {
         const actions: HostedSessionOperation[] = [];
         const visibility = session.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC";
         if (permits(() => booker.assertCanChangeVisibility(session, visibility, now))) actions.push({ name: "set-visibility", visibility });
@@ -91,7 +91,7 @@ export class ListHostedSessions {
           unverifiedCount,
         }];
       });
-      return { sessions: upcoming, awaitingAttendance };
+      return { sessions: managed, awaitingAttendance };
     });
   }
 }

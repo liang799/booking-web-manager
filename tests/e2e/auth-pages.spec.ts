@@ -153,6 +153,45 @@ test("UC1-01 email endings preserve full addresses and survive navigation betwee
   expect(await page.evaluate(() => new FormData(document.forms[0]).get("email"))).toBe("jamie@example.net");
 });
 
+for (const colorScheme of ["light", "dark"] as const) {
+  test.describe(`${colorScheme} theme`, () => {
+    test.use({ colorScheme });
+
+    test("UC1-01 every region, sport and email ending option is readable in the open list", async ({ page }) => {
+      await page.goto("/register");
+      await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${colorScheme}\\b`));
+
+      // The browser draws the open list with each option's own colours, so check them directly.
+      const contrasts = await page.evaluate(() => {
+        const channels = (value: string) => (value.match(/[\d.]+/g) ?? []).slice(0, 4).map(Number);
+        const luminance = ([r, g, b]: number[]) => {
+          const linear = [r, g, b].map((value) => {
+            const channel = (value ?? 0) / 255;
+            return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * (linear[0] ?? 0) + 0.7152 * (linear[1] ?? 0) + 0.0722 * (linear[2] ?? 0);
+        };
+        return [...document.querySelectorAll("#region option, #sport option, select[aria-label='Email ending'] option")].map((option) => {
+          const style = getComputedStyle(option);
+          const background = channels(style.backgroundColor);
+          const [lighter, darker] = [luminance(channels(style.color)), luminance(background)].sort((a, b) => b - a);
+          return {
+            option: option.textContent,
+            opaque: background.length === 3 || background[3] === 1,
+            ratio: ((lighter ?? 0) + 0.05) / ((darker ?? 0) + 0.05),
+          };
+        });
+      });
+
+      expect(contrasts.length).toBe(5 + 7 + 5);
+      for (const { option, opaque, ratio } of contrasts) {
+        expect(opaque, `${option} has its own background`).toBe(true);
+        expect(ratio, `${option} contrast`).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+  });
+}
+
 test("UC1-01 an incomplete profile stays on the profile step with accessible errors", async ({ page }) => {
   await page.goto("/register");
   await continueRegistration(page);

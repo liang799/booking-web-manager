@@ -29,7 +29,7 @@ test("Wallet links open the wallet inside account navigation on mobile and deskt
         await expect(activityHeading).toBeVisible();
         await expect(sections).toBeHidden();
       } else {
-        await expect(sections.getByRole("link", { name: "All transactions", exact: true })).toBeVisible();
+        await expect(sections.getByRole("tab", { name: "All transactions", exact: true })).toBeVisible();
         await expect(activityHeading).toBeHidden();
       }
       await expect(page.getByRole("navigation", { name: "Main", exact: true }).getByRole("link", { name: "Wallet", exact: true })).toHaveAttribute("aria-current", "page");
