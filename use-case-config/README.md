@@ -318,7 +318,7 @@ against the full checked-in ordered migration sequence before accepting integrat
 `session-management.ts` assembles `ToggleSessionVisibility` and
 `ListHostedSessions` using the existing Supabase/PostgreSQL settings, lazy pool,
 complete User reader and a dedicated `PostgresSessionManagementTransaction`.
-`ListHostedSessions.forBooker` returns both upcoming sessions and those awaiting
+`ListHostedSessions.forBooker` returns upcoming/in-progress sessions and those awaiting
 attendance from one transaction, account check and clock value. App-owned
 serializers convert dates for the API response.
 The management getter has the same retryable initialization boundary as creation.

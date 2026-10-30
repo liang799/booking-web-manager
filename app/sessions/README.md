@@ -431,10 +431,11 @@ attendance counts, and tied timestamps across multiple page boundaries.
 
 ## UC2-03a: visibility management
 
-`GET /api/sessions/hosted` supplies management actions for every open, upcoming
+`GET /api/sessions/hosted` supplies management actions for every open, upcoming or in-progress
 session hosted by the signed-in user, ordered by start time and session ID. It
 includes full sessions; their action list omits visibility changes. Availability includes direct-invitation reservations
-through `Session.getAvailableSlots`; the UI does not calculate capacity itself.
+through `Session.getAvailableSlots`; in-progress sessions retain participant management
+while their action list omits visibility changes and cancellation. The UI does not calculate capacity itself.
 Rows display confirmed visibility with per-row saving, success and error feedback.
 The UI follows the returned HTTP actions. Existing cookie-authenticated server
 actions and bearer APIs invoke the same use cases directly.
