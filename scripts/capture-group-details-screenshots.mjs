@@ -29,8 +29,6 @@ try {
   await capture("after-hero-light.png");
   await story("groups-details--dark", "Members (4)");
   await capture("after-hero-dark.png");
-
-  await story("groups-details--dark", "Members (4)");
   await capture("after-members.png");
 
   await page.getByRole("button", { name: "Invite players" }).click();
