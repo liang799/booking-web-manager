@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { MoreHorizontal } from "lucide-react";
+import styles from "./group-detail.module.css";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorMessage } from "@/components/ui/error-message";
@@ -9,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   archiveGroup,
+  cancelPendingInvitation,
   createGroup,
   joinGroup,
   leaveGroup,
@@ -88,7 +91,7 @@ export function RenameGroupForm({ groupId, name }: { readonly groupId: string; r
     <GroupNameForm
       action={renameGroup.bind(null, groupId)}
       label="Group name"
-      submitLabel="Save name"
+      submitLabel="Save changes"
       pendingLabel="Saving…"
       defaultValue={name}
     />
@@ -162,8 +165,8 @@ export function RemoveMemberButton({
   return (
     <ConfirmDialog
       trigger={
-        <Button variant="ghost" size="sm" className="text-destructive">
-          Remove
+        <Button variant="ghost" size="icon" className={styles.rowAction} aria-label={"Remove " + memberName} title={"Remove " + memberName}>
+          <MoreHorizontal size={22} aria-hidden="true" />
         </Button>
       }
       title={`Remove ${memberName}?`}
@@ -172,6 +175,27 @@ export function RemoveMemberButton({
       destructive
       onConfirm={async () => {
         const result = await removeMember(groupId, memberId);
+        if (result.error !== undefined) throw new Error(result.error);
+      }}
+    />
+  );
+}
+
+/** Owner: withdraw one unanswered invitation from the Pending invitations list. */
+export function CancelPendingInvitationButton({ groupId, inviteeId, inviteeName }: {
+  readonly groupId: string;
+  readonly inviteeId: string;
+  readonly inviteeName: string;
+}) {
+  return (
+    <ConfirmDialog
+      trigger={<Button variant="ghost" size="icon" className={styles.rowAction} aria-label={"Revoke invitation for " + inviteeName} title={"Revoke invitation for " + inviteeName}><MoreHorizontal size={22} aria-hidden="true" /></Button>}
+      title={"Revoke " + inviteeName + "'s invitation?"}
+      description="They will no longer be able to accept this invitation. The group link stays active."
+      confirmLabel="Revoke invitation"
+      destructive
+      onConfirm={async () => {
+        const result = await cancelPendingInvitation(groupId, inviteeId);
         if (result.error !== undefined) throw new Error(result.error);
       }}
     />
