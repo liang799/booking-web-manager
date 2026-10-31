@@ -8,14 +8,20 @@ import { GroupDetailView, type GroupDetailViewProps } from "./group-detail-view"
 import { GroupInvitationPanel } from "./group-invitation-panel";
 import styles from "./group-detail.module.css";
 
-const inviteAction = fn(async (_previous: InvitePlayerState, form: FormData): Promise<InvitePlayerState> => ({ status: "sent", message: `Invitation sent to @${form.get("handle")}.` }));
+const inviteAction = fn(async (_previous: InvitePlayerState, form: FormData): Promise<InvitePlayerState> => ({ status: "sent", message: "Invitation sent to @" + form.get("handle") + "." }));
 const invitation = <GroupInvitationPanel groupId="crew" url="https://booking.example/groups/join/preview-link" active inviteAction={inviteAction} />;
-const membership = <section id="leave" className={styles.membership}><h2>Your membership</h2><p>You can leave this group at any time. You&apos;ll need another invitation to rejoin.</p><Button variant="outline">Leave group</Button></section>;
+const membership = <section id="leave" className={styles.membership}><h2>Membership settings</h2><p>You can leave this group at any time. You&apos;ll need another invitation to rejoin.</p><Button variant="outline">Leave group</Button></section>;
+const settings = <section id="settings" className={styles.settings}><h2>Group settings</h2><p className={styles.settingsIntro}>Manage your group&apos;s identity and lifecycle.</p><div className={styles.settingsSection}><h3>Group details</h3><p>Visible to members.</p></div><div className={styles.archiveSection}><h3>Archive group</h3><Button variant="outline">Archive group</Button></div></section>;
 const members = [
   { key: "owner", name: "Rishi R", handle: "rishi_r", joined: "20 Oct 2026", isOwner: true, isYou: false },
   { key: "tester", name: "testingaccount1", handle: "testingaccount1", joined: "30 Oct 2026", isOwner: false, isYou: false },
   { key: "joseph", name: "Joseph", handle: "joseph", joined: "30 Oct 2026", isOwner: false, isYou: false },
   { key: "me", name: "Tian Pok Neoh", handle: "tian_pok_neoh", joined: "30 Oct 2026", isOwner: false, isYou: true },
+] as const;
+const pendingInvitations = [
+  { key: "jamie", name: "Jamie Wong", handle: "jamiewong", invited: "28 Oct 2026" },
+  { key: "cheryl", name: "Cheryl Lim", handle: "cheryllim", invited: "27 Oct 2026" },
+  { key: "ryan", name: "Ryan Yap", handle: "ryanyap", invited: "25 Oct 2026" },
 ] as const;
 const meta = {
   title: "Groups/Details", component: GroupDetailView,
@@ -32,8 +38,11 @@ export const Member: Story = {
     await expect(canvas.getByRole("heading", { name: "Members (4)" })).toBeVisible();
     await expect(canvas.getByText("@joseph")).toBeVisible();
     await expect(canvas.getByRole("link", { name: "All groups" })).toHaveAttribute("href", "/groups");
+    await userEvent.click(canvas.getByRole("tab", { name: "Settings" }));
     await expect(canvas.getByRole("button", { name: "Leave group" })).toBeVisible();
-    await userEvent.click(canvas.getByRole("tab", { name: "By user ID" }));
+    await userEvent.click(canvas.getByRole("tab", { name: "Members" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Invite players" }));
+    await userEvent.click(canvas.getByRole("tab", { name: "Invite by user ID" }));
     await userEvent.type(canvas.getByRole("textbox", { name: "User ID" }), "joseph");
     await userEvent.click(canvas.getByRole("button", { name: "Send invitation" }));
     await expect(await canvas.findByText("Invitation sent to @joseph.")).toBeVisible();
@@ -45,11 +54,20 @@ export const Member: Story = {
 export const InvitationTab: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("tab", { name: "Invitations" }));
-    await expect(canvas.getByRole("heading", { name: "Make room for your regulars." })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "No pending invitations" })).toBeVisible();
     await userEvent.click(canvas.getByLabelText("Options for 2006"));
     await userEvent.click(canvas.getByRole("link", { name: "View members" }));
     await expect(canvas.getByRole("heading", { name: "Members (4)" })).toBeVisible();
-    await expect(canvas.getByRole("tab", { name: "Members" })).toHaveAttribute("aria-selected", "true");
+  },
+};
+export const PendingInvitations: Story = {
+  args: { isOwner: true, membership: undefined, settings, pendingInvitations },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Invitations" }));
+    await expect(canvas.getByRole("heading", { name: "Pending invitations" })).toBeVisible();
+    await expect(canvas.getAllByText("Pending")).toHaveLength(3);
+    await expect(canvas.getByText("Jamie Wong")).toBeVisible();
+    await expect(canvas.getByText("@ryanyap")).toBeVisible();
   },
 };
 export const CopyDenied: Story = {
@@ -57,6 +75,7 @@ export const CopyDenied: Story = {
     const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("Denied"); } } });
     try {
+      await userEvent.click(canvas.getByRole("button", { name: "Invite players" }));
       await userEvent.click(canvas.getByRole("button", { name: "Copy link" }));
       await expect(await canvas.findByText("Couldn't copy the link. Select the link above and copy it manually.")).toBeVisible();
       await expect(canvas.getByRole("textbox", { name: "Invitation link" })).toHaveValue("https://booking.example/groups/join/preview-link");
@@ -67,14 +86,14 @@ export const CopyDenied: Story = {
   },
 };
 export const Owner: Story = {
-  args: { isOwner: true, membership: undefined, settings: <section id="settings" className={styles.settings}><h2>Group settings</h2><p>Rename your group or archive it when you&apos;re finished playing.</p></section>, members: members.map((member) => ({ ...member, isYou: member.isOwner, removeControl: member.isOwner ? undefined : <Button variant="ghost">Remove</Button> })) },
+  args: { isOwner: true, membership: undefined, settings, members: members.map((member) => ({ ...member, isYou: member.isOwner, removeControl: member.isOwner ? undefined : <Button variant="ghost" aria-label={"Remove " + member.name}>Remove</Button> })) },
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByRole("button", { name: "Remove" })).toHaveLength(3);
+    await expect(canvas.getAllByRole("button", { name: /Remove / })).toHaveLength(3);
     await expect(canvas.queryByRole("button", { name: "Leave group" })).not.toBeInTheDocument();
     await userEvent.click(canvas.getByLabelText("Options for 2006"));
     await expect(canvas.getByRole("link", { name: "Group settings" })).toHaveAttribute("href", "/groups/crew#settings");
-    await userEvent.keyboard("{Escape}");
-    await expect(canvas.getByLabelText("Options for 2006")).toHaveFocus();
+    await userEvent.click(canvas.getByRole("link", { name: "Group settings" }));
+    await expect(canvas.getByRole("tab", { name: "Settings" })).toHaveAttribute("aria-selected", "true");
   },
 };
 export const Archived: Story = {
@@ -82,23 +101,29 @@ export const Archived: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText("This group is archived. Your members and their history are still here.")).toBeVisible();
     await expect(canvas.queryByRole("tab", { name: "Invitations" })).not.toBeInTheDocument();
-    await expect(canvas.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: "Invite players" })).not.toBeInTheDocument();
     await expect(canvas.getByRole("heading", { name: "Members (4)" })).toBeVisible();
   },
 };
 export const LinkOff: Story = {
   args: { invitation: <GroupInvitationPanel groupId="crew" url="" active={false} inviteAction={inviteAction} /> },
-  play: async ({ canvas }) => { await expect(canvas.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument(); await expect(canvas.queryByRole("button", { name: "Send invitation" })).not.toBeInTheDocument(); },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Invite players" }));
+    await expect(canvas.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("tab", { name: "Invite by user ID" }));
+    await expect(canvas.queryByRole("button", { name: "Send invitation" })).not.toBeInTheDocument();
+  },
 };
 function ArchivePreview(props: GroupDetailViewProps) {
   const [archived, setArchived] = useState(false);
   return <GroupDetailView {...props} isOwner archived={archived} invitation={archived ? undefined : props.invitation} membership={undefined}
-    settings={archived ? undefined : <Button onClick={() => setArchived(true)}>Archive group</Button>} />;
+    settings={archived ? undefined : <section id="settings"><Button onClick={() => setArchived(true)}>Archive group</Button></section>} />;
 }
 export const ArchiveWhileInviting: Story = {
   render: (args) => <ArchivePreview {...args} />,
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("tab", { name: "Invitations" }));
+    await userEvent.click(canvas.getByRole("tab", { name: "Settings" }));
     await userEvent.click(canvas.getByRole("button", { name: "Archive group" }));
     await expect(canvas.getByRole("heading", { name: "Members (4)" })).toBeVisible();
     await expect(canvas.queryByRole("tab", { name: "Invitations" })).not.toBeInTheDocument();
