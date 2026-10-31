@@ -6,6 +6,7 @@ import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import {
   ArchiveGroupButton,
+  CancelPendingInvitationButton,
   InvitationControls,
   LeaveGroupButton,
   RemoveMemberButton,
@@ -36,7 +37,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
     throw error;
   }
 
-  const profiles = await memberProfiles(group.memberships.map((member) => member.userId));
+  const profiles = await memberProfiles([...new Set([...group.memberships.map((member) => member.userId), ...(group.invitations ?? []).map((invite) => invite.inviteeId)])]);
   const isOwner = group.ownerId === user.id;
   const active = group.status === "ACTIVE";
 
@@ -60,6 +61,13 @@ export default async function GroupPage({ params }: GroupPageProps) {
             ? <RemoveMemberButton groupId={group.groupId} memberId={member.userId} memberName={name} /> : undefined,
         };
       })}
+      pendingInvitations={active ? (group.invitations ?? []).map((entry) => {
+        const profile = profiles.get(entry.inviteeId);
+        const invitedName = profile?.name ?? "Unnamed player";
+        return { key: entry.inviteeId, name: invitedName, handle: profile?.handle ?? null,
+          invited: joinedDate.format(entry.invitedAt),
+          revokeControl: isOwner ? <CancelPendingInvitationButton groupId={group.groupId} inviteeId={entry.inviteeId} inviteeName={invitedName} /> : undefined };
+      }).sort((first, second) => first.name.localeCompare(second.name)) : []}
       invitation={active ? <GroupInvitationPanel groupId={group.groupId} url={invitationUrl}
         active={group.invitationActive} inviteAction={invitePlayer}
         controls={isOwner ? <InvitationControls groupId={group.groupId} active={group.invitationActive} /> : undefined} /> : undefined}
@@ -70,8 +78,17 @@ export default async function GroupPage({ params }: GroupPageProps) {
       </section> : undefined}
       settings={isOwner && active ? <section id="settings" className={styles.settings} aria-labelledby="settings-heading">
         <h2 id="settings-heading">Group settings</h2>
-        <RenameGroupForm groupId={group.groupId} name={group.name} />
-        <div><p>Finished playing with this group? Archive it to turn off invitations and keep your member history.</p><ArchiveGroupButton groupId={group.groupId} /></div>
+        <p className={styles.settingsIntro}>Manage your group&apos;s identity and lifecycle.</p>
+        <div className={styles.settingsSection}>
+          <h3>Group details</h3>
+          <p>This name will be visible to all members.</p>
+          <RenameGroupForm groupId={group.groupId} name={group.name} />
+        </div>
+        <div className={styles.archiveSection}>
+          <h3>Archive group</h3>
+          <p>Finished playing with this group? Archive it to turn off invitations and keep your member history.</p>
+          <ArchiveGroupButton groupId={group.groupId} />
+        </div>
       </section> : undefined}
     />
   );
