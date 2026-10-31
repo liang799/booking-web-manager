@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, Link2 } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import styles from "./group-detail.module.css";
 
 /** Shows the invitation link with a Copy button. */
 export function InvitationLink({ url }: { readonly url: string }) {
@@ -23,10 +24,10 @@ export function InvitationLink({ url }: { readonly url: string }) {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
-      <Input readOnly value={url} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()} />
-      <Button type="button" variant="outline" className="shrink-0" onClick={copy}>
-        {copied ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
+    <div className={styles.linkCopy}>
+      <Input className={styles.linkInput} readOnly value={url} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()} />
+      <Button type="button" className={styles.copyButton} onClick={copy}>
+        {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
         {copied ? "Copied!" : "Copy link"}
       </Button>
       <span role="status" className={copyError ? "text-sm text-muted-foreground" : "sr-only"}>
