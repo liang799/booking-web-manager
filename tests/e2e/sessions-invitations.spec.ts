@@ -69,11 +69,10 @@ test("a host creates a private session and shares a mobile invitation that a sec
     const copy = card.getByRole("button", { name: "Copy invitation link", exact: true });
     await copy.focus();
     await page.keyboard.press("Enter");
-    const field = card.getByLabel("Invitation link", { exact: true });
-    await expect(field).toBeVisible();
+    await expect(card.getByRole("button", { name: "Link copied", exact: true })).toBeVisible();
     await expect(card.getByRole("status")).toHaveText("Invitation link copied.");
-    const link = await field.inputValue();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
+    await expect(card.getByLabel("Invitation link", { exact: true })).toHaveCount(0);
+    const link = await page.evaluate(() => navigator.clipboard.readText());
     const url = new URL(link);
     const destination = `${url.pathname}${url.search}`;
     const stored = (await context.pool.query("select visibility,room_token from sessions where session_id=$1", [sessionId])).rows[0];
@@ -85,8 +84,9 @@ test("a host creates a private session and shares a mobile invitation that a sec
     await page.reload();
     await openHostedSession(page, venueName);
     await copy.click();
-    await expect(field).toHaveValue(link);
+    await expect(card.getByRole("button", { name: "Link copied", exact: true })).toBeVisible();
     await expect(card.getByRole("status")).toHaveText("Invitation link copied.");
+    await expect(card.getByLabel("Invitation link", { exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
 
     const ownerHeaders = { Authorization: `Bearer ${booker.token}` };
@@ -185,7 +185,7 @@ test("clipboard denial leaves a selectable invitation and a lost join response r
     await card.getByRole("button", { name: "Copy invitation link", exact: true }).click();
     const field = card.getByLabel("Invitation link", { exact: true });
     await expect(field).toHaveAttribute("readonly", "");
-    await expect(card.getByRole("status")).toHaveText("Copy the invitation link below.");
+    await expect(card.getByText("Copy the invitation link below.", { exact: true })).toBeVisible();
     const link = await field.inputValue();
     expect(new URL(link).pathname + new URL(link).search).toBe(fixture.invitationPath);
     await field.focus();
