@@ -34,7 +34,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Member: Story = {
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
+    const dialog = within(canvasElement.ownerDocument.body);
     await expect(canvas.getByRole("heading", { name: "Members (4)" })).toBeVisible();
     await expect(canvas.getByText("@joseph")).toBeVisible();
     await expect(canvas.getByRole("link", { name: "All groups" })).toHaveAttribute("href", "/groups");
@@ -42,10 +43,10 @@ export const Member: Story = {
     await expect(canvas.getByRole("button", { name: "Leave group" })).toBeVisible();
     await userEvent.click(canvas.getByRole("tab", { name: "Members" }));
     await userEvent.click(canvas.getByRole("button", { name: "Invite players" }));
-    await userEvent.click(canvas.getByRole("tab", { name: "Invite by user ID" }));
-    await userEvent.type(canvas.getByRole("textbox", { name: "User ID" }), "joseph");
-    await userEvent.click(canvas.getByRole("button", { name: "Send invitation" }));
-    await expect(await canvas.findByText("Invitation sent to @joseph.")).toBeVisible();
+    await userEvent.click(dialog.getByRole("tab", { name: "Invite by user ID" }));
+    await userEvent.type(dialog.getByRole("textbox", { name: "User ID" }), "joseph");
+    await userEvent.click(dialog.getByRole("button", { name: "Send invitation" }));
+    await expect(await dialog.findByText("Invitation sent to @joseph.")).toBeVisible();
     const form = inviteAction.mock.calls.at(-1)?.[1];
     await expect(form?.get("groupId")).toBe("crew");
     await expect(form?.get("handle")).toBe("joseph");
@@ -71,14 +72,15 @@ export const PendingInvitations: Story = {
   },
 };
 export const CopyDenied: Story = {
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
+    const dialog = within(canvasElement.ownerDocument.body);
     const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("Denied"); } } });
     try {
       await userEvent.click(canvas.getByRole("button", { name: "Invite players" }));
-      await userEvent.click(canvas.getByRole("button", { name: "Copy link" }));
-      await expect(await canvas.findByText("Couldn't copy the link. Select the link above and copy it manually.")).toBeVisible();
-      await expect(canvas.getByRole("textbox", { name: "Invitation link" })).toHaveValue("https://booking.example/groups/join/preview-link");
+      await userEvent.click(dialog.getByRole("button", { name: "Copy link" }));
+      await expect(await dialog.findByText("Couldn't copy the link. Select the link above and copy it manually.")).toBeVisible();
+      await expect(dialog.getByRole("textbox", { name: "Invitation link" })).toHaveValue("https://booking.example/groups/join/preview-link");
     } finally {
       if (original) Object.defineProperty(navigator, "clipboard", original);
       else Reflect.deleteProperty(navigator, "clipboard");
@@ -107,11 +109,12 @@ export const Archived: Story = {
 };
 export const LinkOff: Story = {
   args: { invitation: <GroupInvitationPanel groupId="crew" url="" active={false} inviteAction={inviteAction} /> },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
+    const dialog = within(canvasElement.ownerDocument.body);
     await userEvent.click(canvas.getByRole("button", { name: "Invite players" }));
-    await expect(canvas.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole("tab", { name: "Invite by user ID" }));
-    await expect(canvas.queryByRole("button", { name: "Send invitation" })).not.toBeInTheDocument();
+    await expect(dialog.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
+    await userEvent.click(dialog.getByRole("tab", { name: "Invite by user ID" }));
+    await expect(dialog.queryByRole("button", { name: "Send invitation" })).not.toBeInTheDocument();
   },
 };
 function ArchivePreview(props: GroupDetailViewProps) {
