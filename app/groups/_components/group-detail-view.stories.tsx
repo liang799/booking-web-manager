@@ -136,6 +136,9 @@ export const DeletedMember: Story = {
   args: { members: [{ ...members[0], key: "deleted", name: "Deleted user", handle: null }] },
   play: async ({ canvas }) => { await expect(within(canvas.getByRole("list")).queryByText(/@/)).not.toBeInTheDocument(); },
 };
+/** Stable, interaction-free stories for automated visual evidence (not mock screenshots). */
+export const VisualOwner: Story = { args: { isOwner: true, membership: undefined, settings } };
+export const VisualPending: Story = { args: { isOwner: true, membership: undefined, settings, pendingInvitations } };
 export const Dark: Story = { globals: { theme: "dark" } };
 export const Mobile: Story = {
   globals: { viewport: { value: "phone", isRotated: false } },
