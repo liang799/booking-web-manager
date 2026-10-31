@@ -128,10 +128,9 @@ export function GroupDetailView({
                       <li key={pending.key} className={styles.personRow}>
                         <span className={styles.avatar} aria-hidden="true">{initials(pending.name)}</span>
                         <div className={styles.personCopy}>
-                          <span className={styles.personName}>{pending.name}</span>
+                          <div className={styles.invitationName}><span className={styles.personName}>{pending.name}</span><span className={styles.pendingBadge}>Pending</span></div>
                           {pending.handle !== null && <span className={styles.handle}>@{pending.handle}</span>}
                         </div>
-                        <span className={styles.pendingBadge}>Pending</span>
                         <span className={styles.date}>Invited {pending.invited}</span>
                         {pending.revokeControl}
                       </li>
@@ -143,7 +142,6 @@ export function GroupDetailView({
                   <Mail size={40} strokeWidth={1.35} aria-hidden="true" />
                   <h2 id="pending-invitations-heading">No pending invitations</h2>
                   <p>Invitations you send to join this group will appear here.</p>
-                  <div className={styles.emptyInvite}>{invitation}</div>
                 </div>
               )}
             </section>
