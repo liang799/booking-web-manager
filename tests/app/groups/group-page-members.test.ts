@@ -17,7 +17,7 @@ vi.mock("next/navigation", () => ({
 // The owner controls are client components with their own tests; this page test covers the member list.
 vi.mock("@/app/groups/_components/group-controls", () => {
   const none = () => null;
-  return { ArchiveGroupButton: none, InvitationControls: none, InvitationLink: none, LeaveGroupButton: none, RemoveMemberButton: none, RenameGroupForm: none };
+  return { ArchiveGroupButton: none, CancelPendingInvitationButton: none, InvitationControls: none, InvitationLink: none, LeaveGroupButton: none, RemoveMemberButton: none, RenameGroupForm: none };
 });
 
 const joinedAt = new Date("2026-10-12T10:00:00+08:00");
@@ -70,6 +70,25 @@ describe("group page member list", () => {
     expect(page.props.membership).toBeUndefined();
     expect(page.props.members.every((member: { removeControl?: unknown }) => member.removeControl === undefined)).toBe(true);
     expect(renderToStaticMarkup(page)).toContain("Marcus Lim");
+  });
+
+  test("shows outgoing invitations in the pending tab, with newest first and owner-only revoke controls", async () => {
+    const group = await mocks.viewAsMember();
+    mocks.viewAsMember.mockResolvedValue({ ...group, invitations: [
+      { inviteeId: "first", invitedAt: new Date("2026-10-22T00:00:00Z") },
+      { inviteeId: "second", invitedAt: new Date("2026-10-28T00:00:00Z") },
+    ] });
+    vi.mocked(memberProfiles).mockResolvedValue(new Map([
+      ["owner", { name: "Owner", handle: "the_owner" }],
+      ["marcus", { name: "Marcus Lim", handle: "marcus_lim" }],
+      ["gone", { name: "Deleted user", handle: null }],
+      ["first", { name: "Jamie", handle: "jamie" }],
+      ["second", { name: "Cheryl", handle: "cheryl" }],
+    ]));
+    const page = await GroupPage({ params: Promise.resolve({ groupId: GROUP_ID }) });
+    expect(memberProfiles).toHaveBeenCalledWith(["owner", "marcus", "gone", "first", "second"]);
+    expect(page.props.pendingInvitations.map((entry: { name: string }) => entry.name)).toEqual(["Cheryl", "Jamie"]);
+    expect(page.props.pendingInvitations.every((entry: { revokeControl?: unknown }) => entry.revokeControl !== undefined)).toBe(true);
   });
 
   test("only an active owner receives removal and group settings controls", async () => {
