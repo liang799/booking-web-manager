@@ -117,3 +117,14 @@
   .linkHeader { gap: 12px; }
   .linkIcon { width: 40px; height: 40px; }
 }
+
+.linkCopy { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; min-width: 0; }
+.linkInput { flex: 1 1 260px; width: 100%; min-height: 50px; min-width: 0; background: transparent; overflow: hidden; font-size: 13px; }
+.copyButton { min-height: 50px; flex-shrink: 0; padding-inline: 22px; }
+.linkCopy > span { flex: 1 0 100%; }
+@media (max-width: 480px) {
+  .copyButton { width: 100%; }
+  .linkInput { flex-basis: 100%; }
+  .personRow { gap: 9px; }
+  .pendingBadge { padding-inline: 7px; font-size: 10px; }
+}
