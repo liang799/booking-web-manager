@@ -115,11 +115,19 @@
 .statusDot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .schedule {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
   padding: 38px 0 43px;
 }
-.scheduleCell { min-width: 0; }
-.scheduleCell + .scheduleCell { padding-left: 55px; border-left: 1px solid var(--sheet-line); }
+.scheduleCell {
+  display: grid;
+  grid-template-columns: 23px minmax(0, 1fr);
+  align-content: start;
+  column-gap: 15px;
+  min-width: 0;
+}
+.scheduleCell + .scheduleCell { padding-left: 26px; border-left: 1px solid var(--sheet-line); }
+.scheduleCopy { min-width: 0; }
+.scheduleIcon { width: 23px; height: 23px; margin-top: 1px; color: var(--sheet-ink); }
 .scheduleValue {
   min-width: 0;
   margin: 13px 0 0;
@@ -131,9 +139,15 @@
   letter-spacing: -.028em;
   overflow-wrap: anywhere;
 }
+.scheduleValue[data-long="true"] {
+  font-size: clamp(18px, 1.4vw, 21px);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
 .supporting { margin: 6px 0 0; color: var(--sheet-muted); font-size: 13px; line-height: 1.6; }
-.venue { display: inline-flex; align-items: baseline; gap: 12px; max-width: 100%; }
-.venue svg { flex: 0 0 auto; }
+.venue { display: inline-flex; align-items: flex-start; gap: 9px; max-width: 100%; min-width: 0; }
+.venueText { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.venue svg { flex: 0 0 auto; margin-top: .18em; }
 .venue:hover { text-decoration: underline; text-underline-offset: 4px; }
 .tabs {
   display: flex;
@@ -227,7 +241,8 @@
 @media (max-width: 950px) {
   .scrollArea { padding-right: 36px; padding-left: 40px; }
   .footer { padding-right: 28px; padding-left: 40px; }
-  .scheduleCell + .scheduleCell, .metric + .metric { padding-left: 28px; }
+  .scheduleCell + .scheduleCell { padding-left: 20px; }
+  .metric + .metric { padding-left: 28px; }
   .tabs { gap: 34px; }
 }
 @media (max-width: 700px) {
@@ -251,8 +266,11 @@
   .title { max-width: 95%; padding: 0; font-size: clamp(30px, 8vw, 38px); }
   .status { margin-top: 15px; }
   .schedule { gap: 18px; padding: 24px 0 28px; }
+  .scheduleCell { grid-template-columns: 19px minmax(0, 1fr); column-gap: 9px; }
+  .scheduleIcon { width: 19px; height: 19px; }
   .scheduleCell + .scheduleCell { padding-left: 17px; }
   .scheduleValue { font-size: clamp(20px, 5.5vw, 26px); }
+  .scheduleValue[data-long="true"] { font-size: 18px; }
   .supporting { font-size: 12px; }
   .label { font-size: 10px; }
   .tabs { gap: 26px; min-height: 55px; }
@@ -264,6 +282,15 @@
   .capacityBar { gap: 3px; }
   .footer { min-height: 86px; padding: 12px 18px 12px 25px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .calendarButton { min-height: 49px; padding: 12px 14px; font-size: 10px; letter-spacing: .12em; gap: 9px; }
+}
+@media (max-width: 540px) {
+  /* A readable one-column schedule is preferable to squeezing an address into half a phone. */
+  .schedule { grid-template-columns: minmax(0, 1fr); gap: 21px; }
+  .scheduleCell + .scheduleCell {
+    padding: 19px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--sheet-line);
+  }
 }
 @media (max-width: 370px) {
   .schedule { grid-template-columns: 1fr; gap: 18px; }
