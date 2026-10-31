@@ -22,7 +22,7 @@ date, so members can find each other later (deleted members show none).
 **Find a player** at the top of the page searches by exact user ID and shows the
 player's name, `@id` and reliability score. It lives in [`app/users`](../users/README.md);
 see [ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md). The overview
-passes it to `GroupsView` as a slot, like the create form. On desktop it sits
+passes it to `GroupsView` as a slot. On desktop it sits
 between the header and the filters; on mobile only its search row shows, under
 the Joined / Hosting / Groups navigation, with the heading kept for screen readers.
 
@@ -38,8 +38,9 @@ them; **Join** runs `acceptGroupInvitation` and opens the group, **Decline** run
 
 ## Groups overview
 
-The overview follows the supplied list reference, with a Create group dialog and
-All, Owned, Joined and Archived filters. All includes archived groups; Owned and
+The overview follows the supplied list reference, with a court-backed header, a
+Create group link to `/groups/new`, and counted All, Owned, Joined and Archived
+underline filters. Rows show Active/Archived status alongside the member role. All includes archived groups; Owned and
 Joined include active groups only. Archived groups retain their role badge and
 member history. Row options link to the existing detail page sections and expose
 settings appropriate to the current member's role. Mutations still run through
@@ -55,7 +56,7 @@ Groups have no stored description or cover image. “Organised by …” uses th
 owner name, and decorative thumbnails reuse `/images/sessions/court.webp`,
 `/images/session-court.webp`, `/images/sessions/bench.webp` and
 `/images/sports/tennis.jpg`. Their existing provenance lives with the source assets.
-The shared shell and group detail pages are unchanged.
+The shared shell is unchanged. Group details use the same court artwork.
 
 On mobile, Groups continues the existing Joined / Hosting / Groups navigation
 used by Sessions, with Groups marked as current and links back to both session
@@ -70,5 +71,45 @@ Resizing from a filtered desktop view still shows all groups on mobile.
 The mobile page background stays transparent so the shared shell's court artwork
 and existing gradient fade through the tab area without a hard horizontal edge.
 
-Storybook's **Groups / Overview** includes filters, role-specific options, dialog
-keyboard behavior, empty states, long names, mobile layouts and both themes.
+Storybook's **Groups / Overview** includes filters, role-specific options, creation navigation, empty states, long names, mobile
+layouts and both themes.
+
+
+## Two-step group creation
+
+`/groups/new` authenticates before rendering `CreateGroupWizard`. Details collects
+and validates a group name. Invite players resolves exact user IDs and queues up
+to 20 players, with add/remove, duplicate and self checks. Players join only after
+accepting an invitation. Lookup blocks creation and navigation until it settles.
+
+Save draft stores the name and selected players in sessionStorage, scoped to the
+signed-in account. Restored data is validated; unavailable storage never blocks
+creation. Successful creation clears the draft. No draft is saved on the server.
+
+`createGroupWithPlayers` validates all submitted fields, creates through the
+existing use case, then sends deduplicated invitations through `inviteByHandle`.
+If an invitation fails, the response retains the created group ID and identifies
+the failed player, so the UI opens that group instead of offering to create it
+again. A transport error asks the user to check their group list before retrying.
+
+## Group details
+
+`GroupDetailView` receives display data and existing mutation controls from the
+server page. Members shows initials, names, user IDs and join dates; the sidebar
+has Share a link / By user ID invitation tabs and the member's leave control.
+Invitations provides a dedicated sharing view. Clipboard denial retains a
+selectable link and explains manual copying. The owner alone receives link
+management, rename, archive and member removal controls, with existing
+confirmations. Archived groups show member history without mutation controls;
+archiving while Invitations is selected returns to Members. Options links also
+restore the member view before opening their target section.
+
+No outgoing invitation history is shown: the current query exposes invitations
+received by the signed-in player, which remain on the overview. No database
+migration, group policy or shared navigation changes are included.
+
+Storybook **Groups / Create** and **Groups / Details** cover both themes, phone
+layouts, long/deleted profiles, invitation submission, draft restoration,
+validation, partial success, copy denial, pending player lookup and archive tab
+recovery. Current screenshots and validation are in
+[the experience previews](../../docs/assets/groups/experience/README.md).

@@ -95,28 +95,7 @@ export function RenameGroupForm({ groupId, name }: { readonly groupId: string; r
   );
 }
 
-/** Shows the invitation link with a Copy button. */
-export function InvitationLink({ url }: { readonly url: string }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div className="flex flex-col gap-2 sm:flex-row">
-      <Input readOnly value={url} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()} />
-      <Button type="button" variant="outline" className="shrink-0" onClick={copy}>
-        {copied ? "Copied!" : "Copy link"}
-      </Button>
-      <span role="status" className="sr-only">
-        {copied ? "Link copied" : ""}
-      </span>
-    </div>
-  );
-}
+export { InvitationLink } from "./invitation-link";
 
 /** A plain button that runs one group action and shows any refusal under it. */
 function ActionButton({

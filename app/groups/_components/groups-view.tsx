@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { InfoNote } from "@/components/ui/info-note";
 import { initials } from "@/components/ui/initials";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +23,6 @@ export interface GroupOverview {
 
 export interface GroupsViewProps {
   readonly groups: readonly GroupOverview[];
-  readonly createForm: ReactNode;
   /** Player search by user ID (ADR-0021), shown above the filters. */
   readonly findPlayer?: ReactNode;
   /** Invitations by user ID waiting for an answer (ADR-0022), shown first. */
@@ -51,12 +49,13 @@ function subscribeToMobile(onChange: () => void) {
 const isMobileScreen = () => window.matchMedia(mobileQuery).matches;
 const isServerScreenMobile = () => false;
 
-/** Synchronous UC1-06 overview; mutations remain in the server-owned form slot. */
-export function GroupsView({ groups, createForm, findPlayer, invitations, leftGroup = false }: GroupsViewProps) {
+/** Synchronous UC1-06 overview; server-owned slots provide search and invitations. */
+export function GroupsView({ groups, findPlayer, invitations, leftGroup = false }: GroupsViewProps) {
   const [filterValue, setFilterValue] = useState("all");
   const mobile = useSyncExternalStore(subscribeToMobile, isMobileScreen, isServerScreenMobile);
   return (
     <div className={styles.page}>
+      <div className={styles.heroArtwork} aria-hidden="true" />
       <header className={styles.header}>
         <div className={styles.mobileNavigation}><SessionViewNavigation active="groups" /></div>
         <div className={styles.headerCopy}>
@@ -64,20 +63,7 @@ export function GroupsView({ groups, createForm, findPlayer, invitations, leftGr
           <h1>Your groups</h1>
           <p className={styles.intro}>Play together. Organise sessions with your regular players.</p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className={styles.createButton}><Plus aria-hidden="true" /><span>Create group</span></Button>
-          </DialogTrigger>
-          <DialogContent className={styles.createDialog}>
-            <DialogHeader>
-              <DialogTitle>Create a group</DialogTitle>
-              <DialogDescription>
-                Bring your regular players together. You become the owner and can invite players with a link.
-              </DialogDescription>
-            </DialogHeader>
-            {createForm}
-          </DialogContent>
-        </Dialog>
+        <Button asChild className={styles.createButton}><Link href="/groups/new"><Plus aria-hidden="true" /><span>Create group</span></Link></Button>
       </header>
 
       {leftGroup && <div className={styles.notice}><InfoNote icon><span role="status">You left the group.</span></InfoNote></div>}
@@ -96,7 +82,7 @@ export function GroupsView({ groups, createForm, findPlayer, invitations, leftGr
 
       <Tabs value={mobile ? "all" : filterValue} onValueChange={setFilterValue} className={styles.tabs}>
         <TabsList aria-label="Filter groups" className={styles.filters}>
-          {filters.map((filter) => <TabsTrigger key={filter.value} value={filter.value} className={styles.filter}>{filter.label}</TabsTrigger>)}
+          {filters.map((filter) => <TabsTrigger key={filter.value} value={filter.value} className={styles.filter}>{filter.label}<span className={styles.filterCount} aria-hidden="true">{groups.filter(filter.includes).length}</span></TabsTrigger>)}
         </TabsList>
         {filters.map((filter) => {
           const visible = groups.map((group, index) => ({ group, index })).filter(({ group }) => filter.includes(group));
@@ -143,8 +129,8 @@ function GroupRow({ group, coverIndex }: { readonly group: GroupOverview; readon
           </span>
         </span>
         <span className={styles.status}>
+          <span className={styles.activity} data-archived={group.archived || undefined}><span aria-hidden="true" />{group.archived ? "Archived" : "Active"}</span>
           <span className={`${styles.role} ${group.isOwner ? styles.owner : ""}`}>{group.isOwner ? "Owner" : "Member"}</span>
-          {group.archived && <span className={styles.archived}>Archived</span>}
         </span>
         <span className={styles.optionsSpace} aria-hidden="true" />
         <ChevronRight className={styles.chevron} size={22} strokeWidth={1.5} aria-hidden="true" />
@@ -155,7 +141,7 @@ function GroupRow({ group, coverIndex }: { readonly group: GroupOverview; readon
 }
 
 /** Native disclosure links retain normal Tab navigation, outside dismissal and Escape focus. */
-function GroupOptions({ group }: { readonly group: GroupOverview }) {
+export function GroupOptions({ group, onNavigate }: { readonly group: Pick<GroupOverview, "groupId" | "name" | "isOwner" | "archived">; readonly onNavigate?: () => void }) {
   const ref = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -176,7 +162,7 @@ function GroupOptions({ group }: { readonly group: GroupOverview }) {
       }
     }}>
       <summary aria-label={`Options for ${group.name}`}><MoreHorizontal size={22} strokeWidth={1.8} aria-hidden="true" /></summary>
-      <div className={styles.optionsPanel} onClick={() => { if (ref.current) ref.current.open = false; }}>
+      <div className={styles.optionsPanel} onClick={() => { if (ref.current) ref.current.open = false; onNavigate?.(); }}>
         <Link href={`/groups/${group.groupId}#members`}><UsersRound aria-hidden="true" />View members</Link>
         {!group.archived && <Link href={`/groups/${group.groupId}#invite`}><Link2 aria-hidden="true" />Invitation link</Link>}
         {!group.archived && group.isOwner && <Link href={`/groups/${group.groupId}#settings`}><Settings2 aria-hidden="true" />Group settings</Link>}

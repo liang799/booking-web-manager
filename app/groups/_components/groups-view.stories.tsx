@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { AppShell } from "@/components/ui/app-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { FindPlayerState } from "@/app/users/find-player-action";
 import { FindPlayer } from "@/app/users/_components/find-player";
 import { GroupInvitations } from "./group-invitations";
@@ -25,17 +22,12 @@ const meta = {
   parameters: {
     layout: "fullscreen",
     nextjs: { navigation: { pathname: "/groups" } },
-    docs: { description: { component: "UC1-06 group overview. All includes archived groups; Owned and Joined show active groups. Initials and organiser names come from real profiles in production. Court photography is decorative. This fixture form demonstrates the dialog; production injects the existing CreateGroupForm and server action." } },
+    docs: { description: { component: "UC1-06 group overview. All includes archived groups; Owned and Joined show active groups. Initials and organiser names come from real profiles in production. Court photography is decorative. Creation opens the two-step /groups/new page." } },
   },
   globals: { viewport: { value: "desktop", isRotated: false } },
   decorators: [(Story) => <AppShell user={{ name: "Tian Pok Neoh", reliabilityScore: 100 }} logoutAction={fn()}><Story /></AppShell>],
   args: {
     groups,
-    createForm: <form onSubmit={(event) => event.preventDefault()} className="space-y-3">
-      <Label htmlFor="preview-group-name">New group name</Label>
-      <Input id="preview-group-name" name="name" placeholder="e.g. Weekend Tennis Crew" maxLength={60} />
-      <Button type="submit">Create group</Button>
-    </form>,
   },
 } satisfies Meta<typeof GroupsView>;
 
@@ -88,19 +80,9 @@ export const Options: Story = {
   },
 };
 
-export const CreateDialog: Story = {
-  play: async ({ canvas, canvasElement }) => {
-    const trigger = canvas.getByRole("button", { name: "Create group" });
-    await userEvent.click(trigger);
-    const body = within(canvasElement.ownerDocument.body);
-    const dialog = within(await body.findByRole("dialog", { name: "Create a group" }));
-    const input = dialog.getByRole("textbox", { name: "New group name" });
-    await waitFor(() => expect(input).toHaveFocus());
-    await userEvent.type(input, "Friday players");
-    await expect(input).toHaveValue("Friday players");
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
-    await expect(trigger).toHaveFocus();
+export const CreatePageLink: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("link", { name: "Create group" })).toHaveAttribute("href", "/groups/new");
   },
 };
 
@@ -108,7 +90,7 @@ export const Empty: Story = {
   args: { groups: [] },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("heading", { name: "No groups yet" })).toBeVisible();
-    await expect(canvas.getByRole("button", { name: "Create group" })).toBeEnabled();
+    await expect(canvas.getByRole("link", { name: "Create group" })).toHaveAttribute("href", "/groups/new");
   },
 };
 
@@ -131,7 +113,7 @@ export const Mobile: Story = {
     await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
     await expect(views.getByRole("link", { name: "I'm playing" })).toHaveAttribute("href", "/sessions");
     await expect(views.getByRole("link", { name: "I'm organising" })).toHaveAttribute("href", "/sessions?tab=hosting");
-    await expect(canvas.queryByRole("button", { name: "Create group" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: "Create group" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("tablist", { name: "Filter groups" })).not.toBeInTheDocument();
     await expect(within(canvas.getByRole("list", { name: "All groups" })).getAllByRole("listitem")).toHaveLength(6);
     const row = canvas.getByRole("link", { name: "Open Weekend Tennis Club" });

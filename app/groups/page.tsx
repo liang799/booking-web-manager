@@ -4,7 +4,6 @@ import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import { findPlayer } from "@/app/users/find-player-action";
 import { acceptGroupInvitation, declineGroupInvitation, invitePlayer } from "./actions";
-import { CreateGroupForm } from "./_components/group-controls";
 import { GroupFindPlayer } from "./_components/group-find-player";
 import { GroupInvitations } from "./_components/group-invitations";
 import { GroupsView } from "./_components/groups-view";
@@ -54,7 +53,6 @@ export default async function GroupsPage({ searchParams }: GroupsPageProps) {
         memberNames: group.memberships.slice(0, 4).map((member) => nameOf(member.userId)),
       }))}
       leftGroup={left === "1"}
-      createForm={<CreateGroupForm />}
       findPlayer={<GroupFindPlayer findAction={findPlayer} inviteAction={invitePlayer} inviteGroups={inviteGroups} />}
       invitations={invitations.length === 0 && !focusedGroupId ? undefined : (
         <GroupInvitations

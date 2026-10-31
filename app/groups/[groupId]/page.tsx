@@ -1,20 +1,20 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { DomainError } from "@/domain";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { memberProfiles } from "@/lib/supabase/profile-names";
 import { createManageGroup } from "@/use-case-config/groups";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 import {
   ArchiveGroupButton,
   InvitationControls,
-  InvitationLink,
   LeaveGroupButton,
   RemoveMemberButton,
   RenameGroupForm,
 } from "../_components/group-controls";
+import { GroupDetailView } from "../_components/group-detail-view";
+import { GroupInvitationPanel } from "../_components/group-invitation-panel";
+import { invitePlayer } from "../actions";
+import styles from "../_components/group-detail.module.css";
 
 const joinedDate = new Intl.DateTimeFormat("en-SG", { day: "numeric", month: "short", year: "numeric" });
 
@@ -46,91 +46,33 @@ export default async function GroupPage({ params }: GroupPageProps) {
   const invitationUrl = `${origin}/groups/join/${group.invitationToken}`;
 
   return (
-    <>
-      <PageHeader breadcrumb="Groups" title={group.name} />
-      <div className="space-y-4 p-4 md:p-8">
-        <Link href="/groups" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-          ← Back to groups
-        </Link>
-        {!active && <StatusBadge tone="neutral">Archived</StatusBadge>}
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <section className="min-w-0 space-y-3" aria-labelledby="members">
-            <h2 id="members" className="text-xl font-semibold">
-              Members ({group.memberships.length})
-            </h2>
-            <ul className="divide-y overflow-hidden rounded-lg border bg-card">
-              {group.memberships.map((member) => {
-                const profile = profiles.get(member.userId);
-                const name = profile?.name ?? "Unnamed player";
-                const memberIsOwner = member.userId === group.ownerId;
-                return (
-                  <li key={member.userId} className="flex items-center gap-3 px-4 py-3">
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">
-                        {name}
-                        {member.userId === user.id && " (you)"}
-                      </span>
-                      <span className="block truncate text-sm text-muted-foreground">
-                        {profile?.handle != null && <>@{profile.handle} · </>}
-                        Joined {joinedDate.format(member.joinedAt)}
-                      </span>
-                    </span>
-                    {memberIsOwner && <StatusBadge tone="info">Owner</StatusBadge>}
-                    {isOwner && active && !memberIsOwner && (
-                      <RemoveMemberButton groupId={group.groupId} memberId={member.userId} memberName={name} />
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-
-          <div className="min-w-0 space-y-8">
-            {active && (
-              <section className="space-y-3 rounded-lg border bg-card p-6" aria-labelledby="invite">
-                <h2 id="invite" className="text-xl font-semibold">
-                  Invitation link
-                </h2>
-                {group.invitationActive ? (
-                  <>
-                    <p className="text-sm text-muted-foreground">
-                      Anyone with this link can join the group. Members can also invite players by user ID from
-                      the Groups page; turning the link off cancels those invitations too.
-                    </p>
-                    <InvitationLink url={invitationUrl} />
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">The invitation link is turned off.</p>
-                )}
-                {isOwner && <InvitationControls groupId={group.groupId} active={group.invitationActive} />}
-              </section>
-            )}
-
-            {!isOwner && active && (
-              <section className="space-y-3 rounded-lg border bg-card p-6" aria-labelledby="leave">
-                <h2 id="leave" className="text-xl font-semibold">
-                  Leave group
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  You can leave at any time. To come back, you&apos;ll need a current invitation link.
-                </p>
-                <LeaveGroupButton groupId={group.groupId} groupName={group.name} />
-              </section>
-            )}
-
-            {isOwner && active && (
-              <section className="space-y-4 rounded-lg border bg-card p-6" aria-labelledby="settings">
-                <h2 id="settings" className="text-xl font-semibold">
-                  Group settings
-                </h2>
-                <RenameGroupForm groupId={group.groupId} name={group.name} />
-                <ArchiveGroupButton groupId={group.groupId} />
-              </section>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
+    <GroupDetailView
+      groupId={group.groupId} name={group.name} ownerName={profiles.get(group.ownerId)?.name ?? "Unnamed player"}
+      isOwner={isOwner} archived={!active}
+      members={group.memberships.map((member) => {
+        const profile = profiles.get(member.userId);
+        const name = profile?.name ?? "Unnamed player";
+        const memberIsOwner = member.userId === group.ownerId;
+        return {
+          key: member.userId, name, handle: profile?.handle ?? null,
+          joined: joinedDate.format(member.joinedAt), isOwner: memberIsOwner, isYou: member.userId === user.id,
+          removeControl: isOwner && active && !memberIsOwner
+            ? <RemoveMemberButton groupId={group.groupId} memberId={member.userId} memberName={name} /> : undefined,
+        };
+      })}
+      invitation={active ? <GroupInvitationPanel groupId={group.groupId} url={invitationUrl}
+        active={group.invitationActive} inviteAction={invitePlayer}
+        controls={isOwner ? <InvitationControls groupId={group.groupId} active={group.invitationActive} /> : undefined} /> : undefined}
+      membership={!isOwner && active ? <section id="leave" className={styles.membership} aria-labelledby="membership-heading">
+        <h2 id="membership-heading">Your membership</h2>
+        <p>You can leave this group at any time. You&apos;ll need another invitation to rejoin. Sessions you&apos;ve already joined stay as they are.</p>
+        <LeaveGroupButton groupId={group.groupId} groupName={group.name} />
+      </section> : undefined}
+      settings={isOwner && active ? <section id="settings" className={styles.settings} aria-labelledby="settings-heading">
+        <h2 id="settings-heading">Group settings</h2>
+        <RenameGroupForm groupId={group.groupId} name={group.name} />
+        <div><p>Finished playing with this group? Archive it to turn off invitations and keep your member history.</p><ArchiveGroupButton groupId={group.groupId} /></div>
+      </section> : undefined}
+    />
   );
 }
