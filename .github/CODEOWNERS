@@ -267,3 +267,12 @@
 /tests/use-cases/UC2-03b-*.test.ts @liang799
 /tests/integration/session-removal-persistence.test.ts @liang799 @harr008
 /tests/e2e/sessions-removal.spec.ts @liang799
+
+# Durable notification delivery spans commitments, groups and shared infrastructure.
+/use-case-config/notification-*.ts @Wyjessie @rbrishi15
+/app/api/cron/notifications/ @Wyjessie @rbrishi15
+/tests/lib/notifications/ @Wyjessie @rbrishi15
+/tests/integration/notification-*.test.ts @Wyjessie @Jolingoes @rbrishi15
+/tests/use-cases/notification-lifecycle.test.ts @Wyjessie @Jolingoes @liang799
+/supabase/migrations/0020_durable_notifications.sql @Wyjessie @Jolingoes @liang799 @rbrishi15
+/supabase/migrations/0021_notification_dispatch_and_realtime.sql @Wyjessie @Jolingoes @rbrishi15

@@ -3,7 +3,6 @@ import type { SqlExecutor } from "@/lib/money/sql";
 import { text } from "@/lib/sessions/postgres-row-values";
 import type {
   VerificationReminder,
-  VerificationReminderQuery,
 } from "@/use-cases/sessions/scheduling-ports";
 
 /**
@@ -17,7 +16,7 @@ import type {
  * right now) for a later sweep, and concurrent sweeps never claim the same
  * reminder twice.
  */
-export class PostgresVerificationReminderQuery implements VerificationReminderQuery {
+export class PostgresVerificationReminderQuery {
   constructor(private readonly sql: SqlExecutor) {}
 
   async claimVerificationReminders(

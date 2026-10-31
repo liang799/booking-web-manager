@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { SignedInShell } from "@/app/(auth)/_components/signed-in-shell";
 import { loadReliabilityScore } from "@/app/profile/reliability";
+import { NotificationProvider } from "@/app/notifications/provider";
 import { AppShell } from "@/components/ui/app-shell";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 
@@ -28,8 +29,10 @@ test("the sidebar shows the score calculated from the user's history", async () 
   const shell = await SignedInShell({ children: "Page" });
 
   // Assert
-  expect(shell.type).toBe(AppShell);
-  expect(shell.props.user).toEqual({ name: "Viewer", reliabilityScore: 66.5 });
+  expect(shell.type).toBe(NotificationProvider);
+  expect(shell.props.userId).toBe("viewer");
+  expect(shell.props.children.type).toBe(AppShell);
+  expect(shell.props.children.props.user).toEqual({ name: "Viewer", reliabilityScore: 66.5 });
   expect(loadReliabilityScore).toHaveBeenCalledExactlyOnceWith("viewer");
 });
 
@@ -41,5 +44,5 @@ test("the sidebar is told the score is unavailable instead of using the starting
   const shell = await SignedInShell({ children: "Page" });
 
   // Assert
-  expect(shell.props.user).toEqual({ name: "Viewer", reliabilityScore: null });
+  expect(shell.props.children.props.user).toEqual({ name: "Viewer", reliabilityScore: null });
 });

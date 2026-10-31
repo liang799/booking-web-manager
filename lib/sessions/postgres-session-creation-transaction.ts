@@ -1,3 +1,5 @@
+import { withNotificationPublication } from "@/lib/notifications/transaction-publication";
+import { PostgresNotificationWriter } from "@/lib/notifications/postgres-notification-writer";
 import type { Pool } from "pg";
 import { bookingAccountIneligibility, DomainError, type UUID } from "@/domain";
 import { PostgresTransactor } from "@/lib/database/postgres-transactor";
@@ -26,6 +28,7 @@ export class PostgresSessionCreationTransaction
     pool: Pool,
     submission: SessionCreationSubmission,
     private readonly clock: Clock,
+    private readonly publish: (recipients: readonly string[]) => void = () => {},
   ) {
     this.transactor = new PostgresTransactor(pool);
     this.idempotencyKey = submission.idempotencyKey;
@@ -45,8 +48,10 @@ export class PostgresSessionCreationTransaction
     const legacyRequest = { idempotencyKey: key };
     // Authorize every transaction attempt before a durable replay can reveal its room token.
     // Keep payout and booking-time rules inside new creation, preserving eligible replay.
+    const notificationWriters = new WeakMap<SqlExecutor, PostgresNotificationWriter>();
     const unitOfWork = new LedgerUnitOfWork({
-      transaction: (perform) => this.transactor.transaction(async (sql) => {
+      transaction: (perform) => withNotificationPublication((recipients) => this.transactor.transaction(async (sql) => {
+        notificationWriters.set(sql, new PostgresNotificationWriter(sql, key, recipients));
         await assertCurrentBookerAccess(sql, bookerId);
         try {
           return await perform(sql);
@@ -74,7 +79,7 @@ export class PostgresSessionCreationTransaction
           if (claim.status !== "REPLAY") throw error;
           return claim.value as Awaited<ReturnType<typeof perform>>;
         }
-      }),
+      }), this.publish),
     });
     return unitOfWork.execute(
       { ...operation, request: this.request ?? legacyRequest },
@@ -82,6 +87,7 @@ export class PostgresSessionCreationTransaction
         work({
           users: new PostgresUserReader(sql, this.clock),
           sessions: new PostgresSessionWriter(sql, bookerId),
+          notifications: notificationWriters.get(sql)!,
         }),
     );
   }

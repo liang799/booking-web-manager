@@ -617,3 +617,16 @@ function sessionCreationScenario() {
     },
   };
 }
+
+
+test("shared booking notifications target the current group members once and exclude the prepaid booker", async () => {
+  const { createSessions, unitOfWork } = sessionCreationScenario();
+  unitOfWork.groupMembers.set(groupId, [bookerId, "alice", "bob"]);
+  const input = creationInput({ invitedGroupId: groupId });
+  const result = await createSessions.forBooker(input.bookerId, input.booking, input.config);
+  expect(unitOfWork.notifications).toEqual([
+    expect.objectContaining({ kind: "GROUP_BOOKING_CREATED", recipientId: "alice", sessionId: result.sessionId, groupId }),
+    expect.objectContaining({ kind: "GROUP_BOOKING_CREATED", recipientId: "bob", sessionId: result.sessionId, groupId }),
+  ]);
+  expect(unitOfWork.ledgerInstructions).toEqual([]);
+});

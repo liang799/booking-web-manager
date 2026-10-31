@@ -237,8 +237,7 @@ describe.skipIf(!DATABASE_URL)("scheduled commitment sweep (database)", () => {
           }
         : query,
       verificationReminders: {
-        claimVerificationReminders: async () => [],
-        releaseVerificationReminders: async () => {},
+        enqueueVerificationReminders: async () => [],
       },
       notifier,
       expireReplacements: new ExpireReplacements({ unitOfWork, clock, notifier }),

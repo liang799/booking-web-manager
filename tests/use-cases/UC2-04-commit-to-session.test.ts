@@ -464,7 +464,7 @@ describe("UC2-04 Commit to Session", () => {
 
     test("notifies each promoted participant and tells a skipped one why they left the waitlist", async () => {
       // Arrange
-      const { promote, notifier } = promotionScenario({
+      const { promote, unitOfWork } = promotionScenario({
         totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol", "dave"],
@@ -475,11 +475,11 @@ describe("UC2-04 Commit to Session", () => {
       await promote.forSession(promotionRequest());
 
       // Assert
-      expect(notifier.deliveries()).toEqual([
+      expect(unitOfWork.notifications.map((entry) => [entry.kind, entry.recipientId])).toEqual([
         ["PROMOTED", "dave"],
         ["REMOVED_FROM_WAITLIST", "carol"],
       ]);
-      expect(notifier.sent).toContainEqual(
+      expect(unitOfWork.notifications).toContainEqual(
         expect.objectContaining({
           kind: "REMOVED_FROM_WAITLIST",
           recipientId: "carol",
@@ -488,7 +488,7 @@ describe("UC2-04 Commit to Session", () => {
       );
     });
 
-    test("keeps a promotion when its notification cannot be delivered", async () => {
+    test("persists promotion independently of the legacy external notifier", async () => {
       // Arrange
       const { promote, unitOfWork, notifier } = promotionScenario({
         totalSlots: 3,
@@ -549,9 +549,9 @@ describe("UC2-04 Commit to Session", () => {
       expect(retry).toEqual(first);
       expect(unitOfWork.ledgerInstructions).toHaveLength(1);
       expect(unitOfWork.availableCents("carol")).toBe(9_500);
-      expect(notifier.sent).toHaveLength(2);
-      expect(notifier.sent[0]?.occurrenceKey).toBe(JSON.stringify(["promote-from-waitlist", sessionId, "withdrawal-1"]));
-      expect(notifier.sent[1]?.occurrenceKey).toBe(notifier.sent[0]?.occurrenceKey);
+      expect(unitOfWork.notifications).toHaveLength(1);
+      expect(unitOfWork.notifications[0]?.occurrenceKey).toBe(JSON.stringify(["promote-from-waitlist", sessionId, "withdrawal-1"]));
+      expect(notifier.sent).toHaveLength(0);
     });
   });
 });

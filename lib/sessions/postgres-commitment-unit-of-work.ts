@@ -1,3 +1,5 @@
+import { withNotificationPublication } from "@/lib/notifications/transaction-publication";
+import { PostgresNotificationWriter } from "@/lib/notifications/postgres-notification-writer";
 import type { Pool } from "pg";
 import { PostgresTransactor } from "@/lib/database/postgres-transactor";
 import { isRetryable, LedgerError } from "@/lib/money/errors";
@@ -43,6 +45,7 @@ export class PostgresCommitmentUnitOfWork implements UnitOfWork {
   constructor(
     private readonly getPool: () => Pool,
     private readonly clock: Clock,
+    private readonly publish: (recipients: readonly string[]) => void = () => {},
   ) {}
 
   async execute<T>(
@@ -51,7 +54,7 @@ export class PostgresCommitmentUnitOfWork implements UnitOfWork {
   ): Promise<T> {
     for (let attempt = 1; ; attempt += 1) {
       try {
-        return await new PostgresTransactor(
+        return await withNotificationPublication((recipients) => new PostgresTransactor(
           this.getPool(),
           "read committed",
         ).transaction(async (sql) => {
@@ -73,10 +76,11 @@ export class PostgresCommitmentUnitOfWork implements UnitOfWork {
             payouts: { get: unsupported, save: unsupported },
             deactivationInput: { get: unsupported },
             payoutIntents: { append: unsupported },
+            notifications: new PostgresNotificationWriter(sql, idempotencyKey, recipients),
           });
           await keys.succeed(idempotencyKey, result);
           return result;
-        });
+        }), this.publish);
       } catch (error) {
         if (shouldRestart(error) && attempt < MAX_ATTEMPTS) continue;
         throw error;

@@ -243,3 +243,35 @@ describe("supabaseGroupStore (UC1-06)", () => {
     await expect(attempt).rejects.toMatchObject({ code: "57014" });
   });
 });
+
+
+describe("atomic group notification transport", () => {
+  test("includes the canonical notification in the same version-checked save and publishes only after success", async () => {
+    const { rpc } = fakeAdmin({ select: { data: groupRow(4), error: null }, rpc: { data: 5, error: null } });
+    const publish = vi.fn();
+    const { groups } = supabaseGroupStore(publish);
+    const group = (await groups.get(GROUP_ID))!;
+    group.invite({ actorId: OWNER, inviteeId: JOINER, now: new Date(JOINED_AT) });
+    await groups.save(group, [{ kind: "GROUP_INVITATION", groupId: GROUP_ID, recipientId: JOINER, subjectName: group.name }]);
+    expect(rpc).toHaveBeenCalledWith("save_regular_group", expect.objectContaining({ p_expected_version: 4, p_notifications: [expect.objectContaining({
+      recipient_id: JOINER, group_id: GROUP_ID, kind: "GROUP_INVITATION", push_enabled: true,
+      source_key: JSON.stringify(["GROUP_INVITATION", GROUP_ID, JSON.stringify(["group", GROUP_ID, 5])]),
+    })] }));
+    expect(publish).toHaveBeenCalledWith([JOINER]);
+    expect(rpc.mock.invocationCallOrder[0]).toBeLessThan(publish.mock.invocationCallOrder[0]!);
+  });
+
+  test("a refused group save publishes no hint and a failed hint never changes a successful save", async () => {
+    const publish = vi.fn(() => { throw new Error("Hint unavailable"); });
+    fakeAdmin({ select: { data: groupRow(4), error: null }, rpc: { data: null, error: { code: "40001" } } });
+    const rejected = supabaseGroupStore(publish).groups;
+    const group = (await rejected.get(GROUP_ID))!;
+    const notices = [{ kind: "GROUP_INVITATION" as const, groupId: GROUP_ID, recipientId: JOINER }];
+    await expect(rejected.save(group, notices)).rejects.toBeInstanceOf(GroupChangedError);
+    expect(publish).not.toHaveBeenCalled();
+    fakeAdmin({ select: { data: groupRow(4), error: null }, rpc: { data: 5, error: null } });
+    const saved = supabaseGroupStore(publish).groups;
+    await expect(saved.save((await saved.get(GROUP_ID))!, notices)).resolves.toBeUndefined();
+    expect(publish).toHaveBeenCalledOnce();
+  });
+});

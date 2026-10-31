@@ -1,3 +1,4 @@
+import { createNotificationPublisher } from "./notification-publisher";
 import type { SessionRemovalDependencies } from "@/app/sessions/removal-dependencies";
 import { SessionRemovalUnavailableError } from "@/app/sessions/removal-unavailable";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
@@ -27,7 +28,7 @@ export function createSessionRemovalDependencies(): SessionRemovalDependencies {
     listParticipants: new ListSessionParticipants({ transaction, clock }),
     previewRemoval: new PreviewParticipantRemoval({ transaction, clock, versioner }),
     createRemoval: ({ idempotencyKey }) => new RemoveParticipant({
-      transaction: new PostgresSessionRemovalTransaction(getPool, clock, idempotencyKey), clock, versioner,
+      transaction: new PostgresSessionRemovalTransaction(getPool, clock, idempotencyKey, createNotificationPublisher()), clock, versioner,
     }),
   };
 }

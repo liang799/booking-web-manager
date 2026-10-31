@@ -8,6 +8,21 @@ import {
 } from "@/domain";
 import type { UserDirectory, UserSummary } from "../accounts/user-handles";
 import type { Repository } from "../shared/contracts";
+import type { NotificationIntent, NotificationKind } from "../notifications/notification-intents";
+
+export interface GroupRepository extends Repository<RegularGroup> {
+  save(group: RegularGroup, notifications?: readonly NotificationIntent[]): Promise<void>;
+}
+
+function notice(group: RegularGroup, kind: NotificationKind, recipientId: UUID): NotificationIntent {
+  return { kind, recipientId, groupId: group.groupId, subjectName: group.name };
+}
+
+function joinedNotices(group: RegularGroup, inviterId: UUID | undefined): NotificationIntent[] {
+  return inviterId === undefined
+    ? [notice(group, "GROUP_MEMBER_JOINED", group.ownerId)]
+    : [notice(group, "GROUP_INVITATION_ACCEPTED", inviterId), ...(inviterId === group.ownerId ? [] : [notice(group, "GROUP_MEMBER_JOINED", group.ownerId)])];
+}
 
 /** Group lookups that the plain get/save Repository contract doesn't cover. */
 export interface GroupQueries {
@@ -45,7 +60,7 @@ export interface ManageGroupDependencies {
    * `groups` and `queries` must come from the same store: a group loaded through either one
    * is saved through `groups`, and the store remembers which version it loaded.
    */
-  readonly groups: Repository<RegularGroup>;
+  readonly groups: GroupRepository;
   readonly queries: GroupQueries;
   readonly newId: () => UUID;
   /** A long random value that is hard to guess; it becomes the invitation link. */
@@ -115,12 +130,13 @@ export class ManageGroup {
     const group = await this.#deps.queries.findByInvitationToken(command.invitationToken);
     if (group === null) throw new DomainError("INVALID_INVITATION", "The invitation token is invalid or revoked");
 
+    const invitation = group.invitations.find((entry) => entry.inviteeId === command.userId);
     const result = group.join({
       userId: command.userId,
       invitationToken: command.invitationToken,
       now: this.#deps.now(),
     });
-    if (result === "JOINED") await this.#deps.groups.save(group);
+    if (result === "JOINED") await this.#deps.groups.save(group, joinedNotices(group, invitation?.invitedBy));
     return { group, result };
   }
 
@@ -138,7 +154,7 @@ export class ManageGroup {
 
     const group = await this.#load(command.groupId);
     const result = group.invite({ actorId: command.actorId, inviteeId: invitee.userId, now: this.#deps.now() });
-    if (result === "INVITED") await this.#deps.groups.save(group);
+    if (result === "INVITED") await this.#deps.groups.save(group, [notice(group, "GROUP_INVITATION", invitee.userId)]);
     return { invitee, result };
   }
 
@@ -163,8 +179,9 @@ export class ManageGroup {
   async acceptInvitation(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<GroupJoinResult> {
     const group = await this.#deps.groups.get(command.groupId);
     if (group === null) throw new DomainError("INVALID_INVITATION", "This invitation is no longer available");
+    const invitation = group.invitations.find((entry) => entry.inviteeId === command.actorId);
     const result = group.acceptInvitation({ userId: command.actorId, now: this.#deps.now() });
-    if (result === "JOINED") await this.#deps.groups.save(group);
+    if (result === "JOINED") await this.#deps.groups.save(group, joinedNotices(group, invitation?.invitedBy));
     return result;
   }
 
@@ -172,10 +189,10 @@ export class ManageGroup {
   async declineInvitation(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<void> {
     const group = await this.#deps.groups.get(command.groupId);
     if (group === null) return;
-    const invited = group.invitations.some((invitation) => invitation.inviteeId === command.actorId);
+    const invited = group.invitations.find((invitation) => invitation.inviteeId === command.actorId);
     if (!invited) return;
     group.declineInvitation({ userId: command.actorId });
-    await this.#deps.groups.save(group);
+    await this.#deps.groups.save(group, [notice(group, "GROUP_INVITATION_DECLINED", invited.invitedBy)]);
   }
 
   /** Owner only: removes a member (never the owner). */
@@ -186,7 +203,7 @@ export class ManageGroup {
   }): Promise<void> {
     const group = await this.#load(command.groupId);
     group.removeMember({ actorId: command.actorId, userId: command.userId });
-    await this.#deps.groups.save(group);
+    await this.#deps.groups.save(group, [notice(group, "GROUP_MEMBER_REMOVED", command.userId)]);
   }
 
   /**
@@ -196,14 +213,15 @@ export class ManageGroup {
   async leave(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<void> {
     const group = await this.#load(command.groupId);
     group.leave({ userId: command.actorId });
-    await this.#deps.groups.save(group);
+    await this.#deps.groups.save(group, [notice(group, "GROUP_MEMBER_LEFT", group.ownerId)]);
   }
 
   /** Owner only: renames the group. */
   async rename(command: { readonly actorId: UUID; readonly groupId: UUID; readonly name: string }): Promise<void> {
     const group = await this.#load(command.groupId);
+    const before = group.name;
     group.rename({ actorId: command.actorId, name: command.name });
-    await this.#deps.groups.save(group);
+    await this.#deps.groups.save(group, before === group.name ? [] : group.memberships.filter((entry) => entry.userId !== command.actorId).map((entry) => notice(group, "GROUP_RENAMED", entry.userId)));
   }
 
   /** Owner only: issues a new link. The old link stops working. Returns the new token. */
@@ -217,16 +235,20 @@ export class ManageGroup {
   /** Owner only: turns the invitation link off until a new one is issued. */
   async revokeInvitation(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<void> {
     const group = await this.#load(command.groupId);
+    const ended = group.invitations.map((entry) => notice(group, "GROUP_INVITATION_ENDED", entry.inviteeId));
     group.revokeInvitation(command.actorId);
-    await this.#deps.groups.save(group);
+    await this.#deps.groups.save(group, ended);
   }
 
   /** Owner only: archives the group once none of its sessions are still unsettled. */
   async archive(command: { readonly actorId: UUID; readonly groupId: UUID }): Promise<void> {
     const group = await this.#load(command.groupId);
     const unsettledLinkedSessions = await this.#deps.queries.countUnsettledLinkedSessions(command.groupId);
+    const ended = group.invitations.map((entry) => notice(group, "GROUP_INVITATION_ENDED", entry.inviteeId));
+    const wasArchived = group.status === "ARCHIVED";
     group.archive({ actorId: command.actorId, unsettledLinkedSessions });
-    await this.#deps.groups.save(group);
+    if (wasArchived) return;
+    await this.#deps.groups.save(group, [...group.memberships.filter((entry) => entry.userId !== command.actorId).map((entry) => notice(group, "GROUP_ARCHIVED", entry.userId)), ...ended]);
   }
 
   async #load(groupId: UUID): Promise<RegularGroup> {

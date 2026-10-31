@@ -36,7 +36,7 @@ export interface ScheduledJobsReport {
 export interface RunScheduledSessionJobsDependencies {
   readonly dueSessions: DueSessionQuery;
   readonly verificationReminders: VerificationReminderQuery;
-  readonly notifier: CommitmentNotifier;
+  readonly notifier?: CommitmentNotifier;
   readonly expireReplacements: Pick<ExpireReplacements, "forSession">;
   readonly promote: Pick<PromoteFromWaitlist, "forSession">;
   readonly autoVerify: Pick<AutoVerifyAttendance, "forSession">;
@@ -55,9 +55,8 @@ export interface RunScheduledSessionJobsDependencies {
  *    withdrawal reported as DEFERRED.
  * 3. AutoVerifyAttendance: 72 hours after the session ends.
  *
- * It then claims due verification reminders and notifies their bookers. A
- * successful claim and hand-off sends each reminder once; if the hand-off
- * fails, the claims are released and the next run retries them.
+ * It then atomically enqueues due verification reminders. The claim and saved
+ * inbox message commit together; external delivery is handled separately.
  *
  * Each job is its own unit of work keyed by `runId`, so a retried run replays
  * rather than repeats. A failing job is recorded and the sweep continues; the
@@ -72,7 +71,6 @@ export class RunScheduledSessionJobs {
     const {
       dueSessions,
       verificationReminders,
-      notifier,
       expireReplacements,
       promote,
       autoVerify,
@@ -120,25 +118,8 @@ export class RunScheduledSessionJobs {
     }
 
     await attempt(undefined, "VERIFICATION_REMINDERS", async () => {
-      const due = await verificationReminders.claimVerificationReminders(
-        now,
-        batchSize,
-      );
-      if (due.length === 0) return;
+      const due = await verificationReminders.enqueueVerificationReminders(now, batchSize);
       const sessionIds = due.map((reminder) => reminder.sessionId);
-      try {
-        await notifier.notify(
-          due.map((reminder) => ({
-            kind: "VERIFICATION_REMINDER" as const,
-            recipientId: reminder.bookerId,
-            sessionId: reminder.sessionId,
-          })),
-        );
-      } catch (error) {
-        // Release the claims so the next run retries these reminders.
-        await verificationReminders.releaseVerificationReminders(sessionIds);
-        throw error;
-      }
       reminded.push(...sessionIds);
     });
 

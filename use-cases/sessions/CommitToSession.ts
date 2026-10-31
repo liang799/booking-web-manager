@@ -1,3 +1,4 @@
+import { replacementRefundNotifications, sessionNotificationFacts } from "./session-notification-facts";
 import type { ParticipantJoinResult, UUID } from "@/domain";
 import type { UseCaseDependencies } from "../shared/dependencies";
 import { appendInstructions, requireAggregate } from "../shared/helpers";
@@ -77,6 +78,10 @@ export class CommitToSession {
 
       await transaction.sessions.save(session);
       await appendInstructions(transaction, result.instructions);
+      await transaction.notifications.append([
+        { ...sessionNotificationFacts(session), kind: result.kind === "COMMITTED" ? "BOOKING_JOINED" : "WAITLIST_ENTERED", recipientId: user.userId, occurrenceKey: key },
+        ...replacementRefundNotifications(session, result.instructions, key),
+      ]);
       return {
         kind: result.kind,
         sessionId: session.sessionId,

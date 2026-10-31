@@ -52,7 +52,7 @@ describe("UC2-02 request transaction", () => {
     expect(replay).toBe("original-result");
   });
 
-  test("exposes only user and session repositories to creation", async () => {
+  test("exposes creation repositories and the transactional notification writer", async () => {
     // Arrange
     const transaction = new RequestSessionCreationTransaction(
       new CreateSessionUnitOfWork([]),
@@ -66,6 +66,6 @@ describe("UC2-02 request transaction", () => {
     );
 
     // Assert
-    expect(repositories.sort()).toEqual(["sessions", "users"]);
+    expect(repositories.sort()).toEqual(["notifications", "sessions", "users"]);
   });
 });

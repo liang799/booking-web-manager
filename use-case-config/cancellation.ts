@@ -1,3 +1,4 @@
+import { createNotificationPublisher } from "./notification-publisher";
 import type { SessionCancellationDependencies } from "@/app/sessions/cancellation-dependencies";
 import { SessionManagementUnavailableError } from "@/app/sessions/session-management-unavailable";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
@@ -23,7 +24,7 @@ export function createSessionCancellationDependencies(): SessionCancellationDepe
     authenticate: createSupabaseIdentityAuthenticator(settings.supabaseUrl, settings.supabaseAnonKey),
     previewCancellation: new PreviewSessionCancellation({ transaction: new PostgresSessionManagementTransaction(getPool, clock), clock, versioner }),
     createCancellation: ({ idempotencyKey }) => new CancelSession({
-      transaction: new PostgresSessionCancellationTransaction(getPool, clock, idempotencyKey), clock, versioner,
+      transaction: new PostgresSessionCancellationTransaction(getPool, clock, idempotencyKey, createNotificationPublisher()), clock, versioner,
     }),
   };
 }

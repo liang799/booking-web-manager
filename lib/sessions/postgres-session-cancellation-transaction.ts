@@ -1,3 +1,5 @@
+import { withNotificationPublication } from "@/lib/notifications/transaction-publication";
+import { PostgresNotificationWriter } from "@/lib/notifications/postgres-notification-writer";
 import type { Pool } from "pg";
 import { z } from "zod";
 import { PostgresTransactor } from "@/lib/database/postgres-transactor";
@@ -18,15 +20,16 @@ const committedResult = z.object({
 
 /** Submission-scoped serializable atomic cancellation with durable response replay. */
 export class PostgresSessionCancellationTransaction implements SessionCancellationTransaction {
-  constructor(private readonly getPool: () => Pool, private readonly clock: Clock, private readonly submissionKey: string) {}
+  constructor(private readonly getPool: () => Pool, private readonly clock: Clock, private readonly submissionKey: string, private readonly publish: (recipients: readonly string[]) => void = () => {}) {}
 
   async run<T>(work: (repositories: SessionCancellationRepositories) => Promise<T>): Promise<T> {
     for (let attempt = 1; ; attempt += 1) {
       try {
-        return await new PostgresTransactor(this.getPool(), "serializable").transaction(async (sql) => {
+        return await withNotificationPublication((recipients) => new PostgresTransactor(this.getPool(), "serializable").transaction(async (sql) => {
           const keys = new PostgresIdempotencyStore(sql);
           // The writer's key is initialized after authoritative actor authorization.
           let writer: PostgresLedgerWriter | undefined;
+          let notifications: PostgresNotificationWriter | undefined;
           return work({
             users: new PostgresUserReader(sql, this.clock),
             sessions: new PostgresSessionCancellationRepository(sql),
@@ -34,6 +37,16 @@ export class PostgresSessionCancellationTransaction implements SessionCancellati
               if (!writer) throw new SessionPersistenceError("Ledger write outside a claimed cancellation");
               await writer.append(instructions);
             } },
+            notifications: {
+              append: async (intents) => {
+                if (!notifications) throw new SessionPersistenceError("Notification write outside a claimed action");
+                await notifications.append(intents);
+              },
+              groupMembers: async (id) => {
+                if (!notifications) throw new SessionPersistenceError("Notification query outside a claimed action");
+                return notifications.groupMembers(id);
+              },
+            },
             submission: { once: async (bookerId, sessionId, previewVersion, perform) => {
               const key = JSON.stringify(["UC2-03c", bookerId, this.submissionKey]);
               const claim = await keys.claim({ idempotencyKey: key, scope: "UC2-03c", fingerprint: fingerprintOf({ sessionId, previewVersion }) });
@@ -43,12 +56,13 @@ export class PostgresSessionCancellationTransaction implements SessionCancellati
                 return result;
               }
               writer = new PostgresLedgerWriter(sql, key);
+              notifications = new PostgresNotificationWriter(sql, key, recipients);
               const result = committedResult.parse(await perform());
               await keys.succeed(key, result);
               return result;
             } },
           });
-        });
+        }), this.publish);
       } catch (error) {
         if (isRetryable(error) && attempt < 3) continue;
         throw error;
