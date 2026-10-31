@@ -1,0 +1,44 @@
+name: Group detail visual evidence
+
+on:
+  push:
+    branches:
+      - design/group-management-editorial
+    paths:
+      - .github/workflows/group-detail-screenshots.yml
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build Storybook
+        run: npm run build-storybook
+      - name: Serve Storybook and capture the redesigned screens
+        run: |
+          python3 -m http.server 6006 --bind 127.0.0.1 --directory storybook-static > /tmp/group-storybook.log 2>&1 &
+          node -e 'let n=0; const ping=async()=>{try{const r=await fetch("http://127.0.0.1:6006/iframe.html");if(r.ok)return; }catch{} if(++n>45)process.exit(1);setTimeout(ping,1000)}; ping()'
+          node scripts/capture-group-details-screenshots.mjs
+      - name: Commit screenshots to the PR branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/groups/visual-comparison/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(groups): capture after screenshots from running Storybook [skip ci]"
+            git push origin HEAD:design/group-management-editorial
+          fi
