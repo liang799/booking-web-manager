@@ -6,6 +6,16 @@ machine: each state is a screen or dialog, and each transition is
 API is on `main` but whose UI is not yet built. Submitted for Lab 3; see
 [lab3/](../../../lab3/README.md).
 
+The Lab 3 map is a submission snapshot. Its direct Groups-to-details creation
+transition predates the two-step creation page. The current UC1-06 flow is
+[Groups experience](./uc1-06-groups-experience.svg), with editable
+[Graphviz source](./uc1-06-groups-experience.dot). It includes name validation,
+queued invitations, partial success and archive tab recovery. Regenerate it with:
+
+```bash
+dot -Tsvg uc1-06-groups-experience.dot -o uc1-06-groups-experience.svg
+```
+
 | File | Contents |
 | --- | --- |
 | [dialog-map.pdf](./dialog-map.pdf), [dialog-map.png](./dialog-map.png), [dialog-map.svg](./dialog-map.svg) | Full map |

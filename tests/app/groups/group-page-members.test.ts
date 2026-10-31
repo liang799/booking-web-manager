@@ -47,8 +47,8 @@ describe("group page member list", () => {
 
     // Assert
     expect(html).toContain("Marcus Lim");
-    expect(html).toContain("@marcus_lim · Joined 12 Oct 2026");
-    expect(html).toContain("@the_owner · Joined 12 Oct 2026");
+    expect(html).toMatch(/@marcus_lim[\s\S]*?Joined 12 Oct 2026/);
+    expect(html).toMatch(/@the_owner[\s\S]*?Joined 12 Oct 2026/);
     expect(memberProfiles).toHaveBeenCalledExactlyOnceWith(["owner", "marcus", "gone"]);
   });
 
@@ -60,4 +60,24 @@ describe("group page member list", () => {
     const deletedRow = html.slice(html.indexOf("Deleted user"));
     expect(deletedRow.slice(0, deletedRow.indexOf("</li>"))).not.toContain("@");
   });
+  test("archived groups retain history without mutation or sharing controls", async () => {
+    const group = await mocks.viewAsMember();
+    mocks.viewAsMember.mockResolvedValue({ ...group, status: "ARCHIVED", invitationActive: false });
+    const page = await GroupPage({ params: Promise.resolve({ groupId: GROUP_ID }) });
+    expect(page.props.archived).toBe(true);
+    expect(page.props.invitation).toBeUndefined();
+    expect(page.props.settings).toBeUndefined();
+    expect(page.props.membership).toBeUndefined();
+    expect(page.props.members.every((member: { removeControl?: unknown }) => member.removeControl === undefined)).toBe(true);
+    expect(renderToStaticMarkup(page)).toContain("Marcus Lim");
+  });
+
+  test("only an active owner receives removal and group settings controls", async () => {
+    const page = await GroupPage({ params: Promise.resolve({ groupId: GROUP_ID }) });
+    expect(page.props.settings).toBeDefined();
+    expect(page.props.membership).toBeUndefined();
+    expect(page.props.members.filter((member: { removeControl?: unknown }) => member.removeControl !== undefined)).toHaveLength(2);
+    expect(page.props.members[0].removeControl).toBeUndefined();
+  });
+
 });

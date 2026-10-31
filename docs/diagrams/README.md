@@ -44,6 +44,7 @@ These are not diagrams and stay where they are:
 | --- | --- | --- | --- | --- | --- |
 | UC2 session management | Use case | Yajie | Not in repo (SRS) | [uc2-session-management.png](./use-case/uc2-session-management.png) | SRS, [Lab 3](../../lab3/README.md) |
 | Dialog map | Dialog map | Yajie | [dialog-map/*.drawio](./dialog-map/README.md) | [PNG](./dialog-map/dialog-map.png), [SVG](./dialog-map/dialog-map.svg), [PDF](./dialog-map/dialog-map.pdf) | [Lab 3](../../lab3/README.md) |
+| UC1-06 Groups experience (current UI) | Dialog map | Joseph | [DOT](./dialog-map/uc1-06-groups-experience.dot) | [SVG](./dialog-map/uc1-06-groups-experience.svg) | [Groups](../../app/groups/README.md), supersedes the Lab 3 snapshot's group creation transition |
 | Domain class diagram (overview) | Class | Rishi | [domain-class-diagram.puml](../domain-class-diagram.puml) | [SVG](../assets/domain-class-diagram.svg), [PNG](../assets/domain-class-diagram.png) | [Domain class diagram](../domain-class-diagram.md) |
 | Domain: accounts and groups | Class | Rishi | [domain-accounts.puml](./domain-accounts.puml) | [SVG](../assets/domain-accounts.svg) | [Domain class diagram](../domain-class-diagram.md) |
 | Domain: sessions | Class | Rishi | [domain-sessions.puml](./domain-sessions.puml) | [SVG](../assets/domain-sessions.svg) | [Domain class diagram](../domain-class-diagram.md) |
