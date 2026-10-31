@@ -40,9 +40,13 @@ class Session <<AggregateRoot>> {
   +sessionId : UUID
   +status : SessionStatus
   +totalSlots : number
-  +minimumHeadcount : number
   +bookingShare : Money {readOnly}
 }
+note right of Session
+  Capacity includes the prepaid booker.
+  No minimum viable headcount.
+end note
+
 class PayoutAttempt <<AggregateRoot>> {
   +payoutId : UUID
   +status : PayoutStatus

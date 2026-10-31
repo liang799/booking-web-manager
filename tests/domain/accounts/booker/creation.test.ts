@@ -143,43 +143,16 @@ describe("Booker session creation", () => {
       const details = creationDetails();
 
       expect(() =>
-        readyBooker().createSession({ ...details, totalSlots: 1001 }),
+        readyBooker().createSession({ ...details, totalSlots: 1001001 }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     });
 
-    test("createSession_WhenCapacityIsOne_ThrowsInvalidInput", () => {
+    test("createSession_WhenCapacityIsZero_ThrowsInvalidInput", () => {
       const details = creationDetails();
 
       expect(() =>
-        readyBooker().createSession({ ...details, totalSlots: 1 }),
+        readyBooker().createSession({ ...details, totalSlots: 0 }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
-    test("createSession_WhenMinimumHeadcountIsOne_ThrowsInvalidInput", () => {
-      const details = creationDetails();
-
-      expect(() =>
-        readyBooker().createSession({ ...details, minimumHeadcount: 1 }),
-      ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
-    test("createSession_WhenMinimumHeadcountExceedsCapacity_ThrowsInvalidInput", () => {
-      const details = creationDetails(3);
-
-      expect(() =>
-        readyBooker().createSession({ ...details, minimumHeadcount: 4 }),
-      ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-    });
-
-    test("createSession_WhenMinimumHeadcountEqualsCapacity_PreservesMinimumHeadcount", () => {
-      const details = creationDetails(3);
-
-      const session = readyBooker().createSession({
-        ...details,
-        minimumHeadcount: 3,
-      });
-
-      expect(session.minimumHeadcount).toBe(3);
     });
 
     test("createSession_WhenBookingHasEnded_ThrowsSessionStarted", () => {

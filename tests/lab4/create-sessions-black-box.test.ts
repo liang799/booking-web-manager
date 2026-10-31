@@ -32,16 +32,12 @@ interface Case {
 // representative, so it is not duplicated for every input dimension.
 export const blackBoxCases: readonly Case[] = [
   { id: "BB01", name: "nominal defaults and floor division", technique: "valid EP / shared nominal", share: 333 },
-  { id: "BB02", name: "capacity just below minimum", technique: "BVA slots min-1", config: { totalSlots: 1 }, error: "INVALID_INPUT" },
-  { id: "BB03", name: "capacity at minimum", technique: "BVA slots min", config: { totalSlots: 2 }, share: 500 },
+  { id: "BB02", name: "capacity just below minimum", technique: "BVA slots min-1", config: { totalSlots: 0 }, error: "INVALID_INPUT" },
+  { id: "BB03", name: "capacity at minimum", technique: "BVA slots min", config: { totalSlots: 1 }, share: 1001 },
   { id: "BB04", name: "capacity just below maximum", technique: "BVA slots max-1", config: { totalSlots: 29 }, share: 34 },
   { id: "BB05", name: "capacity at maximum", technique: "BVA slots max", config: { totalSlots: 30 }, share: 33 },
   { id: "BB06", name: "capacity just above maximum", technique: "BVA slots max+1", config: { totalSlots: 31 }, error: "INVALID_INPUT" },
   { id: "BB07", name: "capacity is fractional", technique: "invalid numeric EP", config: { totalSlots: 2.5 }, error: "INVALID_INPUT" },
-  { id: "BB08", name: "minimum headcount below two", technique: "BVA headcount min-1", config: { minimumHeadcount: 1 }, error: "INVALID_INPUT" },
-  { id: "BB09", name: "minimum headcount equals capacity", technique: "BVA headcount min+1/max", config: { minimumHeadcount: 3 }, share: 333 },
-  { id: "BB10", name: "minimum headcount exceeds capacity", technique: "BVA headcount max+1", config: { minimumHeadcount: 4 }, error: "INVALID_INPUT" },
-  { id: "BB11", name: "minimum headcount is fractional", technique: "invalid numeric EP", config: { minimumHeadcount: 2.5 }, error: "INVALID_INPUT" },
   { id: "BB12", name: "price just below permitted minimum", technique: "BVA price min-1", config: { pricePerSlotCents: 166 }, error: "INVALID_INPUT" },
   { id: "BB13", name: "price at permitted minimum", technique: "BVA price min", config: { pricePerSlotCents: 167 }, share: 167 },
   { id: "BB14", name: "price just above permitted minimum", technique: "BVA price min+1", config: { pricePerSlotCents: 168 }, share: 168 },
@@ -104,7 +100,7 @@ describe("Lab 4 / UC2-02 / CreateSessions black-box EP and BVA", () => {
         venueName: "Jurong East Sports Hall", region: "West", sport: "Badminton",
         startAt, endAt, totalCostCents: 1001, ...row.booking,
       };
-      const config: SessionConfig = { totalSlots: 3, minimumHeadcount: 2, ...row.config };
+      const config: SessionConfig = { totalSlots: 3, ...row.config };
       const expected = row.error
         ? { outcome: "rejected", error: row.error, persistedSessions: 0 }
         : { outcome: "created", shareCents: row.share, persistedSessions: 1 };
@@ -116,7 +112,6 @@ describe("Lab 4 / UC2-02 / CreateSessions black-box EP and BVA", () => {
         actual = { outcome: "created", shareCents: result.bookingShareCents, persistedSessions: unitOfWork.sessions.size };
         const session = unitOfWork.requireSession(result.sessionId);
         expect(session.totalSlots).toBe(config.totalSlots);
-        expect(session.minimumHeadcount).toBe(config.minimumHeadcount);
         expect(session.visibility).toBe(config.visibility ?? "PRIVATE");
         expect(session.minimumReliability?.toNumber()).toBe(config.minimumReliability);
         expect(session.invitedGroupId).toBe(config.invitedGroupId);

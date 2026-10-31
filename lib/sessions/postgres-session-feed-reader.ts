@@ -6,7 +6,7 @@ import { choice, date, SessionPersistenceError, text } from "./postgres-row-valu
 
 const count = (value: unknown) => z.number().int().safe().nonnegative().parse(value);
 
-/** Reads only personal summaries. Neither invitation secrets nor another player's identity is selected. */
+/** Reads only personal summaries. Neither invitation secrets nor guest identities are selected. */
 export class PostgresSessionFeedReader implements SessionFeedReader {
   constructor(private readonly sql: SqlExecutor) {}
 
@@ -15,7 +15,7 @@ export class PostgresSessionFeedReader implements SessionFeedReader {
       `with account as (
          select account_status from profiles where user_id = $1
        ), eligible as (
-         select s.session_id, s.venue_name, s.sport, s.region, s.start_at, s.end_at,
+         select s.session_id, s.booker_id, s.venue_name, s.sport, s.region, s.start_at, s.end_at,
                 s.total_slots, s.booking_share_cents, s.visibility, s.status,
                 mine.status as participation_status,
                 case when s.status = 'OPEN' and s.end_at > $3
@@ -46,7 +46,8 @@ export class PostgresSessionFeedReader implements SessionFeedReader {
        select (select account_status from account) as account_status,
               totals.upcoming_count, totals.past_count, page.*,
               (select count(*)::integer from participations p
-               where p.session_id = page.session_id and p.status = 'COMMITTED') as participant_count,
+               where p.session_id = page.session_id and p.status = 'COMMITTED'
+                 and p.user_id <> page.booker_id) as participant_count,
               case when $2 = 'hosting' and page.status = 'OPEN' and page.end_at <= $3
                 then (select count(*)::integer from participations p
                   where p.session_id = page.session_id and p.status = 'COMMITTED'
@@ -74,6 +75,7 @@ export class PostgresSessionFeedReader implements SessionFeedReader {
 }
 
 function toSession(row: SqlRow, tab: SessionFeedQuery["tab"]): PersonalSession {
+  const status = choice(row.status, ["OPEN", "CANCELLED", "AWAITING_PAYOUT", "PAYOUT_PENDING", "SETTLED"]);
   return {
     sessionId: text(row.session_id),
     venueName: text(row.venue_name),
@@ -82,10 +84,10 @@ function toSession(row: SqlRow, tab: SessionFeedQuery["tab"]): PersonalSession {
     startAt: date(row.start_at),
     endAt: date(row.end_at),
     capacity: z.number().int().positive().parse(row.total_slots),
-    participantCount: count(row.participant_count),
+    participantCount: count(row.participant_count) + (status === "CANCELLED" ? 0 : 1),
     bookingShareCents: fromDatabaseCents(row.booking_share_cents, "booking_share_cents").toCents(),
     visibility: choice(row.visibility, ["PUBLIC", "PRIVATE"]),
-    status: choice(row.status, ["OPEN", "CANCELLED", "AWAITING_PAYOUT", "PAYOUT_PENDING", "SETTLED"]),
+    status,
     role: tab === "hosting" ? "HOST" : "PARTICIPANT",
     participationStatus: row.participation_status === null ? null
       : choice(row.participation_status, ["WAITLISTED", "COMMITTED", "LEFT_WAITLIST", "WITHDRAWN", "REMOVED", "CANCELLED"]),

@@ -42,7 +42,6 @@ export function creationDetails(totalSlots = 2): BookerSessionCreation {
       totalCost: Money.fromCents(1000),
     }),
     totalSlots,
-    minimumHeadcount: 2,
     holdingAccountId: "platform",
     roomToken: "room",
     visibility: "PUBLIC",
@@ -69,7 +68,7 @@ interface TestSessionOptions {
 
 /** Constructs starting state without running the commands exercised by tests. */
 export function createTestSession({
-  totalSlots = 2,
+  totalSlots = 3,
   bookingShare,
   status = "OPEN",
   visibility = "PUBLIC",
@@ -82,7 +81,7 @@ export function createTestSession({
 }: TestSessionOptions = {}): Session {
   const details = sessionDetails({
     totalSlots,
-    bookingShare,
+    bookingShare: bookingShare ?? creationDetails().booking.totalCost.divideFloor(Math.max(1, totalSlots - 1)),
     status,
     visibility,
     invitedGroupId,
@@ -91,7 +90,7 @@ export function createTestSession({
   const terms = {
     holdingAccountId: details.holdingAccountId,
     bookingShare:
-      bookingShare ?? details.booking.totalCost.divideFloor(totalSlots),
+      bookingShare ?? details.booking.totalCost.divideFloor(Math.max(1, totalSlots - 1)),
   };
   const attendanceMarks = new Map(Object.entries(attendanceByUserId));
   const rosterOverrides = new Map(Object.entries(participationOverrides));
@@ -350,8 +349,8 @@ export function sessionDetails(
     sessionId: "s",
     bookerId: "booker",
     booking: creationDetails().booking,
-    totalSlots: 2,
-    minimumHeadcount: 2,
+    totalSlots: 3,
+    bookingShare: (overrides.booking ?? creationDetails().booking).totalCost.divideFloor(Math.max(1, (overrides.totalSlots ?? 3) - 1)),
     holdingAccountId: "platform",
     roomToken: "room",
     visibility: "PUBLIC",

@@ -3,6 +3,7 @@ import type { Money } from "../finance/money";
 import type { Booking } from "../sessions/booking";
 import type { Participation } from "../sessions/participation";
 import { refundInstruction } from "../sessions/participation-instructions";
+import { resolveBookingShare } from "../sessions/pricing";
 import { Session } from "../sessions/session";
 import {
   assertAttendanceOpen,
@@ -43,7 +44,6 @@ export interface BookerSessionCreation {
   readonly booking: Booking;
   readonly bookingShare?: Money;
   readonly totalSlots: number;
-  readonly minimumHeadcount: number;
   readonly roomToken: string;
   readonly holdingAccountId: UUID;
   readonly now: Date;
@@ -116,9 +116,8 @@ export class Booker {
       sessionId: details.sessionId,
       bookerId: this.#user.userId,
       booking: details.booking,
-      bookingShare: details.bookingShare,
+      bookingShare: resolveBookingShare(details.booking.totalCost, details.totalSlots, details.bookingShare),
       totalSlots: details.totalSlots,
-      minimumHeadcount: details.minimumHeadcount,
       roomToken: details.roomToken,
       holdingAccountId: details.holdingAccountId,
       visibility: details.visibility ?? "PRIVATE",

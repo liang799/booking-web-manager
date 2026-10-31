@@ -19,7 +19,7 @@ async function login(page: Page, identity: Identity, destination: string) {
   }).toBe(destination);
 }
 
-/** Inserts a two-slot session fixture with configurable visibility and start time, returning its ID. */
+/** Inserts a session for the booker and two guests, with configurable visibility and start time. */
 async function insertSession(context: SessionTestContext, bookerId: string, venue: string, input: {
   visibility?: Visibility; startAt?: string;
 } = {}) {
@@ -27,8 +27,8 @@ async function insertSession(context: SessionTestContext, bookerId: string, venu
   const start = new Date(input.startAt ?? "2045-04-02T10:00:00Z");
   await context.pool.query(
     `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-      total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, room_token, holding_account_id)
-     values ($1,$2,$3,'West','Badminton',$4,$5,200,2,2,100,$6,$7,$8)`,
+      total_cost_cents, total_slots, booking_share_cents, visibility, room_token, holding_account_id)
+     values ($1,$2,$3,'West','Badminton',$4,$5,200,3,100,$6,$7,$8)`,
     [sessionId, bookerId, venue, start, new Date(start.getTime() + 7_200_000),
       input.visibility ?? "PRIVATE", randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
   );
@@ -228,10 +228,11 @@ test("a delayed background refresh neither blocks draft editing nor overwrites a
   let release: (() => void) | undefined;
   try {
     const participant = await context.identity(false);
+    const booker = await context.identity(false);
     const first = `Refresh-A-${randomUUID().slice(0, 8)}`;
     const second = `Refresh-B-${randomUUID().slice(0, 8)}`;
-    const firstId = await insertSession(context, participant.userId, first, { visibility: "PUBLIC" });
-    const secondId = await insertSession(context, participant.userId, second, { visibility: "PUBLIC" });
+    const firstId = await insertSession(context, booker.userId, first, { visibility: "PUBLIC" });
+    const secondId = await insertSession(context, booker.userId, second, { visibility: "PUBLIC" });
     await login(page, participant, `/discover?q=${first}`);
     await expect(row(page, first)).toBeVisible();
     let announce: (() => void) | undefined;

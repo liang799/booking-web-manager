@@ -18,7 +18,7 @@ describe.skipIf(!databaseUrl)("PostgreSQL notification inbox", () => {
   beforeAll(async () => {
     await pool.query(`create schema "${schema}"`);
     await pool.query(`create table profiles (user_id uuid primary key, account_status text not null)`);
-    await pool.query(readFileSync("supabase/migrations/0017_notification_inbox.sql", "utf8").replaceAll("public.", `"${schema}".`));
+    await pool.query(readFileSync("supabase/migrations/0018_notification_inbox.sql", "utf8").replaceAll("public.", `"${schema}".`));
     await pool.query("insert into profiles values ($1, 'ACTIVE'), ($2, 'ACTIVE')", [actor, other]);
   });
   afterAll(async () => { await pool.query(`drop schema if exists "${schema}" cascade`); await pool.end(); });

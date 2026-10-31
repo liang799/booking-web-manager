@@ -18,7 +18,7 @@ function submission(id = "submission"): RequestBoundSessionCreationSubmission {
         venueName: "Jurong East Sports Hall", region: "West", sport: "Badminton",
         startAt: new Date("2030-01-01T10:00:00Z"), endAt: new Date("2030-01-01T12:00:00Z"), totalCostCents: 1000,
       },
-      config: { totalSlots: 4, minimumHeadcount: 2 },
+      config: { totalSlots: 5, },
     },
   };
 }
@@ -52,7 +52,7 @@ describe("UC2-02 request-bound PostgreSQL transaction adapter", () => {
         },
         config: {
           ...changed.request.config,
-          ...(field === "slots" ? { totalSlots: 5 } : {}),
+          ...(field === "slots" ? { totalSlots: 6 } : {}),
           ...(field === "price" ? { pricePerSlotCents: 300 } : {}),
           ...(field === "visibility" ? { visibility: "PUBLIC" as const } : {}),
         },
@@ -93,14 +93,88 @@ describe("UC2-02 request-bound PostgreSQL transaction adapter", () => {
     const replay = await new PostgresSessionCreationTransaction(database.pool, submission(), clock).runForBooker(bookerId, work);
     expect(replay).toEqual(result);
     expect(work).not.toHaveBeenCalled();
-    expect(database.accountChecks).toBe(2);
+    expect(database.accountChecks).toBe(1);
     expect(database.state.keys.get(key())?.fingerprint).toBe(fingerprintOf({ idempotencyKey: key() }));
   });
 
-  test("the legacy probe cannot execute work if a key disappears after the conflict", async () => {
+  test.each([[2, 2], [5, 2], [5, 5], [30, 30]])(
+    "replays a successful %s-place request recorded with minimum headcount %s", async (totalSlots, minimumHeadcount) => {
+      const database = fakeDatabase();
+      const input = submission();
+      const request = { ...input.request, config: { totalSlots } };
+      const fingerprint = fingerprintOf({ ...request, config: { totalSlots, minimumHeadcount } });
+      database.seed(fingerprint);
+      const work = vi.fn(async () => { database.state.created += 1; return result; });
+
+      const replay = await new PostgresSessionCreationTransaction(database.pool, { ...input, request }, clock)
+        .runForBooker(bookerId, work);
+
+      expect(replay).toEqual(result);
+      expect(work).not.toHaveBeenCalled();
+      expect(database.state.created).toBe(0);
+      expect(database.state.keys.get(key())?.fingerprint).toBe(fingerprint);
+      expect(database.accountChecks).toBe(1);
+    },
+  );
+
+  test.each(["venue", "cost", "slots", "price", "visibility"] as const)(
+    "keeps changed %s conflicting against a retired-headcount request", async (field) => {
+      const database = fakeDatabase();
+      const input = submission();
+      database.seed(fingerprintOf({ ...input.request, config: { ...input.request.config, minimumHeadcount: 2 } }));
+      const request = {
+        ...input.request,
+        booking: {
+          ...input.request.booking,
+          ...(field === "venue" ? { venueName: "Another venue" } : {}),
+          ...(field === "cost" ? { totalCostCents: 1200 } : {}),
+        },
+        config: {
+          ...input.request.config,
+          ...(field === "slots" ? { totalSlots: 6 } : {}),
+          ...(field === "price" ? { pricePerSlotCents: 300 } : {}),
+          ...(field === "visibility" ? { visibility: "PUBLIC" as const } : {}),
+        },
+      };
+      const work = vi.fn(async () => result);
+
+      await expect(new PostgresSessionCreationTransaction(database.pool, { ...input, request }, clock)
+        .runForBooker(bookerId, work)).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+      expect(work).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each([[5, 1], [5, 6], [5, 2.5], [31, 2]])(
+    "does not accept an impossible historical capacity %s and headcount %s", async (totalSlots, minimumHeadcount) => {
+      const database = fakeDatabase();
+      const input = submission();
+      const request = { ...input.request, config: { totalSlots } };
+      database.seed(fingerprintOf({ ...request, config: { totalSlots, minimumHeadcount } }));
+      const work = vi.fn(async () => result);
+
+      await expect(new PostgresSessionCreationTransaction(database.pool, { ...input, request }, clock)
+        .runForBooker(bookerId, work)).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+      expect(work).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each(["IN_PROGRESS", "FAILED"])("never replays or executes a retired-headcount %s record", async (status) => {
+    const database = fakeDatabase();
+    const input = submission();
+    database.seed(fingerprintOf({ ...input.request, config: { ...input.request.config, minimumHeadcount: 2 } }));
+    database.state.keys.get(key())!.status = status;
+    const work = vi.fn(async () => result);
+
+    await expect(new PostgresSessionCreationTransaction(database.pool, input, clock)
+      .runForBooker(bookerId, work)).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    expect(work).not.toHaveBeenCalled();
+    expect(database.state.keys.get(key())?.status).toBe(status);
+  });
+
+  test("historical probes cannot execute work if a key disappears after the conflict read", async () => {
     const database = fakeDatabase();
     database.seed(fingerprintOf({ differentRequest: true }));
-    database.removeKeyAfterRollback = true;
+    database.removeKeyAfterRead = true;
     const work = vi.fn(async () => { database.state.created += 1; return result; });
     await expect(new PostgresSessionCreationTransaction(database.pool, submission(), clock)
       .runForBooker(bookerId, work)).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
@@ -109,9 +183,11 @@ describe("UC2-02 request-bound PostgreSQL transaction adapter", () => {
     expect(database.state.keys.size).toBe(0);
   });
 
-  test.each(["legacy", "bound"])("rechecks account access before a %s replay", async (kind) => {
+  test.each(["legacy", "bound", "retired-headcount"])("rechecks account access before a %s replay", async (kind) => {
     const database = fakeDatabase();
-    database.seed(fingerprintOf(kind === "legacy" ? { idempotencyKey: key() } : submission().request));
+    const request = submission().request;
+    database.seed(fingerprintOf(kind === "legacy" ? { idempotencyKey: key() }
+      : kind === "retired-headcount" ? { ...request, config: { ...request.config, minimumHeadcount: 2 } } : request));
     database.accountStatus = "INACTIVE";
     const work = vi.fn(async () => result);
     await expect(new PostgresSessionCreationTransaction(database.pool, submission(), clock)
@@ -155,7 +231,7 @@ function fakeDatabase() {
     accountChecks: 0,
     claims: 0,
     connections: 0,
-    removeKeyAfterRollback: false,
+    removeKeyAfterRead: false,
     seed(fingerprint: string) {
       database.state.keys.set(key(), { fingerprint, status: "SUCCEEDED", response: JSON.stringify({ value: result }) });
     },
@@ -167,10 +243,6 @@ function fakeDatabase() {
     if (statement === "rollback") {
       if (snapshot) database.state = snapshot;
       snapshot = undefined;
-      if (database.removeKeyAfterRollback) {
-        database.state.keys.delete(key());
-        database.removeKeyAfterRollback = false;
-      }
       return { rows: [] };
     }
     if (statement.includes("from profiles")) {
@@ -186,6 +258,12 @@ function fakeDatabase() {
     }
     if (statement.includes("from idempotency_keys")) {
       const stored = database.state.keys.get(id);
+      if (database.removeKeyAfterRead) {
+        // Model an external deletion that survives this transaction's rollback.
+        database.state.keys.delete(id);
+        snapshot?.keys.delete(id);
+        database.removeKeyAfterRead = false;
+      }
       return { rows: stored ? [{ status: stored.status, request_fingerprint: stored.fingerprint, response: stored.response }] : [] };
     }
     if (statement.includes("set status = 'SUCCEEDED'")) {

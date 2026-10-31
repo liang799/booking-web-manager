@@ -11,6 +11,7 @@ vi.mock("@/app/discover/server-dependencies", () => ({ getDiscoveryDependencies:
 
 const viewerId = "10000000-0000-4000-8000-000000000001";
 const otherId = "10000000-0000-4000-8000-000000000002";
+const bookerId = "10000000-0000-4000-8000-000000000003";
 const sessionId = "20000000-0000-4000-8000-000000000001";
 const now = new Date("2040-01-01T00:00:00Z");
 
@@ -24,7 +25,7 @@ describe("discovery excludes the viewer's active participation", () => {
     // Connection-local fixtures exercise real PostgreSQL without changing persisted sessions.
     await pool.query(`
       create temporary table sessions (
-        session_id uuid primary key, venue_name text, sport text, region text,
+        session_id uuid primary key, booker_id uuid, venue_name text, sport text, region text,
         start_at timestamptz, end_at timestamptz, total_slots integer,
         booking_share_cents bigint, visibility text, status text
       );
@@ -48,9 +49,9 @@ describe("discovery excludes the viewer's active participation", () => {
     authenticatedUserId = viewerId;
     await pool.query("truncate sessions, participations");
     await pool.query(
-      `insert into sessions values ($1, 'Discovery fixture', 'Badminton', 'West',
+      `insert into sessions values ($1, $2, 'Discovery fixture', 'Badminton', 'West',
        '2040-06-01T10:00:00Z', '2040-06-01T12:00:00Z', 8, 500, 'PUBLIC', 'OPEN')`,
-      [sessionId],
+      [sessionId, bookerId],
     );
   });
 
@@ -74,6 +75,14 @@ describe("discovery excludes the viewer's active participation", () => {
     expect(await apiPage(`viewerId=${otherId}`)).toEqual({ items: [], nextCursor: null });
     authenticatedUserId = otherId;
     expect((await apiPage()).items.map((item: { sessionId: string }) => item.sessionId)).toEqual([sessionId]);
+  });
+
+  test("the booker's implicit place excludes their session from API and initial discovery", async () => {
+    await pool.query("update sessions set booker_id = $1", [viewerId]);
+
+    expect((await apiPage()).items).toEqual([]);
+    expect((await loadDiscoveryScreen({}, viewerId)).outcome)
+      .toEqual({ status: "ready", page: { items: [], nextCursor: null } });
   });
 
   test("waitlisted sessions are also absent from discovery", async () => {
@@ -104,9 +113,9 @@ describe("discovery excludes the viewer's active participation", () => {
   test("excludes joined sessions before pagination so the first page stays full", async () => {
     await pool.query(`insert into sessions
       select ('20000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-        'Discovery fixture', 'Badminton', 'West', '2040-06-01T10:00:00Z'::timestamptz,
+        $1::uuid, 'Discovery fixture', 'Badminton', 'West', '2040-06-01T10:00:00Z'::timestamptz,
         '2040-06-01T12:00:00Z'::timestamptz, 8, 500, 'PUBLIC', 'OPEN'
-      from generate_series(2, 21) n`);
+      from generate_series(2, 21) n`, [bookerId]);
     await participate("COMMITTED");
 
     const page = await apiPage("sport=Badminton&region=West");

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_SESSION_SLOTS } from "@/domain/sessions/capacity";
+import { MAX_STORED_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import type { DiscoveryOutcome } from "./_components/discovery-state";
 import type { DiscoveryExpiry } from "./_components/discovery-updates";
 
@@ -11,7 +11,7 @@ const pageSchema = z.object({
     region: z.string(),
     startAt: z.string().datetime(),
     endAt: z.string().datetime(),
-    totalSlots: z.number().int().min(1).max(MAX_SESSION_SLOTS),
+    totalSlots: z.number().int().min(1).max(MAX_STORED_SESSION_SLOTS),
     bookingShareCents: z.number().int().positive().safe(),
   })).max(20),
   nextCursor: z.string().nullable(),

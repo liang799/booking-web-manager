@@ -16,9 +16,12 @@ export function registerParticipantRemovalApi(registry: OpenAPIRegistry): void {
     startAt: z.string().datetime(), endAt: z.string().datetime(),
     status: z.enum(["OPEN", "CANCELLED", "AWAITING_PAYOUT", "PAYOUT_PENDING", "SETTLED"]),
     availableSlots: z.number().int().nonnegative(),
+    booker: z.object({ displayName: z.string(), participationId: z.string().uuid().optional() }),
+    canVerifyAttendance: z.boolean(),
     participants: z.array(z.object({
       participationId: z.string().uuid(), displayName: z.string(),
       status: z.enum(["WAITLISTED", "COMMITTED", "LEFT_WAITLIST", "WITHDRAWN", "REMOVED", "CANCELLED"]),
+      attendance: z.enum(["UNVERIFIED", "ATTENDED", "ABSENT"]),
       canRemove: z.boolean(),
     })),
   }));
@@ -34,7 +37,7 @@ export function registerParticipantRemovalApi(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "get", path: "/api/sessions/{sessionId}/participants", operationId: "listSessionParticipants",
     tags: ["Sessions"], summary: "UC2-03b List session participants",
-    description: "Active session owner only. Returns names and statuses in preserved participant-list order, including departure history. canRemove is true only for committed participants in an OPEN upcoming session. Times are ISO dates; no wallet or private profile details are returned.",
+    description: "Active session owner only. Returns the booker's reserved place separately from wallet-funded participants. The booker has no removal action. New bookers have no participation ID or attendance action; a legacy funded booker links their existing participation for attendance and financial history. Guest names and statuses retain participant-list order and departure history. canRemove is true only for committed guests in an OPEN upcoming session. Times are ISO dates; no wallet or private profile details are returned.",
     security: [{ bearerAuth: [] }], request: { params: removalSessionParamsSchema },
     responses: { 200: { description: "Owned session and participants.", content: { "application/json": { schema: participants } } }, ...errors },
   });

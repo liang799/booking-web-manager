@@ -12,6 +12,12 @@ export interface SessionParticipants {
   readonly endAt: Date;
   readonly status: SessionStatus;
   readonly availableSlots: number;
+  /** The booker's place is reserved without a wallet-funded Participation. */
+  readonly booker: {
+    readonly displayName: string;
+    /** Links an existing legacy participation, preserving its history without another display row. */
+    readonly participationId?: UUID;
+  };
   /** UC2-06: the session has ended and is still OPEN, so the booker can mark attendance. */
   readonly canVerifyAttendance: boolean;
   readonly participants: readonly {
@@ -38,20 +44,23 @@ export class ListSessionParticipants {
       const session = await requireAggregate(sessions, sessionId, "Session");
       requireParticipantListOwner(user, session);
       const participations = session.participantList.participations;
-      const names = await participants.displayNames(participations.map((participation) => participation.userId));
+      const legacyBooker = session.participantList.findByUserId(session.bookerId);
+      const names = await participants.displayNames([session.bookerId, ...participations.map((participation) => participation.userId)]);
       const now = this.dependencies.clock.now();
       const openBeforeStart = session.status === "OPEN" && now < session.booking.startAt;
       return {
         sessionId, venueName: session.booking.venueName, sport: session.booking.sport,
         startAt: session.booking.startAt, endAt: session.booking.endAt, status: session.status,
         availableSlots: session.getAvailableSlots(now),
+        booker: { displayName: names.get(session.bookerId) ?? "Unnamed player",
+          ...(legacyBooker ? { participationId: legacyBooker.participationId } : {}) },
         canVerifyAttendance: session.status === "OPEN" && session.booking.hasEnded(now),
         participants: participations.map((participation) => ({
           participationId: participation.participationId,
           displayName: names.get(participation.userId) ?? "Unnamed player",
           status: participation.status,
           attendance: participation.attendance,
-          canRemove: openBeforeStart && participation.status === "COMMITTED",
+          canRemove: openBeforeStart && participation.status === "COMMITTED" && participation.userId !== session.bookerId,
         })),
       };
     });

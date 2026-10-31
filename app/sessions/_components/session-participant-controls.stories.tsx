@@ -17,6 +17,7 @@ const meta = {
       previewWithdrawal: fn(async () => ({ status: "ready" as const, preview: { kind: "REFUNDED" as const, refundCents: 500, heldCents: 0 } })),
       withdrawFromSession: fn(async () => ({ status: "withdrawn" as const, kind: "REFUNDED" as const, refundedCents: 500 })),
       leaveWaitlist: fn(async () => ({ status: "left" as const })),
+      findReplacementCandidate: fn(async () => ({ status: "found" as const, candidate: { userId: "replacement-details", handle: "replacement_player", displayName: "Replacement Player" } })),
     },
   },
   beforeEach: () => {
@@ -55,6 +56,25 @@ export const LeaveWaitlist: Story = {
     await userEvent.click(dialog.getByRole("button", { name: "Leave waitlist" }));
     await expect(args.transport?.leaveWaitlist).toHaveBeenCalledOnce();
     await expect(args.onRefresh).toHaveBeenCalledOnce();
+  },
+};
+
+export const InviteReplacementByUserId: Story = {
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Leave session" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Withdraw from this session?" }));
+    await userEvent.click(dialog.getByRole("radio", { name: /Invite one person/ }));
+    const withdraw = dialog.getByRole("button", { name: "Withdraw" });
+    await expect(withdraw).toBeDisabled();
+    await userEvent.type(dialog.getByLabelText("Their user ID"), "replacement_player");
+    await userEvent.click(dialog.getByRole("button", { name: "Find" }));
+    await expect(await dialog.findByText("Replacement Player")).toBeVisible();
+    await expect(withdraw).toBeEnabled();
+    await userEvent.click(withdraw);
+    await expect(await screen.findByRole("dialog", { name: "You've withdrawn" })).toHaveTextContent("5.00");
+    await expect(args.transport?.withdrawFromSession).toHaveBeenCalledWith(expect.objectContaining({
+      replacement: { mode: "DIRECT_INVITE", inviteeId: "replacement-details" },
+    }));
   },
 };
 

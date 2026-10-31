@@ -17,7 +17,7 @@ describe("UC2-01 public session discovery", () => {
     const item: DiscoveredSession = {
       sessionId: "session", venueName: "Jurong Sports Hall", sport: "Badminton", region: "West",
       startAt: new Date("2030-01-02T10:00:00Z"), endAt: new Date("2030-01-02T12:00:00Z"),
-      totalSlots: 8, bookingShareCents: 333,
+      totalSlots: 9, bookingShareCents: 333,
     };
     search.mockResolvedValue([item]);
     expect(await useCase.searchPublic()).toEqual([item]);

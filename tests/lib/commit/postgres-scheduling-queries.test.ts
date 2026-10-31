@@ -13,6 +13,15 @@ function executor(rows: SqlRow[] = []) {
 }
 
 describe("PostgresDueSessionQuery", () => {
+  test("reserves the booker's place when selecting sessions that can promote a guest", async () => {
+    const { sql, query } = executor();
+
+    await new PostgresDueSessionQuery(sql).dueSessionIds(now, 25);
+
+    expect(query).toHaveBeenCalledWith(expect.stringContaining(") < s.total_slots - 1"), expect.any(Array));
+    expect(query).toHaveBeenCalledWith(expect.stringContaining("p.user_id <> s.booker_id"), expect.any(Array));
+  });
+
   test("dueSessionIds_WhenCalled_PassesNowTheAutoVerifyCutoffAndLimit", async () => {
     // Arrange
     const { sql, query } = executor([{ session_id: sessionId }]);

@@ -1,6 +1,6 @@
 import type { Pool } from "pg";
 import { z } from "zod";
-import { MAX_SESSION_SLOTS } from "@/domain/sessions/capacity";
+import { MAX_STORED_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { PostgresTransactor } from "@/lib/database/postgres-transactor";
 import { fromDatabaseCents } from "@/lib/money/cents";
 import type { InvitedSession, InvitedSessionReader } from "@/use-cases/sessions/GetInvitedSession";
@@ -28,7 +28,7 @@ export class PostgresInvitedSessionReader implements InvitedSessionReader {
         region: text(row.region),
         startAt: date(row.start_at),
         endAt: date(row.end_at),
-        totalSlots: z.number().int().min(1).max(MAX_SESSION_SLOTS).parse(row.total_slots),
+        totalSlots: z.number().int().min(1).max(MAX_STORED_SESSION_SLOTS).parse(row.total_slots),
         bookingShareCents: fromDatabaseCents(row.booking_share_cents, "booking_share_cents").toCents(),
       };
     });

@@ -43,7 +43,7 @@ describe("Explicitly saved desktop session drafts", () => {
     const storage = memoryStorage();
     const incomplete = {
       ...emptySessionDraft, venueName: "Partially typed", cost: "60.", price: "",
-      startDate: "", endTime: "", region: "", totalSlots: 0, minimumHeadcount: 0,
+      startDate: "", endTime: "", region: "", totalSlots: 0,
     };
     saveDraft(storage, "alice", incomplete, 2);
     expect(readSavedDraft(storage, "alice")).toEqual({ draft: incomplete, desktopStep: 2 });
@@ -63,6 +63,15 @@ describe("Explicitly saved desktop session drafts", () => {
     const restored = readSavedDraft(storage, "alice");
     expect(restored).toEqual({ draft, desktopStep: 2 });
     expect(restored).not.toHaveProperty("duration");
+  });
+
+  test("restores legacy saved drafts while discarding the retired minimum headcount", () => {
+    const storage = memoryStorage();
+    const original = JSON.stringify({ version: 1, draft: { ...draft, minimumHeadcount: 4 }, desktopStep: 2 });
+    storage.values.set(savedDraftStorageKey("alice"), original);
+    expect(readSavedDraft(storage, "alice")).toEqual({ draft, desktopStep: 2 });
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.values.get(savedDraftStorageKey("alice"))).toBe(original);
   });
 
   test("isolates users and never touches pending creation evidence when saving or clearing", () => {
@@ -93,7 +102,6 @@ describe("Explicitly saved desktop session drafts", () => {
     JSON.stringify({ version: 1, desktopStep: 1, durationMode: "unknown", draft }),
     JSON.stringify({ version: 1, desktopStep: 1, draft: {} }),
     JSON.stringify({ version: 1, desktopStep: 1, draft: { ...draft, totalSlots: "8" } }),
-    JSON.stringify({ version: 1, desktopStep: 1, draft: { ...draft, minimumHeadcount: null } }),
     JSON.stringify({ version: 1, desktopStep: 1, draft: { ...draft, visibility: "INVITE" } }),
   ])("ignores corrupt or malformed storage and preserves the original value: %s", (stored) => {
     const storage = memoryStorage();

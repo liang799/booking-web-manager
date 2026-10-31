@@ -31,7 +31,7 @@ const booking: SessionBooking = {
   endAt: new Date("2030-01-02T12:00:00Z"),
   totalCostCents: 1001,
 };
-const config = { totalSlots: 3, minimumHeadcount: 2 };
+const config = { totalSlots: 3, };
 const operationKey = (userId: string, key: string) =>
   JSON.stringify(["UC2-02", userId, key]);
 
@@ -311,20 +311,19 @@ describe("UC2-02 PostgreSQL persistence", () => {
     ).toEqual([{ count: 1 }]);
   });
 
-  test("persists and replays custom prices and minimum headcount and enforces the database bounds", async () => {
+  test("persists and replays custom prices and enforces safe accepted-quote bounds", async () => {
     const booker = await context.identity();
     const key = randomUUID();
-    const created = await useCase(transaction(key)).forBooker(booker.userId, booking, { ...config, minimumHeadcount: 3, visibility: "PUBLIC", pricePerSlotCents: 600 });
+    const created = await useCase(transaction(key)).forBooker(booker.userId, booking, { ...config, visibility: "PUBLIC", pricePerSlotCents: 600 });
     expect(created.bookingShareCents).toBe(600);
-    expect((await context.pool.query("select booking_share_cents, minimum_headcount from sessions where session_id = $1", [created.sessionId])).rows).toEqual([{ booking_share_cents: "600", minimum_headcount: 3 }]);
+    expect((await context.pool.query("select booking_share_cents from sessions where session_id = $1", [created.sessionId])).rows).toEqual([{ booking_share_cents: "600" }]);
     expect(await useCase(transaction(key)).forBooker(booker.userId, booking, { ...config, pricePerSlotCents: 500 })).toEqual(created);
     const sql: SqlExecutor = { query: async (statement, values) => (await context.pool.query(statement, values ? [...values] : undefined)).rows };
     const reloaded = await new PostgresSessionManagementRepository(sql).get(created.sessionId);
     expect(reloaded?.bookingShare.toCents()).toBe(600);
-    expect(reloaded?.minimumHeadcount).toBe(3);
     expect((await new PostgresSessionDiscoveryReader(sql).search({}, now)).find((session) => session.sessionId === created.sessionId)?.bookingShareCents).toBe(600);
-    for (const invalid of [166, 667]) {
-      await expect(context.pool.query("update sessions set booking_share_cents = $2 where session_id = $1", [created.sessionId, invalid])).rejects.toMatchObject({ code: "23514", constraint: "sessions_price_within_range" });
+    for (const invalid of [0, 4503599627370496]) {
+      await expect(context.pool.query("update sessions set booking_share_cents = $2 where session_id = $1", [created.sessionId, invalid])).rejects.toMatchObject({ code: "23514", constraint: "sessions_accepted_share_check" });
     }
   });
 
@@ -378,7 +377,7 @@ describe("UC2-02 PostgreSQL persistence", () => {
       await replayCase.forBooker(
         booker.userId,
         { ...booking, venueName: "Changed venue", totalCostCents: 9999 },
-        { totalSlots: 4, minimumHeadcount: 3 },
+        { totalSlots: 4, },
       ),
     ).toEqual(created);
     await expect(
@@ -558,8 +557,8 @@ describe("UC2-02 PostgreSQL persistence", () => {
       await creator.query("begin");
       await creator.query(
         `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at, total_cost_cents,
-        total_slots, minimum_headcount, booking_share_cents, room_token, holding_account_id, invited_group_id)
-        values ($1,$2,'Concurrent venue','West','Badminton',$3,$4,1001,3,2,333,$5,$6,$7)`,
+        total_slots, booking_share_cents, room_token, holding_account_id, invited_group_id)
+        values ($1,$2,'Concurrent venue','West','Badminton',$3,$4,1001,4,333,$5,$6,$7)`,
         [
           randomUUID(),
           booker.userId,

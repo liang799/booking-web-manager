@@ -32,7 +32,7 @@ describe("Session fixture contracts", () => {
 
     test("createTestSession_WhenCostDoesNotDivideEvenly_HydratesRoundedShares", () => {
       const session = createTestSession({
-        totalSlots: 3,
+        totalSlots: 4,
         committedUserIds: ["alice", "ben"],
         attendanceByUserId: { ben: "ATTENDED" },
       });

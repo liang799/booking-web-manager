@@ -35,7 +35,7 @@ returns `{ sessionId, roomToken, bookingShareCents }`.
 `bookerId` comes from authentication. `SessionBooking` contains venue name,
 resolved region, sport, `Date` start/end values, and integer `totalCostCents`.
 `SessionConfig` groups
-`totalSlots`, `minimumHeadcount`, and optional `visibility`, `minimumReliability`,
+`totalSlots` (including the booker), and optional `visibility`, `minimumReliability`,
 `invitedGroupId`, and `pricePerSlotCents`. The module maps these fields explicitly into domain inputs.
 Client-supplied identities, account facts, or lifecycle fields cannot override
 creation. The domain validates the chosen booking share, uses integer-cent floor

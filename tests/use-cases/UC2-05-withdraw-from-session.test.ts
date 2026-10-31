@@ -338,7 +338,7 @@ describe("UC2-05 Withdraw from Session", () => {
 
   test("an invited queue head leaving the waitlist lets the next person be promoted", async () => {
     // Arrange
-    const scenario = withdrawalScenario({ totalSlots: 3 });
+    const scenario = withdrawalScenario({ totalSlots: 4 });
     await scenario.commit("alice");
     await scenario.commit("bob");
     await scenario.commit("erin");
@@ -438,7 +438,7 @@ describe("UC2-05 Withdraw from Session", () => {
   });
 });
 
-function withdrawalScenario({ totalSlots = 2 } = {}) {
+function withdrawalScenario({ totalSlots = 3 } = {}) {
   const unitOfWork = new InMemoryUnitOfWork({
     users: ["alice", "bob", "carol", "dave", "erin"].map((userId) =>
       createTestUserDetails({ userId }),

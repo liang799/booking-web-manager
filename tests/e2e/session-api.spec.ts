@@ -15,7 +15,7 @@ const body = () => ({
     endAt: "2030-01-02T12:00:00Z",
     totalCostCents: 1001,
   },
-  config: { totalSlots: 3, minimumHeadcount: 2 },
+  config: { totalSlots: 3, },
 });
 
 test("authenticated creation replays atomically and refuses replay after deactivation", async ({
@@ -234,7 +234,7 @@ test("payout eligibility and invalid input retain distinct responses", async ({
           headers,
           data: {
             ...body(),
-            config: { totalSlots: "three", minimumHeadcount: 2 },
+            config: { totalSlots: "three", },
           },
         })
       ).status(),

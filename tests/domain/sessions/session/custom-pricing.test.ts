@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Booking, Money, Session } from "@/domain";
 import {
   createTestSession,
+  creationDetails,
   pendingPayoutDetails,
   createTestUser,
   hoursBeforeSessionStart,
@@ -17,6 +18,7 @@ describe("Session participant pricing", () => {
       const details = sessionDetails({
         booking: bookingWithCost(Money.fromCents(1001)),
         totalSlots: 3,
+        bookingShare: undefined,
       });
 
       const session = new Session(details);
@@ -72,26 +74,26 @@ describe("Session participant pricing", () => {
       );
     });
 
-    test("constructor_WhenPriceIsOneCentBelowMinimum_RejectsOutsideBounds", () => {
-      const details = sessionDetails({
+    test("createSession_WhenPriceIsOneCentBelowMinimum_RejectsOutsideBounds", () => {
+      const details = { ...creationDetails(3),
         booking: bookingWithCost(Money.fromCents(1001)),
         totalSlots: 3,
         bookingShare: Money.fromCents(166),
-      });
+      };
 
-      expect(() => new Session(details)).toThrow(
+      expect(() => readyBooker().createSession(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
-    test("constructor_WhenPriceIsOneCentAboveMaximum_RejectsOutsideBounds", () => {
-      const details = sessionDetails({
+    test("createSession_WhenPriceIsOneCentAboveMaximum_RejectsOutsideBounds", () => {
+      const details = { ...creationDetails(3),
         booking: bookingWithCost(Money.fromCents(1001)),
         totalSlots: 3,
         bookingShare: Money.fromCents(667),
-      });
+      };
 
-      expect(() => new Session(details)).toThrow(
+      expect(() => readyBooker().createSession(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });

@@ -68,20 +68,20 @@ describe("Create-session workflow store", () => {
     expect(creationScreen(store.getState())).toBe("settings");
   });
 
-  test("applies existing price and minimum-headcount rules when editing", () => {
+  test("updates the suggested price when editing capacity or cost", () => {
     const { store } = setup();
     store.getState().change({ totalSlots: 2 });
-    expect(store.getState().draft).toMatchObject({ totalSlots: 2, minimumHeadcount: 2, price: "30.00" });
+    expect(store.getState().draft).toMatchObject({ totalSlots: 2, price: "30.00" });
     store.getState().change({ cost: "80.00" });
     expect(store.getState().draft.price).toBe("40.00");
   });
 
   test("checks every step before submission and returns the first invalid step's errors", async () => {
-    const { store, storage } = setup({ initialDraft: { ...complete, minimumHeadcount: 9 } });
+    const { store, storage } = setup({ initialDraft: { ...complete, reliability: "invalid" } });
     const create = vi.fn<CreateSession>();
     const result = await store.getState().submit(create);
-    expect(result).toEqual({ status: "invalid", errors: { minimumHeadcount: expect.any(String) } });
-    expect(store.getState()).toMatchObject({ workflow: { status: "editing", editor: { screen: "settings" }, errors: { minimumHeadcount: expect.any(String) } } });
+    expect(result).toEqual({ status: "invalid", errors: { reliability: expect.any(String) } });
+    expect(store.getState()).toMatchObject({ workflow: { status: "editing", editor: { screen: "settings" }, errors: { reliability: expect.any(String) } } });
     expect(create).not.toHaveBeenCalled();
     expect(storage.setItem).not.toHaveBeenCalled();
   });
