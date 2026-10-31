@@ -195,6 +195,14 @@ export class ManageGroup {
     await this.#deps.groups.save(group, [notice(group, "GROUP_INVITATION_DECLINED", invited.invitedBy)]);
   }
 
+  /** Owner cancels a pending invitation; a concurrent acceptance leaves nothing to cancel. */
+  async cancelPendingInvitation(command: { readonly actorId: UUID; readonly groupId: UUID; readonly inviteeId: UUID }): Promise<void> {
+    const group = await this.#load(command.groupId);
+    if (group.cancelInvitation({ actorId: command.actorId, inviteeId: command.inviteeId })) {
+      await this.#deps.groups.save(group, [notice(group, "GROUP_INVITATION_ENDED", command.inviteeId)]);
+    }
+  }
+
   /** Owner only: removes a member (never the owner). */
   async removeMember(command: {
     readonly actorId: UUID;
