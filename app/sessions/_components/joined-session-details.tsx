@@ -2,7 +2,7 @@
 
 import { useId, useRef, type KeyboardEvent } from "react";
 import Image from "next/image";
-import { ExternalLink, UsersRound } from "lucide-react";
+import { CalendarDays, ExternalLink, MapPin, UsersRound } from "lucide-react";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Money } from "@/components/ui/money";
 import type { SessionFeedItem } from "../session-feed-contract";
@@ -27,6 +27,8 @@ export function JoinedSessionDetails({ session, userId, canLeave, onRefresh }: J
   const id = useId();
   const tabs = useRef<HTMLDivElement>(null);
   const date = sessionDate(session.startAt);
+  const venueLabel = sessionVenueLabel(session.venueName);
+  const longVenue = venueLabel.length > 26;
   const status = sessionStatus(session);
   const committed = session.participationStatus === "COMMITTED";
   const waitlisted = session.participationStatus === "WAITLISTED";
@@ -60,19 +62,25 @@ export function JoinedSessionDetails({ session, userId, canLeave, onRefresh }: J
 
         <section className={styles.schedule} aria-label="Session schedule and location">
           <div className={styles.scheduleCell}>
-            <h3 className={styles.label}>Date</h3>
-            <p className={styles.scheduleValue}><time dateTime={session.startAt}>{date.full}</time></p>
-            <p className={styles.supporting}>{date.weekday} · {sessionTime(session)} SGT</p>
+            <CalendarDays className={styles.scheduleIcon} size={23} strokeWidth={1.4} aria-hidden="true" />
+            <div className={styles.scheduleCopy}>
+              <h3 className={styles.label}>Date &amp; time</h3>
+              <p className={styles.scheduleValue}><time dateTime={session.startAt}>{date.full}</time></p>
+              <p className={styles.supporting}>{date.weekday} · {sessionTime(session)} SGT</p>
+            </div>
           </div>
           <div className={styles.scheduleCell}>
-            <h3 className={styles.label}>Location</h3>
-            <p className={styles.scheduleValue}>
-              <a className={styles.venue} href={"https://www.google.com/maps/search/?" + new URLSearchParams({ api: "1", query: session.venueName + ", Singapore" })} target="_blank" rel="noreferrer">
-                {sessionVenueLabel(session.venueName)}
-                <ExternalLink size={17} strokeWidth={1.5} aria-hidden="true" />
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            </p>
+            <MapPin className={styles.scheduleIcon} size={23} strokeWidth={1.4} aria-hidden="true" />
+            <div className={styles.scheduleCopy}>
+              <h3 className={styles.label}>Location</h3>
+              <p className={styles.scheduleValue} data-long={longVenue || undefined}>
+                <a className={styles.venue} href={"https://www.google.com/maps/search/?" + new URLSearchParams({ api: "1", query: session.venueName + ", Singapore" })} target="_blank" rel="noreferrer">
+                  <span className={styles.venueText}>{venueLabel}</span>
+                  <ExternalLink size={17} strokeWidth={1.5} aria-hidden="true" />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </p>
+            </div>
           </div>
         </section>
 
