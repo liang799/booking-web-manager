@@ -128,3 +128,6 @@
   .personRow { gap: 9px; }
   .pendingBadge { padding-inline: 7px; font-size: 10px; }
 }
+
+.invitationName { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+.invitationName .pendingBadge { margin-right: 0; }
