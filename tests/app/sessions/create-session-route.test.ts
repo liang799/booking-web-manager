@@ -26,6 +26,17 @@ const holdingAccountId = "00000000-0000-4000-8000-000000000001";
 
 // Owner: Neoh (liang799) — /app/sessions
 describe("UC2-02 POST /api/sessions", () => {
+  test("creates a booker-only session without a minimum participant requirement", async () => {
+    const { POST, unitOfWork } = await sessionRouteScenario();
+    const response = await POST(postRequest(creationRequest({ totalSlots: 1 })));
+    const result: CreateSessionResult = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(unitOfWork.requireSession(result.sessionId).totalSlots).toBe(1);
+    expect(result.bookingShareCents).toBe(1001);
+    expect(unitOfWork.ledgerInstructions).toEqual([]);
+  });
+
   test("accepts and persists the chosen per-slot price, including above-cost collection", async () => {
     const { POST, unitOfWork } = await sessionRouteScenario();
     const response = await POST(postRequest(creationRequest({ pricePerSlotCents: 600 })));
@@ -71,7 +82,6 @@ describe("UC2-02 POST /api/sessions", () => {
     expect(session.booking.totalCost.toCents()).toBe(1001);
     expect(session.bookingShare.toCents()).toBe(result.bookingShareCents);
     expect(session.totalSlots).toBe(3);
-    expect(session.minimumHeadcount).toBe(2);
     expect(session.roomToken).toBe(result.roomToken);
     expect(session.holdingAccountId).toBe(holdingAccountId);
     expect(session.visibility).toBe("PRIVATE");
@@ -390,7 +400,7 @@ describe("UC2-02 POST /api/sessions", () => {
     expect(unitOfWork.sessions.size).toBe(0);
   });
 
-  test("replays the original result across independently initialized routes with changed valid input", async () => {
+  test("replays identical input across independently initialized routes", async () => {
     // Arrange
     const { POST, loadRoute, unitOfWork } = await sessionRouteScenario();
     const firstResponse = await POST(postRequest(creationRequest()));
@@ -398,10 +408,9 @@ describe("UC2-02 POST /api/sessions", () => {
     const { POST: retry, readyBookerUser: reloadedBooker } = await loadRoute();
     // A fresh process hydrates persisted Users with its own domain constructors.
     unitOfWork.users.set(bookerId, reloadedBooker(bookerId));
-    const changedRequest = creationRequest({ totalSlots: 2 });
 
     // Act
-    const replayResponse = await retry(postRequest(changedRequest));
+    const replayResponse = await retry(postRequest(creationRequest()));
 
     // Assert
     expect(firstResponse.status).toBe(201);
@@ -414,7 +423,7 @@ describe("UC2-02 POST /api/sessions", () => {
   test("checks current account authorization before returning a successful replay", async () => {
     // Arrange
     const authenticate = vi.fn(verifiedTestUser);
-    const { POST, unitOfWork, createForSubmission } = await sessionRouteScenario(authenticate);
+    const { POST, unitOfWork, createForSubmission, setTime } = await sessionRouteScenario(authenticate);
     const firstResponse = await POST(postRequest(creationRequest()));
     const first: CreateSessionResult = await firstResponse.json();
     const { DomainError } = await import("@/domain");
@@ -434,10 +443,8 @@ describe("UC2-02 POST /api/sessions", () => {
     expect(unitOfWork.sessions.size).toBe(1);
 
     // Act: access is restored, while creation-specific booking eligibility has changed.
-    const changedRequest = creationRequest({ totalSlots: 2 });
-    changedRequest.booking.startAt = "2020-01-01T10:00:00Z";
-    changedRequest.booking.endAt = "2020-01-01T12:00:00Z";
-    const replay = await POST(postRequest(changedRequest));
+    setTime(new Date("2027-01-01T00:00:00Z"));
+    const replay = await POST(postRequest(creationRequest()));
 
     // Assert
     expect(replay.status).toBe(201);
@@ -445,6 +452,47 @@ describe("UC2-02 POST /api/sessions", () => {
     expect(authenticate).toHaveBeenCalledTimes(3);
     expect(createForSubmission).toHaveBeenCalledTimes(2);
     expect(unitOfWork.sessions.size).toBe(1);
+  });
+
+  test("passes only authenticated, normalized request metadata to the creation capability", async () => {
+    const { POST, createForSubmission } = await sessionRouteScenario();
+    const request = creationRequest();
+    request.booking.startAt = "2026-10-10T18:00:00+08:00";
+    request.booking.endAt = "2026-10-10T20:00:00+08:00";
+
+    const response = await POST(postRequest({
+      ...request,
+      bookerId: otherBookerId,
+      request: { bookerId: otherBookerId },
+      fingerprint: "untrusted",
+    }));
+
+    expect(response.status).toBe(201);
+    expect(createForSubmission).toHaveBeenCalledWith({
+      idempotencyKey: request.idempotencyKey,
+      request: {
+        bookerId,
+        booking: { ...request.booking, startAt: sessionStartsAt, endAt: sessionEndsAt },
+        config: request.config,
+      },
+    });
+  });
+
+  test.each([
+    ["IDEMPOTENCY_CONFLICT", "This submission key was already used for different booking details"],
+    ["IDEMPOTENCY_IN_FLIGHT", "This submission is already being processed"],
+  ] as const)("maps %s from persistence to a sanitized HTTP conflict", async (code, message) => {
+    const { POST, createForSubmission, unitOfWork } = await sessionRouteScenario();
+    const { LedgerError } = await import("@/lib/money/errors");
+    createForSubmission.mockReturnValueOnce({
+      forBooker: async () => { throw new LedgerError(code, "private-key-and-payload"); },
+    });
+
+    const response = await POST(postRequest(creationRequest()));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: { code, message } });
+    expect(unitOfWork.sessions.size).toBe(0);
   });
 
   test("maps an intentionally unavailable creation capability to the fixed 503 response", async () => {
@@ -751,7 +799,7 @@ function creationRequest(config: Partial<SessionConfig> = {}) {
       endAt: sessionEndsAt.toISOString(),
       totalCostCents: 1001,
     },
-    config: { totalSlots: 3, minimumHeadcount: 2, ...config },
+    config: { totalSlots: 3, ...config },
   };
 }
 
@@ -802,6 +850,8 @@ async function sessionRouteScenario(
     const { RequestSessionCreationTransaction } = await import(
       "@/lib/sessions/request-session-creation-transaction"
     );
+    // General HTTP/domain tests use the existing key-only fake. Bound replay and
+    // conflict semantics are verified with the production adapter in DB/HTTP integration.
     createForSubmission.mockImplementation((submission) =>
       new CreateSessions({
         transaction: new RequestSessionCreationTransaction(unitOfWork, submission),

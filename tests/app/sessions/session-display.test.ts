@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { SessionFeedItem } from "@/app/sessions/session-feed-contract";
-import { sessionCalendarHref, sessionDate, sessionStatus, sessionTime, timelineGroup } from "@/app/sessions/_components/session-display";
+import { sessionSummaryTime, sessionCanLeave, sessionCalendarHref, sessionDate, sessionLongDate, sessionDuration, sessionStatus, sessionTime, timelineGroup } from "@/app/sessions/_components/session-display";
 
 const session: SessionFeedItem = {
   sessionId: "10000000-0000-4000-8000-000000000001",
@@ -99,5 +99,51 @@ describe("Singapore dates and calendar links", () => {
       dates: "20261021T153000Z/20261021T170000Z",
       ctz: "Asia/Singapore",
     });
+  });
+});
+
+
+describe("session detail summary", () => {
+  test("uses a full Singapore date without repeating it in a same-day time range", () => {
+    expect(sessionLongDate("2026-11-06T01:50:00Z")).toBe("Friday, 6 November 2026");
+    expect(sessionTime({ startAt: "2026-11-06T01:50:00Z", endAt: "2026-11-06T03:20:00Z" })).toBe("9:50 AM – 11:20 AM");
+  });
+
+  test.each([
+    ["2026-11-06T03:20:00Z", "1 hr 30 min"],
+    ["2026-11-06T02:20:00Z", "30 min"],
+    ["2026-11-06T03:50:00Z", "2 hr"],
+  ])("shows duration through %s", (endAt, duration) => {
+    expect(sessionDuration({ startAt: "2026-11-06T01:50:00Z", endAt })).toBe(duration);
+  });
+
+  test("keeps the correct date and duration across Singapore midnight", () => {
+    expect(sessionLongDate("2026-11-06T16:00:00Z")).toBe("Saturday, 7 November 2026");
+    expect(sessionDuration({ startAt: "2026-11-06T15:30:00Z", endAt: "2026-11-06T17:00:00Z" })).toBe("1 hr 30 min");
+  });
+});
+
+
+describe("participant leave availability", () => {
+  test("an ongoing session is visible in upcoming but no longer offers departure", () => {
+    expect(sessionCanLeave(session, "2026-10-21T18:59:59+08:00")).toBe(true);
+    expect(sessionCanLeave(session, session.startAt)).toBe(false);
+    expect(sessionCanLeave(session, "2026-10-21T19:30:00+08:00")).toBe(false);
+  });
+  test("only active participant places can be left", () => {
+    const before = "2026-10-21T18:00:00+08:00";
+    expect(sessionCanLeave({ ...session, participationStatus: "WAITLISTED" }, before)).toBe(true);
+    expect(sessionCanLeave({ ...session, role: "HOST" }, before)).toBe(false);
+    expect(sessionCanLeave({ ...session, status: "CANCELLED" }, before)).toBe(false);
+    expect(sessionCanLeave({ ...session, participationStatus: "WITHDRAWN" }, before)).toBe(false);
+  });
+});
+
+
+describe("host summary time", () => {
+  test("shares the period only when both times are on the same Singapore day and period", () => {
+    expect(sessionSummaryTime({ startAt: "2026-11-06T09:50:00+08:00", endAt: "2026-11-06T11:20:00+08:00" })).toBe("9:50 – 11:20 AM");
+    expect(sessionSummaryTime({ startAt: "2026-11-06T11:30:00+08:00", endAt: "2026-11-06T13:00:00+08:00" })).toBe("11:30 AM – 1:00 PM");
+    expect(sessionSummaryTime({ startAt: "2026-11-06T23:30:00+08:00", endAt: "2026-11-07T01:00:00+08:00" })).toBe("11:30 PM – 7 Nov 2026, 1:00 AM");
   });
 });

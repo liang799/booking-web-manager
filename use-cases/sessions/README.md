@@ -35,7 +35,7 @@ returns `{ sessionId, roomToken, bookingShareCents }`.
 `bookerId` comes from authentication. `SessionBooking` contains venue name,
 resolved region, sport, `Date` start/end values, and integer `totalCostCents`.
 `SessionConfig` groups
-`totalSlots`, `minimumHeadcount`, and optional `visibility`, `minimumReliability`,
+`totalSlots` (including the booker), and optional `visibility`, `minimumReliability`,
 `invitedGroupId`, and `pricePerSlotCents`. The module maps these fields explicitly into domain inputs.
 Client-supplied identities, account facts, or lifecycle fields cannot override
 creation. The domain validates the chosen booking share, uses integer-cent floor
@@ -116,7 +116,7 @@ The application's active-account gate does not alter the Booker's domain policy.
 
 `ListHostedSessions.forBooker(bookerId)` returns `{ sessions, awaitingAttendance }`
 from one transaction, active-account check and clock value. `sessions` contains
-ordered summaries of owned, open, upcoming sessions, including full sessions;
+ordered summaries of owned, open, upcoming and in-progress sessions, including full sessions;
 `awaitingAttendance` contains ended open sessions with unverified participants.
 It derives available slots and offered operations from hydrated domain objects
 and exposes no room token, participant identities or payment details. The app

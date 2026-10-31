@@ -211,6 +211,11 @@
   padding-right: 56px;
 }
 
+/* Leaves room for the "@" in front of the user ID. */
+.field .handleInput {
+  padding-left: 36px;
+}
+
 .selectWrap {
   position: relative;
 }
@@ -224,6 +229,17 @@
 .select:focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
+}
+
+/* The browser draws the open list with its own background, so give options the
+   theme's colours; inherited dark-mode text was white on a white list. */
+.select option {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
+.select option:disabled {
+  color: hsl(var(--muted-foreground));
 }
 
 .selectWrap svg {

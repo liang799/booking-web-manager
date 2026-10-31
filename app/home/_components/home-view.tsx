@@ -3,6 +3,7 @@
 import { ArrowRight, ArrowUpRight, CloudLightning, CloudRain, CloudSun, Search, Sun } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -12,10 +13,11 @@ import styles from "./home-view.module.css";
 export interface HomeViewProps {
   readonly state: HomeState;
   readonly onRetry: () => void;
+  readonly discovery?: ReactNode;
 }
 
 /** Synchronous Home UI. Personal bookings and the empty-state forecast are server-owned. */
-export function HomeView({ state, onRetry }: HomeViewProps) {
+export function HomeView({ state, onRetry, discovery }: HomeViewProps) {
   return (
     <div className={styles.home}>
       <header className={`${styles.hero} ${state.status === "empty" ? styles.withWeather : ""}`}>
@@ -41,6 +43,7 @@ export function HomeView({ state, onRetry }: HomeViewProps) {
           <HomeContent state={state} onRetry={onRetry} />
         </div>
       </section>
+      {discovery}
     </div>
   );
 }
@@ -202,7 +205,7 @@ function MobileWeatherCard({ weather }: { readonly weather: WeatherState }) {
       </div>
       <div className="border-t bg-muted/30 px-5 py-4">
         <Button asChild variant="outline" className="min-h-11 bg-card">
-          <Link href="/discover?returnTo=%2F"><Search className="h-4 w-4" aria-hidden />Find a session</Link>
+          <Link href="#discover-bookings">Find a session</Link>
         </Button>
       </div>
     </div>

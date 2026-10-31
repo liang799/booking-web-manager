@@ -26,7 +26,7 @@ export interface SessionDiscoveryCriteria {
 }
 
 /**
- * UC2-01: discover public matches without requiring an account.
+ * UC2-01: discover public matches, optionally excluding the viewer's active participation.
  * Results are public, open and strictly upcoming, including full sessions,
  * ordered by start time and session ID.
  */
@@ -38,10 +38,10 @@ export class DiscoverSessions {
     },
   ) {}
 
-  /** Anonymous and authenticated visitors use the same safe public projection. */
-  async searchPublic(criteria: SessionDiscoveryCriteria = {}): Promise<readonly DiscoveredSession[]> {
+  /** Viewer identity scopes results without adding participant details to the public projection. */
+  async searchPublic(criteria: SessionDiscoveryCriteria = {}, viewerId?: UUID): Promise<readonly DiscoveredSession[]> {
     return this.dependencies.transaction.run(({ sessions }) =>
-      sessions.search(criteria, this.dependencies.clock.now()),
+      sessions.search(criteria, this.dependencies.clock.now(), viewerId),
     );
   }
 }

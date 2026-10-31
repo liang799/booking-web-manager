@@ -3,6 +3,7 @@ import type { Money } from "../finance/money";
 import type { Booking } from "../sessions/booking";
 import type { Participation } from "../sessions/participation";
 import { refundInstruction } from "../sessions/participation-instructions";
+import { resolveBookingShare } from "../sessions/pricing";
 import { Session } from "../sessions/session";
 import {
   assertAttendanceOpen,
@@ -43,7 +44,6 @@ export interface BookerSessionCreation {
   readonly booking: Booking;
   readonly bookingShare?: Money;
   readonly totalSlots: number;
-  readonly minimumHeadcount: number;
   readonly roomToken: string;
   readonly holdingAccountId: UUID;
   readonly now: Date;
@@ -64,7 +64,6 @@ export interface VerifyAttendanceCommand {
 
 export interface PreparePayoutCommand {
   readonly payoutId: UUID;
-  readonly idempotencyKey: string;
   readonly now: Date;
 }
 
@@ -117,9 +116,8 @@ export class Booker {
       sessionId: details.sessionId,
       bookerId: this.#user.userId,
       booking: details.booking,
-      bookingShare: details.bookingShare,
+      bookingShare: resolveBookingShare(details.booking.totalCost, details.totalSlots, details.bookingShare),
       totalSlots: details.totalSlots,
-      minimumHeadcount: details.minimumHeadcount,
       roomToken: details.roomToken,
       holdingAccountId: details.holdingAccountId,
       visibility: details.visibility ?? "PRIVATE",
@@ -129,7 +127,6 @@ export class Booker {
       participations: [],
       nextQueueSequence: 1,
       payoutAttemptIds: [],
-      payoutIdempotencyKeys: [],
     });
     DomainError.require(
       !session.booking.hasStarted(now),
@@ -241,11 +238,6 @@ export class Booker {
   ): PayoutBatch | undefined {
     const destination = this.payoutDestination();
     requireId(command.payoutId, "payoutId");
-    DomainError.require(
-      command.idempotencyKey.trim() !== "",
-      "INVALID_INPUT",
-      "idempotencyKey is required",
-    );
     validatePayoutDestination(destination);
     this.assertOwnsSession(session.bookerId);
     assertSettlementOpen(session.status, session.booking, command.now);
@@ -258,9 +250,7 @@ export class Booker {
     validatePayoutAttempt(
       session.pendingSettlement,
       session.payoutAttemptIds,
-      session.payoutIdempotencyKeys,
       command.payoutId,
-      command.idempotencyKey,
     );
     const batch = buildPayoutBatch(
       session.sessionId,
@@ -272,7 +262,6 @@ export class Booker {
     session.recordSettlementPreparation(
       {
         payoutId: command.payoutId,
-        idempotencyKey: command.idempotencyKey,
         participations: next,
         batch,
       },

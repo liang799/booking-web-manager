@@ -43,7 +43,6 @@ export function buildPayoutBatch(
   participations: readonly Participation[],
   command: {
     readonly payoutId: UUID;
-    readonly idempotencyKey: string;
     readonly now: Date;
   },
   destination: PayoutDestination,
@@ -83,7 +82,6 @@ export function buildPayoutBatch(
   const batch: PayoutBatch = {
     payoutId: command.payoutId,
     sessionId,
-    idempotencyKey: command.idempotencyKey,
     requestedAt: validDate(command.now, "now"),
     destination,
     lines,

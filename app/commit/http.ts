@@ -1,4 +1,5 @@
 import { DomainError, type UUID } from "@/domain";
+import { isRequestFailure } from "@/app/http/request-failure";
 import {
   SESSION_MANAGEMENT_UNAVAILABLE_MESSAGE,
   SessionManagementUnavailableError,
@@ -36,68 +37,11 @@ const domainErrorStatuses: Partial<Record<DomainError["code"], number>> = {
   ATTENDANCE_CONFLICT: 409,
 };
 
-export interface AuthenticatedJsonAction<Input, Output> {
-  readonly authenticate: Authenticate;
-  /** Validates the body and combines it with the authenticated user ID. */
-  readonly parse: (userId: UUID, body: unknown) => Input;
-  readonly run: (input: Input) => Promise<Output>;
-  readonly successStatus: number;
-  readonly invalidRequestMessage: string;
-}
-
-/**
- * Shared HTTP boundary for commitment actions: authenticate, parse JSON,
- * validate with Zod, run the use case, and map the outcome to a response.
- * The acting user always comes from authentication, never the body. Known
- * domain errors become 4xx responses with their code, and unconfigured
- * production dependencies become 503; anything else becomes an opaque 500 so
- * internal details never reach the client.
- */
-export async function handleAuthenticatedJson<Input, Output>(
-  request: Request,
-  action: AuthenticatedJsonAction<Input, Output>,
-): Promise<Response> {
-  let userId: UUID | null;
-  try {
-    userId = await action.authenticate(request);
-  } catch (error) {
-    return failureResponse(error);
-  }
-  if (userId === null) {
-    return errorResponse(401, "UNAUTHENTICATED", "Authentication is required");
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch (error) {
-    return error instanceof SyntaxError
-      ? errorResponse(400, "INVALID_REQUEST", "Request body must be valid JSON")
-      : internalErrorResponse();
-  }
-
-  let input: Input;
-  try {
-    input = action.parse(userId, body);
-  } catch (error) {
-    return error instanceof z.ZodError
-      ? errorResponse(400, "INVALID_REQUEST", action.invalidRequestMessage)
-      : internalErrorResponse();
-  }
-
-  try {
-    const result = await action.run(input);
-    return Response.json(result, {
-      status: action.successStatus,
-      headers: { "Cache-Control": "no-store" },
-    });
-  } catch (error) {
-    return failureResponse(error);
-  }
-}
-
 /** Maps an authentication or use-case failure without exposing internals. */
-function failureResponse(error: unknown): Response {
+export function commitmentErrorResponse(error: unknown): Response {
+  if (isRequestFailure(error)) {
+    return errorResponse(error.status, error.code, error.message);
+  }
   if (error instanceof SessionManagementUnavailableError) {
     return errorResponse(
       503,

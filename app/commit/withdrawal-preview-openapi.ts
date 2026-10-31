@@ -22,8 +22,8 @@ export function registerWithdrawalPreviewApi(registry: OpenAPIRegistry): void {
     summary: "UC2-05 Preview withdrawal refund",
     description: [
       "Shows what the authenticated participant's withdrawal would do right now, before they confirm it.",
-      "More than 30 hours before start: kind REFUNDED, and refundCents equals the held share.",
-      "At 30 hours or less: kind AWAITING_REPLACEMENT and refundCents 0; the share stays held until a replacement joins, and is forfeited to the booker if none does before start.",
+      "At least 30 hours before start (including exactly 30): kind REFUNDED, and refundCents equals the held share.",
+      "Less than 30 hours before start: kind AWAITING_REPLACEMENT and refundCents 0; the share stays held until a replacement joins, and is forfeited to the booker if none does before start.",
       "Uses the same rule as the withdrawal, so the preview matches a withdrawal made at the same moment. Integer cents. Nothing is saved and no money moves.",
       "Requires migrations through 0007_session_management.",
     ].join(" "),

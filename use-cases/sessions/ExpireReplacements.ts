@@ -1,9 +1,9 @@
+import { sessionNotificationFacts } from "./session-notification-facts";
 import type { Session, UUID } from "@/domain";
 import type { UseCaseDependencies } from "../shared/dependencies";
 import { requireAggregate } from "../shared/helpers";
 import {
   type CommitmentNotifier,
-  notifyBestEffort,
 } from "./commitment-notifications";
 
 export interface ExpireReplacementsRequest {
@@ -25,7 +25,8 @@ export interface ExpireReplacementsResult {
 
 export interface ExpireReplacementsDependencies
   extends Pick<UseCaseDependencies, "unitOfWork" | "clock"> {
-  readonly notifier: CommitmentNotifier;
+  /** @deprecated Delivery is recorded through the transaction notification writer. */
+  readonly notifier?: CommitmentNotifier;
 }
 
 /**
@@ -44,7 +45,7 @@ export class ExpireReplacements {
   async forSession(
     request: ExpireReplacementsRequest,
   ): Promise<ExpireReplacementsResult> {
-    const { unitOfWork, clock, notifier } = this.dependencies;
+    const { unitOfWork, clock } = this.dependencies;
     const key = JSON.stringify([
       "UC2-05-expire-replacements",
       request.sessionId,
@@ -66,17 +67,10 @@ export class ExpireReplacements {
       );
 
       if (forfeitureDue.length > 0) await transaction.sessions.save(session);
+      await transaction.notifications.append(forfeitureDue.map((entry) => ({ ...sessionNotificationFacts(session), kind: "FORFEITURE_DUE", recipientId: entry.userId, occurrenceKey: key })));
       return { sessionId: session.sessionId, forfeitureDue };
     });
 
-    await notifyBestEffort(
-      notifier,
-      result.forfeitureDue.map((entry) => ({
-        kind: "FORFEITURE_DUE" as const,
-        recipientId: entry.userId,
-        sessionId: result.sessionId,
-      })),
-    );
     return result;
   }
 }

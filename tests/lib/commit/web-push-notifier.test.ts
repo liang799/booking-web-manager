@@ -26,7 +26,7 @@ describe("WebPushNotifier", () => {
     expect(JSON.parse(sends[0]?.payload ?? "")).toEqual({
       kind: "PROMOTED",
       sessionId: "s1",
-      url: "/sessions/s1",
+      url: "/sessions/joined",
       title: "You're in!",
       body: "A place opened up and your share is now held for this session.",
     });
@@ -130,27 +130,66 @@ describe("WebPushNotifier deadlines", () => {
 });
 
 describe("pushPayloadFor", () => {
-  test("pushPayloadFor_ForEachKind_LinksToTheSession", () => {
+  test("pushPayloadFor_ForEachKind_LinksToThePageWhereTheRecipientActs", () => {
     // Arrange
-    const kinds = [
-      "PROMOTED",
-      "REPLACEMENT_INVITATION",
-      "FORFEITURE_WARNING",
-      "FORFEITURE_DUE",
-      "VERIFICATION_REMINDER",
-    ] as const;
+    const destinations = {
+      PROMOTED: "/sessions/joined",
+      REPLACEMENT_INVITATION: "/sessions/joined",
+      FORFEITURE_WARNING: "/wallet",
+      FORFEITURE_DUE: "/wallet",
+      VERIFICATION_REMINDER: "/sessions/s9/participants",
+    } as const;
 
     // Act
-    const payloads = kinds.map((kind) =>
-      pushPayloadFor({ kind, recipientId: "u", sessionId: "s9" }),
+    const payloads = Object.keys(destinations).map((kind) =>
+      pushPayloadFor({
+        kind: kind as keyof typeof destinations,
+        recipientId: "u",
+        sessionId: "s9",
+      }),
     );
 
     // Assert
+    expect(
+      Object.fromEntries(payloads.map((payload) => [payload.kind, payload.url])),
+    ).toEqual(destinations);
     for (const payload of payloads) {
-      expect(payload.url).toBe("/sessions/s9");
+      expect(payload.sessionId).toBe("s9");
       expect(payload.title).not.toBe("");
       expect(payload.body).not.toBe("");
     }
+  });
+
+  test("pushPayloadFor_WhenRemovedFromWaitlistForFunds_LinksToTheWallet", () => {
+    // Act
+    const payload = pushPayloadFor({
+      kind: "REMOVED_FROM_WAITLIST",
+      recipientId: "u",
+      sessionId: "s9",
+      reason: "INSUFFICIENT_FUNDS",
+    });
+
+    // Assert
+    expect(payload).toMatchObject({
+      kind: "REMOVED_FROM_WAITLIST",
+      sessionId: "s9",
+      url: "/wallet",
+    });
+    expect(payload.body).toContain("Top up");
+  });
+
+  test("pushPayloadFor_WhenRemovedFromWaitlistForEligibility_LinksToDiscovery", () => {
+    // Act
+    const payload = pushPayloadFor({
+      kind: "REMOVED_FROM_WAITLIST",
+      recipientId: "u",
+      sessionId: "s9",
+      reason: "LOW_RELIABILITY",
+    });
+
+    // Assert
+    expect(payload.url).toBe("/discover");
+    expect(payload.body).toContain("requirements");
   });
 });
 

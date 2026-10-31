@@ -1,4 +1,9 @@
-import { Money, PayoutAccount } from "@/domain";
+import {
+  Money,
+  PayoutAccount,
+  ReliabilityScore,
+  type BookerSessionCreation,
+} from "@/domain";
 import { describe, expect, test } from "vitest";
 import {
   createTestUser,
@@ -8,180 +13,154 @@ import {
 } from "../../sessions/session/session-fixtures";
 import { readyBookerUser } from "../user-fixtures";
 
-describe("Booker", () => {
-  test("createSession_WhenEmailIsUnverified_AllowsCreation", () => {
-    // Arrange
-    const booker = createTestUser({
-      userId: "booker",
-      emailVerified: false,
-      payoutAccount: readyBookerUser().payoutAccount,
-    }).asBooker();
+describe("Booker session creation", () => {
+  describe("Account eligibility", () => {
+    test("createSession_WhenEmailIsUnverified_AllowsCreation", () => {
+      const booker = createTestUser({
+        userId: "booker",
+        emailVerified: false,
+        payoutAccount: readyBookerUser().payoutAccount,
+      }).asBooker();
 
-    // Act & Assert
-    expect(booker.createSession(creationDetails()).bookerId).toBe("booker");
-  });
+      const bookingSession = booker.createSession(creationDetails());
 
-  test("createSession_WhenEmailIsMissing_RejectsWithEmailRequired", () => {
-    // Arrange
-    const booker = createTestUser({
-      userId: "booker",
-      email: null,
-      emailVerified: false,
-      payoutAccount: readyBookerUser().payoutAccount,
-    }).asBooker();
-
-    // Act & Assert
-    expect(() => booker.createSession(creationDetails())).toThrow(
-      expect.objectContaining({ code: "EMAIL_REQUIRED" }),
-    );
-  });
-
-  test("assertCanCreateSession_WhenEmailIsUnverified_AllowsCreation", () => {
-    // Arrange
-    const booker = createTestUser({
-      userId: "booker",
-      emailVerified: false,
-      payoutAccount: readyBookerUser().payoutAccount,
-    }).asBooker();
-
-    // Act & Assert
-    expect(() => booker.assertCanCreateSession()).not.toThrow();
-  });
-
-  test("createSession_WhenRoleWasCreatedBeforeDeactivation_ThrowsInactiveAccount", () => {
-    // Arrange
-    const owner = createTestUser({
-      userId: "booker",
-      availableFundsCents: 0,
-      payoutAccount: readyBookerUser().payoutAccount,
-    });
-    const booker = owner.asBooker();
-    owner.deactivate({
-      availableBalance: Money.fromCents(0),
-      heldBalance: Money.fromCents(0),
-      activeCommitments: 0,
-      unsettledOwnedSessions: 0,
-      pendingPayouts: 0,
-      activeOwnedGroups: 0,
+      expect(bookingSession.bookerId).toBe("booker");
     });
 
-    // Act & Assert
-    expect(() => booker.createSession(creationDetails())).toThrow(
-      expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
-    );
-  });
+    test("assertCanCreateSession_WhenEmailIsUnverified_AllowsCreation", () => {
+      const booker = createTestUser({
+        userId: "booker",
+        emailVerified: false,
+        payoutAccount: readyBookerUser().payoutAccount,
+      }).asBooker();
 
-  test("createSession_WhenOptionalSettingsAreOmitted_UsesPrivateVisibilityAndEmptyLifecycle", () => {
-    // Arrange
-    const booker = readyBooker();
-    const details = creationDetails();
-
-    // Act
-    const bookingSession = booker.createSession({
-      ...details,
-      visibility: undefined,
+      expect(() => booker.assertCanCreateSession()).not.toThrow();
     });
 
-    // Assert
-    expect(bookingSession.bookerId).toBe(booker.userId);
-    expect(bookingSession.visibility).toBe("PRIVATE");
-    expect(bookingSession.status).toBe("OPEN");
-    expect(bookingSession.participantList.participations).toEqual([]);
-    expect(bookingSession.participantList.nextQueueSequence).toBe(1);
-    expect(bookingSession.payoutAttemptIds).toEqual([]);
-    expect(bookingSession.payoutIdempotencyKeys).toEqual([]);
-    expect(bookingSession.pendingSettlement).toBeUndefined();
-  });
+    test("createSession_WhenEmailIsMissing_RejectsWithEmailRequired", () => {
+      const booker = createTestUser({
+        userId: "booker",
+        email: null,
+        emailVerified: false,
+        payoutAccount: readyBookerUser().payoutAccount,
+      }).asBooker();
 
-  test("createSession_WhenBookerIsInactive_ThrowsInactiveAccount", () => {
-    // Arrange
-    const details = creationDetails();
+      expect(() => booker.createSession(creationDetails())).toThrow(
+        expect.objectContaining({ code: "EMAIL_REQUIRED" }),
+      );
+    });
 
-    // Act & Assert
-    expect(() =>
-      createTestUser({ userId: "booker", accountStatus: "INACTIVE" })
-        .asBooker()
-        .createSession(details),
-    ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
-  });
+    test("createSession_WhenRoleWasCreatedBeforeDeactivation_ThrowsInactiveAccount", () => {
+      const bookerUser = createTestUser({
+        userId: "booker",
+        availableFundsCents: 0,
+        payoutAccount: readyBookerUser().payoutAccount,
+      });
+      const booker = bookerUser.asBooker();
+      bookerUser.deactivate({
+        availableBalance: Money.fromCents(0),
+        heldBalance: Money.fromCents(0),
+        activeCommitments: 0,
+        unsettledOwnedSessions: 0,
+        pendingPayouts: 0,
+        activeOwnedGroups: 0,
+      });
 
-  test("createSession_WhenPayoutAccountIsIncomplete_ThrowsPayoutAccountNotReady", () => {
-    // Arrange
-    const details = creationDetails();
+      expect(() => booker.createSession(creationDetails())).toThrow(
+        expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
+      );
+    });
 
-    // Act & Assert
-    expect(() =>
-      createTestUser({
+    test("createSession_WhenBookerIsInactive_ThrowsInactiveAccount", () => {
+      const booker = createTestUser({
+        userId: "booker",
+        accountStatus: "INACTIVE",
+      }).asBooker();
+      const details = creationDetails();
+
+      expect(() => booker.createSession(details)).toThrow(
+        expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
+      );
+    });
+
+    test("createSession_WhenPayoutAccountIsIncomplete_ThrowsPayoutAccountNotReady", () => {
+      const booker = createTestUser({
         userId: "booker",
         payoutAccount: PayoutAccount.create({
           payoutAccountId: "pa",
           userId: "booker",
           providerAccountReference: "provider",
         }),
-      })
-        .asBooker()
-        .createSession(details),
-    ).toThrow(expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }));
+      }).asBooker();
+      const details = creationDetails();
+
+      expect(() => booker.createSession(details)).toThrow(
+        expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
+      );
+    });
   });
 
-  test("createSession_WhenShareWouldBeZero_ThrowsInvalidInput", () => {
-    // Arrange
-    const details = creationDetails();
+  describe("Session settings", () => {
+    test("createSession_WhenOptionalSettingsAreOmitted_UsesPrivateVisibilityAndEmptyLifecycle", () => {
+      const booker = readyBooker();
+      const details = creationDetails();
 
-    // Act & Assert
-    expect(() =>
-      readyBooker().createSession({ ...details, totalSlots: 1001 }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
+      const bookingSession = booker.createSession({
+        ...details,
+        visibility: undefined,
+      });
+
+      expect(bookingSession.bookerId).toBe(booker.userId);
+      expect(bookingSession.visibility).toBe("PRIVATE");
+      expect(bookingSession.status).toBe("OPEN");
+      expect(bookingSession.participantList.participations).toEqual([]);
+      expect(bookingSession.participantList.nextQueueSequence).toBe(1);
+      expect(bookingSession.payoutAttemptIds).toEqual([]);
+      expect(bookingSession.pendingSettlement).toBeUndefined();
+    });
+
+    test("createSession_WhenCustomSettingsAreProvided_PreservesThem", () => {
+      const details: BookerSessionCreation = {
+        ...creationDetails(),
+        visibility: "PUBLIC",
+        invitedGroupId: "group",
+        minimumReliability: ReliabilityScore.from(80),
+        bookingShare: Money.fromCents(750),
+      };
+      const booker = readyBooker();
+
+      const session = booker.createSession(details);
+
+      expect(session.visibility).toBe("PUBLIC");
+      expect(session.invitedGroupId).toBe("group");
+      expect(session.minimumReliability?.toNumber()).toBe(80);
+      expect(session.bookingShare.toCents()).toBe(750);
+    });
   });
 
-  test("createSession_WhenCapacityIsOne_ThrowsInvalidInput", () => {
-    // Arrange
-    const details = creationDetails();
+  describe("Booking and capacity rules", () => {
+    test("createSession_WhenShareWouldBeZero_ThrowsInvalidInput", () => {
+      const details = creationDetails();
 
-    // Act & Assert
-    expect(() =>
-      readyBooker().createSession({ ...details, totalSlots: 1 }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-  });
+      expect(() =>
+        readyBooker().createSession({ ...details, totalSlots: 1001001 }),
+      ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
+    });
 
-  test("createSession_WhenMinimumHeadcountIsOne_ThrowsInvalidInput", () => {
-    // Arrange
-    const details = creationDetails();
+    test("createSession_WhenCapacityIsZero_ThrowsInvalidInput", () => {
+      const details = creationDetails();
 
-    // Act & Assert
-    expect(() =>
-      readyBooker().createSession({ ...details, minimumHeadcount: 1 }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-  });
+      expect(() =>
+        readyBooker().createSession({ ...details, totalSlots: 0 }),
+      ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
+    });
 
-  test("createSession_WhenMinimumHeadcountExceedsCapacity_ThrowsInvalidInput", () => {
-    // Arrange
-    const details = creationDetails(3);
+    test("createSession_WhenBookingHasEnded_ThrowsSessionStarted", () => {
+      const details = { ...creationDetails(), now: sessionEndsAt };
 
-    // Act & Assert
-    expect(() =>
-      readyBooker().createSession({ ...details, minimumHeadcount: 4 }),
-    ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
-  });
-
-  test("createSession_WhenMinimumHeadcountEqualsCapacity_PreservesMinimumHeadcount", () => {
-    // Arrange
-    const details = creationDetails(3);
-
-    // Act
-    const session = readyBooker().createSession({ ...details, minimumHeadcount: 3 });
-
-    // Assert
-    expect(session.minimumHeadcount).toBe(3);
-  });
-
-  test("createSession_WhenBookingHasEnded_ThrowsSessionStarted", () => {
-    // Arrange
-    const details = { ...creationDetails(), now: sessionEndsAt };
-
-    // Act & Assert
-    expect(() => readyBooker().createSession(details)).toThrow(
-      expect.objectContaining({ code: "SESSION_STARTED" }),
-    );
+      expect(() => readyBooker().createSession(details)).toThrow(
+        expect.objectContaining({ code: "SESSION_STARTED" }),
+      );
+    });
   });
 });

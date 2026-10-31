@@ -33,3 +33,11 @@ invoke use cases. `/app` owns HTTP policy and input validation, `/lib` owns
 infrastructure, and the core remains framework-independent. Creation retains
 201 and its existing cache behavior; other routes retain their status, caching,
 authentication and error contracts, including discovery's safe 500 diagnostics.
+
+The shared boundary also serves wallet, payout, commitment, venue and push
+subscription actions. API method exports are checked by the
+`architecture/api-authentication` lint rule and exercised by a complete route
+authentication inventory. See the [HTTP boundary guide](../../app/http/README.md)
+for the exact public/machine-authenticated exceptions and privileged database
+authorization responsibilities. This enforces the existing HTTP ownership
+decision without moving business authorization out of use cases or the domain.

@@ -29,27 +29,31 @@ function mutationResponse(page: Page, sessionId: string) {
 test("UC2-03c full session cancellation refunds wallets and disappears from open discovery within three seconds", async ({ page, browser }, testInfo) => {
   test.setTimeout(60_000);
   const context = sessionTestContext();
-  const participantBrowser = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const observerBrowser = await browser.newContext({ viewport: { width: 390, height: 844 } });
   try {
     const fixture = await cancellationFixture(context, 2);
-    const participantPage = await participantBrowser.newPage();
-    await login(participantPage, fixture.participants[0]!, `/discover?q=${fixture.venueName}&returnTo=%2Fsessions`);
-    await expect(row(participantPage, fixture.venueName)).toBeVisible();
-    const search = participantPage.getByRole("searchbox");
+    // A committed participant is intentionally excluded from Discover. Use a non-participant
+    // to verify the session disappears from public discovery when it is cancelled.
+    const observer = await context.identity(false);
+    const observerPage = await observerBrowser.newPage();
+    await login(observerPage, observer, `/discover?q=${fixture.venueName}&returnTo=%2Fsessions`);
+    await expect(row(observerPage, fixture.venueName)).toBeVisible();
+    const search = observerPage.getByRole("searchbox");
     await search.fill("Unsubmitted cancellation draft");
     await search.focus();
-    const url = participantPage.url();
+    const url = observerPage.url();
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await expect(row(page, fixture.venueName).getByRole("button", { name: "Make private" })).toHaveCount(0);
-    const trigger = row(page, fixture.venueName).getByRole("button", { name: "Cancel session", exact: true });
+    // The segmented control stays visible, but a fully booked session cannot change visibility.
+    await expect(page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Change visibility to private" })).toBeDisabled();
+    const trigger = page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session", exact: true });
     await trigger.focus();
     await page.keyboard.press("Enter");
     const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("10.00");
     await expect(dialog).toContainText("2 participants will receive a refund");
-    await expect(dialog).toContainText("venue booking cancellation separately");
+    await expect(dialog).toContainText("cancel it with the venue separately");
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();
@@ -66,11 +70,11 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     await dialog.getByRole("button", { name: "Confirm cancellation" }).click();
     expect((await response).status()).toBe(200);
     const committedAt = Date.now();
-    await expect(row(participantPage, fixture.venueName)).toHaveCount(0, { timeout: Math.max(1, 3000 - (Date.now() - committedAt)) });
+    await expect(row(observerPage, fixture.venueName)).toHaveCount(0, { timeout: Math.max(1, 3000 - (Date.now() - committedAt)) });
     expect(Date.now() - committedAt).toBeLessThanOrEqual(3000);
     await expect(search).toHaveValue("Unsubmitted cancellation draft");
     await expect(search).toBeFocused();
-    expect(participantPage.url()).toBe(url);
+    expect(observerPage.url()).toBe(url);
     await expect(page.getByRole("status")).toContainText("Session cancelled");
     await expect(page.getByRole("button", { name: "Cancel session", exact: true })).toHaveCount(0);
     await expect(row(page, fixture.venueName)).toContainText("Cancelled");
@@ -79,7 +83,7 @@ test("UC2-03c full session cancellation refunds wallets and disappears from open
     }
     expect((await context.pool.query("select count(*)::int as count from ledger_entries where session_id=$1 and kind='REFUND'", [fixture.sessionId])).rows[0].count).toBe(2);
   } finally {
-    await participantBrowser.close();
+    await observerBrowser.close();
     await context.pool.end();
   }
 });
@@ -91,7 +95,7 @@ test("changed roster requires a fresh preview and another confirmation", async (
     const fixture = await cancellationFixture(context);
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await row(page, fixture.venueName).getByRole("button", { name: "Cancel session" }).click();
+    await page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session" }).click();
     const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("5.00");
     await addCancellationParticipant(cancellationSql(context), fixture.sessionId, await context.identity(false));
@@ -114,7 +118,7 @@ test("lost committed response survives reload and replays the identical financia
     const fixture = await cancellationFixture(context);
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    await row(page, fixture.venueName).getByRole("button", { name: "Cancel session" }).click();
+    await page.getByRole("dialog", { name: "Badminton session" }).getByRole("button", { name: "Cancel session" }).click();
     const dialog = cancellationDialog(page);
     await expect(dialog).toContainText("5.00");
     let intercepted = false;

@@ -98,7 +98,7 @@ its use case; the factory supplies the common HTTP steps. For example, the
 
 ```ts
 export const POST = sessionCreationAction({
-  parse: parseCreateSessionInput,
+  parse: parseRequestBoundCreateSessionInput,
   run: (dependencies, { input, submission }) =>
     dependencies.createForSubmission(submission).forBooker(
       input.bookerId, input.booking, input.config,
@@ -134,21 +134,25 @@ The shared JSON action distinguishes malformed JSON from an invalid request
 schema; only input failures at that boundary become 400 responses. Internal
 validation errors from authentication or the use case remain opaque 500s.
 
-[parseCreateSessionInput](./create-session-input.ts) validates the authenticated
-user ID separately from the raw `{ idempotencyKey, booking, config }` body.
+[parseRequestBoundCreateSessionInput](./request-bound-creation-input.ts) wraps
+[parseCreateSessionInput](./create-session-input.ts), which validates the
+authenticated user ID separately from the raw `{ idempotencyKey, booking, config }` body.
 Booking timestamps are ISO strings with a timezone (`Z` or an offset), converted
 to `Date` values for the use case. Unknown fields are stripped. Submission keys
 must contain a non-whitespace character and be at most 200 characters; they are
 preserved without trimming. Invalid input returns 400 before constructing a
 submission use case.
 
-The parser returns
-`{ input: { bookerId, booking, config }, submission: { idempotencyKey } }`.
-The trusted `bookerId` comes from authentication. Existing parser callers that
-hold Date values serialize them first:
+The HTTP parser returns
+`{ input: { bookerId, booking, config }, submission: { idempotencyKey, request: input } }`.
+The trusted `bookerId` comes from authentication. Submission metadata contains
+only parsed input; client-supplied identities, request metadata and fingerprints
+are ignored. The app dependency contract requires this bound submission, while
+`CreateSessions.forBooker` still receives only its business input. Parser callers
+that hold Date values serialize them first:
 
 ```ts
-const parsed = parseCreateSessionInput(authenticatedUserId, {
+const parsed = parseRequestBoundCreateSessionInput(authenticatedUserId, {
   idempotencyKey,
   booking: {
     ...booking,
@@ -162,16 +166,17 @@ const parsed = parseCreateSessionInput(authenticatedUserId, {
 Direct use-case callers continue to supply Date-valued booking details.
 Successful creation and replay return 201 with
 `{ sessionId, roomToken, bookingShareCents }`. Omitted `config.pricePerSlotCents` rounds down equally:
-1001 cents over three slots means 333 cents each, 999 cents collected when full,
-and a 2-cent shortfall borne by the booker. An optional safe integer chosen price
+1001 cents over three participant places means 333 cents each. The other two
+participants contribute 666 cents, leaving 335 cents covered by the booker.
+An optional safe integer chosen price
 is validated against `[max(1, ceil(s / 2)), min(2 × s, floor(MAX_SAFE_INTEGER / slots))]`,
 where `s = floor(cost / slots)`. Above-cost collection is allowed. The accepted
 price is immutable Session state hydrated from `booking_share_cents`; participation,
 refund and settlement use that price and historical holds. Apply migration 0008
 before deploying this behavior. See [ADR-0012](../../docs/adr/0012-booker-selected-session-pricing.md).
-Creation moves no funds. `config.minimumHeadcount` remains required and is
-persisted as `minimum_headcount`; it must be an integer between two and
-`config.totalSlots`.
+Creation moves no funds. `config.totalSlots` is the total participant capacity
+from one to thirty, including the booker. There is no minimum participant
+requirement; the booker can create a session for themselves.
 
 | Status | Outcome |
 | --- | --- |
@@ -180,15 +185,31 @@ persisted as `minimum_headcount`; it must be an integer between two and
 | 401 | No authenticated user |
 | 403 | Inactive account, missing email (`EMAIL_REQUIRED`), or unauthorized action |
 | 404 | Authenticated User is missing from storage |
-| 409 | Payout setup or session-state conflict |
+| 409 | Payout setup or session-state conflict, changed parsed input for a payload-bound key (`IDEMPOTENCY_CONFLICT`), or a submission still being processed (`IDEMPOTENCY_IN_FLIGHT`) |
 | 422 | Invalid business values |
 | 500 | Unexpected initialization, authentication, or persistence failure, or malformed authenticated identity |
 | 503 | Required session server settings are missing |
 
 Errors use `{ error: { code, message } }`. Unexpected failures return the fixed
-`INTERNAL_ERROR` response. Retrying the same booker's submission key must return
-the original result; an intended new session needs a new key. The authentication
-integration must verify current active-account access and a present email address
+`INTERNAL_ERROR` response. A new HTTP submission records a fingerprint of its
+parsed input. Retrying the same booker's key with identical normalized input
+returns the original result; changed valid input returns 409
+`IDEMPOTENCY_CONFLICT`. Equivalent timestamp offsets and object-property ordering
+produce the same fingerprint. Omitted optional choices and explicit defaults are
+not automatically equivalent. An intended new session needs a new key.
+
+Successful legacy keys retain their original replay policy, including replay
+after valid input changes, because their stored fingerprints contain no payload.
+Existing key-only non-HTTP callers retain replay for their own legacy records;
+they cannot replay payload-bound records. The strict HTTP policy is proposed
+pending session-owner and ledger review. Adoption requires retiring old creation
+writers before accepting bound records, and rollback must retain the compatible
+adapter and HTTP parser. See
+[ADR-0018](../../docs/adr/0018-request-bound-session-creation-retries.md) for the
+cutover and open PR #112 dependency prerequisite; no schema migration or guessed
+fingerprint backfill is required.
+
+The authentication integration must verify current active-account access and a present email address
 before parsing or replay. The transaction repeats these checks before claiming
 an idempotency key, including each database retry.
 The persistence integration must commit the Session and replay result atomically.
@@ -215,10 +236,17 @@ are assembled and how to add operations to the reference.
 
 The [route tests](../../tests/app/sessions/create-session-route.test.ts) exercise
 creation, replay, validation, and failures with injected dependencies and the
-real use case. The [E2E tests](../../tests/e2e) load the documentation and check
+real use case. Their key-only `RequestSessionCreationTransaction` fake covers
+HTTP/domain behavior; assertions verify normalized trusted metadata forwarding,
+identical retries and sanitized `LedgerError` mapping. Production request
+comparison is covered by real PostgreSQL adapter and authenticated HTTP tests.
+The [E2E tests](../../tests/e2e) load the documentation and check
 503 against an unconfigured Next.js server. Separate service-backed suites
 exercise real authentication, database persistence, concurrent replay and
 rejection after deactivation; see the configuration guide for their commands.
+See [ADR-0018's dated validation record](../../docs/adr/0018-request-bound-session-creation-retries.md#local-validation-2026-10-23)
+for executed request-bound checks and inherited repository-wide failures.
+Production-build integration remains pending PR #112.
 
 The discovery page is covered by UC2-01. Participant removal is documented below;
 Realtime subscriptions remain separate work.
@@ -270,8 +298,14 @@ states without provider dependencies.
 
 ## Personal sessions feed
 
-`/sessions` opens **Joined**; `?tab=hosting` opens **Hosting**. Returning from
-creation with `?created=1` selects Hosting and announces success. Desktop Joined
+`/sessions` opens **I’m playing**; `?tab=hosting` opens **I’m organising**.
+The shared navigation uses these labels on Sessions and mobile Groups; URL and
+store values remain `joined` and `hosting`. Returning from creation with
+`?created=1` selects I’m organising and announces success. Joined always
+links **Manage my places** to `/sessions/joined` (UC2-05: withdraw, leave a
+waitlist, accept a replacement place), even with no joined sessions, because a
+replacement invitation can exist first. Desktop shows it in the sticky header
+beside New session; mobile shows it as a line under the tabs. Desktop Joined
 uses an editorial agenda on the grey page canvas, without an outer bordered card.
 The selected session puts the photograph above its title, venue and horizontal
 time/player metadata. **View details** sits at the right of that metadata row
@@ -398,10 +432,11 @@ attendance counts, and tied timestamps across multiple page boundaries.
 
 ## UC2-03a: visibility management
 
-`GET /api/sessions/hosted` supplies management actions for every open, upcoming
+`GET /api/sessions/hosted` supplies management actions for every open, upcoming or in-progress
 session hosted by the signed-in user, ordered by start time and session ID. It
 includes full sessions; their action list omits visibility changes. Availability includes direct-invitation reservations
-through `Session.getAvailableSlots`; the UI does not calculate capacity itself.
+through `Session.getAvailableSlots`; in-progress sessions retain participant management
+while their action list omits visibility changes and cancellation. The UI does not calculate capacity itself.
 Rows display confirmed visibility with per-row saving, success and error feedback.
 The UI follows the returned HTTP actions. Existing cookie-authenticated server
 actions and bearer APIs invoke the same use cases directly.

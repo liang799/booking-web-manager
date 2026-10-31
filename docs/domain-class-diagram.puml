@@ -40,9 +40,13 @@ class Session <<AggregateRoot>> {
   +sessionId : UUID
   +status : SessionStatus
   +totalSlots : number
-  +minimumHeadcount : number
   +bookingShare : Money {readOnly}
 }
+note right of Session
+  Capacity includes the prepaid booker.
+  No minimum viable headcount.
+end note
+
 class PayoutAttempt <<AggregateRoot>> {
   +payoutId : UUID
   +status : PayoutStatus
@@ -59,6 +63,10 @@ class PayoutAccount <<ImmutableChild>> {
 class GroupMembership <<ImmutableChild>> {
   +userId : UUID
   +joinedAt : Date
+}
+class GroupInvitation <<ImmutableChild>> {
+  +inviteeId : UUID
+  +invitedAt : Date
 }
 class Booking <<ValueObject>> {
   +venueName : string
@@ -92,6 +100,7 @@ Session "0..*" -up-> "0..1" RegularGroup : invited group
 User "1" *-down- "1" Wallet
 User "1" *-down- "0..1" PayoutAccount
 RegularGroup "1" *-left- "1..*" GroupMembership
+RegularGroup "1" *-left- "0..*" GroupInvitation
 Session "1" *-down- "1" Booking
 Session "1" *-down- "1" ParticipantList
 ParticipantList "1" *-down- "0..*" Participation

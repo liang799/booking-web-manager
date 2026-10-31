@@ -75,6 +75,13 @@ class Email <<ValueObject>> {
   +equals(...) : boolean
 }
 
+class UserHandle <<ValueObject>> {
+  {static} +parse(...) : UserHandle
+  +toString() : string
+  +toDisplay() : string
+  +equals(...) : boolean
+}
+
 class PayoutAccount <<ImmutableChild>> {
   +payoutAccountId : UUID
   +userId : UUID
@@ -93,6 +100,9 @@ class RegularGroup <<AggregateRoot>> {
   --
   {static} +create(...) : RegularGroup
   +join(...) : GroupJoinResult
+  +invite(...) : GroupInviteResult
+  +acceptInvitation(...) : GroupJoinResult
+  +declineInvitation(...) : void
   +removeMember(...) : void
   +leave(...) : void
   +rotateInvitation(...) : void
@@ -104,6 +114,12 @@ class GroupMembership <<ImmutableChild>> {
   +joinedAt : Date
 }
 
+class GroupInvitation <<ImmutableChild>> {
+  +inviteeId : UUID
+  +invitedBy : UUID
+  +invitedAt : Date
+}
+
 Booker "0..*" -down-> "1" User : wraps
 Participant "0..*" -down-> "1" User : wraps
 User "1" *-down- "1" Wallet : wallet
@@ -112,21 +128,31 @@ User -down-> "0..1" Email : email
 RegularGroup "1" *-down- "1..*" GroupMembership : memberships
 RegularGroup "0..*" -left-> "1" User : ownerId {ID reference}
 GroupMembership "0..*" -left-> "1" User : userId {ID reference}
+RegularGroup "1" *-down- "0..*" GroupInvitation : invitations
+GroupInvitation "0..*" -left-> "1" User : inviteeId, invitedBy {ID references}
 
 note bottom of RegularGroup
   Membership user IDs are unique within a group.
   The owner is always a member and cannot be removed or leave.
+  Any member may invite a player by user ID while the link is on;
+  only that player accepts or declines. Turning the link off or
+  archiving ends invitations, and a member is never invited (ADR-0022).
 end note
 
 note bottom of User
   UC1-03 profile edits use prepareProfileUpdate(...)
   without loading User (ADR-0014).
+  userId is the permanent internal UUID that wallets, sessions,
+  groups and the ledger reference. The public user ID (@name) is a
+  separate UserHandle on the profile: it can change and is released
+  on deletion, so no record refers to it (ADR-0021).
   Deactivation shares assertDeactivationAllowed(...).
 end note
 
 User -[hidden]right- RegularGroup
 Wallet -[hidden]right- Email
-Email -[hidden]right- PayoutAccount
+Email -[hidden]right- UserHandle
+UserHandle -[hidden]right- PayoutAccount
 
 caption Selected public members; (...) abbreviates parameters.\nRoles authorize actors and run workflows; Session validates and records prepared changes.\nSession creation/admission require an active account and a present email, without requiring email confirmation.\nWallet uses committed ledger history; reliability and group IDs are loaded related values.
 @enduml

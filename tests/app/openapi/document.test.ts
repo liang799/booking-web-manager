@@ -28,6 +28,21 @@ function registerNoticesApi(registry: OpenAPIRegistry) {
 }
 
 describe("application OpenAPI document", () => {
+  test("documents request-bound creation conflicts and legacy replay compatibility", () => {
+    const document = createOpenApiDocument([registerSessionApi]);
+    const creation = document.paths["/api/sessions"]?.post;
+
+    expect(creation?.description).toContain("same normalized input");
+    expect(creation?.description).toContain("Legacy key-only results");
+    expect(creation?.description).not.toContain("even when valid booking details change");
+    expect(creation?.responses["409"]).toMatchObject({
+      description: expect.stringContaining("IDEMPOTENCY_CONFLICT"),
+    });
+    expect(creation?.responses["409"]).toMatchObject({
+      description: expect.stringContaining("IDEMPOTENCY_IN_FLIGHT"),
+    });
+  });
+
   test("publishes the composed, structurally valid OpenAPI 3.0.3 document without authentication", async () => {
     const response = GET();
     const document = await response.json();
@@ -43,6 +58,7 @@ describe("application OpenAPI document", () => {
       post: { operationId: "createSession" },
     });
     expect(document.paths["/api/venues"]?.get).toMatchObject({ operationId: "searchVenues", security: [{ bearerAuth: [] }] });
+    expect(document.paths["/api/health"]?.get).toMatchObject({ operationId: "apiHealth", security: [] });
   });
 
   test("composes an independent public feature without imposing session authentication", async () => {
@@ -57,7 +73,7 @@ describe("application OpenAPI document", () => {
     });
     expect(document.security).toBeUndefined();
     expect(document.paths["/api/notices"]?.get?.security).toBeUndefined();
-    expect(document.paths["/api/sessions"]?.get?.security).toEqual([]);
+    expect(document.paths["/api/sessions"]?.get?.security).toEqual([{ bearerAuth: [] }, { loginCookie: [] }]);
     expect(document.paths["/api/sessions"]?.post?.security).toEqual([{ bearerAuth: [] }]);
     await expect(SwaggerParser.validate(await Response.json(document).json())).resolves.toBeDefined();
   });

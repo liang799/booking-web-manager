@@ -66,7 +66,6 @@ describe("UC2-02 Create Session", () => {
     // Act
     const result = await createSessions.forBooker(bookerId, booking, {
       totalSlots: 3,
-      minimumHeadcount: 2,
     });
 
     // Assert
@@ -103,7 +102,6 @@ describe("UC2-02 Create Session", () => {
       startAt: sessionStartsAt,
       endAt: sessionEndsAt,
     });
-    expect(session.minimumHeadcount).toBe(2);
     expect(session.visibility).toBe("PUBLIC");
     expect(session.minimumReliability?.toNumber()).toBe(75);
     expect(session.invitedGroupId).toBe(groupId);
@@ -320,7 +318,7 @@ describe("UC2-02 Create Session", () => {
   test("accepts the maximum capacity of thirty slots", async () => {
     // Arrange
     const { createSessions, unitOfWork } = sessionCreationScenario();
-    const request = creationInput({ totalSlots: 30, minimumHeadcount: 30 });
+    const request = creationInput({ totalSlots: 30, });
 
     // Act
     const result = await createSessions.forBooker(
@@ -344,26 +342,12 @@ describe("UC2-02 Create Session", () => {
     await expect(
       createSessions.forBooker(bookerId, booking, {
         ...config,
-        totalSlots: 1,
+        totalSlots: 0,
       }),
     ).rejects.toMatchObject({ code: "INVALID_INPUT" });
     expect(unitOfWork.sessions.size).toBe(0);
   });
 
-  test("rejects minimum headcount greater than capacity", async () => {
-    // Arrange
-    const { booking, config } = creationInput();
-    const { createSessions, unitOfWork } = sessionCreationScenario();
-
-    // Act & Assert
-    await expect(
-      createSessions.forBooker(bookerId, booking, {
-        ...config,
-        minimumHeadcount: 4,
-      }),
-    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
-    expect(unitOfWork.sessions.size).toBe(0);
-  });
 
   test("rejects a positive cost that produces a zero-cent share", async () => {
     // Arrange
@@ -602,7 +586,7 @@ function creationInput(config: Partial<SessionConfig> = {}) {
       endAt: sessionEndsAt,
       totalCostCents: 1001,
     },
-    config: { totalSlots: 3, minimumHeadcount: 2, ...config },
+    config: { totalSlots: 3, ...config },
   };
 }
 
@@ -633,3 +617,16 @@ function sessionCreationScenario() {
     },
   };
 }
+
+
+test("shared booking notifications target the current group members once and exclude the prepaid booker", async () => {
+  const { createSessions, unitOfWork } = sessionCreationScenario();
+  unitOfWork.groupMembers.set(groupId, [bookerId, "alice", "bob"]);
+  const input = creationInput({ invitedGroupId: groupId });
+  const result = await createSessions.forBooker(input.bookerId, input.booking, input.config);
+  expect(unitOfWork.notifications).toEqual([
+    expect.objectContaining({ kind: "GROUP_BOOKING_CREATED", recipientId: "alice", sessionId: result.sessionId, groupId }),
+    expect.objectContaining({ kind: "GROUP_BOOKING_CREATED", recipientId: "bob", sessionId: result.sessionId, groupId }),
+  ]);
+  expect(unitOfWork.ledgerInstructions).toEqual([]);
+});

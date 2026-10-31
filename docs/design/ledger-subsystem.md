@@ -78,8 +78,8 @@ The state is therefore always reconstructable from the history.
 stateDiagram-v2
     [*] --> Available : wallet funded by TOP_UP
     Available --> Held : LOCK (UC2-04 commit)
-    Held --> Refunded : REFUND, withdrawal more than 30h before start
-    Held --> AwaitingReplacement : withdrawal 30h or less before start
+    Held --> Refunded : REFUND, withdrawal at least 30h before start
+    Held --> AwaitingReplacement : withdrawal less than 30h before start
     AwaitingReplacement --> Refunded : REFUND, funded replacement found
     AwaitingReplacement --> ForfeitureDue : no replacement by session start
     ForfeitureDue --> Forfeited : FORFEIT, credits the booker

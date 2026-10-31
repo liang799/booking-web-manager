@@ -17,12 +17,12 @@ describe("UC2-01 public session discovery", () => {
     const item: DiscoveredSession = {
       sessionId: "session", venueName: "Jurong Sports Hall", sport: "Badminton", region: "West",
       startAt: new Date("2030-01-02T10:00:00Z"), endAt: new Date("2030-01-02T12:00:00Z"),
-      totalSlots: 8, bookingShareCents: 333,
+      totalSlots: 9, bookingShareCents: 333,
     };
     search.mockResolvedValue([item]);
     expect(await useCase.searchPublic()).toEqual([item]);
     expect(run).toHaveBeenCalledOnce();
-    expect(search).toHaveBeenCalledExactlyOnceWith({}, now);
+    expect(search).toHaveBeenCalledExactlyOnceWith({}, now, undefined);
   });
   test("passes combined filters and current time to the reader", async () => {
     const { useCase, search, clock } = discovery();
@@ -31,7 +31,7 @@ describe("UC2-01 public session discovery", () => {
       startsWithin: { from: new Date("2030-01-02T10:00:00Z"), before: new Date("2030-01-02T12:00:00Z") },
     };
     await useCase.searchPublic(criteria);
-    expect(search).toHaveBeenCalledExactlyOnceWith(criteria, now);
+    expect(search).toHaveBeenCalledExactlyOnceWith(criteria, now, undefined);
     expect(clock.now).toHaveBeenCalledOnce();
   });
   test("obtains a fresh listing cutoff on every request", async () => {
@@ -40,7 +40,7 @@ describe("UC2-01 public session discovery", () => {
     const later = new Date("2030-01-01T00:00:05Z");
     clock.now.mockReturnValue(later);
     await useCase.searchPublic();
-    expect(search).toHaveBeenLastCalledWith({}, later);
+    expect(search).toHaveBeenLastCalledWith({}, later, undefined);
   });
   test("propagates reader failures without returning partial results", async () => {
     const { useCase, search } = discovery();

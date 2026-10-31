@@ -1,26 +1,18 @@
 "use client";
 
-import { LogOut, Plus, Search, Settings, UserRound, UsersRound } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookingLogo } from "@/components/ui/booking-logo";
 import { initials } from "@/components/ui/initials";
 import { NavigationIcon } from "@/components/ui/navigation-icon";
 import { MobileNavigation } from "@/components/ui/mobile-navigation";
 import { toFivePoint } from "@/components/ui/reliability-badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { discoveryHref, discoveryReturnTo } from "@/app/discover/navigation";
-import styles from "./app-shell.module.css";
+import { useNewNotifications } from "@/app/notifications/provider";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", icon: "home" },
@@ -28,6 +20,7 @@ const NAV_LINKS = [
   { href: "/sessions", label: "My sessions", icon: "sessions" },
   { href: "/wallet", label: "Wallet", icon: "wallet" },
   { href: "/groups", label: "Groups", icon: "groups" },
+  { href: "/notifications", label: "Notifications", icon: "notifications" },
   { href: "/profile", label: "Settings", icon: "settings" },
 ] as const;
 
@@ -57,21 +50,18 @@ function SidebarContents({
   logoutAction,
   onNavigate,
   searchHref,
-  walletLayout = false,
+  hasNewNotifications,
 }: {
   readonly user: ShellUser;
   readonly logoutAction?: () => Promise<void>;
   readonly onNavigate?: () => void;
   readonly searchHref: string;
-  readonly walletLayout?: boolean;
+  readonly hasNewNotifications: boolean;
 }) {
   const pathname = usePathname();
 
   return (
-    <div className={cn(
-      "flex h-full flex-col overflow-y-auto px-4 py-7 lg:px-5 lg:py-8",
-      walletLayout && "px-[18px] py-6 lg:px-[18px] lg:py-6",
-    )}>
+    <div className="flex h-full flex-col overflow-y-auto px-4 py-7 lg:px-5 lg:py-8">
       <div className="px-3">
         <Link
           href="/"
@@ -84,7 +74,7 @@ function SidebarContents({
       </div>
 
       {/* Navigation links */}
-      <nav className={cn("mt-10 flex flex-col gap-2 lg:mt-12", walletLayout && "mt-[42px] gap-2.5 lg:mt-[42px]")} aria-label="Main">
+      <nav className="mt-10 flex flex-col gap-2 lg:mt-12" aria-label="Main">
         {NAV_LINKS.map((link) => {
           const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
           return (
@@ -95,20 +85,12 @@ function SidebarContents({
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:gap-4",
-                walletLayout && "min-h-[46px] rounded-[7px] py-2.5",
                 active && "bg-accent font-semibold",
               )}
             >
-              {link.image === "search" ? (
-                <Search className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : walletLayout && link.image === "settings" ? (
-                <Settings className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : link.image === null ? (
-                <UsersRound className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
-              ) : (
-                <Image src={`/images/navigation/${link.image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />
-              )}
+              <NavigationIcon name={link.icon} active={active} />
               {link.label}
+              {link.href === "/notifications" && hasNewNotifications && <span aria-label="New notifications" className="ml-auto rounded-full bg-foreground px-1.5 py-0.5 text-[10px] font-semibold text-background">New</span>}
             </Link>
           );
         })}
@@ -116,9 +98,9 @@ function SidebarContents({
 
       {/* Your account (bottom) */}
       <div className="mt-auto pt-10">
-        <div className={cn("border-t pt-5", walletLayout && "pt-6")}>
-          <div className={cn("flex items-center gap-3", walletLayout && "px-2")}>
-            <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-semibold", walletLayout && "h-9 w-9")}>
+        <div className="border-t pt-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-semibold">
               {initials(user.name)}
             </span>
             <div className="min-w-0">
@@ -129,7 +111,7 @@ function SidebarContents({
             </div>
           </div>
           {logoutAction !== undefined && (
-            <form action={logoutAction} className={cn("mt-3", walletLayout && "mt-4")}>
+            <form action={logoutAction} className="mt-3">
               <button
                 type="submit"
                 className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -146,10 +128,11 @@ function SidebarContents({
 }
 
 
-/** Frames signed-in content with a desktop sidebar and mobile navigation plus an account sheet. */
+/** Frames signed-in content with a desktop sidebar, mobile navigation and a direct notification shortcut. */
 export function AppShell({ user, logoutAction, children, mobileVariant = "standard" }: AppShellProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const hasNewNotifications = useNewNotifications();
+  const notificationsLayout = pathname === "/notifications";
   const walletLayout = pathname === "/wallet" || pathname.startsWith("/wallet/");
   const searchParams = useSearchParams();
   const query = searchParams.toString();
@@ -160,18 +143,15 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
   const searchHref = discoveryHref("", searchOrigin);
 
   return (
-    <div className={cn("flex min-h-screen bg-card md:bg-background", walletLayout && styles.wallet)}>
+    <div className="flex min-h-screen bg-card md:bg-background">
       {/* Desktop sidebar (hidden below 768px) */}
-      <aside className={cn(
-        "sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64",
-        walletLayout && "mb-6 h-[calc(100dvh-2.5rem)] rounded-lg border-0 shadow-none lg:w-60 2xl:w-60",
-      )}>
-        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} walletLayout={walletLayout} />
+      <aside className="sticky top-4 my-4 ml-4 hidden h-[calc(100dvh-2rem)] w-52 shrink-0 rounded-2xl border border-border/40 bg-card shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.08)] md:block lg:w-60 2xl:w-64">
+        <SidebarContents user={user} logoutAction={logoutAction} searchHref={searchHref} hasNewNotifications={hasNewNotifications} />
       </aside>
 
       <div className="relative isolate flex min-w-0 flex-1 flex-col">
         {/* The desktop court fades behind the page introduction without competing with its content. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && "md:block")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-[420px] overflow-hidden", mobileVariant === "standard" && !walletLayout && !notificationsLayout && "md:block")} aria-hidden="true">
           <Image
             src="/images/mobile-hero.png"
             alt=""
@@ -183,7 +163,7 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0)_0%,hsl(var(--background)/0.2)_45%,hsl(var(--background))_100%)]" />
         </div>
         {/* Figma's hero: an oversized image at 50%, with left and bottom fades into the page. */}
-        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", mobileVariant === "focused" && "hidden")} aria-hidden="true">
+        <div className={cn("pointer-events-none absolute inset-x-0 top-0 -z-10 h-[295px] overflow-hidden md:hidden", (mobileVariant === "focused" || notificationsLayout) && "hidden")} aria-hidden="true">
           <div className="absolute -top-2.5 left-1/2 h-[295px] w-[calc(100%+148px)] -translate-x-1/2">
             <Image
               src="/images/mobile-hero.png"
@@ -204,105 +184,32 @@ export function AppShell({ user, logoutAction, children, mobileVariant = "standa
             >
               <BookingLogo className={walletLayout ? "text-lg" : undefined} />
             </Link>
-            {walletLayout ? (
-              <Link
-                href="/sessions/create"
-                aria-label="Create session"
-                className="flex h-11 w-11 items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground">
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                </span>
-              </Link>
-            ) : (
             <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="icon" className="h-11 w-11 [&_svg]:size-5" aria-label="Search sessions">
-              <Link href={searchHref}><NavigationIcon name="search" active={pathname === "/discover"} /></Link>
-            </Button>
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button size="icon" className="h-11 w-11 rounded-md" aria-label="Open account menu">
-                  <UserRound className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-72 bg-card p-6 [&>button]:flex [&>button]:h-11 [&>button]:w-11 [&>button]:items-center [&>button]:justify-center"
-              >
-                <SheetTitle className="pr-10">Your account</SheetTitle>
-                <SheetDescription className="sr-only">Account details, settings, and logout</SheetDescription>
-                <div className="mt-8 flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                    {initials(user.name)}
+              {walletLayout ? (
+                <Link
+                  href="/sessions/create"
+                  aria-label="Create session"
+                  className="flex h-11 w-11 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground">
+                    <Plus className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <div className="min-w-0">
-                    <p className="break-words text-sm font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {reliabilityText(user.reliabilityScore)}
-                    </p>
-                  </div>
-                </div>
-                <Button asChild variant="outline" className="mt-6 min-h-11 w-full">
-                  <Link href="/groups" onClick={() => setMenuOpen(false)}>
-                    My groups
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="mt-3 min-h-11 w-full">
-                  <Link href="/profile" onClick={() => setMenuOpen(false)}>
-                    Account settings
-                  </Link>
-                </Button>
-                {logoutAction !== undefined && (
-                  <form action={logoutAction} className="mt-3">
-                    <Button type="submit" variant="ghost" className="min-h-11 w-full">
-                      Log out
-                    </Button>
-                  </form>
-                )}
-              </SheetContent>
-            </Sheet>
+                </Link>
+              ) : null}
+              <Button asChild variant="ghost" size="icon" className="relative h-11 w-11 rounded-md [&_svg]:size-5">
+                <Link
+                  href="/notifications"
+                  aria-label={hasNewNotifications ? "Notifications, new updates" : "Notifications"}
+                  aria-current={notificationsLayout ? "page" : undefined}
+                >
+                  <NavigationIcon name="notifications" active={notificationsLayout} />
+                  {hasNewNotifications && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden />}
+                </Link>
+              </Button>
             </div>
-            )}
           </div>
 
-          <nav
-            className={cn(
-              "flex items-center rounded-md bg-card p-2.5 shadow-[0_0_1px_0_hsl(var(--foreground)/0.3),0_4px_8px_0_hsl(var(--foreground)/0.1)]",
-              walletLayout && "p-[7px]",
-            )}
-            aria-label="Main"
-          >
-            {MOBILE_NAV_LINKS.map(({ href, label, image }, index) => {
-              const active = index === activeMobileIndex;
-              return (
-                <Fragment key={href}>
-                  <Link
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    title={active ? undefined : label}
-                    className={cn(
-                      "flex min-h-11 min-w-[44px] items-center justify-center gap-2 whitespace-nowrap rounded px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                      active ? "flex-[2] bg-accent font-medium text-foreground" : "flex-1 text-foreground",
-                      walletLayout && "relative text-xs",
-                      walletLayout && active && "isolate bg-transparent before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded before:bg-accent",
-                    )}
-                  >
-                    <Image src={`/images/navigation/${image}.svg`} width={20} height={20} alt="" className="shrink-0 dark:invert" />
-                    <span className={active ? undefined : "sr-only"}>{label}</span>
-                  </Link>
-                  {index < MOBILE_NAV_LINKS.length - 1 && (
-                    <Image
-                      src="/images/navigation/separator.svg"
-                      width={1}
-                      height={20}
-                      alt=""
-                      className={cn("mx-1.5 shrink-0 dark:invert", (active || activeMobileIndex === index + 1) && "invisible")}
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
-          </nav>
+          <MobileNavigation pathname={pathname} enabled={mobileVariant === "standard"} compact={walletLayout} />
         </header>
 
         {/* Page content */}

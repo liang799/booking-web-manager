@@ -189,13 +189,19 @@ describe("production Create Session availability", () => {
       "@/app/sessions/session-api-unavailable"
     );
     const dependencies = createSessionDependencies();
+    const { parseRequestBoundCreateSessionInput } = await import(
+      "@/app/sessions/request-bound-creation-input"
+    );
+    const { submission } = parseRequestBoundCreateSessionInput(
+      "11111111-1111-4111-8111-111111111111", JSON.parse(validRequestBody()),
+    );
 
     // Act & Assert
     await expect(dependencies.authenticate(request())).rejects.toBeInstanceOf(
       SessionApiUnavailableError,
     );
     expect(() =>
-      dependencies.createForSubmission({ idempotencyKey: "new-session" }),
+      dependencies.createForSubmission(submission),
     ).toThrow(SessionApiUnavailableError);
     expect(network).not.toHaveBeenCalled();
   });
@@ -232,7 +238,7 @@ function validRequestBody(): string {
       endAt: "2030-01-01T12:00:00Z",
       totalCostCents: 1001,
     },
-    config: { totalSlots: 3, minimumHeadcount: 2 },
+    config: { totalSlots: 3, },
   });
 }
 

@@ -1,0 +1,91 @@
+.overlay { background: rgb(20 20 20 / .55); backdrop-filter: blur(6px); }
+.sheetHandle { display: none; }
+.dialog.dialog { width: calc(100% - 32px); max-width: 760px; max-height: calc(100dvh - 32px); overflow-y: auto; padding: 34px 43px 31px; gap: 0; border-radius: 12px; color: hsl(var(--foreground)); background: hsl(var(--card)); box-shadow: 0 24px 80px hsl(var(--foreground) / .12); font-kerning: normal; }
+.header { text-align: left; margin-bottom: 29px; }
+.eyebrow { margin: 0 44px 36px 0; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; }
+.titleRow { min-width: 0; }
+.title { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 48px; line-height: 1.15; font-weight: 400; letter-spacing: -.005em; text-transform: capitalize; }
+.subtitle { margin-top: 6px !important; color: hsl(var(--muted-foreground)); font-size: 16px; font-weight: 300; line-height: 1.5; letter-spacing: normal; overflow-wrap: anywhere; }
+.subtitle a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.date { flex: 1; }
+.summary { display: flex; align-items: baseline; justify-content: space-between; gap: 16px 24px; padding-bottom: 28px; margin-bottom: 37px; border-bottom: 1px solid hsl(var(--border)); }
+.date, .time { font-size: 18px; line-height: 1.5; }
+.date { font-size: 13px; font-weight: 400; letter-spacing: .14em; line-height: 1.6; text-transform: uppercase; }
+.time { flex: none; text-align: right; font-size: 14px; font-weight: 300; line-height: 1.6; letter-spacing: .04em; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.managementRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-left: 1px solid hsl(var(--muted-foreground)); min-height: 104px; margin-bottom: 50px; padding: 0 0 0 39px; }
+.managementRow > div:first-child { min-width: 0; }
+.managementRow h3 { margin-bottom: 8px; color: hsl(var(--muted-foreground)); font-size: 11px; font-weight: 500; line-height: 1.4; letter-spacing: .13em; text-transform: uppercase; }
+.count { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.count strong { color: hsl(var(--foreground)); font-family: "Times New Roman", Georgia, serif; font-size: 48px; font-weight: 400; letter-spacing: -.8px; line-height: .92; }
+.count > span { transform: translateY(-4px); color: hsl(var(--muted-foreground)); font-size: 15px; font-weight: 300; letter-spacing: -.01em; }
+.manageButton { min-width: 216px; min-height: 48px; flex-shrink: 0; justify-content: space-between; padding: 0 20px 0 22px; border-radius: 5px; font-size: 14.5px; font-weight: 400; letter-spacing: -.02em; text-transform: capitalize; transform: translateY(-9px); }
+.visibilityDescription { max-width: 270px; color: hsl(var(--muted-foreground)); font-size: 15.5px; font-weight: 300; line-height: 1.5; letter-spacing: -.01em; }
+.segment { display: flex; flex-shrink: 0; min-width: 218px; padding: 3px; border-radius: 7px; background: hsl(var(--muted)); transform: translateY(-8px); }
+.segment button { flex: 1; min-width: 76px; min-height: 42px; padding: 8px 12px; border-radius: 5px; color: hsl(var(--muted-foreground)); font-size: 14px; }
+.segment button[aria-pressed="true"] { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: 0 1px 3px hsl(var(--foreground) / .12); }
+.hostFooter { display: grid; gap: 16px; padding-top: 0; }
+.invitation, .inviteRow { width: 100%; }
+.inviteButton { position: relative; gap: 24px; width: 100%; min-height: 53px; border-radius: 5px; font-size: 15px; font-weight: 400; text-transform: capitalize; }
+.inviteButton > svg { position: static; width: 26px; height: 26px; margin: 0; stroke-width: 1.6; transform: translate(2px, -1px); }
+.cancelButton { position: relative; display: flex; align-items: center; justify-content: center; gap: 24px; width: 100%; min-height: 52px; padding: 12px 64px 12px 52px; border: 1px solid hsl(var(--input)); border-radius: 5px; color: hsl(var(--foreground)); font-size: 15px; letter-spacing: -.015em; text-transform: capitalize; }
+.cancelButton > svg { position: static; width: 24px; height: 24px; stroke-width: 1.6; }
+.cancelButton:hover { background: hsl(var(--muted)); }
+.dialog > button:last-child { top: 16px; right: 16px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; opacity: 1; }
+.dialog > button:last-child svg { width: 28px; height: 28px; stroke-width: 1.6; }
+.dialog :is(button, a):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+.dialog > button:last-child:focus-visible { outline: none; }
+.dialog button:disabled { opacity: .5; cursor: not-allowed; }
+.feedback { margin-top: 12px; font-size: 13px; }
+/* Shared participant controls retain the original Joined dialog's presentation. */
+.row { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid hsl(var(--border)); padding: 22px 0; }
+.row h3 { font-size: 14px; font-weight: 500; }
+.row p { margin-top: 5px; color: hsl(var(--muted-foreground)); font-size: 13px; line-height: 1.5; }
+.quietButton { min-height: 40px; border-radius: 999px; padding: 0 16px; font-size: 13px; font-weight: 500; }
+.danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; margin-top: 24px; padding-top: 18px; border-top: 1px solid hsl(var(--border)); }
+.danger button { min-height: 40px; padding: 0; color: hsl(var(--destructive)); background: none; font-size: 13px; font-weight: 500; }
+.danger button:hover { text-decoration: underline; text-underline-offset: 4px; }
+.danger p { max-width: 250px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
+:global(.dark) .danger { --destructive: 0 85% 72%; }
+:global(:root:not(.dark)) .dialog { --foreground: 210 10% 5%; --primary: 0 0% 10%; --secondary: 0 0% 94%; --muted: 0 0% 94%; --border: 0 0% 86%; --input: 0 0% 84%; background: #fafaf9; }
+:global(.dark) .dialog { --muted-foreground: 220 10% 72%; --destructive: 0 85% 72%; }
+@keyframes sheetEnter { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetExit { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@media (min-width: 581px) {
+  .managementRow + .managementRow { min-height: 80px; margin-bottom: 48px; }
+}
+@media (max-width: 580px) {
+  .dialog.dialog { top: auto; bottom: 0; left: 0; display: flex; flex-direction: column; width: 100%; max-width: none; height: calc(100dvh - max(16px, env(safe-area-inset-top))); max-height: calc(100dvh - max(16px, env(safe-area-inset-top))); transform: none; padding: 52px 24px max(24px, env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; overscroll-behavior: contain; }
+  .dialog.dialog > :not(button) { flex-shrink: 0; }
+  .dialog.dialog[data-state="open"] { animation: sheetEnter 240ms ease-out; }
+  .dialog.dialog[data-state="closed"] { animation: sheetExit 180ms ease-in; }
+  .sheetHandle { position: absolute; top: 2px; left: 50%; display: flex; align-items: center; justify-content: center; width: 80px; height: 40px; transform: translateX(-50%); border-radius: 8px; }
+  .sheetHandle span { width: 34px; height: 3px; border-radius: 999px; background: hsl(var(--muted-foreground) / .3); }
+  .eyebrow { margin-bottom: 32px; font-size: 10px; letter-spacing: .17em; }
+  .title { font-size: 40px; letter-spacing: -1px; }
+  .subtitle { margin-top: 8px !important; font-size: 13px; letter-spacing: 0; }
+  .header { margin-bottom: 32px; }
+  .summary { flex-wrap: wrap; gap: 8px 12px; padding-bottom: 28px; margin-bottom: 28px; }
+  .date { font-size: 10px; font-weight: 600; letter-spacing: .12em; line-height: 1.6; text-transform: uppercase; }
+  .time { flex: none; padding-left: 0; border-left: 0; font-size: 12px; line-height: 1.6; letter-spacing: normal; }
+  .managementRow { align-items: stretch; flex-direction: column; gap: 18px; min-height: 0; padding-left: 20px; margin-bottom: 32px; border-left-width: 2px; border-left-color: hsl(var(--border)); }
+  .managementRow > div:first-child { width: 100%; }
+  .managementRow h3 { margin-bottom: 10px; font-size: 10px; font-weight: 500; letter-spacing: .16em; }
+  .count strong { font-family: Georgia, "Times New Roman", serif; font-size: 40px; font-weight: 400; line-height: 1.2; }
+  .count > span { font-size: 13px; letter-spacing: 0; transform: none; }
+  .manageButton { justify-content: space-between; width: 100%; min-height: 44px; padding: 0 16px; font-size: 14px; letter-spacing: normal; transform: none; }
+  .visibilityDescription { max-width: 270px; font-size: 13px; letter-spacing: 0; line-height: 1.6; }
+  .segment { align-self: stretch; padding: 0; transform: none; }
+  .segment button { flex: 1; min-height: 44px; }
+  .hostFooter { margin-top: auto; padding-top: 26px; gap: 14px; }
+  .inviteButton, .cancelButton { min-height: 52px; font-size: 14px; letter-spacing: normal; }
+  .inviteButton { gap: 14px; }
+  .cancelButton { gap: 20px; padding: 12px 52px; }
+  .inviteButton > svg, .cancelButton > svg { width: 21px; height: 21px; transform: none; }
+  .dialog > button:last-child { top: 38px; right: 14px; }
+  .dialog > button:last-child svg { width: 23px; height: 23px; }
+  .danger { align-items: flex-start; flex-direction: column; gap: 0; }
+  .danger p { max-width: none; }
+}
+@media (max-width: 580px) and (prefers-reduced-motion: reduce) {
+  .dialog.dialog[data-state] { animation: none; }
+}

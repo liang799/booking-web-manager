@@ -30,7 +30,7 @@ describe("private session invitation persistence", () => {
     expect(summary).toEqual({
       sessionId: fixture.sessionId, venueName: fixture.venueName, sport: "Badminton", region: "West",
       startAt: new Date("2045-06-17T10:00:00Z"), endAt: new Date("2045-06-17T12:00:00Z"),
-      totalSlots: 2, bookingShareCents: 500,
+      totalSlots: 3, bookingShareCents: 500,
     });
     for (const wrong of [token.toLowerCase(), ` ${token}`, `${token} `, `${token}' OR true --`]) {
       expect(await preview().byToken(fixture.sessionId, wrong)).toBeNull();
@@ -68,7 +68,30 @@ describe("private session invitation persistence", () => {
     const invitations = new GetSessionInvitation({ transaction: new PostgresSessionManagementTransaction(() => context.pool, clock), clock });
     expect(await invitations.forBooker(fixture.booker.userId, fixture.sessionId)).toEqual({ sessionId: fixture.sessionId, roomToken: fixture.roomToken });
     expect(await invitations.forBooker(fixture.booker.userId, fixture.sessionId)).toEqual({ sessionId: fixture.sessionId, roomToken: fixture.roomToken });
-    expect(await preview().byToken(fixture.sessionId, fixture.roomToken)).toMatchObject({ sessionId: fixture.sessionId, totalSlots: 2, bookingShareCents: 500 });
+    expect(await preview().byToken(fixture.sessionId, fixture.roomToken)).toMatchObject({ sessionId: fixture.sessionId, totalSlots: 3, bookingShareCents: 500 });
     expect(await snapshot()).toEqual(before);
   });
+  test("tokenless group previews check current membership and active account without exposing the room token", async () => {
+    const fixture = await invitationFixture(context);
+    const member = await context.identity(false);
+    const stranger = await context.identity(false);
+    const groupId = randomUUID();
+    await context.pool.query(
+      "insert into regular_groups(group_id,owner_id,name,invitation_token,invitation_active,status) values($1,$2,'Preview group',$3,true,'ACTIVE')",
+      [groupId,fixture.booker.userId,randomUUID()],
+    );
+    await context.pool.query("insert into group_memberships(group_id,user_id,joined_at) values($1,$2,now()),($1,$3,now())", [groupId,fixture.booker.userId,member.userId]);
+    await context.pool.query("update sessions set invited_group_id=$2 where session_id=$1", [fixture.sessionId,groupId]);
+    const result = await preview().forGroupMember(fixture.sessionId,member.userId);
+    expect(result).toMatchObject({sessionId:fixture.sessionId,bookingShareCents:500});
+    expect(result).not.toHaveProperty("roomToken");
+    expect(await preview().forGroupMember(fixture.sessionId,stranger.userId)).toBeNull();
+    await context.pool.query("delete from group_memberships where group_id=$1 and user_id=$2", [groupId,member.userId]);
+    expect(await preview().forGroupMember(fixture.sessionId,member.userId)).toBeNull();
+    await context.pool.query("insert into group_memberships(group_id,user_id,joined_at) values($1,$2,now())", [groupId,member.userId]);
+    await context.pool.query("update profiles set account_status='INACTIVE' where user_id=$1", [member.userId]);
+    expect(await preview().forGroupMember(fixture.sessionId,member.userId)).toBeNull();
+    expect(await preview(new Date("2045-06-17T10:00:00Z")).forGroupMember(fixture.sessionId,fixture.booker.userId)).toBeNull();
+  });
+
 });

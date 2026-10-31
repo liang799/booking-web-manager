@@ -1,3 +1,4 @@
+import { sessionNotificationFacts } from "./session-notification-facts";
 import {
   Booking,
   DomainError,
@@ -17,7 +18,6 @@ export interface SessionConfig {
   /** A booker choice; the domain validates bounds before persisting it. */
   pricePerSlotCents?: number;
   totalSlots: number;
-  minimumHeadcount: number;
   visibility?: Visibility;
   minimumReliability?: number;
   invitedGroupId?: UUID;
@@ -96,7 +96,6 @@ export class CreateSessions {
         booking,
         bookingShare,
         totalSlots: config.totalSlots,
-        minimumHeadcount: config.minimumHeadcount,
         visibility: config.visibility,
         minimumReliability,
         invitedGroupId: config.invitedGroupId,
@@ -104,6 +103,10 @@ export class CreateSessions {
       });
 
       await repositories.sessions.save(session);
+      if (session.invitedGroupId) {
+        const members = await repositories.notifications.groupMembers(session.invitedGroupId);
+        await repositories.notifications.append(members.filter((id) => id !== bookerId).map((recipientId) => ({ ...sessionNotificationFacts(session), kind: "GROUP_BOOKING_CREATED", recipientId, groupId: session.invitedGroupId, expiresAt: session.booking.startAt })));
+      }
       return {
         sessionId: session.sessionId,
         roomToken: session.roomToken,

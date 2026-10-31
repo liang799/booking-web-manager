@@ -1,247 +1,245 @@
-import { FundHold, Money, Participation, Session } from "@/domain";
+import {
+  FundHold,
+  type FundHoldDetails,
+  Money,
+  Participation,
+  type ParticipationDetails,
+  Session,
+} from "@/domain";
 import { describe, expect, test } from "vitest";
 import { hoursBeforeSessionStart, sessionDetails } from "./session-fixtures";
 
-describe("Session", () => {
-  test("constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference", () => {
-    // Arrange
-    const replacement = replacementCommitment("ben", "p-missing");
-    const details = sessionDetails({ participations: [replacement] });
+describe("Session replacement history restoration", () => {
+  describe("Replacement ownership and refund proof", () => {
+    test("constructor_WhenReplacementTargetIsMissing_RejectsUnownedReference", () => {
+      const replacement = replacementParticipation("ben", "p-missing");
+      const details = sessionDetails({ participations: [replacement] });
 
-    // Act & Assert
-    expect(() => new Session(details)).toThrow(
-      expect.objectContaining({ code: "INVALID_INPUT" }),
-    );
+      expect(() => new Session(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenDepartedWaiterClaimsInvitation_RejectsPhantomAcceptance", () => {
+      const inviter = refundedInvitation();
+      const departedWaiter = new Participation({
+        participationId: "p-ben",
+        userId: "ben",
+        status: "LEFT_WAITLIST",
+        attendance: "UNVERIFIED",
+        waitlistedAt: hoursBeforeSessionStart(48),
+        queueSequence: 1,
+        replacesParticipationId: "p-alice",
+      });
+      const details = sessionDetails({
+        participations: [inviter, departedWaiter],
+        nextQueueSequence: 2,
+      });
+
+      expect(() => new Session(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient", () => {
+      const inviter = refundedInvitation();
+      const wrongRecipient = replacementParticipation("cara", "p-alice");
+      const details = sessionDetails({
+        participations: [inviter, wrongRecipient],
+      });
+
+      expect(() => new Session(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenReplacedWithdrawalIsNotRefunded_RejectsUnsettledAcceptance", () => {
+      const aliceCommittedAt = hoursBeforeSessionStart(48);
+      const aliceInvitedAt = hoursBeforeSessionStart(10);
+      const inviter = new Participation({
+        participationId: "p-alice",
+        userId: "alice",
+        status: "WITHDRAWN",
+        attendance: "UNVERIFIED",
+        committedAt: aliceCommittedAt,
+        withdrawnAt: aliceInvitedAt,
+        replacementMode: "DIRECT_INVITE",
+        replacementInviteeId: "ben",
+        hold: fundHold("alice", { state: "AWAITING_REPLACEMENT" }),
+      });
+      const replacement = replacementParticipation("ben", "p-alice");
+      const details = sessionDetails({ participations: [inviter, replacement] });
+
+      expect(() => new Session(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenTargetWasCancelledWithoutWithdrawal_RejectsUnrelatedRefund", () => {
+      const aliceCommittedAt = hoursBeforeSessionStart(48);
+      const cancelledAt = hoursBeforeSessionStart(40);
+      const cancelledParticipant = new Participation({
+        participationId: "p-alice",
+        userId: "alice",
+        status: "CANCELLED",
+        attendance: "UNVERIFIED",
+        committedAt: aliceCommittedAt,
+        hold: fundHold("alice", { state: "REFUNDED", settledAt: cancelledAt }),
+      });
+      const replacement = replacementParticipation("ben", "p-alice");
+      const details = sessionDetails({
+        participations: [cancelledParticipant, replacement],
+      });
+
+      expect(() => new Session(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenRemovedReplacementHasNoCommitmentHistory_RejectsPhantomAcceptance", () => {
+      const inviter = refundedInvitation();
+      const uncommittedReplacement = new Participation({
+        participationId: "p-ben",
+        userId: "ben",
+        status: "REMOVED",
+        attendance: "UNVERIFIED",
+        replacesParticipationId: "p-alice",
+      });
+      const details = sessionDetails({
+        participations: [inviter, uncommittedReplacement],
+      });
+
+      expect(() => new Session(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
   });
 
-  test("constructor_WhenDepartedWaiterClaimsInvitation_RejectsPhantomAcceptance", () => {
-    // Arrange
-    const inviter = refundedInvitation();
-    const departedWaiter = new Participation({
-      participationId: "p-ben",
-      userId: "ben",
-      status: "LEFT_WAITLIST",
-      attendance: "UNVERIFIED",
-      waitlistedAt: hoursBeforeSessionStart(48),
-      queueSequence: 1,
-      replacesParticipationId: "p-alice",
-    });
-    const details = sessionDetails({
-      participations: [inviter, departedWaiter],
-      nextQueueSequence: 2,
-    });
+  describe("Consumed invitation history", () => {
+    test("constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation", () => {
+      const inviter = refundedInvitation();
+      const replacement = replacementParticipation("ben", "p-alice");
+      const details = sessionDetails({ participations: [inviter, replacement] });
 
-    // Act & Assert
-    expect(() => new Session(details)).toThrow(
-      expect.objectContaining({ code: "INVALID_INPUT" }),
-    );
-  });
+      const restored = new Session(details);
 
-  test("constructor_WhenReplacementIsNotNamedInvitee_RejectsWrongRecipient", () => {
-    // Arrange
-    const inviter = refundedInvitation();
-    const wrongRecipient = replacementCommitment("cara", "p-alice");
-    const details = sessionDetails({
-      participations: [inviter, wrongRecipient],
+      expect(restored.participantList.reservedCount).toBe(0);
+      expect(
+        restored.participantList.personalReplacementForInvitee("ben"),
+      ).toBeUndefined();
+      expect(restored.participantList.committedCount).toBe(1);
+      expect(restored.getAvailableSlots(hoursBeforeSessionStart(38))).toBe(1);
     });
 
-    // Act & Assert
-    expect(() => new Session(details)).toThrow(
-      expect.objectContaining({ code: "INVALID_INPUT" }),
-    );
-  });
+    test("constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed", () => {
+      const benWithdrewAt = hoursBeforeSessionStart(10);
+      const availabilityCheckedAt = hoursBeforeSessionStart(9);
+      const inviter = refundedInvitation();
+      const withdrawnReplacement = replacementParticipation("ben", "p-alice", {
+        status: "WITHDRAWN",
+        withdrawnAt: benWithdrewAt,
+        replacementMode: "OPEN_SLOT",
+        hold: fundHold("ben", {
+          state: "AWAITING_REPLACEMENT",
+          createdAt: hoursBeforeSessionStart(39),
+        }),
+      });
+      const details = sessionDetails({
+        participations: [inviter, withdrawnReplacement],
+      });
 
-  test("constructor_WhenReplacedWithdrawalIsNotRefunded_RejectsUnsettledAcceptance", () => {
-    // Arrange
-    const aliceCommittedAt = hoursBeforeSessionStart(48);
-    const aliceInvitedAt = hoursBeforeSessionStart(10);
-    const inviter = new Participation({
-      participationId: "p-alice",
-      userId: "alice",
-      status: "WITHDRAWN",
-      attendance: "UNVERIFIED",
-      committedAt: aliceCommittedAt,
-      withdrawnAt: aliceInvitedAt,
-      replacementMode: "DIRECT_INVITE",
-      replacementInviteeId: "ben",
-      hold: heldShare("alice").awaitReplacement(),
-    });
-    const replacement = replacementCommitment("ben", "p-alice");
-    const details = sessionDetails({ participations: [inviter, replacement] });
+      const restored = new Session(details);
 
-    // Act & Assert
-    expect(() => new Session(details)).toThrow(
-      expect.objectContaining({ code: "INVALID_INPUT" }),
-    );
-  });
-
-  test("constructor_WhenTargetWasCancelledWithoutWithdrawal_RejectsUnrelatedRefund", () => {
-    // Arrange
-    const aliceCommittedAt = hoursBeforeSessionStart(48);
-    const cancelledAt = hoursBeforeSessionStart(40);
-    const cancelledParticipant = new Participation({
-      participationId: "p-alice",
-      userId: "alice",
-      status: "CANCELLED",
-      attendance: "UNVERIFIED",
-      committedAt: aliceCommittedAt,
-      hold: heldShare("alice").refund(cancelledAt),
-    });
-    const replacement = replacementCommitment("ben", "p-alice");
-    const details = sessionDetails({
-      participations: [cancelledParticipant, replacement],
+      expect(restored.participantList.reservedCount).toBe(0);
+      expect(
+        restored.participantList.personalReplacementForInvitee("ben"),
+      ).toBeUndefined();
+      expect(restored.participantList
+        .requireParticipation("p-ben").replacesParticipationId).toBe("p-alice");
+      expect(restored.getAvailableSlots(availabilityCheckedAt)).toBe(2);
     });
 
-    // Act & Assert
-    expect(() => new Session(details)).toThrow(
-      expect.objectContaining({ code: "INVALID_INPUT" }),
-    );
-  });
+    test("constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed", () => {
+      const benRemovedAt = hoursBeforeSessionStart(38);
+      const availabilityCheckedAt = hoursBeforeSessionStart(37);
+      const inviter = refundedInvitation();
+      const removedReplacement = replacementParticipation("ben", "p-alice", {
+        status: "REMOVED",
+        hold: fundHold("ben", {
+          state: "REFUNDED",
+          createdAt: hoursBeforeSessionStart(39),
+          settledAt: benRemovedAt,
+        }),
+      });
+      const details = sessionDetails({
+        participations: [inviter, removedReplacement],
+      });
 
-  test("constructor_WhenRemovedReplacementHasNoCommitmentHistory_RejectsPhantomAcceptance", () => {
-    // Arrange
-    const inviter = refundedInvitation();
-    const uncommittedReplacement = new Participation({
-      participationId: "p-ben",
-      userId: "ben",
-      status: "REMOVED",
-      attendance: "UNVERIFIED",
-      replacesParticipationId: "p-alice",
-    });
-    const details = sessionDetails({
-      participations: [inviter, uncommittedReplacement],
-    });
+      const restored = new Session(details);
 
-    // Act & Assert
-    expect(() => new Session(details)).toThrow(
-      expect.objectContaining({ code: "INVALID_INPUT" }),
-    );
-  });
-
-  test("constructor_WhenNamedReplacementCommitted_RestoresConsumedInvitation", () => {
-    // Arrange
-    const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
-    const details = sessionDetails({ participations: [inviter, replacement] });
-
-    // Act
-    const restored = new Session(details);
-
-    // Assert
-    expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(restored.participantList.committedCount).toBe(1);
-    expect(restored.getAvailableSlots(hoursBeforeSessionStart(38))).toBe(1);
-  });
-
-  test("constructor_WhenAcceptedReplacementLaterWithdraws_KeepsOriginalInvitationConsumed", () => {
-    // Arrange
-    const benWithdrewAt = hoursBeforeSessionStart(10);
-    const availabilityCheckedAt = hoursBeforeSessionStart(9);
-    const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
-    const withdrawnReplacement = replacement.withdraw(
-      replacement.hold!.awaitReplacement(),
-      benWithdrewAt,
-      "OPEN_SLOT",
-    );
-    const details = sessionDetails({
-      participations: [inviter, withdrawnReplacement],
+      expect(restored.participantList.reservedCount).toBe(0);
+      expect(
+        restored.participantList.personalReplacementForInvitee("ben"),
+      ).toBeUndefined();
+      expect(restored.participantList
+        .requireParticipation("p-ben").replacesParticipationId).toBe("p-alice");
+      expect(restored.getAvailableSlots(availabilityCheckedAt)).toBe(2);
     });
 
-    // Act
-    const restored = new Session(details);
+    test("constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory", () => {
+      const inviter = refundedInvitation({
+        status: "CANCELLED",
+        replacementMode: undefined,
+        replacementInviteeId: undefined,
+      });
+      const replacement = replacementParticipation("ben", "p-alice", {
+        status: "CANCELLED",
+        hold: fundHold("ben", {
+          state: "REFUNDED",
+          createdAt: hoursBeforeSessionStart(39),
+          settledAt: hoursBeforeSessionStart(38),
+        }),
+      });
+      const details = sessionDetails({
+        status: "CANCELLED",
+        participations: [inviter, replacement],
+      });
 
-    // Assert
-    expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(
-      restored.participantList.requireParticipation("p-ben")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(restored.getAvailableSlots(availabilityCheckedAt)).toBe(2);
-  });
+      const restored = new Session(details);
 
-  test("constructor_WhenAcceptedReplacementIsRemoved_KeepsOriginalInvitationConsumed", () => {
-    // Arrange
-    const benRemovedAt = hoursBeforeSessionStart(38);
-    const availabilityCheckedAt = hoursBeforeSessionStart(37);
-    const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
-    const removedReplacement = replacement.remove(
-      replacement.hold!.refund(benRemovedAt),
-    );
-    const details = sessionDetails({
-      participations: [inviter, removedReplacement],
+      expect(restored.status).toBe("CANCELLED");
+      expect(restored.participantList.reservedCount).toBe(0);
+      expect(
+        restored.participantList.personalReplacementForInvitee("ben"),
+      ).toBeUndefined();
+      expect(restored.participantList
+        .requireParticipation("p-ben").replacesParticipationId).toBe("p-alice");
+      expect(
+        restored.participantList.requireParticipation("p-alice").hold?.state,
+      ).toBe("REFUNDED");
     });
-
-    // Act
-    const restored = new Session(details);
-
-    // Assert
-    expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(
-      restored.participantList.requireParticipation("p-ben")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(restored.getAvailableSlots(availabilityCheckedAt)).toBe(2);
-  });
-
-  test("constructor_WhenSessionWithAcceptedReplacementIsCancelled_RetainsReplacementHistory", () => {
-    // Arrange
-    const inviter = refundedInvitation();
-    const replacement = replacementCommitment("ben", "p-alice");
-    const details = sessionDetails({
-      status: "CANCELLED",
-      participations: [
-        inviter.cancel(),
-        replacement.cancel(
-          replacement.hold!.refund(hoursBeforeSessionStart(38)),
-        ),
-      ],
-    });
-
-    // Act
-    const restored = new Session(details);
-
-    // Assert
-    expect(restored.status).toBe("CANCELLED");
-    expect(restored.participantList.reservedCount).toBe(0);
-    expect(
-      restored.participantList.personalReplacementForInvitee("ben"),
-    ).toBeUndefined();
-    expect(
-      restored.participantList.requireParticipation("p-ben")
-        .replacesParticipationId,
-    ).toBe("p-alice");
-    expect(
-      restored.participantList.requireParticipation("p-alice").hold?.state,
-    ).toBe("REFUNDED");
   });
 });
 
-function heldShare(
+function fundHold(
   userId: string,
-  createdAt = hoursBeforeSessionStart(48),
+  overrides: Partial<FundHoldDetails> = {},
 ): FundHold {
-  return FundHold.create({
+  return new FundHold({
     holdId: `h-${userId}`,
     participationId: `p-${userId}`,
     walletId: `w-${userId}`,
     holdingAccountId: "platform",
     amount: Money.fromCents(500),
-    createdAt,
+    state: "HELD",
+    createdAt: hoursBeforeSessionStart(48),
+    ...overrides,
   });
 }
 
-function refundedInvitation(): Participation {
+function refundedInvitation(
+  overrides: Partial<ParticipationDetails> = {},
+): Participation {
   const aliceInvitedAt = hoursBeforeSessionStart(40);
   return new Participation({
     participationId: "p-alice",
@@ -252,20 +250,25 @@ function refundedInvitation(): Participation {
     withdrawnAt: aliceInvitedAt,
     replacementMode: "DIRECT_INVITE",
     replacementInviteeId: "ben",
-    hold: heldShare("alice").refund(aliceInvitedAt),
+    hold: fundHold("alice", { state: "REFUNDED", settledAt: aliceInvitedAt }),
+    ...overrides,
   });
 }
 
-function replacementCommitment(
+function replacementParticipation(
   userId: string,
   replacesParticipationId: string,
+  overrides: Partial<ParticipationDetails> = {},
 ): Participation {
   const replacementCommittedAt = hoursBeforeSessionStart(39);
-  return Participation.createCommitted({
+  return new Participation({
     participationId: `p-${userId}`,
     userId,
+    status: "COMMITTED",
+    attendance: "UNVERIFIED",
     committedAt: replacementCommittedAt,
-    hold: heldShare(userId, replacementCommittedAt),
+    hold: fundHold(userId, { createdAt: replacementCommittedAt }),
     replacesParticipationId,
+    ...overrides,
   });
 }

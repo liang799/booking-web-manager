@@ -6,90 +6,67 @@ import {
 } from "@/domain";
 import { describe, expect, test } from "vitest";
 
-describe("RegularGroup", () => {
-  describe("Construction and membership", () => {
+describe("Regular group membership and administration", () => {
+  describe("Restored membership and invitation state", () => {
     test("constructor_WhenMembershipsAreEmpty_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      const details = groupDetails({ memberships: [] });
 
-      // Act & Assert
-      expect(() => new RegularGroup({ ...details, memberships: [] })).toThrow(
-        DomainError,
-      );
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenMembershipsAreDuplicated_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      const ownerMembership = new GroupMembership({ userId: "owner", joinedAt: now() });
+      const details = groupDetails({ memberships: [ownerMembership, ownerMembership] });
 
-      // Act & Assert
-      expect(
-        () =>
-          new RegularGroup({
-            ...details,
-            memberships: [...details.memberships, ...details.memberships],
-          }),
-      ).toThrow(DomainError);
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenOwnerIsNotAMember_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      const details = groupDetails({ ownerId: "missing" });
 
-      // Act & Assert
-      expect(
-        () => new RegularGroup({ ...details, ownerId: "missing" }),
-      ).toThrow(DomainError);
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenArchivedInvitationIsActive_ThrowsDomainError", () => {
-      // Arrange
-      const details = groupDetails();
+      const details = groupDetails({ status: "ARCHIVED", invitationActive: true });
 
-      // Act & Assert
-      expect(
-        () => new RegularGroup({ ...details, status: "ARCHIVED" }),
-      ).toThrow(DomainError);
+      expect(() => new RegularGroup(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenSourceMembershipsAreMutated_PreservesMembersAndDates", () => {
-      // Arrange
       const memberships = [
         new GroupMembership({ userId: "owner", joinedAt: now() }),
       ];
       const details = groupDetails({ memberships });
       const group = new RegularGroup(details);
 
-      // Act
+      // Attempt to alter the supplied membership collection and date.
       memberships[0]?.joinedAt.setUTCFullYear(2000);
       memberships.pop();
+      const storedMemberships = group.memberships;
 
-      // Assert
-      expect(group.memberships).toHaveLength(1);
-      expect(group.memberships[0]?.joinedAt).toEqual(now());
+      expect(storedMemberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(storedMemberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
     });
 
     test("memberships_WhenReturnedMembershipsAreMutated_PreservesMembersAndDates", () => {
-      // Arrange
       const group = newGroup();
       const returnedMemberships = group.memberships as GroupMembership[];
 
-      // Act
+      // Attempt to alter the returned membership collection and date.
       returnedMemberships[0]?.joinedAt.setUTCFullYear(2000);
       returnedMemberships.pop();
+      const storedMemberships = group.memberships;
 
-      // Assert
-      expect(group.memberships).toHaveLength(1);
-      expect(group.memberships[0]?.joinedAt).toEqual(now());
+      expect(storedMemberships.map((member) => member.userId)).toEqual(["owner"]);
+      expect(storedMemberships[0]?.joinedAt).toEqual(new Date("2026-09-15T00:00:00Z"));
     });
   });
 
-  describe("Joining and invitations", () => {
+  describe("Invitation access and rotation", () => {
     test("join_WhenMemberJoinsAgain_PreservesSingleMembership", () => {
-      // Arrange
       const group = newGroup();
 
-      // Act
       const firstJoin = group.join({
         userId: "player",
         invitationToken: "first-token",
@@ -100,25 +77,22 @@ describe("RegularGroup", () => {
         invitationToken: "first-token",
         now: now(),
       });
+      const memberships = group.memberships;
 
-      // Assert
       expect(group.status).toBe("ACTIVE");
-      expect(group.memberships.map((member) => member.userId)).toEqual([
+      expect(memberships.map((member) => member.userId)).toEqual([
         "owner",
         "player",
       ]);
       expect(firstJoin).toBe("JOINED");
       expect(repeatedJoin).toBe("ALREADY_MEMBER");
-      expect(group.memberships).toHaveLength(2);
+      expect(memberships).toHaveLength(2);
     });
 
     test("join_WhenInvitationIsRevokedForExistingMember_ThrowsInvalidInvitation", () => {
-      // Arrange
-      const group = newGroup();
-      group.revokeInvitation("owner");
+      const group = newGroup({ invitationActive: false });
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.join({
           userId: "owner",
@@ -130,16 +104,9 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenTokenWasRotated_ThrowsInvalidInvitation", () => {
-      // Arrange
-      const group = newGroup();
-      group.revokeInvitation("owner");
-      group.rotateInvitation({
-        actorId: "owner",
-        invitationToken: "next-token",
-      });
+      const group = newGroup({ invitationToken: "next-token" });
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.join({
           userId: "player",
@@ -151,32 +118,25 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenRevokedInvitationIsRotated_AcceptsNewToken", () => {
-      // Arrange
-      const group = newGroup();
-      group.revokeInvitation("owner");
+      const group = newGroup({ invitationActive: false });
       group.rotateInvitation({
         actorId: "owner",
         invitationToken: "next-token",
       });
 
-      // Act
       const admission = group.join({
         userId: "player",
         invitationToken: "next-token",
         now: now(),
       });
 
-      // Assert
       expect(admission).toBe("JOINED");
     });
 
     test("join_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
-      const group = newGroup();
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      const group = newGroup({ status: "ARCHIVED", invitationActive: false });
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.join({
           userId: "player",
@@ -188,11 +148,9 @@ describe("RegularGroup", () => {
     });
 
     test("rotateInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.rotateInvitation({ actorId: "other", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -200,24 +158,28 @@ describe("RegularGroup", () => {
     });
 
     test("rotateInvitation_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
-      const group = newGroup();
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      const group = newGroup({ status: "ARCHIVED", invitationActive: false });
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.rotateInvitation({ actorId: "owner", invitationToken: "new" }),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
       expect(groupState(group)).toEqual(before);
     });
 
+    test("revokeInvitation_WhenOwnerRevokesInvitation_DisablesInvitation", () => {
+      const group = newGroup({ invitationActive: true });
+
+      group.revokeInvitation("owner");
+
+      expect(group.invitationActive).toBe(false);
+      expect(group.invitationToken).toBe("first-token");
+    });
+
     test("revokeInvitation_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() => group.revokeInvitation("other")).toThrow(
         expect.objectContaining({ code: "UNAUTHORIZED" }),
       );
@@ -225,13 +187,11 @@ describe("RegularGroup", () => {
     });
   });
 
-  describe("Owner management", () => {
+  describe("Group naming", () => {
     test("rename_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.rename({ actorId: "other", name: "New name" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -239,22 +199,17 @@ describe("RegularGroup", () => {
     });
 
     test("rename_WhenOwnerProvidesName_UpdatesName", () => {
-      // Arrange
       const group = newGroup();
 
-      // Act
       group.rename({ actorId: "owner", name: "Saturday tennis" });
 
-      // Assert
       expect(group.name).toBe("Saturday tennis");
     });
 
     test("rename_WhenNameIsBlank_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() => group.rename({ actorId: "owner", name: " " })).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -262,24 +217,21 @@ describe("RegularGroup", () => {
     });
 
     test("rename_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
-      const group = newGroup();
-      group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
+      const group = newGroup({ status: "ARCHIVED", invitationActive: false });
       const before = groupState(group);
 
-      // Act & Assert
       expect(() => group.rename({ actorId: "owner", name: "New" })).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
       expect(groupState(group)).toEqual(before);
     });
+  });
 
+  describe("Member removal", () => {
     test("removeMember_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.removeMember({ actorId: "other", userId: "owner" }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -287,28 +239,17 @@ describe("RegularGroup", () => {
     });
 
     test("removeMember_WhenOwnerRemovesAnotherMember_RetainsOwner", () => {
-      // Arrange
-      const group = newGroup();
-      group.join({
-        userId: "player",
-        invitationToken: "first-token",
-        now: now(),
-      });
+      const group = newGroup({ memberships: groupMemberships("owner", "player") });
 
-      // Act
       group.removeMember({ actorId: "owner", userId: "player" });
 
-      // Assert
-      expect(group.memberships).toHaveLength(1);
-      expect(group.memberships[0]?.userId).toBe("owner");
+      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
     });
 
     test("removeMember_WhenTargetIsOwner_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.removeMember({ actorId: "owner", userId: "owner" }),
       ).toThrow(expect.objectContaining({ code: "OWNER_REMOVAL" }));
@@ -316,23 +257,21 @@ describe("RegularGroup", () => {
     });
 
     test("removeMember_WhenMemberIsMissing_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.removeMember({ actorId: "owner", userId: "missing" }),
       ).toThrow(expect.objectContaining({ code: "NOT_FOUND" }));
       expect(groupState(group)).toEqual(before);
     });
+  });
 
+  describe("Group archiving", () => {
     test("archive_WhenActorIsNotOwner_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.archive({ actorId: "other", unsettledLinkedSessions: 0 }),
       ).toThrow(expect.objectContaining({ code: "UNAUTHORIZED" }));
@@ -340,11 +279,9 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenLinkedSessionsAreUnsettled_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.archive({ actorId: "owner", unsettledLinkedSessions: 1 }),
       ).toThrow(expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }));
@@ -352,11 +289,9 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenLinkedSessionCountIsNegative_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() =>
         group.archive({ actorId: "owner", unsettledLinkedSessions: -1 }),
       ).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
@@ -364,31 +299,25 @@ describe("RegularGroup", () => {
     });
 
     test("archive_WhenAllLinkedSessionsAreSettled_RetainsMembersAndIsIdempotent", () => {
-      // Arrange
       const group = newGroup();
 
-      // Act
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
       group.archive({ actorId: "owner", unsettledLinkedSessions: 0 });
 
-      // Assert
       expect(group.status).toBe("ARCHIVED");
       expect(group.invitationActive).toBe(false);
-      expect(group.memberships).toHaveLength(1);
+      expect(group.memberships.map((member) => member.userId)).toEqual(["owner"]);
     });
   });
 
-  describe("Leaving", () => {
+  describe("Leaving and rejoining", () => {
     test("leave_WhenMemberLeaves_RemovesOnlyThatMember", () => {
-      // Arrange
-      const group = newGroup();
-      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
-      group.join({ userId: "ben", invitationToken: "first-token", now: now() });
+      const group = newGroup({
+        memberships: groupMemberships("owner", "aisha", "ben"),
+      });
 
-      // Act
       group.leave({ userId: "aisha" });
 
-      // Assert
       expect(group.memberships.map((member) => member.userId)).toEqual([
         "owner",
         "ben",
@@ -396,12 +325,9 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenUserIsOwner_RejectsWithoutChangingState", () => {
-      // Arrange
-      const group = newGroup();
-      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      const group = newGroup({ memberships: groupMemberships("owner", "aisha") });
       const before = groupState(group);
 
-      // Act & Assert
       expect(() => group.leave({ userId: "owner" })).toThrow(
         expect.objectContaining({ code: "OWNER_REMOVAL" }),
       );
@@ -409,11 +335,9 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenUserIsNotAMember_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = newGroup();
       const before = groupState(group);
 
-      // Act & Assert
       expect(() => group.leave({ userId: "stranger" })).toThrow(
         expect.objectContaining({ code: "NOT_FOUND" }),
       );
@@ -421,7 +345,6 @@ describe("RegularGroup", () => {
     });
 
     test("leave_WhenGroupIsArchived_RejectsWithoutChangingState", () => {
-      // Arrange
       const group = new RegularGroup(
         groupDetails({
           status: "ARCHIVED",
@@ -434,7 +357,6 @@ describe("RegularGroup", () => {
       );
       const before = groupState(group);
 
-      // Act & Assert
       expect(() => group.leave({ userId: "aisha" })).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
@@ -442,20 +364,16 @@ describe("RegularGroup", () => {
     });
 
     test("join_WhenFormerMemberUsesCurrentInvitation_JoinsAgain", () => {
-      // Arrange
-      const group = newGroup();
-      group.join({ userId: "aisha", invitationToken: "first-token", now: now() });
+      const group = newGroup({ memberships: groupMemberships("owner", "aisha") });
       group.leave({ userId: "aisha" });
 
-      // Act
-      const result = group.join({
+      const readmission = group.join({
         userId: "aisha",
         invitationToken: "first-token",
         now: now(),
       });
 
-      // Assert
-      expect(result).toBe("JOINED");
+      expect(readmission).toBe("JOINED");
       expect(group.memberships.map((member) => member.userId)).toEqual([
         "owner",
         "aisha",
@@ -465,14 +383,17 @@ describe("RegularGroup", () => {
 });
 
 const now = () => new Date("2026-09-15T00:00:00Z");
-const newGroup = () =>
-  RegularGroup.create({
-    groupId: "group",
-    ownerId: "owner",
+function newGroup(overrides: Partial<RegularGroupDetails> = {}): RegularGroup {
+  return new RegularGroup(groupDetails({
     name: "Sunday badminton",
     invitationToken: "first-token",
-    now: now(),
-  });
+    ...overrides,
+  }));
+}
+
+function groupMemberships(...userIds: string[]): GroupMembership[] {
+  return userIds.map((userId) => new GroupMembership({ userId, joinedAt: now() }));
+}
 
 function groupDetails(
   overrides: Partial<RegularGroupDetails> = {},

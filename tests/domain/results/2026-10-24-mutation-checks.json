@@ -1,0 +1,28 @@
+{
+  "mutations": [
+    "Participation.withChanges drops replacesParticipationId",
+    "PayoutAttempt.requestedIntent returns 999 cents instead of its actual amount"
+  ],
+  "environment": "Isolated copies, installed Vitest, Node environment with the repository alias; production source in the PR is unchanged.",
+  "results": [
+    {
+      "revision": "ecdc64b",
+      "total": 607,
+      "passed": 607,
+      "failed": 0,
+      "failedTests": []
+    },
+    {
+      "revision": "review fixes",
+      "total": 624,
+      "passed": 620,
+      "failed": 4,
+      "failedTests": [
+        "requestedIntent_WhenPayoutIsRequested_ContainsDurableRequestDetails",
+        "withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory",
+        "remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory",
+        "cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory"
+      ]
+    }
+  ]
+}

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { Money } from "@/components/ui/money";
 import { AttendanceVerificationForm } from "@/app/commit/_components/attendance-verification-form";
@@ -99,16 +98,21 @@ export function SessionParticipantsView({ sessionId, outcome, refreshing, remova
       {session.canVerifyAttendance && <AttendanceVerificationForm sessionId={session.sessionId} onSaved={onRefresh}
         players={session.participants.filter((participant) => participant.status === "COMMITTED" && participant.attendance === "UNVERIFIED")} />}
       <section aria-labelledby="participant-list-heading">
-        <h2 id="participant-list-heading" className="mb-3 text-lg font-semibold">Participants ({session.participants.length})</h2>
-        {session.participants.length === 0 ? <EmptyState title="No participants yet" description="Participants will appear here when they join this session." />
-          : <ul aria-label="Participants" className="space-y-3">
+        <h2 id="participant-list-heading" className="mb-3 text-lg font-semibold">Participants ({session.participants.length + (session.booker.participationId ? 0 : 1)})</h2>
+        <ul aria-label="Participants" className="space-y-3">
+            {!session.booker.participationId && <li className="rounded-lg border bg-card p-4">
+              <article aria-label={session.booker.displayName}>
+                <h3 className="break-words font-medium">{session.booker.displayName}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Booker · You</p>
+              </article>
+            </li>}
             {session.participants.map((participant) => {
               const status = removed.has(participant.participationId) ? "REMOVED" : participant.status;
               return <li key={participant.participationId} className="rounded-lg border bg-card p-4">
                 <article aria-label={participant.displayName} className="flex min-w-0 flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <h3 className="break-words font-medium">{participant.displayName}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{statusLabels[status]}
+                    <p className="mt-1 text-sm text-muted-foreground">{session.booker.participationId === participant.participationId && <>Booker · You · </>}{statusLabels[status]}
                       {status === "COMMITTED" && participant.attendance !== "UNVERIFIED" && <> · {attendanceLabels[participant.attendance]}</>}</p>
                   </div>
                   {status === "COMMITTED" && participant.canRemove && session.status === "OPEN" && !started && <Button
@@ -119,7 +123,7 @@ export function SessionParticipantsView({ sessionId, outcome, refreshing, remova
                 </article>
               </li>;
             })}
-          </ul>}
+          </ul>
         {session.participants.some((participant) => participant.status === "WAITLISTED") && <p className="mt-4 text-sm text-muted-foreground">Waitlist order is preserved. Removing a participant does not automatically promote someone from the waitlist.</p>}
       </section>
     </>}

@@ -11,228 +11,65 @@ import { describe, expect, test } from "vitest";
 const createdAt = new Date("2026-10-01");
 const settledAt = new Date("2026-10-03");
 
-describe("Participation", () => {
-  describe("Construction and isolation", () => {
+describe("Participation state and fund lifecycle", () => {
+  describe("Commitment and queue state", () => {
     test("constructor_WhenDatesAreMutated_PreservesTimestampAndImmutableHold", () => {
-      // Arrange
       const input = participationDetails();
-      const participation = new Participation(input);
 
-      // Act
+      const participation = new Participation(input);
       input.committedAt?.setTime(0);
       participation.committedAt?.setTime(0);
 
-      // Assert
       expect(participation.committedAt).toEqual(createdAt);
       expect(participation.hold).toBe(input.hold);
     });
 
     test("constructor_WhenHoldBelongsToAnotherParticipation_ThrowsDomainError", () => {
-      // Arrange
       const details = participationDetails({
         hold: new FundHold(holdDetails({ participationId: "foreign" })),
       });
 
-      // Act & Assert
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenCommittedHoldIsMissing_ThrowsDomainError", () => {
-      // Arrange
       const details = participationDetails({ hold: undefined });
 
-      // Act & Assert
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenCommitmentDateIsMissing_ThrowsDomainError", () => {
-      // Arrange
       const details = participationDetails({ committedAt: undefined });
 
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenAttendanceHasNoVerification_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({ attendance: "ATTENDED" });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({
-        verifiedAt: settledAt,
-        verificationMethod: "BOOKER",
-      });
-
-      // Act & Assert
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenWaitlistMetadataIsMissing_ThrowsDomainError", () => {
-      // Arrange
       const details = participationDetails({
         status: "WAITLISTED",
         hold: undefined,
       });
 
-      // Act & Assert
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenWaitlistedParticipationHasHold_ThrowsDomainError", () => {
-      // Arrange
       const details = participationDetails({
         status: "WAITLISTED",
         waitlistedAt: createdAt,
         queueSequence: 1,
       });
 
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({
-        status: "WITHDRAWN",
-        withdrawnAt: settledAt,
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({ status: "CANCELLED" });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenRemovedParticipationHasHold_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({ status: "REMOVED" });
-
-      // Act & Assert
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
     test("constructor_WhenQueueSequenceIsZero_ThrowsDomainError", () => {
-      // Arrange
       const details = participationDetails({ queueSequence: 0 });
 
-      // Act & Assert
       expect(() => new Participation(details)).toThrow(DomainError);
     });
 
-    test("constructor_WhenParticipationReplacesItself_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({
-        replacesParticipationId: "participation",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError", () => {
-      // Arrange
-      const details = participationDetails({
-        replacementMode: "DIRECT_INVITE",
-        replacementInviteeId: "ben",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(DomainError);
-    });
-
-    test("constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation", () => {
-      // Arrange
-      const details = participationDetails({
-        status: "WITHDRAWN",
-        withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
-        replacementMode: "DIRECT_INVITE",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-
-    test("constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation", () => {
-      // Arrange
-      const details = participationDetails({
-        status: "WITHDRAWN",
-        withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
-        replacementMode: "DIRECT_INVITE",
-        replacementInviteeId: " ",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-
-    test("constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement", () => {
-      // Arrange
-      const details = participationDetails({
-        status: "WITHDRAWN",
-        withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
-        replacementMode: "DIRECT_INVITE",
-        replacementInviteeId: "user",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-
-    test("constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata", () => {
-      // Arrange
-      const details = participationDetails({
-        status: "WITHDRAWN",
-        withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
-        replacementMode: "OPEN_SLOT",
-        replacementInviteeId: "ben",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-
-    test("constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata", () => {
-      // Arrange
-      const details = participationDetails({
-        status: "WITHDRAWN",
-        withdrawnAt: settledAt,
-        hold: new FundHold(holdDetails()).awaitReplacement(),
-        replacementInviteeId: "ben",
-      });
-
-      // Act & Assert
-      expect(() => new Participation(details)).toThrow(
-        expect.objectContaining({ code: "INVALID_INPUT" }),
-      );
-    });
-  });
-
-  describe("Commitment and replacement", () => {
     test("commit_WhenPromotedAsReplacement_PreservesQueueEntryAndReplacementIdentity", () => {
-      // Arrange
       const queued = Participation.createWaitlisted({
         participationId: "participation",
         userId: "user",
@@ -240,32 +77,142 @@ describe("Participation", () => {
         queueSequence: 1,
       });
 
-      // Act
       const committed = queued.commit(
         new FundHold(holdDetails()),
         createdAt,
         "previous",
       );
 
-      // Assert
       expect(committed.replacesParticipationId).toBe("previous");
       expect(queued.status).toBe("WAITLISTED");
       expect(queued.hold).toBeUndefined();
     });
+  });
+
+  describe("Withdrawal and replacement reservations", () => {
+    test("withdraw_WhenAcceptedReplacementLeaves_PreservesReplacementHistory", () => {
+      const replacement = new Participation(
+        participationDetails({ replacesParticipationId: "original-participation" }),
+      );
+      const awaitingHold = new FundHold(
+        holdDetails({ state: "AWAITING_REPLACEMENT" }),
+      );
+
+      const withdrawn = replacement.withdraw(awaitingHold, settledAt, "OPEN_SLOT");
+
+      expect(withdrawn.status).toBe("WITHDRAWN");
+      expect(withdrawn.replacesParticipationId).toBe("original-participation");
+      expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
+      expect(replacement.status).toBe("COMMITTED");
+    });
+
+    test("constructor_WhenWithdrawnParticipationHasHeldFunds_ThrowsDomainError", () => {
+      const details = participationDetails({
+        status: "WITHDRAWN",
+        withdrawnAt: settledAt,
+      });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenParticipationReplacesItself_ThrowsDomainError", () => {
+      const details = participationDetails({
+        replacesParticipationId: "participation",
+      });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenCommittedParticipationHasReplacementInvitation_ThrowsDomainError", () => {
+      const details = participationDetails({
+        replacementMode: "DIRECT_INVITE",
+        replacementInviteeId: "ben",
+      });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenInvitationHasNoNamedInvitee_RejectsInvitation", () => {
+      const details = participationDetails({
+        status: "WITHDRAWN",
+        withdrawnAt: settledAt,
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        replacementMode: "DIRECT_INVITE",
+      });
+
+      expect(() => new Participation(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenInvitationHasBlankNamedInvitee_RejectsInvitation", () => {
+      const details = participationDetails({
+        status: "WITHDRAWN",
+        withdrawnAt: settledAt,
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        replacementMode: "DIRECT_INVITE",
+        replacementInviteeId: " ",
+      });
+
+      expect(() => new Participation(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenInvitationNamesWithdrawingParticipant_RejectsSelfReplacement", () => {
+      const details = participationDetails({
+        status: "WITHDRAWN",
+        withdrawnAt: settledAt,
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        replacementMode: "DIRECT_INVITE",
+        replacementInviteeId: "user",
+      });
+
+      expect(() => new Participation(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenOpenPlaceHasNamedInvitee_RejectsReservationMetadata", () => {
+      const details = participationDetails({
+        status: "WITHDRAWN",
+        withdrawnAt: settledAt,
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        replacementMode: "OPEN_SLOT",
+        replacementInviteeId: "ben",
+      });
+
+      expect(() => new Participation(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
+
+    test("constructor_WhenInviteeHasNoReplacementMode_RejectsReservationMetadata", () => {
+      const details = participationDetails({
+        status: "WITHDRAWN",
+        withdrawnAt: settledAt,
+        hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        replacementInviteeId: "ben",
+      });
+
+      expect(() => new Participation(details)).toThrow(
+        expect.objectContaining({ code: "INVALID_INPUT" }),
+      );
+    });
 
     test("withdraw_WhenEarlyWithdrawalInvitesOneNamedPerson_PreservesInvitationWithRefund", () => {
-      // Arrange
       const committed = new Participation(participationDetails());
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
 
-      // Act
       const withdrawn = committed.withdraw(
-        committed.hold!.refund(settledAt),
+        refundedHold,
         settledAt,
         "DIRECT_INVITE",
         "ben",
       );
 
-      // Assert
       expect(withdrawn.status).toBe("WITHDRAWN");
       expect(withdrawn.hold?.state).toBe("REFUNDED");
       expect(withdrawn.replacementMode).toBe("DIRECT_INVITE");
@@ -275,18 +222,18 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenLateWithdrawalInvitesOneNamedPerson_PreservesInvitationWhileAwaitingReplacement", () => {
-      // Arrange
       const committed = new Participation(participationDetails());
+      const awaitingHold = new FundHold(
+        holdDetails({ state: "AWAITING_REPLACEMENT" }),
+      );
 
-      // Act
       const withdrawn = committed.withdraw(
-        committed.hold!.awaitReplacement(),
+        awaitingHold,
         settledAt,
         "DIRECT_INVITE",
         "ben",
       );
 
-      // Assert
       expect(withdrawn.status).toBe("WITHDRAWN");
       expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
       expect(withdrawn.replacementInviteeId).toBe("ben");
@@ -294,16 +241,16 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenPersonalInvitationAlreadyChosen_RejectsSwitchToOpenPlace", () => {
-      // Arrange
-      const committed = new Participation(participationDetails());
-      const withdrawn = committed.withdraw(
-        committed.hold!.refund(settledAt),
-        settledAt,
-        "DIRECT_INVITE",
-        "ben",
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: settledAt,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "ben",
+          hold: new FundHold(holdDetails({ state: "REFUNDED", settledAt })),
+        }),
       );
 
-      // Act & Assert
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "OPEN_SLOT"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -313,15 +260,15 @@ describe("Participation", () => {
     });
 
     test("withdraw_WhenOpenPlaceAlreadyChosen_RejectsSwitchToPersonalInvitation", () => {
-      // Arrange
-      const committed = new Participation(participationDetails());
-      const withdrawn = committed.withdraw(
-        committed.hold!.awaitReplacement(),
-        settledAt,
-        "OPEN_SLOT",
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: settledAt,
+          replacementMode: "OPEN_SLOT",
+          hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        }),
       );
 
-      // Act & Assert
       expect(() =>
         withdrawn.withdraw(withdrawn.hold!, settledAt, "DIRECT_INVITE", "ben"),
       ).toThrow(expect.objectContaining({ code: "INVALID_STATE" }));
@@ -330,28 +277,7 @@ describe("Participation", () => {
       expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
     });
 
-    test("cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata", () => {
-      // Arrange
-      const committed = new Participation(participationDetails());
-      const withdrawn = committed.withdraw(
-        committed.hold!.awaitReplacement(),
-        createdAt,
-        "DIRECT_INVITE",
-        "ben",
-      );
-
-      // Act
-      const cancelled = withdrawn.cancel(withdrawn.hold!.refund(settledAt));
-
-      // Assert
-      expect(cancelled.status).toBe("CANCELLED");
-      expect(cancelled.replacementMode).toBeUndefined();
-      expect(cancelled.replacementInviteeId).toBeUndefined();
-      expect(withdrawn.replacementInviteeId).toBe("ben");
-    });
-
     test("refundReplacement_WhenReplacementIsFound_ReturnsNewChild", () => {
-      // Arrange
       const committed = new Participation(participationDetails());
       const withdrawn = committed.withdraw(
         committed.hold!.awaitReplacement(),
@@ -360,10 +286,8 @@ describe("Participation", () => {
         "ben",
       );
 
-      // Act
       const finalized = withdrawn.refundReplacement(settledAt);
 
-      // Assert
       expect(committed.status).toBe("COMMITTED");
       expect(committed.hold?.state).toBe("HELD");
       expect(withdrawn.hold?.state).toBe("AWAITING_REPLACEMENT");
@@ -372,9 +296,130 @@ describe("Participation", () => {
     });
   });
 
-  describe("Settlement", () => {
+  describe("Cancellation and removal", () => {
+    test("remove_WhenAcceptedReplacementIsRemoved_PreservesReplacementHistory", () => {
+      const replacement = new Participation(
+        participationDetails({ replacesParticipationId: "original-participation" }),
+      );
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
+
+      const removed = replacement.remove(refundedHold);
+
+      expect(removed.status).toBe("REMOVED");
+      expect(removed.replacesParticipationId).toBe("original-participation");
+      expect(removed.hold?.state).toBe("REFUNDED");
+      expect(replacement.status).toBe("COMMITTED");
+    });
+
+    test("cancel_WhenAcceptedReplacementIsCancelled_PreservesReplacementHistory", () => {
+      const replacement = new Participation(
+        participationDetails({ replacesParticipationId: "original-participation" }),
+      );
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
+
+      const cancelled = replacement.cancel(refundedHold);
+
+      expect(cancelled.status).toBe("CANCELLED");
+      expect(cancelled.replacesParticipationId).toBe("original-participation");
+      expect(cancelled.hold?.state).toBe("REFUNDED");
+      expect(replacement.status).toBe("COMMITTED");
+    });
+
+    test("constructor_WhenCancelledParticipationHasHeldFunds_ThrowsDomainError", () => {
+      const details = participationDetails({ status: "CANCELLED" });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenRemovedParticipationHasHold_ThrowsDomainError", () => {
+      const details = participationDetails({ status: "REMOVED" });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("cancel_WhenWithdrawalHasPersonalInvitation_ClearsReservationMetadata", () => {
+      const withdrawn = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: createdAt,
+          replacementMode: "DIRECT_INVITE",
+          replacementInviteeId: "ben",
+          hold: new FundHold(holdDetails({ state: "AWAITING_REPLACEMENT" })),
+        }),
+      );
+      const refundedHold = new FundHold(
+        holdDetails({ state: "REFUNDED", settledAt }),
+      );
+
+      const cancelled = withdrawn.cancel(refundedHold);
+
+      expect(cancelled.status).toBe("CANCELLED");
+      expect(cancelled.replacementMode).toBeUndefined();
+      expect(cancelled.replacementInviteeId).toBeUndefined();
+      expect(withdrawn.replacementInviteeId).toBe("ben");
+    });
+  });
+
+  describe("Attendance verification and settlement", () => {
+    test("constructor_WhenAttendanceHasNoVerification_ThrowsDomainError", () => {
+      const details = participationDetails({ attendance: "ATTENDED" });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("constructor_WhenUnverifiedAttendanceHasMetadata_ThrowsDomainError", () => {
+      const details = participationDetails({
+        verifiedAt: settledAt,
+        verificationMethod: "BOOKER",
+      });
+
+      expect(() => new Participation(details)).toThrow(DomainError);
+    });
+
+    test("settleHold_WhenAttendanceIsUnverified_RejectsRelease", () => {
+      const committed = new Participation(participationDetails());
+
+      expect(() =>
+        committed.settleHold("RELEASE", "payout", settledAt),
+      ).toThrow(DomainError);
+    });
+
+    test("settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy", () => {
+      const attended = new Participation(
+        participationDetails({
+          attendance: "ATTENDED",
+          verificationMethod: "BOOKER",
+          verifiedAt: settledAt,
+        }),
+      );
+
+      const settled = attended.settleHold("RELEASE", "payout", settledAt);
+
+      expect(settled.hold?.state).toBe("RELEASED");
+      expect(attended.hold?.state).toBe("HELD");
+    });
+
+    test("settleHold_WhenParticipantAttended_RejectsForfeiture", () => {
+      const attended = new Participation(
+        participationDetails({
+          attendance: "ATTENDED",
+          verificationMethod: "BOOKER",
+          verifiedAt: settledAt,
+        }),
+      );
+
+      expect(() => attended.settleHold("FORFEIT", "payout", settledAt)).toThrow(
+        DomainError,
+      );
+    });
+  });
+
+  describe("Replacement expiry and forfeiture", () => {
     test("expireReplacement_WhenReplacementIsStillAwaited_ReturnsForfeitureDueCopy", () => {
-      // Arrange
       const withdrawn = new Participation(
         participationDetails({
           status: "WITHDRAWN",
@@ -385,10 +430,8 @@ describe("Participation", () => {
         }),
       );
 
-      // Act
       const expired = withdrawn.expireReplacement(settledAt);
 
-      // Assert
       expect(expired).not.toBe(withdrawn);
       expect(expired.hold?.state).toBe("FORFEITURE_DUE");
       expect(expired.replacementInviteeId).toBe("ben");
@@ -396,7 +439,6 @@ describe("Participation", () => {
     });
 
     test("settleHold_WhenReplacementForfeitureIsDue_ReturnsForfeitedCopy", () => {
-      // Arrange
       const withdrawn = new Participation(
         participationDetails({
           status: "WITHDRAWN",
@@ -405,49 +447,28 @@ describe("Participation", () => {
         }),
       );
 
-      // Act
       const finalized = withdrawn.settleHold("FORFEIT", "payout", settledAt);
 
-      // Assert
       expect(finalized).not.toBe(withdrawn);
       expect(withdrawn.hold?.state).toBe("FORFEITURE_DUE");
       expect(finalized.hold?.state).toBe("FORFEITED");
       expect(finalized.hold?.payoutId).toBe("payout");
-      expect(finalized.reliabilityOutcome(settledAt)?.value).toBe(0);
     });
 
-    test("settleHold_WhenAttendanceIsUnverified_RejectsRelease", () => {
-      // Arrange
-      const committed = new Participation(participationDetails());
-
-      // Act & Assert
-      expect(() =>
-        committed.settleHold("RELEASE", "payout", settledAt),
-      ).toThrow(DomainError);
-    });
-
-    test("settleHold_WhenAttendanceIsVerified_ReturnsReleasedCopy", () => {
-      // Arrange
-      const committed = new Participation(participationDetails());
-      const attended = committed.verify("ATTENDED", "BOOKER", settledAt);
-
-      // Act
-      const settled = attended.settleHold("RELEASE", "payout", settledAt);
-
-      // Assert
-      expect(settled.hold?.state).toBe("RELEASED");
-      expect(attended.hold?.state).toBe("HELD");
-    });
-
-    test("settleHold_WhenParticipantAttended_RejectsForfeiture", () => {
-      // Arrange
-      const committed = new Participation(participationDetails());
-      const attended = committed.verify("ATTENDED", "BOOKER", settledAt);
-
-      // Act & Assert
-      expect(() => attended.settleHold("FORFEIT", "payout", settledAt)).toThrow(
-        DomainError,
+    test("reliabilityOutcome_WhenReplacementForfeitureIsSettled_ReturnsZero", () => {
+      const finalized = new Participation(
+        participationDetails({
+          status: "WITHDRAWN",
+          withdrawnAt: createdAt,
+          hold: new FundHold(
+            holdDetails({ state: "FORFEITED", payoutId: "payout", settledAt }),
+          ),
+        }),
       );
+
+      const reliabilityValue = finalized.reliabilityOutcome(settledAt)?.value;
+
+      expect(reliabilityValue).toBe(0);
     });
   });
 });

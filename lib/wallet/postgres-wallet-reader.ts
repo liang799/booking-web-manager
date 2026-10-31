@@ -68,7 +68,7 @@ export class PostgresWalletReader extends PostgresLedgerReader implements Wallet
   async listActiveHolds(walletId: UUID): Promise<readonly ActiveWalletHold[]> {
     const rows = await this.query(
       `select h.hold_id, h.session_id, h.held_cents, h.original_cents, h.created_at,
-              s.venue_name, s.sport, s.start_at
+              s.venue_name, s.sport, s.start_at, s.booker_id
          from hold_balances h
          left join sessions s on s.session_id = h.session_id
         where h.wallet_id = $1 and h.held_cents > 0
@@ -79,6 +79,7 @@ export class PostgresWalletReader extends PostgresLedgerReader implements Wallet
       return rows.map((row) => ({
         holdId: text(row.hold_id),
         sessionId: text(row.session_id),
+        bookerId: row.booker_id == null ? undefined : text(row.booker_id),
         heldAmount: fromDatabaseCents(row.held_cents, "held_cents"),
         originalAmount: fromDatabaseCents(row.original_cents, "original_cents"),
         createdAt: date(row.created_at),

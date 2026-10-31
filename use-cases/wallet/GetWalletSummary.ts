@@ -23,6 +23,7 @@ export class GetWalletSummary {
       activeHolds: holds.map((hold) => ({
         holdId: hold.holdId,
         sessionId: hold.sessionId,
+        isBooker: hold.bookerId === userId,
         heldCents: hold.heldAmount.toCents(),
         originalCents: hold.originalAmount.toCents(),
         createdAt: hold.createdAt,

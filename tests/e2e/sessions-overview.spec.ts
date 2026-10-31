@@ -16,8 +16,8 @@ async function insertOverviewSession(context: SessionTestContext, input: {
   const startAt = new Date(Date.UTC(2045, 5, 17, 10, input.minute ?? 0));
   await context.pool.query(
     `insert into sessions(session_id,booker_id,venue_name,region,sport,start_at,end_at,total_cost_cents,
-      total_slots,minimum_headcount,booking_share_cents,visibility,room_token,holding_account_id)
-      values ($1,$2,$3,'West','Tennis',$4,$5,2000,4,2,500,$6,$7,$8)`,
+      total_slots,booking_share_cents,visibility,room_token,holding_account_id)
+      values ($1,$2,$3,'West','Tennis',$4,$5,2000,5,500,$6,$7,$8)`,
     [sessionId, input.bookerId, input.venueName, startAt, new Date(startAt.getTime() + 3_600_000),
       input.visibility ?? "PRIVATE", randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
   );
@@ -96,7 +96,7 @@ test("personal sessions authenticate pagination and restore URL selections witho
     await expect(navigation.getByRole("link", { name: "My sessions", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByRole("link", { name: "Discover", exact: true })).toBeVisible();
     await expect(navigation.getByRole("link", { name: "Settings", exact: true })).toHaveAttribute("href", "/profile");
-    await expect(tabs.getByRole("button", { name: "Joined", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(tabs.getByRole("button", { name: "I'm playing", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("article", { name: `Tennis Court Booking at ${joined[0]?.venueName}`, exact: true })).toBeVisible();
     // page.request shares the browser's real login cookies and supplies no bearer header.
     const next = await page.request.get("/api/sessions/mine", { params: { tab: "joined", cursor: firstPage.nextCursor! } });
@@ -152,26 +152,26 @@ test("personal sessions authenticate pagination and restore URL selections witho
       const url = new URL(candidate.url());
       return url.pathname === "/api/sessions/mine" && url.searchParams.get("tab") === "hosting";
     });
-    await tabs.getByRole("button", { name: "Hosting", exact: true }).click();
+    await tabs.getByRole("button", { name: "I'm organising", exact: true }).click();
     const hostingResponse = await hostingRead;
     expect(hostingResponse.status()).toBe(200);
     const hosting = sessionFeedResponseSchema.parse(await hostingResponse.json());
     expect(hosting.sessions.map((session) => session.sessionId)).toEqual([hostedId]);
     expect(hosting.sessions[0]?.role).toBe("HOST");
-    await expect(tabs.getByRole("button", { name: "Hosting", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(tabs.getByRole("button", { name: "I'm organising", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("button", { name: `Manage Tennis Court Booking at ${hostedVenue}`, exact: true })).toBeVisible();
     await expect(page.getByRole("region", { name: "Joined session timeline", exact: true })).toHaveCount(0);
     await expect(page).toHaveURL((url) => url.searchParams.get("tab") === "hosting"
       && !url.searchParams.has("session") && !url.searchParams.has("panel")
       && url.searchParams.get("source") === "overview-test" && url.hash === "#timeline-test");
     expect(await page.evaluate(() => window.history.state.overviewTest)).toBe(true);
-    await tabs.getByRole("button", { name: "Joined", exact: true }).click();
+    await tabs.getByRole("button", { name: "I'm playing", exact: true }).click();
     await expectSelectedSummary(page, joined[1]!, "participants");
     await expect(page).toHaveURL((url) => url.searchParams.get("session") === joined[1]!.sessionId && url.searchParams.get("panel") === "participants");
 
     await test.step("malformed state falls back safely and an inaccessible selection is removed only after exhaustion", async () => {
       await page.goto("/sessions?tab=invalid&session=not-a-uuid&panel=invalid&source=overview-test#timeline-test");
-      await expect(tabs.getByRole("button", { name: "Joined", exact: true })).toHaveAttribute("aria-current", "page");
+      await expect(tabs.getByRole("button", { name: "I'm playing", exact: true })).toHaveAttribute("aria-current", "page");
       await expect(page).toHaveURL((url) => url.searchParams.get("session") === "not-a-uuid" && url.searchParams.get("panel") === "invalid");
       await expectSelectedSummary(page, joined[0]!, "details");
       // Explicitly viewing the implicit first card records its valid selection.

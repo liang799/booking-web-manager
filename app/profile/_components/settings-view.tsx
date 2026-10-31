@@ -1,4 +1,4 @@
-import { CalendarDays, CircleHelp, FileText, Pencil, Plus, ReceiptText, ShieldCheck, Target, Trash2, UserRound } from "lucide-react";
+import { CalendarDays, CircleHelp, FileText, LogOut, Pencil, Plus, ReceiptText, ShieldCheck, Target, Trash2, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -10,11 +10,14 @@ import { SettingsRow } from "./settings-row";
 interface SettingsViewProps {
   readonly user: {
     readonly displayName: string;
-    readonly reliabilityScore: number;
+    /** The public user ID without "@" (ADR-0021); every active account has one. */
+    readonly handle?: string | null;
+    readonly reliabilityScore: number | null;
     readonly preferredSports: readonly string[];
     readonly preferredRegions: readonly string[];
   };
   readonly notifications?: ReactNode;
+  readonly logoutAction?: () => Promise<void>;
 }
 
 const panelClassName = "overflow-hidden rounded-lg border bg-card shadow-[0_2px_3px_hsl(var(--foreground)/0.02),0_6px_14px_-6px_hsl(var(--foreground)/0.1)]";
@@ -44,7 +47,7 @@ function PreferenceLink({ icon, title, values }: {
 }
 
 /** Settings presentation; authentication and browser notification state stay with their owners. */
-export function SettingsView({ user, notifications }: SettingsViewProps) {
+export function SettingsView({ user, notifications, logoutAction }: SettingsViewProps) {
   return (
     <div className="mx-auto max-w-[1280px] px-6 pb-10 pt-2 md:px-8 md:pb-12 md:pt-10 lg:px-12 lg:pt-12">
       <header className="mb-7 hidden items-start justify-between gap-6 md:flex lg:mb-8">
@@ -68,7 +71,12 @@ export function SettingsView({ user, notifications }: SettingsViewProps) {
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="break-words text-base font-bold tracking-tight md:text-2xl">{user.displayName}</h2>
-          <ReliabilityBadge score={user.reliabilityScore} variant="profile" className="mt-1" />
+          {user.handle != null && <p className="break-all text-sm text-muted-foreground md:text-base">@{user.handle}</p>}
+          {user.reliabilityScore === null ? (
+            <p className="mt-1 text-sm text-muted-foreground">Reliability score unavailable right now.</p>
+          ) : (
+            <ReliabilityBadge score={user.reliabilityScore} variant="profile" className="mt-1" />
+          )}
           {/* The profile read model has no activity totals yet. Do not display fictional counts. */}
           <dl className="mt-2 grid max-w-md grid-cols-2 divide-x md:mt-5">
             <div className="relative grid min-w-0 grid-rows-[auto_1fr] pr-2 min-[390px]:pl-5 md:pl-9 md:pr-6">
@@ -125,6 +133,14 @@ export function SettingsView({ user, notifications }: SettingsViewProps) {
             tone="danger"
           />
         </div>
+        {logoutAction && (
+          <form action={logoutAction} className="mt-4">
+            <Button type="submit" variant="outline" className="min-h-11 w-full gap-2">
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Log out
+            </Button>
+          </form>
+        )}
       </section>
     </div>
   );

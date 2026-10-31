@@ -65,7 +65,7 @@ test("a host creates a private session and shares a mobile invitation that a sec
     await expectLocation(page, "/sessions?created=1");
     await hostBrowser.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(page.url()).origin });
     await openHostedSession(page, venueName);
-    const card = page.getByRole("article", { name: `Tennis at ${venueName}`, exact: true });
+    const card = page.getByRole("dialog");
     const copy = card.getByRole("button", { name: "Copy invitation link", exact: true });
     await copy.focus();
     await page.keyboard.press("Enter");
@@ -97,15 +97,24 @@ test("a host creates a private session and shares a mobile invitation that a sec
       expect(invitation.status()).toBe(200);
       expect(await invitation.json()).toEqual({ invitationPath: destination });
       if (visibility === "PUBLIC") {
-        const publicListing = await request.get("/api/sessions", { params: { q: venueName } });
+        const anonymousListing = await request.get("/api/sessions", { params: { q: venueName } });
+        expect(anonymousListing.status()).toBe(401);
+        expect(await anonymousListing.json()).toEqual({
+          error: { code: "UNAUTHENTICATED", message: "Authentication is required" },
+        });
+        const publicListing = await request.get("/api/sessions", {
+          headers: { Authorization: `Bearer ${player.token}` }, params: { q: venueName },
+        });
         expect(publicListing.status()).toBe(200);
         const publicBody = await publicListing.json();
         expect(publicBody.items.map((item: { sessionId: string }) => item.sessionId)).toEqual([sessionId]);
         expect(JSON.stringify(publicBody)).not.toContain(stored.room_token);
+        const ownerListing = await request.get("/api/sessions", { headers: ownerHeaders, params: { q: venueName } });
+        expect(await ownerListing.json()).toEqual({ items: [], nextCursor: null });
       }
     }
 
-    const discovery = await request.get("/api/sessions", { params: { q: venueName } });
+    const discovery = await request.get("/api/sessions", { headers: ownerHeaders, params: { q: venueName } });
     expect(discovery.status()).toBe(200);
     expect(await discovery.json()).toEqual({ items: [], nextCursor: null });
     const guest = await guestBrowser.newPage();
@@ -172,7 +181,7 @@ test("clipboard denial leaves a selectable invitation and a lost join response r
     }));
     await login(page, fixture.booker, "/sessions?tab=hosting");
     await openHostedSession(page, fixture.venueName);
-    const card = page.getByRole("article", { name: `Badminton at ${fixture.venueName}`, exact: true });
+    const card = page.getByRole("dialog");
     await card.getByRole("button", { name: "Copy invitation link", exact: true }).click();
     const field = card.getByLabel("Invitation link", { exact: true });
     await expect(field).toHaveAttribute("readonly", "");
@@ -228,6 +237,8 @@ test("a full private session remains shareable and invited players waitlist with
       await addCancellationParticipant(cancellationSql(context), fixture.sessionId, await context.identity(false));
     }
     const player = await context.identity(false);
+    // Joining a waitlist holds nothing, but the wallet must still cover the share.
+    await fundInvitationWallet(context, player);
     const invitation = await request.get(`/api/sessions/${fixture.sessionId}/invitation`, { headers: { Authorization: `Bearer ${fixture.booker.token}` } });
     expect(invitation.status()).toBe(200);
     expect(await invitation.json()).toEqual({ invitationPath: fixture.invitationPath });
@@ -331,6 +342,7 @@ test("immediate registration returns without joining and an unfunded wallet cann
   try {
     const fixture = await invitationFixture(context);
     const email = `invited-${randomUUID()}@example.com`;
+    const handle = `invited_${randomUUID().slice(0, 8)}`;
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(fixture.invitationPath);
     const register = page.getByRole("link", { name: "Create account", exact: true });
@@ -342,6 +354,8 @@ test("immediate registration returns without joining and an unfunded wallet cann
     await page.getByRole("button", { name: "Sign Up", exact: true }).click();
     await page.getByLabel("Name", { exact: true }).fill("Invited player");
     await page.getByLabel("Preferred sport", { exact: true }).selectOption("Badminton");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await page.getByLabel("User ID", { exact: true }).fill(handle);
     await page.getByRole("button", { name: "Create account", exact: true }).click();
     await expectLocation(page, fixture.invitationPath);
     await expect(page.getByRole("heading", { name: fixture.venueName, exact: true })).toBeVisible();
@@ -352,6 +366,7 @@ test("immediate registration returns without joining and an unfunded wallet cann
     );
     expect(accounts.rows).toHaveLength(1);
     expect(accounts.rows[0]).toMatchObject({ available_cents: "0", entry_count: "0" });
+    expect((await context.pool.query("select handle from profiles where user_id=$1", [accounts.rows[0].id])).rows).toEqual([{ handle }]);
     expect((await context.pool.query("select count(*)::int as count from participations where session_id=$1 and user_id=$2", [fixture.sessionId, accounts.rows[0].id])).rows).toEqual([{ count: 0 }]);
     await page.getByRole("button", { name: `Join Badminton session at ${fixture.venueName}`, exact: true }).click();
     const unfunded = await confirmJoin(page);

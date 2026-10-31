@@ -13,7 +13,7 @@ const meta = {
     nextjs: { navigation: { pathname: "/sessions" } },
     docs: {
       description: {
-        component: "The signed-in sessions overview. Joined sessions use a chronological desktop agenda that opens at the next upcoming session: scroll up for older sessions and down for later ones. The active session places a wide photograph above its title, venue, and inline metadata, with a status badge over the photograph and a plain View details action to the right. Other sessions use unframed text rows with venue and time on the left and participant counts on the right. Dates sit in a dedicated timeline column, with larger selected dates. Time-based labels group the sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
+        component: "The signed-in sessions overview. Joined sessions use a chronological desktop agenda that opens at the next upcoming session. One deliberate wheel or trackpad gesture glides to one older or later session, then settles with that session fully open. Momentum belongs to the same gesture; ordinary scrollbar movement preserves the selected card. The active session places a wide photograph above its title, venue, and inline metadata, with a status badge over the photograph and a plain View details action to the right. Other sessions use unframed text rows with venue and time on the left and participant counts on the right. Dates sit in a dedicated timeline column, with larger selected dates. Time-based labels group the sessions. Detailed information and participant panels belong to the transient session dialog. Hosting shows upcoming cards and compact history. Below 768px both views use the simple dated list. Dates use Singapore time; artwork is decorative and participant icons represent aggregate counts.",
       },
     },
   },
@@ -156,7 +156,8 @@ export const DesktopJoined: Story = {
     if (!overview) throw new globalThis.Error("The Joined overview was not rendered.");
     await expect(within(overview).getByText(/My sessions/)).toBeVisible();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await expect(views.getByRole("button", { name: /^Joined$/ })).toHaveAttribute("aria-current", "page");
+    await expect(views.getByRole("button", { name: /^I'm playing$/ })).toHaveAttribute("aria-current", "page");
+    await expect(canvas.getByRole("link", { name: "Manage my places" })).toHaveAttribute("href", "/sessions/joined");
     canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" }).focus();
     await waitFor(() => expect(canvas.getByRole("heading", { name: "This week" })).toBeVisible());
     await expect(canvas.getByRole("heading", { name: "Earlier this month" })).toBeInTheDocument();
@@ -339,6 +340,7 @@ export const DesktopHosting: Story = {
     const past = canvas.getByRole("region", { name: "Past (6)" });
     await expect(within(past).getAllByRole("button", { name: /^View / })).toHaveLength(6);
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: "Manage my places" })).not.toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-timeline-marker]")).toBeNull();
     await userEvent.click(within(upcoming).getByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" }));
     await expect(args.onOpenSession).toHaveBeenCalledWith(hostedSessions[0]);
@@ -354,6 +356,9 @@ export const MobileJoined: Story = {
     await expect(navigation.getByRole("link", { name: /^Sessions$/ })).toHaveAttribute("aria-current", "page");
     const list = within(canvas.getByRole("list", { name: "Joined sessions" }));
     await expect(list.getAllByRole("listitem")).toHaveLength(10);
+    const manage = canvas.getByRole("link", { name: "Manage my places" });
+    await expect(manage).toHaveAttribute("href", "/sessions/joined");
+    await expect(manage.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     const first = list.getByRole("button", { name: "View Tennis Court Booking at Bukit Timah Community Club, 21 Oct 2026" });
     await expect(first.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await expect(first).toHaveTextContent("7:00 PM – 8:00 PM");
@@ -369,7 +374,7 @@ export const MobileHosting: Story = {
   args: { tab: "hosting", sessions: hostedSessions },
   play: async ({ canvas }) => {
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await expect(views.getByRole("button", { name: /^Hosting$/ })).toHaveAttribute("aria-current", "page");
+    await expect(views.getByRole("button", { name: /^I'm organising$/ })).toHaveAttribute("aria-current", "page");
     const list = within(canvas.getByRole("list", { name: "Hosting sessions" }));
     await expect(list.getAllByRole("listitem")).toHaveLength(10);
     await expect(views.getByRole("link", { name: "Groups" })).toHaveAttribute("href", "/groups");
@@ -401,6 +406,8 @@ export const EmptyJoined: Story = {
   args: { sessions: [], upcomingCount: 0, pastCount: 0 },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole("heading", { name: "Your sessions will appear here." })).toBeVisible();
+    // A replacement invitation can exist before the player has joined anything.
+    await expect(canvas.getByRole("link", { name: "Manage my places" })).toHaveAttribute("href", "/sessions/joined");
     await expect(canvas.getByRole("link", { name: "Join a session" })).toHaveAttribute("href", "/discover?returnTo=%2Fsessions");
     await expect(canvas.getByRole("link", { name: "Create a session" })).toHaveAttribute("href", "/sessions/create");
     await expect(canvas.getByRole("heading", { name: "Ideas to get started", level: 2 })).toBeVisible();
@@ -412,7 +419,7 @@ export const EmptyJoined: Story = {
     await expect(canvas.getByRole("link", { name: /^Play with a group/ })).toHaveAttribute("href", "/groups");
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
     const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(views.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(views.getByRole("button", { name: "I'm organising" }));
     await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     await expectNoHorizontalOverflow();
   },
@@ -494,7 +501,7 @@ export const Loading: Story = {
     await expect(canvas.queryByRole("heading", { name: "Your sessions will appear here." })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
     await expect(canvas.getByRole("link", { name: "New session" })).toBeVisible();
-    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "Hosting" }));
+    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "I'm organising" }));
     await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     await expectNoHorizontalOverflow();
   },
@@ -506,7 +513,7 @@ export const LoadingHosting: Story = {
     await expect(canvas.getByRole("status")).toHaveTextContent("Loading your sessions…");
     await expectFeedSkeleton(canvasElement, "hosting");
     await expect(canvas.queryByRole("heading", { name: "You haven’t created any sessions." })).not.toBeInTheDocument();
-    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "Joined" }));
+    await userEvent.click(within(canvas.getByRole("navigation", { name: "Session views" })).getByRole("button", { name: "I'm playing" }));
     await expect(args.onTabChange).toHaveBeenCalledWith("joined");
     await expectNoHorizontalOverflow();
   },
@@ -572,7 +579,7 @@ export const KeyboardAndSessionSummary: Story = {
     });
     await step("The hosting tab delegates the controlled tab change", async () => {
       const views = within(canvas.getByRole("navigation", { name: "Session views" }));
-      await userEvent.click(views.getByRole("button", { name: /^Hosting$/ }));
+      await userEvent.click(views.getByRole("button", { name: /^I'm organising$/ }));
       await expect(args.onTabChange).toHaveBeenCalledWith("hosting");
     });
     await step("A selected historical date stays subdued while gaining the current date size", async () => {
@@ -586,23 +593,39 @@ export const KeyboardAndSessionSummary: Story = {
   },
 };
 
-/** A neutral full feed for native Playwright wheel-input coverage. */
+/** A neutral full feed for native Playwright gesture-input coverage. */
 export const DesktopWheelNavigation: Story = {};
 
-export const NativeScrollProgress: Story = {
+export const NativeScrollPreservesSelection: Story = {
   play: async ({ canvas }) => {
     const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
     await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
     const initialHeight = timeline.getBoundingClientRect().height;
     const initialScroll = window.scrollY;
-    window.scrollBy({ top: 40, behavior: "instant" });
-    const next = canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" }).parentElement!;
-    await waitFor(() => expect(Number(next.style.getPropertyValue("--expansion"))).toBeGreaterThan(.2));
+    window.scrollBy({ top: 144, behavior: "instant" });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await expect(window.scrollY).toBeGreaterThan(initialScroll);
+    await expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
+    for (const row of timeline.querySelectorAll<HTMLElement>("[data-session-id]")) {
+      await expect(Number(row.style.getPropertyValue("--expansion"))).toBe(row.hasAttribute("data-current") ? 1 : 0);
+    }
     await expect(Math.abs(timeline.getBoundingClientRect().height - initialHeight)).toBeLessThan(1);
-    window.scrollTo({ top: initialScroll + 144, behavior: "instant" });
-    await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
     window.scrollTo({ top: initialScroll, behavior: "instant" });
-    await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 21 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
+    await expectNoHorizontalOverflow();
+  },
+};
+
+export const OneSessionPerGesture: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
+    await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
+    timeline.dispatchEvent(new WheelEvent("wheel", { deltaY: 400, bubbles: true, cancelable: true }));
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
+    await expectTimelineHierarchy(canvasElement, "2026-10-23");
+    await expect(canvas.getByRole("button", { name: "View details" })).toBeVisible();
+    for (const row of timeline.querySelectorAll<HTMLElement>("[data-session-id]")) {
+      await expect(Number(row.style.getPropertyValue("--expansion"))).toBe(row.hasAttribute("data-current") ? 1 : 0);
+    }
     await expectNoHorizontalOverflow();
   },
 };
@@ -621,7 +644,7 @@ export const KeyboardNavigatesTimeline: Story = {
   },
 };
 
-export const TallViewportNativeScroll: Story = {
+export const TallViewportGestureNavigation: Story = {
   globals: { viewport: { value: "tallDesktop", isRotated: false } },
   parameters: {
     viewport: { options: { tallDesktop: { name: "Tall desktop (1440px)", styles: { width: "1440px", height: "1800px" }, type: "desktop" } } },
@@ -629,7 +652,7 @@ export const TallViewportNativeScroll: Story = {
   play: async ({ canvas, canvasElement }) => {
     const timeline = canvas.getByRole("region", { name: "Joined session timeline" });
     await waitFor(() => expect(timeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
-    window.scrollBy({ top: 144, behavior: "instant" });
+    timeline.dispatchEvent(new WheelEvent("wheel", { deltaY: 40, bubbles: true, cancelable: true }));
     await waitFor(() => expect(canvas.getByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true"));
     await expectTimelineHierarchy(canvasElement, "2026-10-23");
     await expectNoHorizontalOverflow();

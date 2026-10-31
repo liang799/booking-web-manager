@@ -26,7 +26,6 @@ class PayoutAttempt <<AggregateRoot>> {
   +payoutAccountId : UUID
   +amount : Money
   +status : PayoutStatus
-  +idempotencyKey : string
   +requestedAt : Date
   +completedAt : Date [0..1]
   +failedAt : Date [0..1]
@@ -42,7 +41,6 @@ class PayoutAttempt <<AggregateRoot>> {
 interface PayoutBatch <<Snapshot>> {
   +payoutId : UUID
   +sessionId : UUID
-  +idempotencyKey : string
   +requestedAt : Date
   +lines : PayoutLine [1..*]
   +destination : PayoutDestination
@@ -69,5 +67,5 @@ PayoutAttempt "1" *-down- "1..*" PayoutLine : fixed line copies
 PayoutAttempt "1" *-down- "1" PayoutDestination : fixed destination copy
 PayoutLine -[hidden]right- PayoutDestination
 
-caption Selected public members. Booker prepares the batch; Session validates and owns its pending copy.\nPayoutAttempt retains its own copies; amount equals the sum of positive lines with unique hold IDs.\nCompleting an attempt alone changes no session holds or ledger entries; retries create a new attempt.\nIDs refer to Session, PayoutAccount, User, Participation, FundHold, Wallet and HoldingAccount.
+caption Selected public members. Booker prepares the batch; Session validates and owns its pending copy.\nPayoutAttempt retains its own copies; amount equals the sum of positive lines with unique hold IDs.\nCompleting an attempt alone changes no session holds or ledger entries; new submissions after failure create a new attempt.\nClient request replay and terminal receipts belong to application transactions (ADR-0020).\nIDs refer to Session, PayoutAccount, User, Participation, FundHold, Wallet and HoldingAccount.
 @enduml

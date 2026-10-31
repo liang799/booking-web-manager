@@ -28,7 +28,7 @@ const singaporeStart = new Intl.DateTimeFormat("en-SG", {
  * even if the dialog is closed and reopened, so a retry can never hold the share twice. A new
  * key is made only after a confirmed outcome or an explicit rejection.
  */
-export function JoinSessionButton({ session, joinSession = defaultJoinSession, loginHref = "/login?next=%2Fdiscover", emailHref = "/profile/email", roomToken }: {
+export function JoinSessionButton({ session, joinSession = defaultJoinSession, loginHref = "/login?next=%2Fdiscover", emailHref = "/profile/email", roomToken, triggerLabel = "Join" }: {
   readonly session: JoinableSession;
   /** Injected in stories and tests; production calls POST /api/sessions/commit. */
   readonly joinSession?: JoinSession;
@@ -36,6 +36,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
   /** Keeps contextual previews reachable after adding the email required for admission. */
   readonly emailHref?: string;
   readonly roomToken?: string;
+  readonly triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -73,7 +74,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
       <Dialog open={open} onOpenChange={(next) => { if (!pending) { if (next) openDialog(); else setOpen(false); } }}>
         <DialogTrigger asChild>
           <Button type="button" className="min-h-11" aria-label={`Join ${session.sport} session at ${session.venueName}`}>
-            Join
+            {triggerLabel}
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
@@ -88,7 +89,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
             <p role="status"><Money cents={outcome.heldCents} className="font-semibold" /> is now held in your wallet. It goes to the booker after attendance is verified.</p>
           )}
           {outcome?.status === "waitlisted" && (
-            <p role="status">The session is full, so you've joined the waitlist. Nothing is held until a place opens for you.</p>
+            <p role="status">The session is full, so you've joined the waitlist. Nothing is held until a place opens for you. Keep enough in your wallet to cover your share, or you'll leave the waitlist when a place opens.</p>
           )}
 
           {!finished && (
@@ -99,7 +100,7 @@ export function JoinSessionButton({ session, joinSession = defaultJoinSession, l
               </div>
               <InfoNote icon>
                 Your share is held, not paid, until attendance is verified. If the session is already full you join the
-                waitlist instead and nothing is held. Withdraw more than 30 hours before the start for a full refund; later,
+                waitlist instead and nothing is held. Withdraw at least 30 hours before the start for a full refund; closer to start,
                 you need a replacement or the share is forfeited.
               </InfoNote>
             </div>

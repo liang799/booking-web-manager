@@ -108,9 +108,9 @@ describe("Hosted session listing", () => {
   test("returns only display facts while retaining full sessions and repository ordering", async () => {
     const scenario = management();
     const full = createTestSession({ committedUserIds: ["alice", "bob"] });
-    scenario.listUpcoming.mockResolvedValue([full, new Session(sessionDetails({ sessionId: "second" }))]);
+    scenario.listNotEndedOpen.mockResolvedValue([full, new Session(sessionDetails({ sessionId: "second" }))]);
     const result = await scenario.list.forBooker("booker");
-    expect(scenario.listUpcoming).toHaveBeenCalledExactlyOnceWith("booker", hoursBeforeSessionStart(48));
+    expect(scenario.listNotEndedOpen).toHaveBeenCalledExactlyOnceWith("booker", hoursBeforeSessionStart(48));
     expect(result.sessions).toEqual([
       { sessionId: "s", venueName: "Court", sport: "Badminton", region: "North", startAt: full.booking.startAt, endAt: full.booking.endAt, visibility: "PUBLIC", availableSlots: 0, actions: [{ name: "preview-cancellation" }] },
       { sessionId: "second", venueName: "Court", sport: "Badminton", region: "North", startAt: full.booking.startAt, endAt: full.booking.endAt, visibility: "PUBLIC", availableSlots: 2, actions: [{ name: "set-visibility", visibility: "PRIVATE" }, { name: "preview-cancellation" }] },
@@ -122,7 +122,7 @@ describe("Hosted session listing", () => {
   test("unverified owners retain management actions and projecting them does not mutate session state", async () => {
     const scenario = management();
     scenario.getUser.mockResolvedValue(createTestUser({ userId: "booker", emailVerified: false }));
-    scenario.listUpcoming.mockResolvedValue([scenario.session]);
+    scenario.listNotEndedOpen.mockResolvedValue([scenario.session]);
     const before = sessionState(scenario.session);
     expect((await scenario.list.forBooker("booker")).sessions[0]!.actions).toEqual([{ name: "set-visibility", visibility: "PRIVATE" }, { name: "preview-cancellation" }]);
     expect(sessionState(scenario.session)).toEqual(before);
@@ -131,7 +131,7 @@ describe("Hosted session listing", () => {
 
   test("a session that has started advertises no new management transitions", async () => {
     const scenario = management();
-    scenario.listUpcoming.mockResolvedValue([scenario.session]);
+    scenario.listNotEndedOpen.mockResolvedValue([scenario.session]);
     scenario.clock.now.mockReturnValue(sessionStartsAt);
     expect((await scenario.list.forBooker("booker")).sessions[0]!.actions).toEqual([]);
   });
@@ -141,7 +141,7 @@ describe("Hosted session listing", () => {
     scenario.getUser.mockResolvedValueOnce(null).mockResolvedValueOnce(createTestUser({ userId: "booker", accountStatus: "INACTIVE" }));
     await expect(scenario.list.forBooker("booker")).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(scenario.list.forBooker("booker")).rejects.toMatchObject({ code: "INACTIVE_ACCOUNT" });
-    expect(scenario.listUpcoming).not.toHaveBeenCalled();
+    expect(scenario.listNotEndedOpen).not.toHaveBeenCalled();
     expect(scenario.listEndedOpen).not.toHaveBeenCalled();
   });
 
@@ -149,14 +149,14 @@ describe("Hosted session listing", () => {
     const scenario = management();
     expect(await scenario.list.forBooker("booker")).toEqual({ sessions: [], awaitingAttendance: [] });
     const failure = new Error("List read failed");
-    scenario.listUpcoming.mockRejectedValue(failure);
+    scenario.listNotEndedOpen.mockRejectedValue(failure);
     await expect(scenario.list.forBooker("booker")).rejects.toBe(failure);
   });
 
   test("loads the complete overview in one transaction with one account and time snapshot", async () => {
     const scenario = management();
     const now = hoursBeforeSessionStart(48);
-    scenario.listUpcoming.mockImplementationOnce(async () => {
+    scenario.listNotEndedOpen.mockImplementationOnce(async () => {
       scenario.clock.now.mockReturnValue(sessionStartsAt);
       return [scenario.session];
     });
@@ -169,13 +169,13 @@ describe("Hosted session listing", () => {
     expect(scenario.run).toHaveBeenCalledOnce();
     expect(scenario.getUser).toHaveBeenCalledExactlyOnceWith("booker");
     expect(scenario.clock.now).toHaveBeenCalledOnce();
-    expect(scenario.listUpcoming).toHaveBeenCalledExactlyOnceWith("booker", now);
+    expect(scenario.listNotEndedOpen).toHaveBeenCalledExactlyOnceWith("booker", now);
     expect(scenario.listEndedOpen).toHaveBeenCalledExactlyOnceWith("booker", now);
   });
 
   test("does not return a partial overview when the attendance query fails", async () => {
     const scenario = management();
-    scenario.listUpcoming.mockResolvedValue([scenario.session]);
+    scenario.listNotEndedOpen.mockResolvedValue([scenario.session]);
     const failure = new Error("Attendance read failed");
     scenario.listEndedOpen.mockRejectedValue(failure);
 
@@ -186,12 +186,12 @@ describe("Hosted session listing", () => {
 function management(session = createTestSession()) {
   const getUser = vi.fn<(id: string) => Promise<User | null>>().mockResolvedValue(createTestUser({ userId: "booker" }));
   const getSession = vi.fn<(id: string) => Promise<Session | null>>().mockResolvedValue(session);
-  const listUpcoming = vi.fn<SessionManagementRepositories["sessions"]["listUpcoming"]>().mockResolvedValue([]);
+  const listNotEndedOpen = vi.fn<SessionManagementRepositories["sessions"]["listNotEndedOpen"]>().mockResolvedValue([]);
   const listEndedOpen = vi.fn<SessionManagementRepositories["sessions"]["listEndedOpen"]>().mockResolvedValue([]);
   const saveVisibility = vi.fn<SessionManagementRepositories["sessions"]["saveVisibility"]>().mockResolvedValue(undefined);
-  const repositories = { users: { get: getUser }, sessions: { get: getSession, listUpcoming, listEndedOpen, saveVisibility } };
+  const repositories = { users: { get: getUser }, sessions: { get: getSession, listNotEndedOpen, listEndedOpen, saveVisibility } };
   const transaction: SessionManagementTransaction = { run: (work) => work(repositories) };
   const run = vi.spyOn(transaction, "run");
   const clock = { now: vi.fn(() => hoursBeforeSessionStart(48)) };
-  return { session, repositories, getUser, getSession, listUpcoming, listEndedOpen, saveVisibility, run, clock, toggle: new ToggleSessionVisibility({ transaction, clock }), list: new ListHostedSessions({ transaction, clock }) };
+  return { session, repositories, getUser, getSession, listNotEndedOpen, listEndedOpen, saveVisibility, run, clock, toggle: new ToggleSessionVisibility({ transaction, clock }), list: new ListHostedSessions({ transaction, clock }) };
 }

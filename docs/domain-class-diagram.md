@@ -60,8 +60,11 @@ abbreviated.
   `session.participantList` exposes only `ParticipantListView` queries; the focused
   diagram distinguishes that public interface from the internal implementation.
   Private maps and candidate-building methods are omitted.
-  Active commitments plus reserved replacement seats are limited by `totalSlots`
-  (at most eight). Departure chooses either one named replacement or the ordinary
+  The booker automatically occupies one prepaid place; guest commitments plus
+  reserved replacement seats share the remaining `totalSlots` capacity. New
+  sessions allow 1–30 total places, with no minimum viable headcount. Historical
+  30-guest rooms retain 31 places including the booker under
+  [ADR-0022](./adr/0022-booker-inclusive-session-capacity.md). Departure chooses either one named replacement or the ordinary
   waitlist; that choice cannot change after withdrawal. See
   [ADR-0006](./adr/0006-personal-replacement-reservations.md).
   A direct invitation names one user ID and reserves the seat until that user
@@ -93,7 +96,10 @@ abbreviated.
 - `PayoutAttempt` owns frozen payout lines and a destination copy; it does not own
   live holds. `Booker.preparePayout` prepares the batch; Session validates and
   records it through `recordSettlementPreparation`, retaining its own pending
-  copy. Failed attempts remain recorded, and each retry has a new payout ID.
+  copy. Failed attempts remain recorded; a new submission after failure has a
+  new payout ID, while retries of the original submission replay its result.
+  Client request keys and terminal receipts belong to application transactions
+  ([ADR-0020](./adr/0020-payout-request-idempotency.md)).
   Frozen account references may
   outlive the user's current payout-setup child.
 - ID attributes also express references where drawing another edge would add

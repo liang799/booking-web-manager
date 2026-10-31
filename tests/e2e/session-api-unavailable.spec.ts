@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
 
+test("health check returns 503 without required server configuration", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.status()).toBe(503);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+  expect(await response.json()).toEqual({ status: "unavailable" });
+});
+
 test("returns unavailable for a documented submission instead of creating a session", async ({ request }) => {
   // Arrange
   const specification = await request.get("/api/openapi");

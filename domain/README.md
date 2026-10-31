@@ -33,7 +33,8 @@ its boundary; child comments identify their owning root.
 - `RegularGroup` owns its member list and invitation lifecycle, and requires
   unique memberships.
 - `PayoutAttempt` freezes one payout batch and external destination for one payout
-  attempt. A failed attempt remains a fact; a retry gets a new attempt ID.
+  attempt. A failed attempt remains a fact; a new submission after failure gets a new
+  attempt ID. Replaying the failed submission returns its recorded result.
 
 `Wallet` is an immutable child owned by `User`; the shared `HoldingAccount`
 and `LedgerTransaction` represent an identity and immutable facts rather than
@@ -76,14 +77,12 @@ Nested arguments are domain objects, such as a `Booking` and `Participation`
 children for a `Session`. Repository adapters construct these objects directly
 and own the mapping between storage values and domain properties.
 
-`SessionDetails` requires explicit `payoutAttemptIds` and
-`payoutIdempotencyKeys` arrays. Repositories must supply the complete histories,
-including failed attempts; the constructor cannot verify their completeness.
-Empty arrays mean there have been no attempts, and the creation workflow supplies
-them for new sessions. Missing histories are rejected rather than inferred from
-the pending payout. These histories preserve the rule that payout IDs and
-idempotency keys cannot be reused after a failed attempt, following ADR-0002's
-complete-state construction contract.
+`SessionDetails` requires an explicit `payoutAttemptIds` array. Repositories
+supply the complete history, including failed attempts; the constructor cannot
+verify completeness. An empty array means there have been no attempts. Payout
+IDs cannot be reused after failure. Client request keys are application and
+adapter metadata, absent from all payout domain values; see
+[ADR-0020](../docs/adr/0020-payout-request-idempotency.md).
 
 `UserDetails` requires a `Wallet`, `ReliabilityScore`, membership IDs, and trusted
 `emailVerified` state from the identity provider, retained for optional email
@@ -204,7 +203,7 @@ all returning `void`:
 | `recordCancellation(cancelled, now)` | The complete cancelled roster. |
 | `recordAttendance(verifiedSubset, now)` | The subset of manually verified participations. |
 | `changeVisibility(visibility, now)` | The requested visibility. |
-| `recordSettlementPreparation(preparation, now)` | `SessionSettlementPreparation`: payout ID, idempotency key, candidate participations, and optional batch. |
+| `recordSettlementPreparation(preparation, now)` | `SessionSettlementPreparation`: payout ID, candidate participations, and optional batch. |
 
 ParticipantList validates capacity, FIFO, identity, hold/queue consistency, and
 collection transitions, including cancellation coverage and attendance subsets.
@@ -242,16 +241,18 @@ belong at the render layer.
 
 `sessionPricing(costCents, slots)` provides one framework-independent calculation
 for UI suggestions and server validation. `Session.bookingShare` is the accepted,
-immutable per-slot price: omission retains floor division, while a chosen price
-is bounded by [ADR-0012](../docs/adr/0012-booker-selected-session-pricing.md).
+immutable per-slot price. Creation bounds a chosen price under
+[ADR-0012](../docs/adr/0012-booker-selected-session-pricing.md); hydration preserves
+accepted positive quotes under [ADR-0022](../docs/adr/0022-booker-inclusive-session-capacity.md).
 The management repository hydrates it from stored `booking_share_cents`. Holds
 keep their original amounts through refunds and settlement.
 
 `Booking` is an immutable value object requiring a positive total cost and
-`startAt < endAt`. A session has at most eight commitments, including accepted
-personal replacements; the booker does not receive a reserved place. UC2-02
-requires `minimumHeadcount` between two and `totalSlots`; this configuration is
-retained when the session is copied or hydrated.
+`startAt < endAt`. New sessions have 1–30 total places, including the booker’s
+automatic prepaid place. Guest commitments and reserved personal replacements
+share the remaining capacity. There is no minimum viable headcount. Historical
+sessions retain previously offered places and accepted prices, including legacy
+31-place sessions. Bookers cannot enroll twice or invite themselves as replacements.
 
 Financial operation amounts are positive and wallet balances are nonnegative at
 the server boundary. A `Wallet` stores no balance field. Its synchronous
@@ -267,12 +268,12 @@ Participation status describes enrollment (`WAITLISTED`, `COMMITTED`,
 `LEFT_WAITLIST`, `WITHDRAWN`, `REMOVED`, `CANCELLED`), while attendance and hold
 states remain separate. A waitlist re-entry reuses its participation ID and gets
 a new persisted queue sequence. The current implementation immediately refunds
-a withdrawal more than 30 hours before start; at 30 hours or less it awaits a
-replacement. This differs from the product-owner-confirmed state diagram, which
-includes exactly 30 hours in the immediate-refund window. At start, unmatched
-replacement holds become `FORFEITURE_DUE`. See the
+a withdrawal at least 30 hours before start, including the exact cutoff; below
+30 hours it awaits a replacement. The final decision uses the server clock
+when processing the withdrawal, not the earlier read-only preview. At start,
+unmatched replacement holds become `FORFEITURE_DUE`. See the
 [product discussion](../docs/discussions/waitlist-and-replacement-options.md)
-for the source diagram and policy questions separate from that boundary issue.
+for the source diagram and remaining policy questions.
 
 ## Named replacements and the joining waitlist
 
@@ -357,16 +358,27 @@ without retaining the history.
 ## Settlement and ledger boundary
 
 After all committed attendance is finalized,
-`booker.preparePayout(session, command)` obtains the trusted destination
-through User and prepares the candidate participations and frozen batch of hold
-IDs, amounts, release/forfeiture reasons, and that destination. Session validates
-the prepared state and payout-attempt history before recording it. The role
-returns no batch when there are no payable holds. Otherwise a
-future use-case coordinator saves the session, `PayoutAttempt`, and a durable payout
-intent in one transaction. A dispatcher calls the external provider later. Only a matching
-confirmed callback can complete that attempt; completion then settles holds and
-appends `RELEASE`/`FORFEIT` ledger instructions atomically. Failure keeps holds
-until a new attempt is requested; transport timeouts leave the attempt pending.
+`booker.preparePayout(session, { payoutId, now })` obtains the trusted destination
+through User and prepares candidate participations and a frozen batch of hold
+IDs, amounts, release/forfeiture reasons, and destination. Session validates the
+prepared state and payout-ID history before recording it. With no payable holds,
+it settles without creating an attempt or adding history.
+
+`WithdrawSessionPayout` saves Session and PayoutAttempt in one preparation
+transaction. The adapter replays preparation by the client request key, while
+provider idempotency uses the payout ID. Before dispatch the application loads
+and authorizes fresh Session and attempt state. Requested attempts resume;
+failed and completed attempts return an immutable terminal receipt without a
+provider call. Completion settles holds and appends RELEASE/FORFEIT and PAYOUT
+entries atomically. Failure retains held funds for a new submission; ambiguous
+provider failures leave the original attempt pending.
+
+Only the invocation that completes an attempt may start its optional bank payout.
+A completed attempt recovered without a receipt returns PAID with no bank method;
+this avoids guessing or dispatching another payment. The first stored terminal
+receipt remains canonical even when the completion winner later finishes its bank
+step. Application receipts and request keys do not change wallet or ledger domain
+idempotency rules.
 
 `LedgerReadPort` exposes asynchronous, derived wallet and holding-account
 balances for independent queries; `WalletBalance` is not part of `User`

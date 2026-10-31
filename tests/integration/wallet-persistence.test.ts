@@ -74,17 +74,27 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
     const sessionId = randomUUID();
     await context.pool.query(
       `insert into sessions(session_id,booker_id,venue_name,region,sport,start_at,end_at,total_cost_cents,
-        total_slots,minimum_headcount,booking_share_cents,visibility,room_token,holding_account_id)
+        total_slots,booking_share_cents,visibility,room_token,holding_account_id)
        values ($1,$2,'Wallet payout fixture','West','Badminton','2045-04-02T10:00:00Z',
-        '2045-04-02T12:00:00Z',1000,2,2,500,'PUBLIC',$3,$4)`,
+        '2045-04-02T12:00:00Z',1000,3,500,'PUBLIC',$3,$4)`,
       [sessionId, bookerId, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );
     return sessionId;
   }
 
+  test("identifies holds for sessions the wallet owner booked", async () => {
+    const fixture = await cancellationFixture(context, 1);
+    const participant = fixture.participants[0]!;
+    expect((await summary(participant.userId)).activeHolds).toMatchObject([{ isBooker: false }]);
+
+    await context.pool.query("update sessions set booker_id = $1 where session_id = $2", [participant.userId, fixture.sessionId]);
+
+    expect((await summary(participant.userId)).activeHolds).toMatchObject([{ isBooker: true }]);
+  });
+
   async function saveAttempt(userId: string, sessionId: string, amountCents: number) {
     const attempt = PayoutAttempt.create({
-      payoutId: randomUUID(), sessionId, idempotencyKey: randomUUID(),
+      payoutId: randomUUID(), sessionId,
       requestedAt: new Date("2045-04-03T00:00:00Z"),
       destination: {
         payoutAccountId: randomUUID(), userId,
@@ -97,7 +107,9 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
         holdingAccountId: PLATFORM_HOLDING_ACCOUNT_ID, amount: Money.fromCents(amountCents), kind: "RELEASE",
       }],
     });
-    await new PostgresPayoutAttemptRepository(cancellationSql(context)).save(attempt);
+    await new PostgresPayoutAttemptRepository(cancellationSql(context), {
+      bookerId: userId, sessionId, idempotencyKey: randomUUID(),
+    }).save(attempt);
     return attempt;
   }
 
@@ -110,13 +122,18 @@ describe("UC1-05 PostgreSQL wallet projections", () => {
     const completedSession = await insertSession(booker.userId);
     const otherSession = await insertSession(other.userId);
     const repository = new PostgresPayoutAttemptRepository(cancellationSql(context));
+    async function load(attempt: PayoutAttempt) {
+      const stored = await repository.get(attempt.payoutId);
+      if (!stored) throw new Error("Payout fixture missing");
+      return stored;
+    }
 
-    const failed = await saveAttempt(booker.userId, firstSession, 999);
+    const failed = await load(await saveAttempt(booker.userId, firstSession, 999));
     failed.fail("Provider rejected the transfer", new Date("2045-04-03T01:00:00Z"));
     await repository.save(failed);
-    const first = await saveAttempt(booker.userId, firstSession, 1250);
-    const second = await saveAttempt(booker.userId, secondSession, 600);
-    const completed = await saveAttempt(booker.userId, completedSession, 888);
+    const first = await load(await saveAttempt(booker.userId, firstSession, 1250));
+    const second = await load(await saveAttempt(booker.userId, secondSession, 600));
+    const completed = await load(await saveAttempt(booker.userId, completedSession, 888));
     completed.complete(`transfer-${randomUUID()}`, new Date("2045-04-03T01:00:00Z"));
     await repository.save(completed);
     await saveAttempt(other.userId, otherSession, 9000);

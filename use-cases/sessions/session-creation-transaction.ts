@@ -1,9 +1,11 @@
+import type { NotificationWriter } from "../notifications/notification-intents";
 import type { UUID } from "@/domain";
 import type { DomainTransaction } from "../shared/contracts";
 
 export interface SessionCreationRepositories {
   readonly users: Pick<DomainTransaction["users"], "get">;
   readonly sessions: Pick<DomainTransaction["sessions"], "save">;
+  readonly notifications: NotificationWriter;
 }
 
 /**

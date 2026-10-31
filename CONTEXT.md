@@ -10,7 +10,7 @@ The shared coordination space for a session at an already-booked venue,
 bringing together its booker and participants.
 
 **Capacity**:
-The maximum number of participant places in a booking session.
+The maximum number of people playing in a booking session, including its booker.
 
 **Participant list**:
 The participation records associated with one booking room, including people
@@ -30,7 +30,7 @@ shares to participants' wallets while retaining prior participation history.
 Cancelling the venue booking is a separate responsibility of the booker.
 
 **Participant**:
-A person seeking or holding a place in a session.
+A person seeking or holding a place in a session. The booker automatically holds one place after paying the venue upfront.
 
 **Booking share**:
 The fixed per-slot price put on hold when a participant commits. It may be below

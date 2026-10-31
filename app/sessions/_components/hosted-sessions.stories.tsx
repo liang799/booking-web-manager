@@ -5,7 +5,7 @@ import { AppShell } from "@/components/ui/app-shell";
 import { Button } from "@/components/ui/button";
 import type { SessionVisibilityActionResult } from "../actions";
 import type { HostedSessionItem } from "../types";
-import { HostedSessionsView, type HostedSessionsViewProps } from "./hosted-sessions-view";
+import { HostedSessionControls, HostedSessionsView, type HostedSessionsViewProps } from "./hosted-sessions-view";
 import type { CancellationTransport } from "./session-cancellation-dialog";
 import { getSessionAccountActions, toHostedSessionActions, withCancellationAction, type SetSessionVisibilityAction } from "../session-actions";
 
@@ -194,5 +194,30 @@ export const AttendanceDue: Story = {
     await expect(section.getByText("3 players to check")).toBeVisible();
     await expect(section.getByRole("link", { name: "Check attendance" })).toHaveAttribute("href", "/sessions/ended/participants");
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const DetailVisibilitySwitch: Story = {
+  render: (args) => <div className="mx-auto max-w-2xl p-6"><HostedSessionControls {...args} session={sessions[0]!} participants={{ participantCount: 1, capacity: 4 }} /></div>,
+  play: async ({ canvas, args }) => {
+    const group = within(canvas.getByRole("group", { name: "Session visibility" }));
+    await expect(group.getByRole("button", { name: "Private" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(group.getByRole("button", { name: "Private" }));
+    await expect(args.onSetVisibility).not.toHaveBeenCalled();
+    await userEvent.click(group.getByRole("button", { name: "Change visibility to public" }));
+    await expect(args.onSetVisibility).toHaveBeenCalledWith("private", sessions[0]!.actions[0]);
+    await expect(args.onRefresh).toHaveBeenCalledOnce();
+    // The selected segment stays tied to confirmed server props until refresh.
+    await expect(group.getByRole("button", { name: "Private" })).toHaveAttribute("aria-pressed", "true");
+  },
+};
+
+export const UnavailableDetailVisibility: Story = {
+  render: (args) => <div className="mx-auto max-w-2xl p-6"><HostedSessionControls {...args} session={{ ...sessions[0]!, availableSlots: 0, actions: [] }} participants={{ participantCount: 4, capacity: 4 }} /></div>,
+  play: async ({ canvas, args }) => {
+    const group = within(canvas.getByRole("group", { name: "Session visibility" }));
+    await expect(group.getByRole("button", { name: "Private" })).toHaveAttribute("aria-pressed", "true");
+    await expect(group.getByRole("button", { name: "Change visibility to public" })).toBeDisabled();
+    await expect(args.onSetVisibility).not.toHaveBeenCalled();
   },
 };

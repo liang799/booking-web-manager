@@ -131,6 +131,34 @@ describe.each(routes)("POST /api/sessions/$name", (route) => {
     expect(route.useCase).not.toHaveBeenCalled();
   });
 
+  test("rejects signed-out requests before reading malformed JSON", async () => {
+    mocks.authenticate.mockResolvedValue(null);
+    const malformed = new Request(`http://localhost/api/sessions/${route.name}`, {
+      method: "POST",
+      body: "{",
+    });
+    const readBody = vi.spyOn(malformed, "json");
+
+    const response = await route.post(malformed);
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(readBody).not.toHaveBeenCalled();
+    expect(route.useCase).not.toHaveBeenCalled();
+  });
+
+  test("does not invoke business operations for an invalid authenticated identity", async () => {
+    mocks.authenticate.mockResolvedValue("not-a-uuid");
+
+    const response = await route.post(request(route.name, route.body));
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: { code: "INTERNAL_ERROR", message: "Internal server error" },
+    });
+    expect(route.useCase).not.toHaveBeenCalled();
+  });
+
   test("reports unconfigured server settings as 503", async () => {
     const original = { ...process.env };
     delete process.env.DATABASE_URL;

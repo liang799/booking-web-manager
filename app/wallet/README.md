@@ -36,7 +36,9 @@ This module adheres strictly to the non-negotiable rules defined in `CLAUDE.md`:
    turns the typed amount into integer cents by pattern, not `parseFloat`, and
    calls `POST /api/wallet/top-up`.
 2. [`StripeWalletTopUps.createIntent`](./stripe-top-up-intents.ts) creates a PayNow
-   PaymentIntent with metadata `purpose: "wallet_top_up"`, `wallet_id`, `user_id`.
+   PaymentIntent with a PayNow payment method already attached
+   (`payment_method_data: { type: "paynow" }`) and metadata
+   `purpose: "wallet_top_up"`, `wallet_id`, `user_id`.
 3. Stripe.js `confirmPayNowPayment` shows the PayNow QR code until the payment ends.
    The browser credits nothing.
 4. Stripe's `payment_intent.succeeded` webhook
@@ -55,6 +57,21 @@ card, Funds in use and an infinite activity list. TanStack Table owns filtering
 and pagination. Each hold links to its session. The mobile Withdraw and desktop
 Payouts links open the existing
 per-session withdrawal flow; they do not withdraw the available wallet balance.
+
+Desktop All transactions and Active holds switch the activity panel with
+keyboard-accessible tabs. Each tab preserves its own filters and page. Active
+holds is a semantic Booking / Status / Amount table with eight rows per page,
+numbered navigation, booking/sport search and upcoming session-date filters.
+Its complete dataset comes from the summary, so pagination never requests
+transaction history. A refresh that releases holds keeps the current page in
+range. The overview card and mobile Funds in use remain compact lists.
+
+Active holds retains the summary's independent loading and error states.
+Hold links open the Joined session through
+`/sessions?tab=joined&session=…`.
+If the wallet owner booked the session, its hold opens the existing participant
+management page instead; hosted sessions are excluded from Joined. The read-only
+summary's optional `isBooker` flag selects that destination.
 
 Mobile Pending displays the total of this booker's `REQUESTED` payout attempts,
 aggregated without a page limit. It means withdrawals being processed, rather
@@ -138,7 +155,8 @@ lazily via [`server-dependencies.ts`](./server-dependencies.ts):
   [`serialize-wallet.ts`](./serialize-wallet.ts) converts application result
   dates to HTTP strings.
 - **Top-up intents**: [`StripeWalletTopUps.createIntent`](./stripe-top-up-intents.ts) creates a
-  Stripe PaymentIntent for PayNow (`payment_method_types: ['paynow']`, `currency: 'sgd'`).
+  Stripe PaymentIntent for PayNow (`payment_method_types: ['paynow']`, `payment_method_data: { type: 'paynow' }`, `currency: 'sgd'`).
+  `confirmPayNowPayment(clientSecret)` does not create a payment method, so one must be attached here.
   Without a test-mode `STRIPE_SECRET_KEY`, top-up answers `503 TOP_UP_UNAVAILABLE`
   while wallet reads keep working; it no longer returns a simulated intent, whose
   client secret could never be paid.

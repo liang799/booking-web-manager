@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import DiscoveryPage from "@/app/discover/page";
 import { DiscoveryApiUnavailableError } from "@/app/discover/discovery-api-unavailable";
 import { getDiscoveryDependencies } from "@/app/discover/server-dependencies";
@@ -17,6 +17,8 @@ vi.mock("next/navigation", () => ({
 
 const searchPublic = vi.fn<DiscoverSessions["searchPublic"]>();
 
+afterEach(() => vi.useRealTimers());
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getCurrentUser).mockResolvedValue({
@@ -24,26 +26,60 @@ beforeEach(() => {
     preferredSports: ["Tennis"], preferredRegions: ["East"], reliabilityScore: 100,
   });
   searchPublic.mockResolvedValue([]);
-  vi.mocked(getDiscoveryDependencies).mockResolvedValue({ discoverSessions: { searchPublic } });
+  vi.mocked(getDiscoveryDependencies).mockResolvedValue({ authenticate: async () => "10000000-0000-4000-8000-000000000001", discoverSessions: { searchPublic } });
 });
 
 function renderPage(params: Record<string, string | string[]> = {}) {
   return DiscoveryPage({ searchParams: Promise.resolve(params) });
 }
 
-describe("public discovery server page", () => {
-  test("renders anonymous results without consulting authentication", async () => {
+describe("authenticated discovery server page", () => {
+  test("samples expiry timing after the server read and only for the displayed page", async () => {
+    vi.useFakeTimers(); vi.setSystemTime(0);
+    const sessions = Array.from({ length: 21 }, (_, index) => ({
+      sessionId: `10000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      venueName: "Sports hall", sport: "Badminton", region: "West",
+      startAt: new Date(index < 20 ? 1_000 : 5_000),
+      endAt: new Date(10_000), totalSlots: 6, bookingShareCents: 750,
+    }));
+    searchPublic.mockImplementation(async () => {
+      vi.advanceTimersByTime(500);
+      return sessions;
+    });
+    const cursor = encodeDiscoveryCursor({ startAt: sessions[19]!.startAt, sessionId: sessions[19]!.sessionId });
+    const result = await renderPage({ cursor });
+    expect(result.props.expiry).toEqual({ startsAt: 5_000, serverNow: 500 });
+    expect(result.props.outcome.page.items).toHaveLength(1);
+  });
+
+  test("does not schedule expiry for empty, invalid or failed results", async () => {
+    expect((await renderPage()).props.expiry).toBeNull();
+    expect((await renderPage({ sport: "invalid" })).props.expiry).toBeNull();
+    searchPublic.mockRejectedValue(new Error("Read failed"));
+    expect((await renderPage()).props.expiry).toBeNull();
+  });
+
+  test("redirects signed-out visitors before loading listings, preserving filters", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue(null);
-    const result = await renderPage();
-    expect(result.props.outcome).toEqual({ status: "ready", page: { items: [], nextCursor: null } });
-    expect(getCurrentUser).not.toHaveBeenCalled();
+    await expect(renderPage({ sport: "Tennis" })).rejects.toThrow("redirect:/login?next=%2Fdiscover%3Fsport%3DTennis");
+    expect(getDiscoveryDependencies).not.toHaveBeenCalled();
+    expect(searchPublic).not.toHaveBeenCalled();
+  });
+
+  test("redirects inactive accounts before querying sessions", async () => {
+    const viewer = await getCurrentUser();
+    if (viewer === null) throw new Error("Missing viewer fixture");
+    vi.mocked(getCurrentUser).mockResolvedValue({ ...viewer, accountStatus: "INACTIVE" });
+    await expect(renderPage()).rejects.toThrow("redirect:/login?next=%2Fdiscover");
+    expect(getDiscoveryDependencies).not.toHaveBeenCalled();
+    expect(searchPublic).not.toHaveBeenCalled();
   });
 
   test("shows an opaque error on a database failure", async () => {
     searchPublic.mockRejectedValue(new Error("private infrastructure detail"));
     const result = await renderPage();
     expect(result.props.outcome).toEqual({ status: "error", kind: "unexpected" });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( {});
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({}, "viewer");
   });
 
   test("validates duplicate URL parameters before querying and retains their distinct controller key", async () => {
@@ -56,14 +92,14 @@ describe("public discovery server page", () => {
 
   test("passes Singapore filter bounds directly to the use case without profile defaults", async () => {
     const result = await renderPage({ region: "West", date: "2035-05-12", timeFrom: "18:00", timeTo: "20:00" });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { region: "West", startsWithin: { from: new Date("2035-05-12T10:00:00Z"), before: new Date("2035-05-12T12:00:00Z") } });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ region: "West", startsWithin: { from: new Date("2035-05-12T10:00:00Z"), before: new Date("2035-05-12T12:00:00Z") } }, "viewer");
     expect(result.props.outcome).toEqual({ status: "ready", page: { items: [], nextCursor: null } });
     expect(result.props).toMatchObject({ returnTo: "/" });
   });
 
   test("passes normalized search to the use case while keeping return navigation UI-only", async () => {
     const result = await renderPage({ q: "  Jurong  ", sport: "Badminton", returnTo: "/?region=West&date=2035-05-12" });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { text: "Jurong", sport: "Badminton" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Jurong", sport: "Badminton" }, "viewer");
     expect(result.props).toMatchObject({
       returnTo: "/?region=West&date=2035-05-12",
       filters: { q: "Jurong", sport: "Badminton" }, queryKey: "q=Jurong&sport=Badminton",
@@ -74,13 +110,13 @@ describe("public discovery server page", () => {
   test.each(["https://external.example", "/login", "/discover", ["/wallet", "/profile"]])("falls back to Home for invalid return destination %j without changing the search", async (returnTo) => {
     const result = await renderPage({ q: "Tennis", returnTo });
     expect(result.props.returnTo).toBe("/");
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { text: "Tennis" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Tennis" }, "viewer");
   });
 
   test("keeps the default query unfiltered and serializes public result props", async () => {
     searchPublic.mockResolvedValue([{ sessionId: "public-session", venueName: "Bishan Sports Hall", sport: "Badminton", region: "Central", startAt: new Date("2035-05-12T10:00:00Z"), endAt: new Date("2035-05-12T12:00:00Z"), totalSlots: 6, bookingShareCents: 750 }]);
     const result = await renderPage();
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( {});
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({}, "viewer");
     expect(result.props.outcome.page.items[0]).toEqual({ sessionId: "public-session", venueName: "Bishan Sports Hall", sport: "Badminton", region: "Central", startAt: "2035-05-12T10:00:00.000Z", endAt: "2035-05-12T12:00:00.000Z", totalSlots: 6, bookingShareCents: 750 });
   });
 
@@ -96,7 +132,7 @@ describe("public discovery server page", () => {
 
     const result = await renderPage({ sport: "Badminton", cursor });
 
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith( { sport: "Badminton" });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ sport: "Badminton" }, "viewer");
     expect(result.props.outcome.page.items.map((item: { sessionId: string }) => item.sessionId))
       .toEqual(sessions.slice(20, 40).map((item) => item.sessionId));
     expect(result.props.outcome.page.nextCursor).toBe(encodeDiscoveryCursor({ startAt, sessionId: sessions[39]!.sessionId }));

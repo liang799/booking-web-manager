@@ -11,7 +11,7 @@ function sessionRow(overrides: SqlRow = {}): SqlRow {
   return {
     session_id: "s", booker_id: "booker", venue_name: "Sports Hall", sport: "Badminton", region: "West",
     start_at: startAt, end_at: new Date("2040-01-02T12:00:00Z"), total_cost_cents: "1001",
-    total_slots: 3, minimum_headcount: 2, booking_share_cents: "333", visibility: "PRIVATE", status: "OPEN",
+    total_slots: 4, booking_share_cents: "333", visibility: "PRIVATE", status: "OPEN",
     minimum_reliability: "75.5", room_token: "room", holding_account_id: "platform", invited_group_id: null,
     next_queue_sequence: 1, payout_attempt_ids: [], payout_idempotency_keys: [], pending_settlement: null,
     ...overrides,
@@ -41,7 +41,6 @@ test("hydrates the full booking, participant list and optional configuration und
   const session = await repository.get("s");
   expect(session).toMatchObject({ sessionId: "s", bookerId: "booker", invitedGroupId: "group", visibility: "PRIVATE" });
   expect(session?.booking.totalCost.toCents()).toBe(1001);
-  expect(session?.minimumHeadcount).toBe(2);
   expect(session?.minimumReliability?.toNumber()).toBe(75.5);
   expect(session?.participantList.participations[0]?.hold?.amount.toCents()).toBe(333);
   expect(session?.getAvailableSlots(now)).toBe(2);
@@ -60,17 +59,17 @@ test.each([167, 334, 666])("preserves the saved %i-cent custom price and histori
   const rows = [sessionRow({ booking_share_cents: String(price) })];
   const participants = [participantRow()];
   const session = await scenario(rows, participants).repository.get("s");
-  const upcoming = await scenario(rows, participants).repository.listUpcoming("booker", now);
+  const upcoming = await scenario(rows, participants).repository.listNotEndedOpen("booker", now);
   for (const loaded of [session, upcoming[0]]) {
     expect(loaded?.bookingShare.toCents()).toBe(price);
     expect(loaded?.participantList.participations[0]?.hold?.amount.toCents()).toBe(333);
   }
 });
 
-test("lists only the owner's upcoming open sessions, including full sessions, without update locks", async () => {
+test("lists the owner's upcoming and in-progress open sessions until their end time, including full sessions", async () => {
   const { query, repository } = scenario();
-  await repository.listUpcoming("booker", now);
-  expect(query.mock.calls[0]?.[0]).toContain("booker_id = $1 and status = 'OPEN' and start_at > $2");
+  await repository.listNotEndedOpen("booker", now);
+  expect(query.mock.calls[0]?.[0]).toContain("booker_id = $1 and status = 'OPEN' and end_at > $2");
   expect(query.mock.calls[0]?.[0]).not.toMatch(/for update|visibility =|count\(/i);
   expect(query.mock.calls[0]?.[1]).toEqual(["booker", now]);
 });
@@ -98,14 +97,13 @@ test("preserves participant-list order for equal withdrawal times and subtracts 
 
 describe("stored state validation", () => {
   test.each([
-    { minimum_headcount: undefined },
-    { minimum_headcount: 1 },
-    { minimum_headcount: 4 },
     { payout_attempt_ids: undefined },
     { payout_idempotency_keys: null },
+    { payout_idempotency_keys: [" "] },
+    { payout_idempotency_keys: ["same", "same"] },
     { total_cost_cents: "9007199254740992" },
-    { booking_share_cents: "166" },
-    { booking_share_cents: "667" },
+    { booking_share_cents: "0" },
+    { booking_share_cents: "9007199254740991" },
     { status: "PAYOUT_PENDING" },
     { pending_settlement: {} },
   ])("rejects invalid or missing Session facts: %j", async (invalid) => {
@@ -136,9 +134,13 @@ test("hydrates a complete pending settlement and retained payout history", async
   const participants = [participantRow({ attendance: "ATTENDED", verified_at: startAt, verification_method: "BOOKER" })];
   const session = await scenario(rows, participants).repository.get("s");
   expect(session?.payoutAttemptIds).toEqual(["earlier", "out"]);
+  expect(session).not.toHaveProperty("payoutIdempotencyKeys");
+  expect(session?.pendingSettlement).not.toHaveProperty("idempotencyKey");
   expect(session?.pendingSettlement?.requestedAt).toEqual(startAt);
   expect(session?.pendingSettlement?.lines[0]?.amount.toCents()).toBe(333);
   await expect(scenario([sessionRow({ ...rows[0], pending_settlement: { ...batch, requestedAt: "not-a-date" } })], participants).repository.get("s"))
+    .rejects.toMatchObject({ name: "SessionPersistenceError" });
+  await expect(scenario([sessionRow({ ...rows[0], payout_idempotency_keys: ["unrelated"] })], participants).repository.get("s"))
     .rejects.toMatchObject({ name: "SessionPersistenceError" });
 });
 
@@ -146,6 +148,7 @@ test.each(["CANCELLED", "SETTLED", "AWAITING_PAYOUT"])("hydrates %s without eras
   const session = await scenario([sessionRow({ status, payout_attempt_ids: ["old"], payout_idempotency_keys: ["old-key"] })]).repository.get("s");
   expect(session?.status).toBe(status);
   expect(session?.payoutAttemptIds).toEqual(["old"]);
+  expect(session).not.toHaveProperty("payoutIdempotencyKeys");
 });
 
 test("preserves SQL failures rather than disguising them as hydration errors", async () => {

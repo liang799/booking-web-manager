@@ -36,11 +36,29 @@ export interface PushPayload {
   readonly sessionId: UUID;
 }
 
+/**
+ * The page that lets the recipient act on a notification. There is no
+ * /sessions/{id} page: players manage places and invitations on
+ * /sessions/joined, a late withdrawer's held share is on the wallet, and the
+ * booker verifies attendance on the participants page.
+ */
+function destinationFor(notification: CommitmentNotification): string {
+  switch (notification.kind) {
+    case "VERIFICATION_REMINDER":
+      return `/sessions/${encodeURIComponent(notification.sessionId)}/participants`;
+    case "FORFEITURE_WARNING":
+    case "FORFEITURE_DUE":
+      return "/wallet";
+    default:
+      return "/sessions/joined";
+  }
+}
+
 /** User-facing text for each notification. Amounts are shown in the app, not here. */
 export function pushPayloadFor(
   notification: CommitmentNotification,
 ): PushPayload {
-  const url = `/sessions/${notification.sessionId}`;
+  const url = destinationFor(notification);
   const base = { url, kind: notification.kind, sessionId: notification.sessionId };
   switch (notification.kind) {
     case "PROMOTED":
@@ -49,6 +67,20 @@ export function pushPayloadFor(
         title: "You're in!",
         body: "A place opened up and your share is now held for this session.",
       };
+    case "REMOVED_FROM_WAITLIST":
+      return notification.reason === "INSUFFICIENT_FUNDS"
+        ? {
+            ...base,
+            url: "/wallet",
+            title: "You missed a place",
+            body: "A place opened up, but your wallet couldn't cover your share, so you left the waitlist. Top up and join again if places remain.",
+          }
+        : {
+            ...base,
+            url: "/discover",
+            title: "You missed a place",
+            body: "A place opened up, but your account no longer meets this session's requirements, so you left the waitlist.",
+          };
     case "REPLACEMENT_INVITATION":
       return {
         ...base,
@@ -59,7 +91,7 @@ export function pushPayloadFor(
       return {
         ...base,
         title: "Your share is still held",
-        body: "You withdrew within 30 hours of the start. Your share is forfeited to the booker unless someone replaces you before the session starts.",
+        body: "You withdrew less than 30 hours before the start. Your share is forfeited to the booker unless someone replaces you before the session starts.",
       };
     case "FORFEITURE_DUE":
       return {

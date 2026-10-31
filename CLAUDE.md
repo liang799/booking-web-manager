@@ -263,8 +263,8 @@ BREAKING CHANGE: use JavaScript features not available in Node 6.
 
 | Rule | Value |
 |---|---|
-| Full refund window | more than 30h before session start |
-| Late withdrawal | 30h or less — requires replacement or forfeits |
+| Full refund window | at least 30h before session start (including exactly 30h) |
+| Late withdrawal | less than 30h before start — requires replacement or forfeits |
 | Auto-verify | 72h after session **end** (not start) |
 | Slot propagation | within 3s |
 | Wallet operations | within 2s for 95% of requests |
@@ -275,9 +275,10 @@ BREAKING CHANGE: use JavaScript features not available in Node 6.
 
 For domain unit tests, follow the
 [domain testing guide](./tests/domain/README.md). It defines scenario naming,
-Arrange/Act/Assert comments, grouping, fixtures, and error assertions. The
+behavior grouping, blank-line structure, useful result captures, fixtures, and
+error assertions. Input/Oracle/Log terminology belongs in the result tables. The
 rationale is recorded in
-[ADR-0005](./docs/adr/0005-domain-unit-test-structure.md).
+[ADR-0018](./docs/adr/0018-domain-test-input-oracle-log.md).
 
 Priority test, and the one most likely to catch a real bug: fire twenty
 concurrent commits at an eight-slot session and assert exactly 8 succeed, 12
@@ -304,3 +305,7 @@ Requirements, use cases, data dictionary and the class diagram live in the SRS
 (`/docs`). When behaviour and the SRS disagree, the SRS wins — fix the code or
 raise it, don't silently diverge. Use case IDs (`UC1-05`, `UC2-04`) are the
 shared vocabulary; reference them in commit messages and PR titles.
+
+Diagrams live in [docs/diagrams](./docs/diagrams/README.md), one folder per
+diagram type, each with its editable source and listed in that README. Update
+a diagram in the same PR as the behaviour it shows.

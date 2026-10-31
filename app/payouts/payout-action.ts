@@ -1,7 +1,6 @@
 import { DomainError, type UUID } from "@/domain";
-import { loadDependencies } from "@/app/http/load-dependencies";
+import { createAuthenticatedActions } from "@/app/http/authenticated-action";
 import { isRequestFailure } from "@/app/http/request-failure";
-import { requireUserId } from "@/app/http/require-user-id";
 import { LedgerError } from "@/lib/money/errors";
 import { PayoutProviderError } from "@/use-cases/payouts/SetUpPayoutAccount";
 import {
@@ -37,22 +36,20 @@ export type PayoutRun<Output> = (
 /**
  * Builds one payout route handler. Owns the shared HTTP policy: loading the
  * cached dependencies, authentication, error mapping and `no-store` responses.
- * The acting user always comes from authentication; these routes take no body.
+ * The acting user always comes from authentication; the callback owns any body parsing.
  */
 export function payoutAction<Output>(
   loader: () => Promise<PayoutDependencies>,
   run: PayoutRun<Output>,
 ): (request: Request) => Promise<Response> {
-  return async (request) => {
-    try {
-      const dependencies = await loadDependencies(loader);
-      const userId = await requireUserId(request, dependencies.authenticate);
-      const result = await run(dependencies, userId, request);
-      return Response.json(result, { headers: { "Cache-Control": "no-store" } });
-    } catch (error) {
-      return payoutErrorResponse(error);
-    }
-  };
+  const actions = createAuthenticatedActions({
+    getDependencies: loader,
+    errorResponse: payoutErrorResponse,
+  });
+  return actions.get({
+    parse: (userId, _params, request) => ({ userId, request }),
+    run: (dependencies, input) => run(dependencies, input.userId, input.request),
+  });
 }
 
 /** Maps failures to `{ error: { code, message } }` without exposing internals. */

@@ -1,4 +1,5 @@
 export { Email } from "./accounts/email";
+export { UserHandle, USER_HANDLE_MAX_LENGTH, USER_HANDLE_MIN_LENGTH } from "./accounts/user-handle";
 export { assertDeactivationAllowed } from "./accounts/deactivation-policy";
 export {
   PROFILE_REGIONS,
@@ -19,6 +20,10 @@ export {
   FundHold,
   type FundHoldDetails,
 } from "./sessions/fund-hold";
+export {
+  GroupInvitation,
+  type GroupInvitationDetails,
+} from "./groups/group-invitation";
 export {
   GroupMembership,
   type GroupMembershipDetails,
@@ -47,6 +52,7 @@ export {
 export {
   RegularGroup,
   type GroupJoinResult,
+  type GroupInviteResult,
   type GroupCreation,
   type RegularGroupDetails,
 } from "./groups/regular-group";

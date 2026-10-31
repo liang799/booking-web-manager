@@ -210,10 +210,10 @@ export const EntranceDoesNotReplayAfterHosting: Story = {
     const firstTimeline = await canvas.findByRole("region", { name: "Joined session timeline" });
     await waitFor(() => expect(firstTimeline).toHaveAttribute("data-timeline-entrance", "complete"), { timeout: 3000 });
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm organising" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await expect(canvas.queryByRole("region", { name: "Joined session timeline" })).not.toBeInTheDocument();
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await expect(await canvas.findByRole("region", { name: "Joined session timeline" })).toHaveAttribute("data-timeline-entrance", "complete");
   },
 };
@@ -248,10 +248,10 @@ export const AccountAndTabCaches: Story = {
     await expect(secondDialog.getByRole("tab", { name: "Details" })).toHaveAttribute("aria-selected", "true");
     await closeSessionDetails();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm organising" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
     await expect(new URL(window.location.href).searchParams.get("tab")).toBe("hosting");
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bishan Tennis Centre" });
     await userEvent.click(canvas.getByRole("button", { name: "Use first account" }));
     await canvas.findByRole("article", { name: "Tennis Court Booking at Bukit Timah Community Club" });
@@ -277,9 +277,9 @@ export const TimelineSelectionSurvivesTabChanges: Story = {
     await userEvent.click(dialog.getByRole("tab", { name: "Participants (3)" }));
     await closeSessionDetails();
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await userEvent.click(navigation.getByRole("button", { name: "Hosting" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm organising" }));
     await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bishan Tennis Centre" });
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await expect(await canvas.findByRole("button", { name: "Show Tennis Court Booking, 23 Oct 2026" })).toHaveAttribute("aria-expanded", "true");
     await expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const restoredDialog = await openSessionDetails(canvas.getByRole("button", { name: "View details" }));
@@ -531,8 +531,8 @@ export const CreatedSessionOpensHosting: Story = {
     await expect(canvas.getByRole("status")).toHaveTextContent("Your session was created successfully.");
     await expect(requests[0]).toMatchObject({ tab: "hosting", cursor: null });
     const navigation = within(canvas.getByRole("navigation", { name: "Session views" }));
-    await expect(navigation.getByRole("button", { name: "Hosting" })).toHaveAttribute("aria-current", "page");
-    await userEvent.click(navigation.getByRole("button", { name: "Joined" }));
+    await expect(navigation.getByRole("button", { name: "I'm organising" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(navigation.getByRole("button", { name: "I'm playing" }));
     await expect(new URL(window.location.href).searchParams.get("tab")).toBe("joined");
     await expect(new URL(window.location.href).searchParams.has("created")).toBe(false);
   },
@@ -543,15 +543,47 @@ export const HostedManagementDialog: Story = {
   play: async ({ canvas }) => {
     const trigger = await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await userEvent.click(trigger);
-    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
-    const participants = await dialog.findByRole("link", { name: "Manage participants" });
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis session" }));
+    const participants = await dialog.findByRole("link", { name: "Manage players" });
     await expect(participants).toHaveAttribute("href", `/sessions/${hostedSessions[0]!.sessionId}/participants`);
-    await waitFor(() => expect(dialog.getByRole("button", { name: "Make private" })).toBeVisible());
+    await waitFor(() => expect(dialog.getByRole("button", { name: "Change visibility to private" })).toBeVisible());
+    await expect(dialog.getByText("Sessions / Organising", { exact: true })).toBeVisible();
+    await expect(dialog.getByLabelText("2 of 4 players joined")).toBeVisible();
+    await expect(dialog.getAllByText("Bukit Timah Community Club", { exact: true })).toHaveLength(1);
+    await expect(dialog.getByText("Wednesday, 21 October 2026")).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Cancel session" })).toBeVisible();
     await expect(hostedCalls).toBe(1);
     await userEvent.click(dialog.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     await expect(trigger).toBeVisible();
+  },
+};
+
+/** An OPEN session remains in the Hosting feed and management response after its start time. */
+export const InProgressHostedManagement: Story = {
+  parameters: { nextjs: { navigation: { pathname: "/sessions", query: { tab: "hosting" } } } },
+  args: {
+    loadFeed: async () => response([{
+      ...hostedSessions[0]!, startAt: "2026-10-21T07:30:00+08:00", endAt: "2026-10-21T08:30:00+08:00",
+    }]),
+    loadHosted: async () => ({
+      sessions: [{
+        sessionId: hostedSessions[0]!.sessionId,
+        venueName: hostedSessions[0]!.venueName, sport: "Tennis", region: "Central",
+        startAt: "2026-10-21T07:30:00+08:00", endAt: "2026-10-21T08:30:00+08:00",
+        visibility: "PUBLIC", availableSlots: 0, actions: [],
+      }],
+      awaitingAttendance: [],
+    }),
+  },
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Tennis Court Booking" }));
+    const participants = await dialog.findByRole("link", { name: "Manage participants" });
+    await expect(participants).toHaveAttribute("href", `/sessions/${hostedSessions[0]!.sessionId}/participants`);
+    await expect(dialog.queryByRole("button", { name: "Make private" })).not.toBeInTheDocument();
+    await expect(dialog.queryByRole("button", { name: "Cancel session" })).not.toBeInTheDocument();
+    await expect(dialog.queryByText("No upcoming sessions to manage")).not.toBeInTheDocument();
   },
 };
 
@@ -561,7 +593,7 @@ export const HostedManagementLoadingCanClose: Story = {
   play: async ({ canvas }) => {
     const trigger = await canvas.findByRole("button", { name: "Manage Tennis Court Booking at Bukit Timah Community Club" });
     await userEvent.click(trigger);
-    const dialogElement = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const dialogElement = await screen.findByRole("dialog", { name: "Tennis session" });
     const dialog = within(dialogElement);
     await expect(dialog.getByRole("status")).toHaveTextContent("Loading session controls…");
     const skeleton = dialogElement.querySelector<HTMLElement>("[data-session-controls-skeleton]");

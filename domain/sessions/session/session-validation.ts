@@ -4,7 +4,7 @@ import type {
   PayoutBatch,
 } from "../../shared/operations";
 import type { UUID } from "../../shared/types";
-import { isValidSlotCount, MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "../capacity";
+import { MAX_STORED_SESSION_SLOTS, MIN_SESSION_SLOTS } from "../capacity";
 import type { FundHold } from "../fund-hold";
 import type { SessionDetails } from "./session";
 import type { ParticipantListView } from "./participant-list";
@@ -35,27 +35,16 @@ export function validateSessionDetails(details: SessionDetails): void {
     "A session needs its payout attempt history",
   );
   DomainError.require(
-    Array.isArray(details.payoutIdempotencyKeys),
-    "INVALID_INPUT",
-    "A session needs its payout idempotency key history",
-  );
-  DomainError.require(
     new Set(details.payoutAttemptIds).size === details.payoutAttemptIds.length,
     "DUPLICATE_ID",
     "Payout attempt IDs must be unique",
-  );
-  DomainError.require(
-    new Set(details.payoutIdempotencyKeys).size ===
-      details.payoutIdempotencyKeys.length,
-    "DUPLICATE_ID",
-    "Payout idempotency keys must be unique",
   );
   validateNextQueueSequence(participations, details.nextQueueSequence);
 }
 
 type SessionConfiguration = Pick<
   SessionDetails,
-  "status" | "visibility" | "totalSlots" | "minimumHeadcount"
+  "status" | "visibility" | "totalSlots"
 >;
 
 export function validateSessionConfiguration(
@@ -78,18 +67,11 @@ export function validateSessionConfiguration(
     "Unknown session visibility",
   );
   DomainError.require(
-    isValidSlotCount(input.totalSlots),
+    Number.isSafeInteger(input.totalSlots) &&
+      input.totalSlots >= MIN_SESSION_SLOTS &&
+      input.totalSlots <= MAX_STORED_SESSION_SLOTS,
     "INVALID_INPUT",
-    `totalSlots must be a safe integer from ${MIN_SESSION_SLOTS} to ${MAX_SESSION_SLOTS}`,
-  );
-  const hasValidMinimumHeadcount =
-    Number.isSafeInteger(input.minimumHeadcount) &&
-    input.minimumHeadcount >= 2 &&
-    input.minimumHeadcount <= input.totalSlots;
-  DomainError.require(
-    hasValidMinimumHeadcount,
-    "INVALID_INPUT",
-    "minimumHeadcount must be between 2 and totalSlots",
+    `totalSlots must be a safe integer from ${MIN_SESSION_SLOTS} to ${MAX_STORED_SESSION_SLOTS}`,
   );
 }
 
@@ -99,7 +81,6 @@ type SessionStateValidation = Pick<
 > & {
   readonly participantList: ParticipantListView;
   readonly payoutAttemptIds: ReadonlySet<UUID>;
-  readonly payoutIdempotencyKeys: ReadonlySet<string>;
 };
 
 /** Checks lifecycle and payout state after the participant list is validated. */
@@ -122,12 +103,6 @@ export function validateSessionState(input: SessionStateValidation): void {
       "INVALID_INPUT",
       "Payout attempt IDs are required",
     );
-  for (const key of input.payoutIdempotencyKeys)
-    DomainError.require(
-      key.trim() !== "",
-      "INVALID_INPUT",
-      "Payout idempotency keys are required",
-    );
   if (input.pendingSettlement !== undefined) {
     validatePayoutBatch(input.pendingSettlement);
     DomainError.require(
@@ -139,11 +114,6 @@ export function validateSessionState(input: SessionStateValidation): void {
       input.payoutAttemptIds.has(input.pendingSettlement.payoutId),
       "INVALID_INPUT",
       "Pending payout ID was not recorded",
-    );
-    DomainError.require(
-      input.payoutIdempotencyKeys.has(input.pendingSettlement.idempotencyKey),
-      "INVALID_INPUT",
-      "Pending payout key was not recorded",
     );
     const holdById = new Map(
       input.participantList.participations
@@ -254,7 +224,8 @@ export function requireId(value: string, name: string): void {
 
 export function cloneBatch(batch: PayoutBatch): PayoutBatch {
   return {
-    ...batch,
+    payoutId: batch.payoutId,
+    sessionId: batch.sessionId,
     requestedAt: validDate(batch.requestedAt, "requestedAt"),
     destination: { ...batch.destination },
     lines: batch.lines.map((line) => ({ ...line })),
@@ -281,11 +252,6 @@ export function validatePayoutDestination(
 export function validatePayoutBatch(batch: PayoutBatch): void {
   requireId(batch.payoutId, "payoutId");
   requireId(batch.sessionId, "sessionId");
-  DomainError.require(
-    batch.idempotencyKey.trim() !== "",
-    "INVALID_INPUT",
-    "idempotencyKey is required",
-  );
   validDate(batch.requestedAt, "requestedAt");
   validatePayoutDestination(batch.destination);
   DomainError.require(

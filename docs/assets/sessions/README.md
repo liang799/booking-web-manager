@@ -2,6 +2,36 @@
 
 Evidence uses the actual `Sessions/Overview` Storybook stories in Chromium, with fictional fixtures fixed at 21 October 2026 in Singapore time, bundled fonts and decorative artwork. The production `AppShell` sidebar, six desktop links, account controls and mobile navigation are unchanged by this editorial update.
 
+## Gesture navigation revision (24 October 2026)
+
+Desktop Joined now settles one complete session per qualifying vertical wheel or trackpad burst. Input accumulates 24 normalized pixels and a 220ms quiet interval starts a fresh burst; this is a browser fallback heuristic, not physical gesture recognition. Positive browser momentum signals never initiate navigation. The committed burst retains its tail after the 280ms eased transition, including at the first and last session. One fresh burst can wait behind a transition.
+
+The coordinator applies one progress value to expansion, dates, the rail marker and page position while preserving total feature space. New date/Home/End commands retarget directly from the current visual state. Native scroll takeover cancels the transition and settles the nearest expansion without changing the user's scroll position. Mobile Joined, Hosting and shared navigation retain their behavior.
+
+At 1536 × 1024 the selected 24 October session reproduces the composition of [`joined-scroll-current.webp`](./joined-scroll-current.webp): a complete photograph, status, summary and View details, with compact 23 and 25 October rows and a marker centered on the enlarged date. Shorter windows first drop neighboring context, then reduce the decorative photo; full details remain in the native-scrolling dialog. Extra trailing space keeps the last session reachable in short feeds and tall windows.
+
+| Evidence | Capture |
+| --- | --- |
+| Before: one 40px wheel event leaves two partially expanded cards | ![Before gesture navigation](./joined-gesture-before.png) |
+| After: the same wheel input from 23 October settles on 24 October | ![After gesture navigation](./joined-gesture-after.png) |
+| Full 1536 × 1024 reference composition | [`joined-gesture-reference.png`](./joined-gesture-reference.png) |
+
+The before/after images crop the Sessions canvas from identical 1536 × 1024 viewports. Before uses the existing native-scroll implementation; after uses the final gesture coordinator. Both use fictional Storybook fixtures. The full screenshot includes the temporary validation shell described below; shared-shell changes are excluded from this PR.
+
+[`joined-gesture-browsing.gif`](./joined-gesture-browsing.gif) records browser wheel gestures through 21 → 23 → 24 → 25 October and back to 21. It uses the same production Storybook preview and validation shell, captured at 1536 × 1024 and displayed at 960 × 640. Repeated still frames are compressed while preserving the browsing sequence and transition timing.
+
+Validation:
+
+- 15 gesture-classifier unit tests pass; all 113 focused Sessions Storybook checks pass, including URL restoration, account resets, pagination anchoring, entrance interruption and dialog focus.
+- All 42 timeline browser cases pass across Chromium and WebKit, covering settled composition, long tails, fresh/reverse/queued gestures, direct retargeting, cancellation, boundaries, wheel units, short/tall windows, accessibility, older-page anchoring, URL-restored dialog scrolling/focus and mobile preservation. The 38-case run had one pre-render Storybook module-fetch failure; its isolated rerun passed. The four added pagination/dialog cases passed in focused runs. This is not a clean first full-suite result.
+- Scoped ESLint and `git diff --check` pass. The production Storybook bundle builds successfully.
+- Full unit suite: 2,804 pass, 3 fail in the existing profile settings tests (`PageHeader` is undefined), 42 skipped and 1 todo.
+- Full typecheck fails in unchanged `app/profile/page.tsx` and `components/ui/app-shell.tsx`. Full lint and the Next.js production build fail on the existing unused `MobileNavigation` import in AppShell; Next.js compilation itself succeeds. These failures exist at base `00f6c88462e16ffce8f91dd78b72aa649918e9f7`.
+
+For UI validation only, the broken AppShell mobile JSX was temporarily replaced with its existing `MobileNavigation` component and the stale desktop image branch with its existing `NavigationIcon`. The overlay was removed before final full-repository checks and is not committed. Browser checks use the resulting production Storybook bundle served statically because the inherited failures prevent starting a production Next.js build. Full application integration remains blocked until the AppShell/profile owners resolve those failures and the normal build/checks are rerun.
+
+Automated browser wheel events and synthetic momentum/clock cases do not validate a physical trackpad. Physical hardware testing remains outstanding. Historical validation sections below describe previous revisions and do not supersede these current limitations.
+
 ## Editorial agenda revision
 
 The main area remains directly on the grey page canvas, without an outer bordered card. The sidebar and canvas color are unchanged by this reference refinement. Wide-desktop page padding scales from 28px to 64px and is 48px at a 1536px viewport. Joined places the selected session's photograph above its title, venue and horizontal time/player metadata. The copy sits directly on the canvas below the image, with **View details** and a plain arrow at the right of the metadata row. The photograph uses an 8:3 aspect ratio, with its wide-desktop height bounded between 240px and 420px. The selected feature leaves 32px of space below it; the body has 20px above and 12px below, with an 18px gap before the metadata row. Wide desktop uses a 34px feature title and an 18px venue line. Compact sessions show venue and time at the left, with player count and chevron at the far right. These rows are at least 112px high with 24px vertical padding, and have no thumbnail, subtitle or divider.
@@ -79,7 +109,7 @@ Captured at device scale 1 after fonts and images settled, with reduced motion a
 
 ## Behavior retained
 
-Joined alone has the scroll-driven chronological timeline, with earlier dates above later dates. Date buttons and compact rows support keyboard selection; keyboard focus inside the active session prevents scrolling from removing the focused control. **View details** opens Details/Participants, map and calendar actions in a transient session dialog. Closing it restores keyboard focus to its trigger. Scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
+Joined alone has the gesture-driven chronological timeline, with earlier dates above later dates. Date buttons and compact rows support keyboard selection; focus moves to the selected date when its outgoing content becomes inert. **View details** opens Details/Participants, map and calendar actions in a transient session dialog. Closing it restores keyboard focus to its trigger. Scroll anchoring, forward/reverse scrolling and reduced motion remain supported.
 
 The entrance runs once per overview/account visit after URL selection has been restored. The visible rail draws for 560ms, the marker travels to the current date for 380ms, then dates and content reveal independently over 420ms with bounded 70ms staggered starts. Layout space stays reserved throughout; dates only fade to preserve marker alignment. Visible content is prioritized so long feeds and restored selections do not extend the wait. Returning from Hosting and loading more pages do not replay it. Wheel, touch, keyboard/focus/pointer input, scrolling, resizing, tab visibility and motion-preference changes finish it immediately. Mobile and reduced motion skip the sequence. This presentation state lives outside the persisted Zustand store.
 

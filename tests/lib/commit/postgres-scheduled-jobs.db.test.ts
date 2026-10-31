@@ -71,6 +71,38 @@ describe.skipIf(!DATABASE_URL)("scheduled commitment sweep (database)", () => {
       expect(await due(at)).not.toContain(sessionId);
   });
 
+  test("does not schedule promotion into the booker's reserved place", async () => {
+    const [booker, alice = "", bob = "", carol = ""] = await createUsers(4);
+    const sessionId = await createSession(booker);
+    await commit(alice, sessionId);
+    await commit(bob, sessionId);
+    await commit(carol, sessionId);
+
+    expect(await statusOf(sessionId, carol)).toMatchObject({ status: "WAITLISTED", hold_state: null });
+    expect(await due(now)).not.toContain(sessionId);
+  });
+
+  test("does not schedule a booker-only session with a waiting guest", async () => {
+    const [booker, alice = ""] = await createUsers(2);
+    const sessionId = await createSession(booker, 1);
+    await commit(alice, sessionId);
+
+    expect(await statusOf(sessionId, alice)).toMatchObject({ status: "WAITLISTED", hold_state: null });
+    expect(await due(now)).not.toContain(sessionId);
+  });
+
+  test("counts a legacy funded booker once so the remaining place can be promoted", async () => {
+    const [originalOwner, booker = "", alice = ""] = await createUsers(3);
+    const sessionId = await createSession(originalOwner, 2);
+    await commit(booker, sessionId);
+    await commit(alice, sessionId);
+    // Reproduce the historical self-join shape with a real funded participation.
+    await pool.query("update sessions set booker_id = $2 where session_id = $1", [sessionId, booker]);
+
+    expect(await statusOf(sessionId, alice)).toMatchObject({ status: "WAITLISTED", hold_state: null });
+    expect(await due(now)).toContain(sessionId);
+  });
+
   test("promotes a waiting participant into a freed place, then is no longer due", async () => {
     const [booker, alice = "", bob = "", carol = ""] = await createUsers(4);
     const sessionId = await createSession(booker);
@@ -205,8 +237,7 @@ describe.skipIf(!DATABASE_URL)("scheduled commitment sweep (database)", () => {
           }
         : query,
       verificationReminders: {
-        claimVerificationReminders: async () => [],
-        releaseVerificationReminders: async () => {},
+        enqueueVerificationReminders: async () => [],
       },
       notifier,
       expireReplacements: new ExpireReplacements({ unitOfWork, clock, notifier }),
@@ -284,20 +315,21 @@ describe.skipIf(!DATABASE_URL)("scheduled commitment sweep (database)", () => {
     return users as [UUID, ...UUID[]];
   }
 
-  async function createSession(bookerId: UUID): Promise<UUID> {
+  async function createSession(bookerId: UUID, totalSlots = 3): Promise<UUID> {
     const sessionId = randomUUID();
     await pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport,
-         start_at, end_at, total_cost_cents, total_slots, minimum_headcount,
+         start_at, end_at, total_cost_cents, total_slots,
          booking_share_cents, visibility, room_token, holding_account_id)
-       values ($1, $2, 'Court', 'North', 'Badminton', $3, $4, $5, 2, 2, $6,
-         'PUBLIC', $7, $8)`,
+       values ($1, $2, 'Court', 'North', 'Badminton', $3, $4, $5, $6, $7,
+         'PUBLIC', $8, $9)`,
       [
         sessionId,
         bookerId,
         startsAt,
         endsAt,
         2 * SHARE_CENTS,
+        totalSlots,
         SHARE_CENTS,
         randomUUID(),
         holdingAccountId,

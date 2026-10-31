@@ -34,7 +34,11 @@ eligibility: the default destination is a debit card whose
 
 Every Stripe call happens outside a database transaction (rule #4). Account
 creation uses the idempotency key `["UC1-07", userId, "first" | failedAccount]`,
-so a double-click cannot create two Stripe accounts.
+so a double-click cannot create two Stripe accounts. Stripe stores a refusal
+under its key for 24 hours, even after the cause (for example a Dashboard
+setting) is fixed. A *replayed* client error created no account, so the adapter
+continues under `[key, "after", originalRequestId]`; concurrent requests derive
+the same key. Replayed server errors, whose outcome is unknown, are not retried.
 
 | Layer | File |
 | --- | --- |
@@ -51,23 +55,46 @@ A booker withdraws a session's settled shares once attendance is verified.
 payout, pending or settled; `POST /api/payouts/withdraw` pays one out.
 
 1. **Prepare** (one transaction, key `["UC1-08:prepare", bookerId, sessionId, key]`):
-   `Booker.preparePayout` moves the session to `PAYOUT_PENDING` and
-   `PayoutAttempt.create` writes a `REQUESTED` row in `payout_attempts`. That
-   row is the durable intent; at most one can be open per session.
-2. **Transfer** (no transaction): a Stripe transfer to the booker's connected
+   the application unit of work stores or replays the original preparation.
+   `Booker.preparePayout(session, { payoutId, now })` moves the session to
+   `PAYOUT_PENDING`, and `PayoutAttempt.create` writes a `REQUESTED` row.
+   At most one attempt can be open per session. Request keys belong to the
+   adapters; domain objects contain payout IDs and business state only.
+2. **Check for a terminal result** (fresh transaction): load and authorize
+   Session, then lock PayoutAttempt. A failed attempt returns its recorded
+   decline; a completed attempt returns its immutable receipt. Neither calls
+   Stripe. A pending attempt continues using its original payout ID.
+3. **Transfer** (no transaction): a Stripe transfer to the booker's connected
    account, grouped by `transfer_group = payoutId` and keyed
-   `["UC1-08:transfer", payoutId]`. A retry finds the existing transfer before
-   creating one, so the booker is never paid twice.
-3. **Complete** (one transaction): the attempt completes, the session settles,
-   and the ledger records the payout. A decline from Stripe instead fails the
-   attempt and returns the session to awaiting payout.
-4. **Bank payout**: `INSTANT` (push-to-card) is used only when it was requested
-   and the account supports it, and falls back to `STANDARD` if Stripe refuses
-   it. The money has already reached the connected account by then.
+   `["UC1-08:transfer", payoutId]`. Provider idempotency prevents duplicate
+   transfers when concurrent calls both observed the pending attempt.
+4. **Complete or fail** (fresh transaction): completion settles the session
+   and appends the settlement and payout ledger entries. A definitive decline
+   instead fails the attempt, reopens the session and stores its decline
+   receipt atomically. The transaction step key determines ledger identity;
+   it never caches the callback's return value.
+5. **Bank payout** (no transaction): only the invocation that newly completed
+   the attempt may initiate this step. `INSTANT` is used when requested and
+   eligible; provider refusal falls back to `STANDARD`. The invocation stores
+   its result if absent under `["UC1-08:result", payoutId]` and returns the
+   canonical receipt. All requests that resumed that attempt share it.
 
-Retrying with the same idempotency key replays the original result. A retry
-after a lost response, even with a new key, resumes the open attempt instead of
-starting a second one.
+Retrying the same request replays its recorded terminal outcome without another
+provider call or ledger entry. A lost transfer response leaves the attempt
+pending; either the same key or a new key resumes it. A new key after a
+recorded decline creates a new attempt.
+
+A completed attempt without a receipt is recovered as `PAID` with `bankPayout`
+omitted. The UI confirms success without guessing the bank method. Recovery
+favors avoiding another payment: if execution stops before the instant step,
+the bank payout may fall back to Stripe's standard schedule. If recovery stores
+its receipt before the completion winner finishes, that immutable receipt is
+returned by both invocations.
+
+The preparation namespace, stored response shape, database key columns and
+pending-settlement JSON remain compatible with existing records. No migration
+or backfill is needed; legacy keys are validated and retained privately by the
+adapters. See [ADR-0020](../../docs/adr/0020-payout-request-idempotency.md).
 
 | Layer | File |
 | --- | --- |

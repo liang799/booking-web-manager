@@ -1,11 +1,18 @@
-import type { UUID } from "@/domain";
+import type { PromotionResult, UUID } from "@/domain";
 
-export type CommitmentNotification =
+export type CommitmentNotification = (
   /** A waiting participant took a place; their share is now held. */
   | {
       readonly kind: "PROMOTED";
       readonly recipientId: UUID;
       readonly sessionId: UUID;
+    }
+  /** A place opened, but the queue head was no longer eligible and left the waitlist. */
+  | {
+      readonly kind: "REMOVED_FROM_WAITLIST";
+      readonly recipientId: UUID;
+      readonly sessionId: UUID;
+      readonly reason: NonNullable<PromotionResult["reason"]>;
     }
   /** Someone withdrew and named the recipient as their replacement. */
   | {
@@ -30,6 +37,9 @@ export type CommitmentNotification =
       readonly kind: "VERIFICATION_REMINDER";
       readonly recipientId: UUID;
       readonly sessionId: UUID;
+    }) & {
+      /** Stable committed action identity for inbox deduplication; reused on replay. */
+      readonly occurrenceKey?: string;
     };
 
 /** Delivers notifications to users, for example by Web Push. */

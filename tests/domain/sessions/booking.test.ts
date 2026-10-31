@@ -10,97 +10,80 @@ const details = {
   endAt: new Date("2026-10-02"),
 };
 
-describe("Booking", () => {
-  test("constructor_WhenCostIsZero_ThrowsRangeError", () => {
-    // Arrange
-    const invalidDetails = { ...details, totalCost: Money.fromCents(0) };
+describe("Booking terms and schedule", () => {
+  describe("Required booking terms", () => {
+    test("constructor_WhenCostIsZero_ThrowsRangeError", () => {
+      const invalidDetails = { ...details, totalCost: Money.fromCents(0) };
 
-    // Act & Assert
-    expect(() => new Booking(invalidDetails)).toThrow(RangeError);
+      expect(() => new Booking(invalidDetails)).toThrow(RangeError);
+    });
+
+    test("constructor_WhenVenueIsBlank_ThrowsRangeError", () => {
+      const invalidDetails = { ...details, venueName: " " };
+
+      expect(() => new Booking(invalidDetails)).toThrow(RangeError);
+    });
   });
 
-  test("constructor_WhenVenueIsBlank_ThrowsRangeError", () => {
-    // Arrange
-    const invalidDetails = { ...details, venueName: " " };
+  describe("Schedule boundaries and date isolation", () => {
+    test("constructor_WhenStartEqualsEnd_ThrowsRangeError", () => {
+      const invalidDetails = { ...details, startAt: details.endAt };
 
-    // Act & Assert
-    expect(() => new Booking(invalidDetails)).toThrow(RangeError);
+      expect(() => new Booking(invalidDetails)).toThrow(RangeError);
+    });
+
+    test("constructor_WhenEndDateIsInvalid_ThrowsRangeError", () => {
+      const invalidDetails = { ...details, endAt: new Date(Number.NaN) };
+
+      expect(() => new Booking(invalidDetails)).toThrow(RangeError);
+    });
+
+    test("constructor_WhenSourceAndExposedDatesAreMutated_PreservesTimes", () => {
+      const input = { ...details, startAt: new Date(details.startAt) };
+
+      const booking = new Booking(input);
+      input.startAt.setFullYear(2000);
+      booking.startAt.setFullYear(2001);
+      booking.endAt.setFullYear(2002);
+
+      expect(booking.startAt).toEqual(details.startAt);
+      expect(booking.endAt).toEqual(details.endAt);
+    });
+
+    test("hasStarted_WhenTimeEqualsStart_ReturnsTrue", () => {
+      const booking = new Booking(details);
+
+      const hasStarted = booking.hasStarted(details.startAt);
+
+      expect(hasStarted).toBe(true);
+    });
+
+    test("hasEnded_WhenTimeEqualsEnd_ReturnsTrue", () => {
+      const booking = new Booking(details);
+
+      const hasEnded = booking.hasEnded(details.endAt);
+
+      expect(hasEnded).toBe(true);
+    });
   });
 
-  test("constructor_WhenStartEqualsEnd_ThrowsRangeError", () => {
-    // Arrange
-    const invalidDetails = { ...details, startAt: details.endAt };
+  describe("Value comparison", () => {
+    test("equals_WhenValuesMatch_ReturnsTrue", () => {
+      const booking = new Booking(details);
+      const identicalBooking = new Booking(details);
 
-    // Act & Assert
-    expect(() => new Booking(invalidDetails)).toThrow(RangeError);
-  });
+      const equalBookings = booking.equals(identicalBooking);
 
-  test("constructor_WhenEndDateIsInvalid_ThrowsRangeError", () => {
-    // Arrange
-    const invalidDetails = { ...details, endAt: new Date(Number.NaN) };
+      expect(equalBookings).toBe(true);
+    });
 
-    // Act & Assert
-    expect(() => new Booking(invalidDetails)).toThrow(RangeError);
-  });
+    test("equals_WhenVenueDiffers_ReturnsFalse", () => {
+      const booking = new Booking(details);
+      const otherVenueBooking = new Booking({ ...details, venueName: "Other" });
 
-  test("constructor_WhenSourceAndExposedDatesAreMutated_PreservesTimes", () => {
-    // Arrange
-    const source = { ...details, startAt: new Date(details.startAt) };
-    const booking = new Booking(source);
+      const equalBookings = booking.equals(otherVenueBooking);
 
-    // Act
-    source.startAt.setFullYear(2000);
-    booking.startAt.setFullYear(2001);
-    booking.endAt.setFullYear(2002);
-
-    // Assert
-    expect(booking.startAt).toEqual(details.startAt);
-    expect(booking.endAt).toEqual(details.endAt);
-  });
-
-  test("equals_WhenValuesMatch_ReturnsTrue", () => {
-    // Arrange
-    const booking = new Booking(details);
-    const other = new Booking(details);
-
-    // Act
-    const equalBookings = booking.equals(other);
-
-    // Assert
-    expect(equalBookings).toBe(true);
-  });
-
-  test("equals_WhenVenueDiffers_ReturnsFalse", () => {
-    // Arrange
-    const booking = new Booking(details);
-    const other = new Booking({ ...details, venueName: "Other" });
-
-    // Act
-    const equalBookings = booking.equals(other);
-
-    // Assert
-    expect(equalBookings).toBe(false);
-  });
-
-  test("hasStarted_WhenTimeEqualsStart_ReturnsTrue", () => {
-    // Arrange
-    const booking = new Booking(details);
-
-    // Act
-    const hasStarted = booking.hasStarted(details.startAt);
-
-    // Assert
-    expect(hasStarted).toBe(true);
-  });
-
-  test("hasEnded_WhenTimeEqualsEnd_ReturnsTrue", () => {
-    // Arrange
-    const booking = new Booking(details);
-
-    // Act
-    const hasEnded = booking.hasEnded(details.endAt);
-
-    // Assert
-    expect(hasEnded).toBe(true);
+      expect(equalBookings).toBe(false);
+    });
   });
 });

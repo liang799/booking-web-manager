@@ -3,74 +3,63 @@ import {
   Email,
   Money,
   PayoutAccount,
+  type PayoutAccountDetails,
   User,
+  type UserDetails,
 } from "@/domain";
 import { describe, expect, test } from "vitest";
 import { createTestUserDetails, userLoadedAt } from "./user-fixtures";
 
-describe("User", () => {
-  describe("Construction and registration", () => {
+describe("User account lifecycle", () => {
+  describe("Registration and restored account data", () => {
     test("constructor_WhenVerifiedEmailIsMissing_ThrowsInvalidInput", () => {
-      // Arrange
       const details = createTestUserDetails({ userId: "owner", email: null, emailVerified: true });
 
-      // Act & Assert
       expect(() => new User(details)).toThrow(expect.objectContaining({ code: "INVALID_INPUT" }));
     });
 
     test("constructor_WhenEmailIsProvided_PreservesTheEmailValue", () => {
-      // Arrange
       const email = new Email("Owner+bookings@Example.COM");
       const details = createTestUserDetails({ userId: "owner", email });
 
-      // Act
       const user = new User(details);
 
-      // Assert
       expect(user.email).toBe(email);
       expect(user.email?.toString()).toBe("Owner+bookings@Example.COM");
     });
 
     test("constructor_WhenActiveAccountHasNoEmail_LoadsAnUnverifiedAccount", () => {
-      // Arrange
       const details = createTestUserDetails({
         userId: "owner",
         email: null,
         emailVerified: false,
       });
 
-      // Act
       const user = new User(details);
 
-      // Assert
       expect(user.accountStatus).toBe("ACTIVE");
       expect(user.email).toBeNull();
       expect(user.emailVerified).toBe(false);
     });
 
     test("constructor_WhenInactiveAccountHasEmail_ThrowsInvalidInput", () => {
-      // Arrange
       const details = createTestUserDetails({
         userId: "owner",
         accountStatus: "INACTIVE",
         email: new Email("owner@example.com"),
       });
 
-      // Act & Assert
       expect(() => new User(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenLoadingDeactivatedUser_RestoresAnonymisedProfile", () => {
-      // Arrange
-      const original = createActiveUser();
-      original.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const original = createUser({
+        accountStatus: "INACTIVE",
+        email: null,
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      original.completePayoutSetup("bank");
-      original.deactivate(deactivationWithoutObligations());
       const details = createTestUserDetails({
         userId: "owner",
         accountStatus: "INACTIVE",
@@ -78,17 +67,14 @@ describe("User", () => {
         payoutAccount: original.payoutAccount,
       });
 
-      // Act
       const restored = new User(details);
 
-      // Assert
       expect(restored.accountStatus).toBe("INACTIVE");
       expect(restored.email).toBeNull();
       expect(accountStateOf(restored)).toEqual(accountStateOf(original));
     });
 
     test("constructor_WhenPayoutAccountBelongsToAnotherUser_ThrowsInvalidInput", () => {
-      // Arrange
       const payoutAccount = PayoutAccount.create({
         payoutAccountId: "account",
         userId: "other-user",
@@ -96,14 +82,12 @@ describe("User", () => {
       });
       const details = createTestUserDetails({ userId: "owner", payoutAccount });
 
-      // Act & Assert
       expect(() => new User(details)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
     });
 
     test("constructor_WhenSourcePreferencesChange_PreservesStoredPreferences", () => {
-      // Arrange
       const sports = new Set(["Tennis"]);
       const regions = new Set(["West"]);
       const user = new User(
@@ -114,20 +98,17 @@ describe("User", () => {
         }),
       );
 
-      // Act
+      // Attempt to alter the supplied preference sets.
       sports.clear();
       regions.clear();
 
-      // Assert
       expect([...user.preferredSports]).toEqual(["Tennis"]);
       expect([...user.preferredRegions]).toEqual(["West"]);
     });
 
     test("create_WhenRegistrationIsValid_ReturnsAnActiveUser", () => {
-      // Arrange
       const email = new Email("owner@example.com");
 
-      // Act
       const user = User.create({
         userId: "owner",
         email,
@@ -135,14 +116,12 @@ describe("User", () => {
         now: userLoadedAt,
       });
 
-      // Assert
       expect(user.accountStatus).toBe("ACTIVE");
       expect(user.email).toBe(email);
       expect(user.emailVerified).toBe(false);
     });
 
     test("create_WhenSourcePreferencesChange_PreservesStoredPreferences", () => {
-      // Arrange
       const sports = new Set(["Tennis"]);
       const regions = new Set(["West"]);
       const user = User.create({
@@ -154,86 +133,71 @@ describe("User", () => {
         preferredRegions: regions,
       });
 
-      // Act
+      // Attempt to alter the supplied preference sets.
       sports.clear();
       regions.clear();
 
-      // Assert
       expect([...user.preferredSports]).toEqual(["Tennis"]);
       expect([...user.preferredRegions]).toEqual(["West"]);
     });
   });
 
-  describe("Profile and preferences", () => {
+  describe("Profile updates and email verification", () => {
     test("updateProfile_WhenVerifiedEmailChanges_RequiresFreshVerification", () => {
-      // Arrange
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
-      // Act
       user.updateProfile({ email: new Email("new@example.com") });
 
-      // Assert
       expect(user.emailVerified).toBe(false);
     });
 
     test("updateProfile_WhenVerifiedEmailIsUnchanged_PreservesVerification", () => {
-      // Arrange
       const user = new User(createTestUserDetails({ userId: "owner", emailVerified: true }));
 
-      // Act
       user.updateProfile({ email: new Email("owner@example.com") });
 
-      // Assert
       expect(user.emailVerified).toBe(true);
     });
 
     test("updateProfile_WhenAccountIsActive_ReplacesEmail", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const email = new Email("new@example.com");
 
-      // Act
       user.updateProfile({ email });
+      const updatedEmail = user.email;
 
-      // Assert
-      expect(user.email).toBe(email);
-      expect(user.email?.toString()).toBe("new@example.com");
+      expect(updatedEmail).toBe(email);
+      expect(updatedEmail?.toString()).toBe("new@example.com");
     });
 
     test("updateProfile_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.deactivate(deactivationWithoutObligations());
+      const user = createUser({ accountStatus: "INACTIVE", email: null });
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() =>
         user.updateProfile({ email: new Email("new@example.com") }),
       ).toThrow(expect.objectContaining({ code: "INACTIVE_ACCOUNT" }));
       expect(accountStateOf(user)).toEqual(before);
     });
+  });
 
+  describe("Preferences and collection isolation", () => {
     test("updatePreferences_WhenPreferencesAreValid_ReplacesSportsAndRegions", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
 
-      // Act
       user.updatePreferences({
         preferredSports: new Set(["Tennis"]),
         preferredRegions: new Set(["West"]),
       });
 
-      // Assert
       expect([...user.preferredSports]).toEqual(["Tennis"]);
       expect([...user.preferredRegions]).toEqual(["West"]);
     });
 
     test("updatePreferences_WhenRegionIsBlank_RejectsWithoutChangingState", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() =>
         user.updatePreferences({
           preferredSports: new Set(["Tennis"]),
@@ -244,12 +208,9 @@ describe("User", () => {
     });
 
     test("updatePreferences_WhenAccountIsInactive_RejectsWithoutChangingState", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.deactivate(deactivationWithoutObligations());
+      const user = createUser({ accountStatus: "INACTIVE", email: null });
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() =>
         user.updatePreferences({
           preferredSports: new Set(["Tennis"]),
@@ -260,7 +221,6 @@ describe("User", () => {
     });
 
     test("preferredSports_WhenReturnedSetChanges_PreservesStoredPreferences", () => {
-      // Arrange
       const user = new User(
         createTestUserDetails({
           userId: "owner",
@@ -269,15 +229,13 @@ describe("User", () => {
       );
       const exposedSports = user.preferredSports as Set<string>;
 
-      // Act
+      // Attempt to alter the returned preference set.
       exposedSports.clear();
 
-      // Assert
       expect([...user.preferredSports]).toEqual(["Tennis"]);
     });
 
     test("preferredRegions_WhenReturnedSetChanges_PreservesStoredPreferences", () => {
-      // Arrange
       const user = new User(
         createTestUserDetails({
           userId: "owner",
@@ -286,41 +244,33 @@ describe("User", () => {
       );
       const exposedRegions = user.preferredRegions as Set<string>;
 
-      // Act
+      // Attempt to alter the returned preference set.
       exposedRegions.clear();
 
-      // Assert
       expect([...user.preferredRegions]).toEqual(["West"]);
     });
   });
 
-  describe("Payout setup", () => {
+  describe("Starting payout setup", () => {
     test("beginPayoutSetup_WhenNoSetupExists_CreatesPendingAccount", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser({ userId: "owner" });
 
-      // Act
       user.beginPayoutSetup({
         payoutAccountId: "account",
         providerAccountReference: "provider",
       });
+      const pendingAccount = user.payoutAccount;
 
-      // Assert
-      expect(user.payoutAccount?.setupStatus).toBe("PENDING");
-      expect(user.payoutAccount?.payoutAccountId).toBe("account");
-      expect(user.payoutAccount?.userId).toBe("owner");
+      expect(pendingAccount?.setupStatus).toBe("PENDING");
+      expect(pendingAccount?.payoutAccountId).toBe("account");
+      expect(pendingAccount?.userId).toBe("owner");
+      expect(pendingAccount?.providerAccountReference).toBe("provider");
     });
 
     test("beginPayoutSetup_WhenSetupIsPending_ThrowsInvalidState", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
+      const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() =>
         user.beginPayoutSetup({
           payoutAccountId: "replacement",
@@ -331,16 +281,11 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() =>
         user.beginPayoutSetup({
           payoutAccountId: "replacement",
@@ -351,15 +296,8 @@ describe("User", () => {
     });
 
     test("beginPayoutSetup_WhenPreviousSetupFailed_AllowsReplacementToComplete", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
-      user.failPayoutSetup();
+      const user = createUser({ payoutAccount: createPayoutAccount("FAILED") });
 
-      // Act
       user.beginPayoutSetup({
         payoutAccountId: "replacement",
         providerAccountReference: "other-provider",
@@ -367,52 +305,49 @@ describe("User", () => {
       user.completePayoutSetup("replacement-bank");
       const destination = user.payoutDestination();
 
-      // Assert
       expect(user.payoutAccount?.setupStatus).toBe("COMPLETE");
       expect(destination.payoutAccountId).toBe("replacement");
       expect(destination.bankAccountReference).toBe("replacement-bank");
     });
+  });
 
+  describe("Payout setup confirmation and failure", () => {
     test("completePayoutSetup_WhenSetupIsPending_ReplacesAccountWithCompletedCopy", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        userId: "owner",
+        payoutAccount: new PayoutAccount({
+          payoutAccountId: "account",
+          userId: "owner",
+          providerAccountReference: "provider",
+          setupStatus: "PENDING",
+        }),
       });
       const pendingAccount = user.payoutAccount;
 
-      // Act
       user.completePayoutSetup("bank");
       const completedAccount = user.payoutAccount;
 
-      // Assert
       expect(pendingAccount?.setupStatus).toBe("PENDING");
       expect(completedAccount).not.toBe(pendingAccount);
       expect(completedAccount?.setupStatus).toBe("COMPLETE");
       expect(completedAccount?.bankAccountReference).toBe("bank");
+      expect(completedAccount?.payoutAccountId).toBe("account");
+      expect(completedAccount?.userId).toBe("owner");
+      expect(completedAccount?.providerAccountReference).toBe("provider");
     });
 
     test("completePayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
 
-      // Act & Assert
       expect(() => user.completePayoutSetup("bank")).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
       );
     });
 
     test("completePayoutSetup_WhenBankReferenceIsBlank_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
-      });
+      const user = createUser({ payoutAccount: createPayoutAccount("PENDING") });
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.completePayoutSetup(" ")).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -420,109 +355,105 @@ describe("User", () => {
     });
 
     test("completePayoutSetup_WhenCompletedWithDifferentBank_ThrowsInvalidState", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.completePayoutSetup("different-bank")).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
       expect(accountStateOf(user)).toEqual(before);
     });
 
-    test("failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      // Arrange
-      const user = createActiveUser();
+    test("failPayoutSetup_WhenSetupIsPending_ReplacesAccountWithFailedCopy", () => {
+      const pendingAccount = createPayoutAccount("PENDING");
+      const user = createUser({ payoutAccount: pendingAccount });
 
-      // Act & Assert
+      user.failPayoutSetup();
+      const failedAccount = user.payoutAccount;
+
+      expect(pendingAccount.setupStatus).toBe("PENDING");
+      expect(failedAccount).not.toBe(pendingAccount);
+      expect(failedAccount?.setupStatus).toBe("FAILED");
+      expect(failedAccount?.bankAccountReference).toBeUndefined();
+    });
+
+    test("failPayoutSetup_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
+      const user = createUser();
+
       expect(() => user.failPayoutSetup()).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
       );
     });
 
     test("failPayoutSetup_WhenSetupIsComplete_ThrowsInvalidState", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.failPayoutSetup()).toThrow(
         expect.objectContaining({ code: "INVALID_STATE" }),
       );
       expect(accountStateOf(user)).toEqual(before);
     });
+  });
 
+  describe("Payout destinations", () => {
     test("payoutDestination_WhenNoSetupExists_ThrowsPayoutAccountNotReady", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
 
-      // Act & Assert
       expect(() => user.payoutDestination()).toThrow(
         expect.objectContaining({ code: "PAYOUT_ACCOUNT_NOT_READY" }),
       );
     });
 
-    test("payoutDestination_WhenSetupIsComplete_ReturnsFrozenDestination", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+    test("payoutDestination_WhenReturnedDataMutationIsAttempted_PreservesAccountDestination", () => {
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
 
-      // Act
       const destination = user.payoutDestination();
+      const destinationBeforeMutation = { ...destination };
+      Reflect.set(destination, "bankAccountReference", "another-bank");
 
-      // Assert
-      expect(destination).toEqual({
+      expect(destinationBeforeMutation).toEqual({
         payoutAccountId: "account",
         userId: "owner",
         providerAccountReference: "provider",
         bankAccountReference: "bank",
       });
-      expect(Object.isFrozen(destination)).toBe(true);
+      expect(user.payoutDestination()).toEqual({
+        payoutAccountId: "account",
+        userId: "owner",
+        providerAccountReference: "provider",
+        bankAccountReference: "bank",
+      });
     });
 
     test("payoutDestination_WhenAccountIsInactive_ThrowsInactiveAccount", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        accountStatus: "INACTIVE",
+        email: null,
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
-      user.deactivate(deactivationWithoutObligations());
 
-      // Act & Assert
       expect(() => user.payoutDestination()).toThrow(
         expect.objectContaining({ code: "INACTIVE_ACCOUNT" }),
       );
     });
   });
 
-  describe("Deactivation", () => {
+  describe("Account deactivation", () => {
     test("deactivate_WhenAvailableBalanceIsPositive_ThrowsActiveObligations", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         availableBalance: Money.fromCents(1),
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -530,15 +461,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenHeldBalanceIsPositive_ThrowsActiveObligations", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         heldBalance: Money.fromCents(1),
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -546,15 +475,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsExist_ThrowsActiveObligations", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeCommitments: 1,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -562,15 +489,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsAreNegative_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeCommitments: -1,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -578,15 +503,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveCommitmentsAreFractional_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeCommitments: 0.5,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -594,15 +517,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsExist_ThrowsActiveObligations", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         unsettledOwnedSessions: 1,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -610,15 +531,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsAreNegative_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         unsettledOwnedSessions: -1,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -626,15 +545,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenUnsettledOwnedSessionsAreFractional_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         unsettledOwnedSessions: 0.5,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -642,12 +559,10 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsExist_ThrowsActiveObligations", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = { ...deactivationWithoutObligations(), pendingPayouts: 1 };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -655,12 +570,10 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsAreNegative_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = { ...deactivationWithoutObligations(), pendingPayouts: -1 };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -668,15 +581,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPendingPayoutsAreFractional_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         pendingPayouts: 0.5,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -684,15 +595,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsExist_ThrowsActiveObligations", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeOwnedGroups: 1,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "ACTIVE_OBLIGATIONS" }),
       );
@@ -700,15 +609,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsAreNegative_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeOwnedGroups: -1,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -716,15 +623,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenActiveOwnedGroupsAreFractional_ThrowsInvalidInput", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       const input = {
         ...deactivationWithoutObligations(),
         activeOwnedGroups: 0.5,
       };
       const before = accountStateOf(user);
 
-      // Act & Assert
       expect(() => user.deactivate(input)).toThrow(
         expect.objectContaining({ code: "INVALID_INPUT" }),
       );
@@ -732,17 +637,13 @@ describe("User", () => {
     });
 
     test("deactivate_WhenNoObligationsRemain_AnonymisesProfile", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.updatePreferences({
+      const user = createUser({
         preferredSports: new Set(["Tennis"]),
         preferredRegions: new Set(["West"]),
       });
 
-      // Act
       user.deactivate(deactivationWithoutObligations());
 
-      // Assert
       expect(user.accountStatus).toBe("INACTIVE");
       expect(user.email).toBeNull();
       expect([...user.preferredSports]).toEqual([]);
@@ -750,20 +651,14 @@ describe("User", () => {
     });
 
     test("deactivate_WhenPayoutSetupIsComplete_RetainsFinancialIdentity", () => {
-      // Arrange
-      const user = createActiveUser();
-      user.beginPayoutSetup({
-        payoutAccountId: "account",
-        providerAccountReference: "provider",
+      const user = createUser({
+        payoutAccount: createPayoutAccount("COMPLETE", "bank"),
       });
-      user.completePayoutSetup("bank");
       const wallet = user.wallet;
       const payoutAccount = user.payoutAccount;
 
-      // Act
       user.deactivate(deactivationWithoutObligations());
 
-      // Assert
       expect(user.userId).toBe("owner");
       expect(user.wallet).toBe(wallet);
       expect(user.payoutAccount).toBe(payoutAccount);
@@ -771,26 +666,38 @@ describe("User", () => {
     });
 
     test("deactivate_WhenAlreadyInactive_LeavesStateUnchanged", () => {
-      // Arrange
-      const user = createActiveUser();
+      const user = createUser();
       user.deactivate(deactivationWithoutObligations());
       const before = accountStateOf(user);
 
-      // Act
       user.deactivate(deactivationWithoutObligations());
 
-      // Assert
       expect(accountStateOf(user)).toEqual(before);
     });
   });
 });
 
-function createActiveUser(): User {
-  return User.create({
+function createUser(overrides: Partial<UserDetails> = {}): User {
+  return new User({
+    ...createTestUserDetails({
+      userId: "owner",
+      emailVerified: false,
+      availableFundsCents: 0,
+    }),
+    ...overrides,
+  });
+}
+
+function createPayoutAccount(
+  setupStatus: PayoutAccountDetails["setupStatus"],
+  bankAccountReference?: string,
+): PayoutAccount {
+  return new PayoutAccount({
+    payoutAccountId: "account",
     userId: "owner",
-    email: new Email("owner@example.com"),
-    walletId: "w-owner",
-    now: userLoadedAt,
+    providerAccountReference: "provider",
+    setupStatus,
+    bankAccountReference,
   });
 }
 

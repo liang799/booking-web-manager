@@ -150,22 +150,17 @@ export const SchedulePresetsAndCancel: Story = {
 export const Settings: Story = {
   args: { initialDraft: complete, initialStep: 2 },
   play: async ({ canvas }) => {
-    const minimum = within(canvas.getByRole("group", { name: "Minimum viable headcount" }));
-    await expect(minimum.getByRole("status")).toHaveTextContent("4");
+    await expect(canvas.queryByRole("group", { name: "Minimum viable headcount" })).not.toBeInTheDocument();
+    await expect(canvas.getByText("Includes you as the booker.")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Increase No. of Slots" })).toBeEnabled();
-    for (let index = 0; index < 6; index++) await userEvent.click(canvas.getByRole("button", { name: "Decrease No. of Slots" }));
+    for (let index = 0; index < 7; index++) await userEvent.click(canvas.getByRole("button", { name: "Decrease No. of Slots" }));
     await expect(canvas.getByRole("button", { name: "Decrease No. of Slots" })).toBeDisabled();
-    await expect(within(canvas.getByRole("group", { name: "No. of Slots" })).getByRole("status")).toHaveTextContent("2");
-    await expect(minimum.getByRole("status")).toHaveTextContent("2");
-    await expect(minimum.getByRole("button", { name: "Increase Minimum viable headcount" })).toBeDisabled();
-    await expect(minimum.getByRole("button", { name: "Decrease Minimum viable headcount" })).toBeDisabled();
+    await expect(within(canvas.getByRole("group", { name: "No. of Slots" })).getByRole("status")).toHaveTextContent("1");
     await userEvent.click(canvas.getByRole("button", { name: "Increase No. of Slots" }));
-    await userEvent.click(minimum.getByRole("button", { name: "Increase Minimum viable headcount" }));
-    await expect(minimum.getByRole("status")).toHaveTextContent("3");
     await userEvent.click(canvas.getByRole("combobox", { name: "Minimum Reliability Score" }));
     await userEvent.click(portal().getByRole("option", { name: "No minimum" }));
     await userEvent.click(await canvas.findByRole("button", { name: "Next" }));
-    await expect(canvas.getByLabelText("Adjust price per slot (SGD)")).toHaveValue("20.00");
+    await expect(canvas.getByLabelText("Adjust price per slot (SGD)")).toHaveValue("30.00");
   },
 };
 export const Pricing: Story = {
@@ -173,7 +168,7 @@ export const Pricing: Story = {
   play: async ({ canvas }) => {
     const price = canvas.getByLabelText("Adjust price per slot (SGD)");
     await userEvent.clear(price); await userEvent.type(price, "12.01");
-    await expect(canvas.getByRole("status")).toHaveTextContent("$96.08");
+    await expect(canvas.getByRole("status")).toHaveTextContent("$84.07");
     await userEvent.click(canvas.getByRole("slider", { name: "Price per slot slider" }));
     // The focused slider supports exact one-cent keyboard adjustments.
     const before = Number((canvas.getByRole("slider") as HTMLInputElement).value);
@@ -183,6 +178,13 @@ export const Pricing: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Done" }));
     await expect(canvas.getByText("Choose a price within the displayed range.")).toBeVisible();
     await waitFor(() => expect(price).toHaveFocus());
+  },
+};
+export const BookerOnlyPricing: Story = {
+  args: { initialDraft: { ...complete, totalSlots: 1, price: "60.00" }, initialStep: 3 },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText("Adjust price per slot (SGD)")).toHaveValue("60.00");
+    await expect(canvas.getByRole("status")).toHaveTextContent("$0.00");
   },
 };
 export const VenueLookup: Story = {
@@ -425,7 +427,7 @@ export const BookerWizardsAreIndependent: Story = {
     await expect(within(second.getByRole("group", { name: "No. of Slots" })).getByRole("status")).toHaveTextContent("6");
     await userEvent.click(canvas.getByRole("button", { name: "Show first booker" }));
     await expect(first.getByRole("heading", { name: "Auto-Generated Pricing" })).toBeVisible();
-    await expect(first.getByText("Estimated revenue at full capacity (7 slots)")).toBeVisible();
+    await expect(first.getByText("Estimated collected revenue at full capacity (7 slots)")).toBeVisible();
     await expect(args.create).not.toHaveBeenCalled();
   },
 };

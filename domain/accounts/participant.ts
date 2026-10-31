@@ -124,6 +124,7 @@ export class Participant {
     requireId(command.participationId, "participationId");
     if (command.holdId !== undefined) requireId(command.holdId, "holdId");
     assertOpenBefore(session.status, session.booking, command.now);
+    DomainError.require(this.userId !== session.bookerId, "ALREADY_PARTICIPATING", "The booker already has a place in this session");
     const participantList = session.participantList;
     if (personalReplacement === undefined) {
       this.assertAccess(session, command);
@@ -163,6 +164,9 @@ export class Participant {
       (session.getAvailableSlots() === 0 ||
         participantList.nextWaitlisted() !== undefined)
     ) {
+      // Nothing is held while queued, but a player who could not fund the share
+      // now would only be skipped at promotion.
+      this.assertEligibleFor(terms, true);
       const sequence = participantList.nextQueueSequence;
       DomainError.require(
         Number.isSafeInteger(sequence) &&
@@ -335,6 +339,8 @@ export class Participant {
       session.sessionId,
     );
     if (command.replacementMode === "DIRECT_INVITE") {
+      DomainError.require(command.replacementInviteeId !== session.bookerId,
+        "INVALID_STATE", "The booker already has a place in this session");
       const invitee =
         command.replacementInviteeId === undefined
           ? undefined
@@ -511,7 +517,7 @@ export class Participant {
       "Only a committed participant can withdraw",
     );
     const hold = participation.hold;
-    const late = booking.hoursUntilStart(command.now) <= 30;
+    const late = booking.hoursUntilStart(command.now) < 30;
     const nextHold = late ? hold.awaitReplacement() : hold.refund(command.now);
     const next = participation.withdraw(
       nextHold,

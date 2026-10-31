@@ -26,8 +26,12 @@ instruction in one `UnitOfWork.execute` call, so the commitment and its fund
 lock succeed or fail together. The idempotency key is required; a retry with
 the same key replays the original result without locking funds again.
 
-The domain decides commit versus waitlist. Waitlist order is the session's
-FIFO `queueSequence`, assigned inside that transaction. The production
+The domain decides commit versus waitlist. Joining the waitlist holds nothing,
+but it applies the same eligibility checks as committing, including enough
+available funds for the share (`INSUFFICIENT_FUNDS` otherwise). The balance is
+checked again at promotion, because it can change while the player waits.
+Waitlist order is the session's FIFO `queueSequence`, assigned inside that
+transaction. The production
 unit-of-work adapter must lock the session row (`SELECT ... FOR UPDATE`) so
 concurrent commits serialize; the in-memory test double does this by running
 transactions one at a time.
@@ -45,8 +49,9 @@ while the dialog is open, so retrying an unconfirmed result cannot hold the shar
 fills free places from the waitlist in FIFO `queueSequence` order, in one unit
 of work. For each unreserved free place it loads the queue head's User and calls
 `promoteFromWaitlist` as that participant. A head who is inactive, below the
-reliability minimum, or cannot fund the share is skipped and leaves the queue.
-A head holding a personal replacement invitation must accept it explicitly
+reliability minimum, or cannot fund the share is skipped and leaves the queue;
+after the unit of work commits they get a `REMOVED_FROM_WAITLIST` notification
+with the reason. A head holding a personal replacement invitation must accept it explicitly
 (ADR-0006), so promotion stops there. Each promotion locks the entrant's share
 and refunds the oldest late open-slot withdrawal it replaces, all in the same
 transaction; any failure promotes nobody.
@@ -66,9 +71,9 @@ ID, so nobody can act on another person's place, and each takes an
 idempotency key.
 
 - [`WithdrawFromSession`](../../use-cases/sessions/WithdrawFromSession.ts) runs
-  `Participant.withdraw` in one unit of work. More than 30 hours before start,
+  `Participant.withdraw` in one unit of work. At least 30 hours before start,
   the share is refunded at once (the REFUND is written with the session
-  change). At 30 hours or less it stays held, awaiting a replacement. The
+  change). Less than 30 hours before start it stays held, awaiting a replacement. The
   participant chooses either `OPEN_SLOT` or `DIRECT_INVITE` for one named,
   existing user, and cannot change it later (ADR-0006).
 - [`AcceptReplacement`](../../use-cases/sessions/AcceptReplacement.ts) lets the
@@ -86,9 +91,10 @@ a separate unit of work ([follow-up-promotion.ts](../../use-cases/sessions/follo
 If that fails, the committed withdrawal is kept and the result reports
 `DEFERRED`; the scheduled promotion sweep fills the place later.
 
-The 30-hour boundary follows CLAUDE.md and the domain: exactly 30 hours is a
-late withdrawal. The product-owner diagram includes exactly 30 hours in the
-refund window; that discrepancy is tracked in the waitlist discussion document.
+The 30-hour boundary follows CLAUDE.md and the product-owner diagram: exactly
+30 hours still qualifies for an immediate full refund. A withdrawal processed
+less than 30 hours before start is late. The server decides using its clock
+inside the withdrawal unit of work; a preview is only a snapshot.
 
 ### Withdraw / Leave-waitlist screens
 
@@ -130,10 +136,10 @@ unknown), in [`withdrawal-recovery.ts`](./withdrawal-recovery.ts):
 - [`withdrawal-transport.ts`](./withdrawal-transport.ts) calls the existing preview,
   withdraw and leave-waitlist routes, validates each reply with Zod and maps it explicitly to
   [`withdrawal-ports.ts`](./withdrawal-ports.ts).
-- The joined-sessions list is served by `GET /api/sessions/joined` (see [Player lists](#player-lists)).
-  Stories still use [`withdrawal-fakes.ts`](./_components/withdrawal-fakes.ts) until its transport
-  and the page, the composition root that loads the list with React Query and provides the
-  `QueryClient`, are added.
+- [`loadJoinedSessions`](./withdrawal-transport.ts) reads `GET /api/sessions/joined` (see
+  [Player lists](#player-lists)) and throws on any failure or malformed reply, so a place is never
+  treated as gone because the list could not be read. Stories keep using
+  [`withdrawal-fakes.ts`](./_components/withdrawal-fakes.ts).
 
 ### Accept-replacement screen
 
@@ -157,9 +163,28 @@ accepting it. The screen follows the same split as the withdrawal screens.
   maps the reply to [`replacement-ports.ts`](./replacement-ports.ts). It shares request handling
   and failure classification with the withdrawal transport through
   [`session-action-request.ts`](./session-action-request.ts).
-- Pending invitations are served by `GET /api/sessions/replacements` (see
-  [Player lists](#player-lists)). Stories still use
-  [`replacement-fakes.ts`](./_components/replacement-fakes.ts) until its transport is added.
+- [`loadReplacementInvitations`](./replacement-transport.ts) reads `GET /api/sessions/replacements`
+  (see [Player lists](#player-lists)) and throws the same way. Stories keep using
+  [`replacement-fakes.ts`](./_components/replacement-fakes.ts).
+
+### The /sessions/joined page
+
+[`/sessions/joined`](../sessions/(manage)/joined/page.tsx) requires a login and renders
+[`JoinedSessionsPage`](./_components/joined-sessions-page.tsx), the composition root for both
+screens: React Query loads the invitations and joined sessions through the real transports, the
+flow hooks drive the dialogs, and unresolved requests are kept in this browser's storage.
+"Places reserved for you" appears above the joined sessions only when there is an invitation or
+the list failed to load. "Invite one person" finds the replacement by their exact user ID
+([ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md)): the dialog checks the ID's form,
+[`findReplacementCandidate`](./withdrawal-transport.ts) asks `GET /api/users/{handle}` as the
+signed-in player, and [`useReplacementSearch`](./use-replacement-search.ts) names the found player
+as the withdrawal's `inviteeId`. Each new search clears the invitee first, only the latest search
+can name someone, and the player's own user ID is refused ("That's your own user ID"), so Withdraw
+stays disabled until someone else is found. Not found, unavailable and failed lookups name nobody.
+The server still decides whether that person may take the place (ADR-0006). The contract tests
+([withdrawal](../../tests/app/commit/withdrawal-contract.test.ts),
+[replacement](../../tests/app/commit/replacement-contract.test.ts)) run both list transports,
+and the user ID lookup followed by a `DIRECT_INVITE` withdrawal, against the real route handlers.
 
 ### Player lists
 
@@ -225,7 +250,10 @@ export const POST = commitmentAction({
 ```
 
 [`commitmentAction`](./commitment-action.ts) owns the shared HTTP policy
-through [`handleAuthenticatedJson`](./http.ts). All routes take the acting user from authentication and require an
+through [`createAuthenticatedActions`](../http/authenticated-action.ts).
+The [HTTP boundary guide](../http/README.md) describes enforced authentication
+and the separate application authorization responsibilities. All routes take
+the acting user from authentication and require an
 idempotency key; Zod strips any other field, so a body cannot name another user
 or supply an amount. Known domain errors map to 4xx responses with their code
 (403 for access and authorization, 404 for missing records, 409 for state
@@ -248,9 +276,8 @@ Supabase bearer-token identity check and the
 [`PostgresCommitmentUnitOfWork`](../../lib/sessions/postgres-commitment-unit-of-work.ts).
 Authentication only verifies identity; the unit of work loads the complete
 User, whose roles enforce account status, email presence and reliability.
-Until Web Push is configured, notifications go to a
-[`NoDeliveryNotifier`](../../lib/commit/no-delivery-notifier.ts) that accepts
-and discards them.
+Notifications are saved to the [persistent inbox](../notifications/README.md)
+even without Web Push settings; configured Web Push remains a second channel.
 
 Promotion, forfeiture expiry and auto-verification have no user route; the
 scheduler calls them.
@@ -282,8 +309,8 @@ who is not waiting on their own invitation. Sessions that cannot make progress
 are never selected, so they cannot fill a batch and starve later sessions.
 [`PostgresVerificationReminderQuery`](../../lib/commit/postgres-verification-reminder-query.ts)
 claims and releases reminders through `sessions.verification_reminded_at`
-(migration 0009). It is not wired in yet: until Web Push can deliver
-reminders, the sweep claims none, so none are marked as sent and lost.
+(migration 0009). The sweep delivers these to the persistent inbox, with optional
+Web Push. If persistence fails, the claim is released so a later sweep retries.
 
 ### Schedule
 
@@ -320,6 +347,7 @@ replays its result and notifies again, so delivery is at-least-once.
 | Notification | Recipient | Sent by |
 | --- | --- | --- |
 | `PROMOTED` | Promoted participant | `PromoteFromWaitlist` |
+| `REMOVED_FROM_WAITLIST` | Skipped queue head | `PromoteFromWaitlist`; links to the wallet when the reason is `INSUFFICIENT_FUNDS`, otherwise to Discover |
 | `REPLACEMENT_INVITATION` | Named invitee | `WithdrawFromSession` (`DIRECT_INVITE`) |
 | `FORFEITURE_WARNING` | Late withdrawer | `WithdrawFromSession` (awaiting replacement) |
 | `FORFEITURE_DUE` | Late withdrawer | `ExpireReplacements` at session start |
@@ -328,14 +356,18 @@ replays its result and notifies again, so delivery is at-least-once.
 [`WebPushNotifier`](../../lib/commit/web-push-notifier.ts) is the Web Push
 adapter. It holds the notification text, sends to every subscription the
 recipient registered, and removes subscriptions the push service reports as
-expired. [`createWebPush`](../../lib/commit/web-push.ts) assembles it over the
+expired. A tap opens the page where the recipient can act: `/sessions/joined`
+for players, `/wallet` for a late withdrawer's held or forfeited share, and
+`/sessions/{id}/participants` for the booker's verification reminder. [`createWebPush`](../../lib/commit/web-push.ts) assembles it over the
 [`PostgresPushSubscriptionStore`](../../lib/commit/postgres-push-subscription-store.ts)
 (`push_subscriptions`, migration 0009, at most 10 browsers per user) and the
 [`WebPushSender`](../../lib/commit/web-push-sender.ts) (`web-push`, VAPID,
-24-hour TTL). The commitment routes use it when `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+24-hour TTL). The commitment routes and scheduled sweep use it when `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
 `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` are set
-([`readPushSettings`](./push-environment.ts)); otherwise notifications go to
-`NoDeliveryNotifier`.
+([`readPushSettings`](./push-environment.ts)). Both configurations always save
+alerts to the inbox through `InboxNotifier` (migration 0017); they share this
+copy and these destination rules. The [inbox guide](../notifications/README.md)
+documents deduplication and the existing best-effort delivery limits.
 
 A browser registers through `POST /api/push/subscriptions` with the
 `PushSubscription.toJSON()` body and unregisters with `DELETE` and

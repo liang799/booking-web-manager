@@ -29,6 +29,9 @@ export class StripeWalletTopUps implements WalletTopUpProvider {
         amount: request.amountCents,
         currency: "sgd",
         payment_method_types: ["paynow"],
+        // Attach the PayNow method now: Stripe.js confirmPayNowPayment(clientSecret)
+        // does not create one, and confirming without it is rejected.
+        payment_method_data: { type: "paynow" },
         metadata: {
           purpose: TOP_UP_PURPOSE,
           wallet_id: request.walletId,

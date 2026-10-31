@@ -14,6 +14,23 @@ const bookerId = "11111111-1111-4111-8111-111111111111";
 const sessionId = "22222222-2222-4222-8222-222222222222";
 
 describe("UC1-08 payout routes", () => {
+  test("rejects signed-out requests before reading malformed JSON or invoking withdrawals", async () => {
+    const forBooker = vi.fn();
+    mocks.dependencies.mockResolvedValue(dependencies({
+      authenticate: async () => null,
+      withdrawals: { forBooker },
+    }));
+    const request = new Request("https://app.test/api/payouts/withdraw", { method: "POST", body: "{" });
+    const readBody = vi.spyOn(request, "json");
+
+    const response = await withdraw(request);
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(readBody).not.toHaveBeenCalled();
+    expect(forBooker).not.toHaveBeenCalled();
+  });
+
   test("POST /api/payouts/withdraw takes the booker from authentication and the amount from the server", async () => {
     // Arrange
     const forBooker = vi.fn(async () => ({
@@ -31,6 +48,18 @@ describe("UC1-08 payout routes", () => {
     expect(response.status).toBe(200);
     expect(forBooker).toHaveBeenCalledWith({ bookerId, sessionId, idempotencyKey: "k-1", method: "STANDARD" });
     expect((await response.json()).amountCents).toBe(1000);
+  });
+
+  test("returns a recovered paid receipt without inventing a bank payout method", async () => {
+    const recovered = { kind: "PAID" as const, payoutId: "33333333-3333-4333-8333-333333333333", amountCents: 1000 };
+    const forBooker = vi.fn(async () => recovered);
+    mocks.dependencies.mockResolvedValue(dependencies({ withdrawals: { forBooker } }));
+
+    const response = await withdraw(post({ sessionId, idempotencyKey: "original-key", method: "INSTANT" }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(recovered);
+    expect(forBooker).toHaveBeenCalledWith({ bookerId, sessionId, idempotencyKey: "original-key", method: "INSTANT" });
   });
 
   test("rejects a withdrawal without a valid session ID", async () => {

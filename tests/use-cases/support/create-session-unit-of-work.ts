@@ -1,3 +1,4 @@
+import type { NotificationIntent } from "@/use-cases/notifications/notification-intents";
 import type {
   FinancialInstruction,
   PayoutRequestedIntent,
@@ -21,6 +22,8 @@ export class CreateSessionUnitOfWork implements UnitOfWork {
   readonly #replayResults = new Map<string, unknown>();
   readonly ledgerInstructions: FinancialInstruction[] = [];
   readonly payoutRequests: PayoutRequestedIntent[] = [];
+  readonly notifications: NotificationIntent[] = [];
+  readonly groupMembers = new Map<UUID, readonly UUID[]>();
   failNextSave = false;
   nextSaveError?: Error;
   nextUserLoadError?: Error;
@@ -40,6 +43,7 @@ export class CreateSessionUnitOfWork implements UnitOfWork {
 
     const staged = new Map<UUID, Session>();
     const stagedInstructions: FinancialInstruction[] = [];
+    const stagedNotifications: NotificationIntent[] = [];
     const stagedPayoutRequests: PayoutRequestedIntent[] = [];
     const result = await work({
       users: {
@@ -76,6 +80,7 @@ export class CreateSessionUnitOfWork implements UnitOfWork {
           stagedInstructions.push(...instructions);
         },
       },
+      notifications: { append: async (notices) => { stagedNotifications.push(...notices); }, groupMembers: async (id) => this.groupMembers.get(id) ?? [] },
       payoutIntents: {
         append: async (intent) => {
           stagedPayoutRequests.push(intent);
@@ -86,6 +91,7 @@ export class CreateSessionUnitOfWork implements UnitOfWork {
     for (const [id, session] of staged) this.sessions.set(id, session);
     this.ledgerInstructions.push(...stagedInstructions);
     this.payoutRequests.push(...stagedPayoutRequests);
+    this.notifications.push(...stagedNotifications);
     this.#replayResults.set(key, replayResult);
     return result;
   }

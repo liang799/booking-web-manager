@@ -22,6 +22,11 @@ responsibility boundaries remain accepted. Personal invitations now use the
 recipient's user ID and explicit `Participant.acceptReplacement`; ordinary
 joining and promotion do not accept a pending invitation implicitly.
 
+Payout client request-key ownership only is superseded by
+[ADR-0020](./0020-payout-request-idempotency.md). Keys are application/adapter
+metadata; payout-ID history, aggregate ownership and business guards remain.
+The earlier key-bearing contracts below are retained as decision history.
+
 ## Context
 
 The earlier refactors moved individual decisions into Participant and Booker,

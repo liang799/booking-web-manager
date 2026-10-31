@@ -54,6 +54,21 @@ describe("UC1-05 wallet workflows", () => {
     });
   });
 
+  test.each([["user-a", true], ["other-user", false]] as const)(
+    "identifies whether the wallet owner booked a held session owned by %s",
+    async (bookerId, isBooker) => {
+      const reads = reader();
+      reads.listActiveHolds.mockResolvedValue([{
+        holdId: "hold-a", sessionId: "session-a", bookerId,
+        heldAmount: Money.fromCents(500), originalAmount: Money.fromCents(500), createdAt: now,
+      }]);
+
+      const result = await new GetWalletSummary(reads).forUser("user-a");
+
+      expect(result.activeHolds).toMatchObject([{ sessionId: "session-a", isBooker }]);
+    },
+  );
+
   test.each(["summary", "history", "top-up"])("rejects a missing wallet before %s work", async (workflow) => {
     const reads = reader();
     const payments = provider();

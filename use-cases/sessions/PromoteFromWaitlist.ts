@@ -1,9 +1,9 @@
+import { replacementRefundNotifications, sessionNotificationFacts } from "./session-notification-facts";
 import type { FinancialInstruction, PromotionResult, UUID } from "@/domain";
 import type { UseCaseDependencies } from "../shared/dependencies";
 import { appendInstructions, requireAggregate } from "../shared/helpers";
 import {
   type CommitmentNotifier,
-  notifyBestEffort,
 } from "./commitment-notifications";
 
 export interface PromoteFromWaitlistRequest {
@@ -45,7 +45,8 @@ export interface PromoteFromWaitlistResult {
 
 export interface PromoteFromWaitlistDependencies
   extends Pick<UseCaseDependencies, "unitOfWork" | "clock" | "ids"> {
-  readonly notifier: CommitmentNotifier;
+  /** @deprecated Delivery is recorded through the transaction notification writer. */
+  readonly notifier?: CommitmentNotifier;
 }
 
 /**
@@ -70,7 +71,7 @@ export class PromoteFromWaitlist {
   async forSession(
     request: PromoteFromWaitlistRequest,
   ): Promise<PromoteFromWaitlistResult> {
-    const { unitOfWork, clock, ids, notifier } = this.dependencies;
+    const { unitOfWork, clock, ids } = this.dependencies;
     const key = JSON.stringify([
       "promote-from-waitlist",
       request.sessionId,
@@ -136,6 +137,11 @@ export class PromoteFromWaitlist {
         await transaction.sessions.save(session);
         await appendInstructions(transaction, instructions);
       }
+      await transaction.notifications.append([
+        ...promoted.map((entry) => ({ ...sessionNotificationFacts(session), kind: "PROMOTED" as const, recipientId: entry.userId, occurrenceKey: key, expiresAt: session.booking.startAt })),
+        ...skipped.map((entry) => ({ ...sessionNotificationFacts(session), kind: "REMOVED_FROM_WAITLIST" as const, recipientId: entry.userId, occurrenceKey: key, reason: entry.reason, expiresAt: session.booking.startAt })),
+        ...replacementRefundNotifications(session, instructions, key),
+      ]);
       return {
         sessionId: session.sessionId,
         promoted,
@@ -144,14 +150,6 @@ export class PromoteFromWaitlist {
       };
     });
 
-    await notifyBestEffort(
-      notifier,
-      result.promoted.map((entry) => ({
-        kind: "PROMOTED" as const,
-        recipientId: entry.userId,
-        sessionId: result.sessionId,
-      })),
-    );
     return result;
   }
 }

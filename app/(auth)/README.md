@@ -12,6 +12,9 @@ The auth pages share a monochrome court backdrop and a form card. Desktop and
 mobile use separate decorative images reconstructed from the supplied design
 references; the [asset notes](../../public/images/auth-court.md) record their
 provenance. Styles are scoped to these pages and reuse the existing controls.
+The region, sport and email-ending selects give their options the theme's popover
+colours, because the browser draws the open list itself: inherited dark-mode text
+was white on a white list until an option was hovered.
 
 Headers use the shared `BookingLogo` navigation size (20px); brand typography is
 owned by that module rather than auth-specific overrides. The small wordmark on
@@ -21,9 +24,33 @@ the court image also reuses it with inherited white text. Review captures:
 
 Registration starts with region, email and password. **Sign Up** validates those
 details using the existing registration schema and opens the required name and
-preferred-sport step. **Create account** submits all five fields and the validated
-return destination to the server action. Both steps remain mounted so Back and validation errors preserve
-the draft. Terms and privacy links appear before the final submission.
+preferred-sport step. **Continue** validates that step and opens **Your user ID**,
+where the person chooses the public ID other players find them by
+([ADR-0021](../../docs/adr/0021-user-ids-for-finding-players.md)). The field
+checks Telegram's username rules as they type and asks the server whether the ID
+is free. **Create account** submits all six fields and the validated return
+destination to the server action, which checks the ID again before sign-up; the
+sign-up trigger keeps IDs unique even if two people race for one, by adding a
+number to the later sign-up's ID. All steps remain
+mounted so Back and validation errors preserve the draft. Terms and privacy links
+appear before the final submission.
+
+An email that already has an account is refused with "An account with this email
+already exists." and a login link (UC1-01 exception 4a). Supabase Auth reports a
+confirmed duplicate itself, but for an account that was never confirmed (for
+example one created while confirmations were enabled) it answers like a new
+sign-up. So the server action first asks `PostgresRegisteredEmails` whether any
+undeleted account in `auth.users` uses the email, ignoring case, and never calls
+`signUp` for one. Deleted accounts don't count, because deletion scrambles their
+email. Without `DATABASE_URL`, or if that read fails, sign-up continues and
+Supabase's own duplicate answer still applies.
+
+Both forms set `method="post"`. After hydration the client handler submits them,
+but a submission before JavaScript loads uses the browser default. Without a
+method that default is GET, which put the email and password in the URL, browser
+history and server logs (defect D1 in the
+[account testing report](../../docs/testing/account-testing/README.md)). With
+POST the page reloads with an empty form and the server ignores the body.
 
 The email control accepts a complete address or an address with a selected
 ending. Complete addresses with other or multi-label domains remain editable in
@@ -41,7 +68,7 @@ sign-in, registration and confirmation still need a configured Supabase service.
 `/sessions/{sessionId}/join?token=...` is a public preview for a UUID session ID.
 Its token is checked by the session reader; becoming signed in never joins a
 session automatically. Other Sessions routes remain protected. Missing or
-unavailable authentication does not block this preview, just as with Discover.
+unavailable authentication does not block invitation previews; Discover requires an active login.
 Invitation responses and authentication/recovery responses carrying their return
 destination use `Cache-Control: private, no-store` and `Referrer-Policy: no-referrer`.
 

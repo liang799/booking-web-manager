@@ -84,7 +84,7 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
     await page.screenshot({ path: testInfo.outputPath("settings-390.png"), fullPage: true });
     await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByLabel("Adjust price per slot (SGD)").fill("12.01");
-    await expect(page.getByRole("status")).toHaveText("S$96.08");
+    await expect(page.getByRole("status")).toHaveText("S$84.07");
     for (const width of [390, 768, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       await createButton(page).scrollIntoViewIfNeeded();
@@ -103,14 +103,14 @@ test("UC2-02 validates, creates a custom-priced overnight booking and refreshes 
     await createButton(page).click();
     expect((await result).status()).toBe(201);
     expect((await result).request().postDataJSON().config).toEqual({
-      totalSlots: 8, minimumHeadcount: 4, visibility: "PUBLIC", minimumReliability: 90, pricePerSlotCents: 1202,
+      totalSlots: 8, visibility: "PUBLIC", minimumReliability: 90, pricePerSlotCents: 1202,
     });
     await expect(page).toHaveURL(/\/sessions\?created=1$/);
     await expect(page.getByRole("status").filter({ hasText: "Your session was created successfully." })).toHaveText("Your session was created successfully.");
     await expect(page.getByRole("button", { name: `Manage Tennis Court Booking at ${venue}`, exact: true })).toBeVisible();
     expect(await page.evaluate((key) => sessionStorage.getItem(key), pendingStorageKey(booker.userId))).toBeNull();
-    expect((await context.pool.query("select booking_share_cents, minimum_reliability, total_slots, minimum_headcount, start_at, end_at from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{
-      booking_share_cents: "1202", minimum_reliability: "90", total_slots: 8, minimum_headcount: 4,
+    expect((await context.pool.query("select booking_share_cents, minimum_reliability, total_slots, start_at, end_at from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{
+      booking_share_cents: "1202", minimum_reliability: "90", total_slots: 8,
       start_at: new Date("2045-06-17T15:00:00Z"), end_at: new Date("2045-06-17T17:00:00Z"),
     }]);
   } finally { await context.pool.end(); }
@@ -152,12 +152,11 @@ test("desktop creation restores a saved draft and creates a custom-duration sess
     await page.getByRole("combobox", { name: "Room visibility", exact: true }).click();
     await page.getByRole("option", { name: "Public", exact: true }).click();
     await page.getByRole("button", { name: "Increase Number of slots", exact: true }).click();
-    await page.getByRole("button", { name: "Increase Minimum viable headcount", exact: true }).click();
     await page.screenshot({ path: testInfo.outputPath("desktop-settings.png"), fullPage: true });
     await nextButton(page).click();
     await expect(page.getByRole("heading", { name: "Set your price.", exact: true })).toBeFocused();
     await priceInput(page).fill("10.00");
-    await expect(page.getByRole("status").filter({ hasText: /^S\$90\.00$/ })).toHaveText("S$90.00");
+    await expect(page.getByRole("status").filter({ hasText: /^S\$80\.00$/ })).toHaveText("S$80.00");
     await page.screenshot({ path: testInfo.outputPath("desktop-pricing.png"), fullPage: true });
     const result = page.waitForResponse((response) => response.url().endsWith("/api/sessions") && response.request().method() === "POST");
     await createButton(page).click();
@@ -165,12 +164,14 @@ test("desktop creation restores a saved draft and creates a custom-duration sess
     expect(response.status()).toBe(201);
     expect(response.request().postDataJSON()).toMatchObject({
       booking: { venueName: venue, region: "West", startAt: "2045-06-17T15:00:00.000Z", endAt: "2045-06-17T16:15:00.000Z", totalCostCents: 6000 },
-      config: { totalSlots: 9, minimumHeadcount: 5, visibility: "PUBLIC", minimumReliability: 90, pricePerSlotCents: 1000 },
+      config: { totalSlots: 9, visibility: "PUBLIC", minimumReliability: 90, pricePerSlotCents: 1000 },
     });
     await expect(page).toHaveURL(/\/sessions\?created=1$/);
-    await expect(page.getByRole("article", { name: `Tennis at ${venue}` })).toBeVisible();
-    expect((await context.pool.query("select booking_share_cents, total_slots, minimum_headcount, start_at, end_at from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{
-      booking_share_cents: "1000", total_slots: 9, minimum_headcount: 5,
+    // The redesigned Sessions agenda selects Hosting after creation and renders a management card.
+    await expect(page.getByRole("navigation", { name: "Session views", exact: true }).getByRole("button", { name: "I'm organising", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("button", { name: `Manage Tennis Court Booking at ${venue}`, exact: true })).toBeVisible();
+    expect((await context.pool.query("select booking_share_cents, total_slots, start_at, end_at from sessions where booker_id = $1", [booker.userId])).rows).toEqual([{
+      booking_share_cents: "1000", total_slots: 9,
       start_at: new Date("2045-06-17T15:00:00Z"), end_at: new Date("2045-06-17T16:15:00Z"),
     }]);
   } finally { await context.pool.end(); }
@@ -283,7 +284,7 @@ test("payout readiness and server validation reject creation visibly without per
     const ready = await context.identity();
     const invalid = await request.post("/api/sessions", { headers: { Authorization: `Bearer ${ready.token}` }, data: {
       idempotencyKey: randomUUID(), booking: { venueName: "Court", region: "West", sport: "Tennis", startAt: "2045-06-17T07:00:00+08:00", endAt: "2045-06-17T08:00:00+08:00", totalCostCents: 6000 },
-      config: { totalSlots: 8, minimumHeadcount: 4, pricePerSlotCents: 1501 },
+      config: { totalSlots: 8, pricePerSlotCents: 1501 },
     } });
     expect(invalid.status()).toBe(422);
     expect((await context.pool.query("select count(*)::int as count from sessions where booker_id = any($1::uuid[])", [[booker.userId, ready.userId]])).rows).toEqual([{ count: 0 }]);

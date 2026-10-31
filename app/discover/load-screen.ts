@@ -1,3 +1,5 @@
+import type { UUID } from "@/domain";
+import type { DiscoveryExpiry } from "./_components/discovery-updates";
 import type { DiscoveryOutcome } from "./_components/discovery-state";
 import { toDiscoveryPage } from "./contracts";
 import { DiscoveryApiUnavailableError } from "./discovery-api-unavailable";
@@ -6,8 +8,8 @@ import { getDiscoveryDependencies } from "./server-dependencies";
 
 export type PageSearchParams = Record<string, string | string[] | undefined>;
 
-/** Public listing queries do not depend on viewer identity. */
-export async function loadDiscoveryScreen(searchParams: PageSearchParams) {
+/** The calling page verifies the viewer, whose active participation is excluded from results. */
+export async function loadDiscoveryScreen(searchParams: PageSearchParams, viewerId: UUID) {
   const params = new URLSearchParams();
   for (const [name, value] of Object.entries(searchParams)) {
     if (name === "returnTo") continue;
@@ -20,11 +22,14 @@ export async function loadDiscoveryScreen(searchParams: PageSearchParams) {
   else {
     try {
       const { discoverSessions } = await getDiscoveryDependencies();
-      const sessions = await discoverSessions.searchPublic(parsed.criteria);
+      const sessions = await discoverSessions.searchPublic(parsed.criteria, viewerId);
       outcome = { status: "ready", page: toDiscoveryPage(sessions, parsed.after) };
     } catch (error) {
       outcome = { status: "error", kind: error instanceof DiscoveryApiUnavailableError ? "unavailable" : "unexpected" };
     }
   }
-  return { queryKey: parsed.queryKey, filters: parsed.filters, outcome };
+  const startsAt = outcome.status === "ready" ? outcome.page.items[0]?.startAt : undefined;
+  const expiry: DiscoveryExpiry | null = startsAt === undefined
+    ? null : { startsAt: Date.parse(startsAt), serverNow: Date.now() };
+  return { queryKey: parsed.queryKey, filters: parsed.filters, outcome, expiry };
 }

@@ -1,3 +1,4 @@
+import type { NotificationIntent } from "@/use-cases/notifications/notification-intents";
 import { describe, expect, test, vi } from "vitest";
 import { Session, type User } from "@/domain";
 import { CancelSession } from "@/use-cases/sessions/CancelSession";
@@ -114,11 +115,14 @@ describe("UC2-03c Cancel Session", () => {
 });
 
 function copy(session: Session): Session {
-  return new Session(sessionDetails({ status: session.status, visibility: session.visibility,
+  return new Session(sessionDetails({ status: session.status, visibility: session.visibility, invitedGroupId: session.invitedGroupId,
     participations: session.participantList.participations, nextQueueSequence: session.participantList.nextQueueSequence }));
 }
 function cancellation(initial = createTestSession()) {
   let persisted = initial;
+  const notices: NotificationIntent[] = [];
+  const saveNotices = vi.fn<(intents: readonly NotificationIntent[]) => Promise<void>>().mockResolvedValue(undefined);
+  const groupMembers = vi.fn<(groupId: string) => Promise<readonly string[]>>().mockResolvedValue([]);
   let response: SessionCancellationResult | undefined;
   let commitFailure: Error | undefined;
   const clock = { now: vi.fn(() => hoursBeforeSessionStart(5)) };
@@ -129,6 +133,7 @@ function cancellation(initial = createTestSession()) {
   const append = vi.fn<SessionCancellationRepositories["ledger"]["append"]>().mockResolvedValue(undefined);
   const once = vi.fn<SessionCancellationRepositories["submission"]["once"]>();
   const transaction: SessionCancellationTransaction = { run: async (work) => {
+    const stagedNotices: NotificationIntent[] = [];
     let candidate: Session | undefined;
     let candidateResult: SessionCancellationResult | undefined;
     once.mockImplementation(async (_actor, _session, _version, perform) => {
@@ -137,19 +142,52 @@ function cancellation(initial = createTestSession()) {
     });
     const result = await work({ users: { get: getUser }, sessions: { get: getSession,
       saveCancellation: async (session) => { await save(session); candidate = session; } },
-      ledger: { append }, submission: { once } });
+      ledger: { append }, submission: { once }, notifications: { append: async (intents) => { await saveNotices(intents); stagedNotices.push(...intents); }, groupMembers } });
     if (commitFailure) throw commitFailure;
     if (candidate) persisted = candidate;
     if (candidateResult) response = candidateResult;
+    notices.push(...stagedNotices);
     return result;
   } };
   const previewTransaction: SessionManagementTransaction = { run: (work) => work({
-    users: { get: getUser }, sessions: { get: getSession, listUpcoming: async () => [], listEndedOpen: async () => [], saveVisibility: async () => { throw new Error("Preview must not save"); } },
+    users: { get: getUser }, sessions: { get: getSession, listNotEndedOpen: async () => [], listEndedOpen: async () => [], saveVisibility: async () => { throw new Error("Preview must not save"); } },
   }) };
   const preview = new PreviewSessionCancellation({ transaction: previewTransaction, clock, versioner });
   const cancel = new CancelSession({ transaction, clock, versioner });
-  return { preview, cancel, clock, getUser, getSession, save, append, once,
+  return { saveNotices, groupMembers, notices, preview, cancel, clock, getUser, getSession, save, append, once,
     stored: () => persisted, cached: () => response, failCommit: (error: Error) => { commitFailure = error; },
     submit: async () => cancel.forBooker("booker", "s", (await preview.forBooker("booker", "s")).previewVersion),
   };
 }
+
+
+test("cancellation tells waiting participants and pending replacements the outcome without inventing refunds", async () => {
+  const session = createTestSession({ committedUserIds: ["alice", "ben"], waitlistedUserIds: ["waiting"] });
+  createTestUser({ userId: "alice" }).asParticipant().withdraw(session, { participationId: "p-alice", replacementMode: "DIRECT_INVITE", replacementInviteeId: "cara", now: hoursBeforeSessionStart(10) });
+  const scenario = cancellation(session);
+  await scenario.submit();
+  expect(scenario.notices).toEqual([
+    expect.objectContaining({ kind: "BOOKING_CANCELLED", recipientId: "alice", refundCents: 500 }),
+    expect.objectContaining({ kind: "BOOKING_CANCELLED", recipientId: "cara", refundCents: 0 }),
+    expect.objectContaining({ kind: "BOOKING_CANCELLED", recipientId: "ben", refundCents: 500 }),
+    expect.objectContaining({ kind: "BOOKING_CANCELLED", recipientId: "waiting", refundCents: 0 }),
+  ]);
+});
+
+
+test("cancellation uses current group members, consolidates overlapping recipients, and never needs inbox history", async () => {
+  const scenario = cancellation(createTestSession({ invitedGroupId: "g", committedUserIds: ["alice"] }));
+  scenario.groupMembers.mockResolvedValue(["booker", "alice", "current-member"]);
+  await scenario.submit();
+  expect(scenario.notices.map((entry) => entry.recipientId)).toEqual(["alice", "current-member"]);
+  expect(scenario.notices.map((entry) => entry.refundCents)).toEqual([500, 0]);
+});
+
+test("cancellation rolls back when canonical messages cannot be saved", async () => {
+  const scenario = cancellation(createTestSession({ committedUserIds: ["alice"] }));
+  scenario.saveNotices.mockRejectedValue(new Error("Notification persistence failed"));
+  await expect(scenario.submit()).rejects.toThrow("Notification persistence failed");
+  expect(scenario.stored().status).toBe("OPEN");
+  expect(scenario.cached()).toBeUndefined();
+  expect(scenario.notices).toEqual([]);
+});

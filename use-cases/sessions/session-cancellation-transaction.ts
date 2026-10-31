@@ -1,3 +1,4 @@
+import type { NotificationWriter } from "../notifications/notification-intents";
 import type { Session, User, UUID } from "@/domain";
 import type { LedgerWritePort } from "../shared/contracts";
 
@@ -16,6 +17,7 @@ export interface SessionCancellationRepositories {
     saveCancellation(session: Session): Promise<void>;
   };
   readonly ledger: LedgerWritePort;
+  readonly notifications: NotificationWriter;
   /** Called only after current application access has been checked. */
   readonly submission: {
     once(bookerId: UUID, sessionId: UUID, previewVersion: string,

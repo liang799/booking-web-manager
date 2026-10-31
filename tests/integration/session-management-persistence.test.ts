@@ -5,6 +5,7 @@ import { PLATFORM_HOLDING_ACCOUNT_ID } from "@/lib/money/constants";
 import type { SqlExecutor } from "@/lib/money/sql";
 import { PostgresSessionManagementRepository } from "@/lib/sessions/postgres-session-management-repository";
 import { PostgresSessionManagementTransaction } from "@/lib/sessions/postgres-session-management-transaction";
+import { ListHostedSessions } from "@/use-cases/sessions/ListHostedSessions";
 import { sessionTestContext, type SessionTestContext } from "../support/session-test-context";
 
 const now = new Date("2040-01-01T00:00:00Z");
@@ -65,14 +66,14 @@ describe("UC2-03a PostgreSQL management", () => {
     }
   });
 
-  /** Inserts a private two-slot session fixture with optional lifecycle overrides and returns its ID. */
+  /** Inserts a private session for the booker and two guests, with optional lifecycle overrides. */
   async function createSession(bookerId: string, options: { status?: string; startAt?: Date } = {}) {
     const sessionId = randomUUID();
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-        total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, status,
+        total_cost_cents, total_slots, booking_share_cents, visibility, status,
         room_token, holding_account_id)
-       values ($1,$2,'Management fixture','West','Badminton',$3,$4,1000,2,2,500,'PRIVATE',$5,$6,$7)`,
+       values ($1,$2,'Management fixture','West','Badminton',$3,$4,1000,3,500,'PRIVATE',$5,$6,$7)`,
       [sessionId, bookerId, options.startAt ?? startAt, endAt, options.status ?? "OPEN", randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );
     return sessionId;
@@ -148,7 +149,7 @@ describe("UC2-03a PostgreSQL management", () => {
     expect((await transaction().run(({ sessions }) => sessions.get(sessionId)))?.visibility).toBe("PRIVATE");
   });
 
-  test("lists only this booker's upcoming open sessions and retains full sessions", async () => {
+  test("lists only this booker's upcoming and in-progress open sessions and retains full sessions", async () => {
     const booker = await context.identity(false);
     const foreign = await context.identity(false);
     const first = await context.identity(false);
@@ -158,11 +159,32 @@ describe("UC2-03a PostgreSQL management", () => {
     await addParticipant(executor(), full, second);
     await createSession(foreign.userId);
     await createSession(booker.userId, { status: "CANCELLED" });
-    await createSession(booker.userId, { startAt: now });
-    const sessions = await transaction().run(({ sessions }) => sessions.listUpcoming(booker.userId, now));
-    expect(sessions.map((session) => session.sessionId)).toEqual([full]);
-    expect(sessions[0]?.getAvailableSlots(now)).toBe(0);
+    const started = await createSession(booker.userId, { startAt: now });
+    const sessions = await transaction().run(({ sessions }) => sessions.listNotEndedOpen(booker.userId, now));
+    expect(sessions.map((session) => session.sessionId)).toEqual([started, full]);
+    expect(sessions[1]?.getAvailableSlots(now)).toBe(0);
     await expect(change(booker.userId, full, "PRIVATE")).rejects.toMatchObject({ code: "CAPACITY_EXCEEDED" });
+  });
+
+  test.each([
+    { time: "2040-01-02T09:59:59.999Z", manageable: true },
+    { time: "2040-01-02T10:00:00.000Z", manageable: true },
+    { time: "2040-01-02T11:00:00.000Z", manageable: true },
+    { time: "2040-01-02T11:59:59.999Z", manageable: true },
+    { time: "2040-01-02T12:00:00.000Z", manageable: false },
+  ])("keeps management available until the session ends at $time", async ({ time, manageable }) => {
+    const booker = await context.identity(false);
+    const participant = await context.identity(false);
+    const sessionId = await createSession(booker.userId);
+    await addParticipant(executor(), sessionId, participant);
+    const overview = await new ListHostedSessions({
+      transaction: transaction(), clock: { now: () => new Date(time) },
+    }).forBooker(booker.userId);
+
+    expect(overview.sessions.map((session) => session.sessionId)).toEqual(manageable ? [sessionId] : []);
+    expect(overview.awaitingAttendance.map((session) => session.sessionId)).toEqual(manageable ? [] : [sessionId]);
+    if (manageable && time >= "2040-01-02T10:00:00.000Z")
+      expect(overview.sessions[0]?.actions).toEqual([]);
   });
 
   test("hydrates pending settlement JSON, holds, stable participant-list order and failed attempt history", async () => {
@@ -201,7 +223,9 @@ describe("UC2-03a PostgreSQL management", () => {
     await context.pool.query("update sessions set status='AWAITING_PAYOUT',pending_settlement=null where session_id=$1", [sessionId]);
     const failed = await transaction().run(({ sessions }) => sessions.get(sessionId));
     expect(failed?.pendingSettlement).toBeUndefined();
-    expect(failed?.payoutIdempotencyKeys).toEqual(["earlier-key", "current-key"]);
+    expect(failed).not.toHaveProperty("payoutIdempotencyKeys");
+    expect((await context.pool.query("select payout_idempotency_keys from sessions where session_id=$1", [sessionId])).rows)
+      .toEqual([{ payout_idempotency_keys: ["earlier-key", "current-key"] }]);
   });
 
   test("rejects malformed settlement JSON and hold ownership without writing visibility", async () => {

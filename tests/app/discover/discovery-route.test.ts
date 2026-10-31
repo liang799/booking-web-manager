@@ -18,7 +18,8 @@ afterEach(() => {
 
 async function scenario() {
   const searchPublic = vi.fn<DiscoveryDependencies["discoverSessions"]["searchPublic"]>().mockResolvedValue([]);
-  configuration.createDiscoveryDependencies.mockReturnValue({ discoverSessions: { searchPublic } });
+  const authenticate = vi.fn<DiscoveryDependencies["authenticate"]>().mockResolvedValue(userId);
+  configuration.createDiscoveryDependencies.mockReturnValue({ authenticate, discoverSessions: { searchPublic } });
   const { GET } = await import("@/app/api/sessions/route");
   const { DomainError } = await import("@/domain");
   const { DiscoveryApiUnavailableError } = await import("@/app/discover/discovery-api-unavailable");
@@ -28,6 +29,22 @@ async function scenario() {
 const request = (query = "") => new Request(`http://localhost/api/sessions?${query}`, { headers: { authorization: "Bearer token" } });
 
 describe("GET /api/sessions", () => {
+  test("adds response-time clock metadata without changing the successful JSON projection", async () => {
+    const { GET, searchPublic } = await scenario();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
+    searchPublic.mockImplementation(async () => {
+      clock.mockReturnValue(1_800_000_000_250);
+      return [];
+    });
+
+    const response = await GET(request());
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-server-time")).toBe("1800000000250");
+    expect(await response.json()).toEqual({ items: [], nextCursor: null });
+  });
+
   test("returns the underlying TLS error without requiring access to server logs", async () => {
     const { GET, searchPublic } = await scenario();
     const cause = Object.assign(new Error("self-signed certificate in certificate chain"), {
@@ -40,6 +57,7 @@ describe("GET /api/sessions", () => {
 
     expect(response.status).toBe(500);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-server-time")).toBeNull();
     expect(body.error.diagnostics).toEqual([
       { message: "Route dependencies could not be loaded" },
       { code: "SELF_SIGNED_CERT_IN_CHAIN", message: "self-signed certificate in certificate chain" },
@@ -66,7 +84,7 @@ describe("GET /api/sessions", () => {
     }
   });
 
-  test("withholds unconfigured topology and arbitrary codes from anonymous callers", async () => {
+  test("withholds unconfigured topology and arbitrary codes from authenticated callers", async () => {
     const { GET, searchPublic } = await scenario();
     const cause = Object.assign(new Error("getaddrinfo ENOTFOUND db.internal.corp"), { code: "ENOTFOUND" });
     const failure = Object.assign(new Error("user=alice host=db.internal 10.0.0.5:5432"), {
@@ -74,7 +92,7 @@ describe("GET /api/sessions", () => {
     });
     searchPublic.mockRejectedValue(failure);
 
-    const response = await GET(new Request("http://localhost/api/sessions"));
+    const response = await GET(request());
     const body = await response.json();
 
     expect(response.status).toBe(500);
@@ -226,14 +244,14 @@ describe("GET /api/sessions", () => {
     expect(searchPublic).not.toHaveBeenCalled();
   });
 
-  test("invokes public discovery with validated filter bounds", async () => {
+  test("invokes authenticated discovery with validated filter bounds", async () => {
     const { GET, searchPublic } = await scenario();
     const req = request("q=+Jurong+&sport=Badminton&region=West&date=2030-01-02&timeFrom=18:00&timeTo=20:00");
     const response = await GET(req);
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({ items: [], nextCursor: null });
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Jurong", sport: "Badminton", region: "West", startsWithin: { from: new Date("2030-01-02T10:00:00Z"), before: new Date("2030-01-02T12:00:00Z") } });
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({ text: "Jurong", sport: "Badminton", region: "West", startsWithin: { from: new Date("2030-01-02T10:00:00Z"), before: new Date("2030-01-02T12:00:00Z") } }, userId);
   });
 
   test("serializes safe listing fields and creates an opaque cursor for further matches", async () => {
@@ -258,7 +276,7 @@ describe("GET /api/sessions", () => {
     const cursor = btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const response = await GET(request(`cursor=${cursor}`));
     expect(response.status).toBe(200);
-    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({});
+    expect(searchPublic).toHaveBeenCalledExactlyOnceWith({}, userId);
     expect(await response.json()).toMatchObject({ items: [{ sessionId: nextId }], nextCursor: null });
   });
 
@@ -268,6 +286,7 @@ describe("GET /api/sessions", () => {
     const response = await GET(request(query));
     expect(response.status).toBe(400);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-server-time")).toBeNull();
     expect(await response.json()).toEqual({ error: { code: "INVALID_REQUEST", message: "Invalid session discovery query" } });
     expect(searchPublic).not.toHaveBeenCalled();
     expect(console.error).not.toHaveBeenCalled();
@@ -278,6 +297,7 @@ describe("GET /api/sessions", () => {
     searchPublic.mockRejectedValue(new DiscoveryApiUnavailableError());
     const response = await GET(request());
     expect(response.status).toBe(503);
+    expect(response.headers.get("x-server-time")).toBeNull();
     expect(await response.json()).toEqual({ error: { code: "DISCOVERY_API_UNAVAILABLE", message: "Session discovery is not available yet" } });
     expect(console.error).not.toHaveBeenCalled();
   });

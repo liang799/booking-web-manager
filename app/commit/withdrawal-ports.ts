@@ -3,8 +3,8 @@
  * the screens, not copied from the HTTP replies: `withdrawal-transport.ts` validates each API
  * reply with Zod and maps it to these types explicitly (see the table there), and
  * `tests/app/commit/withdrawal-contract.test.ts` checks that mapping against the real routes.
- * The joined-sessions list has no API yet, so stories use the fakes in
- * `_components/withdrawal-fakes.ts`. React Query calls these through the flow hooks, which
+ * Stories use the fakes in `_components/withdrawal-fakes.ts`; `/sessions/joined` uses the real
+ * transports. React Query calls these through the flow hooks, which
  * turn error results into thrown `SessionActionError`s.
  */
 
@@ -26,7 +26,7 @@ export type LoadJoinedSessions = () => Promise<readonly JoinedSessionItem[]>;
 
 /** What withdrawing now would do, calculated by the server (integer cents). */
 export interface WithdrawalPreview {
-  /** REFUNDED: more than 30 hours before start. AWAITING_REPLACEMENT: 30 hours or less. */
+  /** REFUNDED: at least 30 hours before start. AWAITING_REPLACEMENT: less than 30 hours. */
   readonly kind: "REFUNDED" | "AWAITING_REPLACEMENT";
   readonly refundCents: number;
   readonly heldCents: number;
@@ -42,11 +42,20 @@ export type Replacement =
   | { readonly mode: "OPEN_SLOT" }
   | { readonly mode: "DIRECT_INVITE"; readonly inviteeId: string };
 
-/** Someone the player may name as their replacement. */
+/** Someone the player may name as their replacement, found by their user ID (ADR-0021). */
 export interface ReplacementCandidate {
   readonly userId: string;
+  /** Their user ID without "@". */
+  readonly handle: string;
   readonly displayName: string;
 }
+
+/** Finds the active player holding exactly this user ID, to name as the replacement. */
+export type FindReplacementCandidate = (handle: string) => Promise<
+  | { readonly status: "found"; readonly candidate: ReplacementCandidate }
+  | { readonly status: "not-found" }
+  | { readonly status: "error"; readonly message: string }
+>;
 
 /** A failed action. `unconfirmed`: it may or may not have happened; retry with the same request. */
 export interface ActionError {

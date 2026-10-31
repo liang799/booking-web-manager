@@ -37,7 +37,7 @@ test("UC2-03b host removes a participant with a full refund, retained history, a
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, f.booker, "/sessions?tab=hosting");
     const management = await openHostedSession(page, f.venueName);
-    await management.getByRole("link", { name: "Manage participants" }).click();
+    await management.getByRole("link", { name: "Manage players" }).click();
     await expect(page).toHaveURL(new RegExp(`${f.path}$`));
     await expect(page.getByRole("heading", { name: "Manage participants", exact: true })).toBeVisible();
     await expect(page.getByText("0 slots available", { exact: true })).toBeVisible();

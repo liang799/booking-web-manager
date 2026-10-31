@@ -24,11 +24,11 @@ const openSlot: ReplacementChoice = { mode: "OPEN_SLOT" };
 
 // Owner: Yajie (Wyjessie) — /app/commit
 describe("UC2-05 Withdraw from Session", () => {
-  test("full refund when withdrawing more than 30h before session start", async () => {
+  test("full refund when withdrawing 30h and one second before session start", async () => {
     // Arrange
     const scenario = withdrawalScenario();
     await scenario.commit("alice");
-    scenario.setTime(hoursBeforeSessionStart(31));
+    scenario.setTime(new Date(hoursBeforeSessionStart(30).getTime() - 1_000));
 
     // Act
     const result = await scenario.withdraw("alice", openSlot);
@@ -43,11 +43,11 @@ describe("UC2-05 Withdraw from Session", () => {
     expect(scenario.participation("id-1").hold?.state).toBe("REFUNDED");
   });
 
-  test("at 30h or less, moves to awaiting_replacement instead of an immediate refund", async () => {
+  test("less than 30h before start, keeps the share held pending replacement", async () => {
     // Arrange
     const scenario = withdrawalScenario();
     await scenario.commit("alice");
-    scenario.setTime(hoursBeforeSessionStart(30));
+    scenario.setTime(new Date(hoursBeforeSessionStart(30).getTime() + 1_000));
 
     // Act
     const result = await scenario.withdraw("alice", openSlot);
@@ -61,6 +61,26 @@ describe("UC2-05 Withdraw from Session", () => {
     expect(scenario.participation("id-1").hold?.state).toBe(
       "AWAITING_REPLACEMENT",
     );
+  });
+
+  test("at exactly 30h, refunds the full held share in the withdrawal transaction", async () => {
+    // Arrange
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(30));
+
+    // Act
+    const result = await scenario.withdraw("alice", openSlot);
+
+    // Assert
+    expect(result).toMatchObject({
+      kind: "REFUNDED",
+      participationId: "id-1",
+      refundedCents: 500,
+    });
+    expect(scenario.unitOfWork.availableCents("alice")).toBe(10_000);
+    expect(scenario.participation("id-1").hold?.state).toBe("REFUNDED");
+    expect(scenario.ledgerKinds()).toEqual(["LOCK", "REFUND"]);
   });
 
   test("forfeits (credits the booker) if no replacement is found before session start", async () => {
@@ -318,7 +338,7 @@ describe("UC2-05 Withdraw from Session", () => {
 
   test("an invited queue head leaving the waitlist lets the next person be promoted", async () => {
     // Arrange
-    const scenario = withdrawalScenario({ totalSlots: 3 });
+    const scenario = withdrawalScenario({ totalSlots: 4 });
     await scenario.commit("alice");
     await scenario.commit("bob");
     await scenario.commit("erin");
@@ -356,7 +376,7 @@ describe("UC2-05 Withdraw from Session", () => {
       });
 
       // Assert
-      expect(scenario.notifier.deliveries()).toEqual([
+      expect(scenario.unitOfWork.notifications.filter((entry) => !["BOOKING_JOINED", "WAITLIST_ENTERED"].includes(entry.kind)).map((entry) => [entry.kind, entry.recipientId])).toEqual([
         ["REPLACEMENT_INVITATION", "dave"],
         ["FORFEITURE_WARNING", "alice"],
       ]);
@@ -374,16 +394,16 @@ describe("UC2-05 Withdraw from Session", () => {
       await scenario.withdraw("alice", openSlot);
 
       // Assert
-      expect(scenario.notifier.deliveries()).toEqual([["PROMOTED", "carol"]]);
+      expect(scenario.unitOfWork.notifications.filter((entry) => !["BOOKING_JOINED", "WAITLIST_ENTERED"].includes(entry.kind)).map((entry) => [entry.kind, entry.recipientId])).toEqual([["PROMOTED", "carol"]]);
     });
 
-    test("the forfeiture sweep tells the withdrawer their share was forfeited", async () => {
+    test("the forfeiture sweep records that the share is due for forfeiture", async () => {
       // Arrange
       const scenario = withdrawalScenario();
       await scenario.commit("alice");
       scenario.setTime(hoursBeforeSessionStart(10));
       await scenario.withdraw("alice", openSlot);
-      scenario.notifier.sent.length = 0;
+      scenario.unitOfWork.notifications.length = 0;
       scenario.setTime(sessionStartsAt);
 
       // Act
@@ -393,12 +413,12 @@ describe("UC2-05 Withdraw from Session", () => {
       });
 
       // Assert
-      expect(scenario.notifier.deliveries()).toEqual([
+      expect(scenario.unitOfWork.notifications.filter((entry) => !["BOOKING_JOINED", "WAITLIST_ENTERED"].includes(entry.kind)).map((entry) => [entry.kind, entry.recipientId])).toEqual([
         ["FORFEITURE_DUE", "alice"],
       ]);
     });
 
-    test("keeps a committed withdrawal when its notification cannot be delivered", async () => {
+    test("persists a withdrawal independently of the legacy external notifier", async () => {
       // Arrange
       const scenario = withdrawalScenario();
       await scenario.commit("alice");
@@ -418,7 +438,7 @@ describe("UC2-05 Withdraw from Session", () => {
   });
 });
 
-function withdrawalScenario({ totalSlots = 2 } = {}) {
+function withdrawalScenario({ totalSlots = 3 } = {}) {
   const unitOfWork = new InMemoryUnitOfWork({
     users: ["alice", "bob", "carol", "dave", "erin"].map((userId) =>
       createTestUserDetails({ userId }),
@@ -479,3 +499,40 @@ function withdrawalScenario({ totalSlots = 2 } = {}) {
     },
   };
 }
+
+
+describe("replacement notification receipts", () => {
+  test.each([48, 10])("acceptance %sh before start sends one departing-person outcome and never claims an earlier refund again", async (hours) => {
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(hours));
+    await scenario.withdraw("alice", { mode: "DIRECT_INVITE", inviteeId: "dave" });
+    scenario.unitOfWork.notifications.length = 0;
+    await scenario.acceptReplacement("dave");
+    expect(scenario.unitOfWork.notifications).toEqual([
+      expect.objectContaining({ kind: "BOOKING_JOINED", recipientId: "dave" }),
+      expect.objectContaining({ kind: "REPLACEMENT_ACCEPTED", recipientId: "alice", refundCents: hours === 10 ? 500 : 0 }),
+    ]);
+  });
+
+  test("an ordinary entrant replacing a late withdrawal sends the actual refund receipt", async () => {
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(10));
+    await scenario.withdraw("alice", openSlot);
+    scenario.unitOfWork.notifications.length = 0;
+    await scenario.commit("dave");
+    expect(scenario.unitOfWork.notifications).toContainEqual(expect.objectContaining({ kind: "REPLACEMENT_REFUNDED", recipientId: "alice", refundCents: 500 }));
+  });
+
+  test("failed invitation persistence leaves the held share and participation committed", async () => {
+    const scenario = withdrawalScenario();
+    await scenario.commit("alice");
+    scenario.setTime(hoursBeforeSessionStart(10));
+    scenario.unitOfWork.failNextNotificationAppend = true;
+    await expect(scenario.withdraw("alice", { mode: "DIRECT_INVITE", inviteeId: "dave" })).rejects.toThrow("Notification append failed");
+    expect(scenario.participation("id-1").status).toBe("COMMITTED");
+    expect(scenario.participation("id-1").hold?.state).toBe("HELD");
+    expect(scenario.unitOfWork.notifications).toHaveLength(1);
+  });
+});

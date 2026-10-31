@@ -15,6 +15,11 @@ and persistence boundaries remain accepted. Current routing is defined by
 run actor workflows, while Session validates and records prepared child changes.
 The original routing below is retained as decision history.
 
+Payout client request-key ownership only is superseded by
+[ADR-0020](./0020-payout-request-idempotency.md). Keys are application/adapter
+metadata; payout-ID history, aggregate ownership and business guards remain.
+The earlier key-bearing contracts below are retained as decision history.
+
 ## Context
 
 The domain contains entities, value objects, role views, and derived facts.
