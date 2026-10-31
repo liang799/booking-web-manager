@@ -86,14 +86,22 @@ for (const offset of [-60_000, 60_000]) {
         [sessionId],
       );
       const startsAt = result.rows[0]!.start_at.getTime();
+      await page.goto(`/discover?q=${venue}`, { waitUntil: "domcontentloaded" });
+      await expect(card(page, venue)).toBeVisible();
+      // The initial streamed navigation (and its prefetches) is not a background
+      // refresh. Only observe subsequent non-prefetch RSC requests while expiry
+      // is being reconciled by the dedicated HTTP discovery endpoint.
       let backgroundRouteRefreshes = 0;
       page.on("request", request => {
-        if (new URL(request.url()).pathname === "/discover" && request.headers().rsc === "1") {
+        const headers = request.headers();
+        if (
+          new URL(request.url()).pathname === "/discover" &&
+          headers.rsc === "1" &&
+          headers["next-router-prefetch"] !== "1"
+        ) {
           backgroundRouteRefreshes += 1;
         }
       });
-      await page.goto(`/discover?q=${venue}`, { waitUntil: "domcontentloaded" });
-      await expect(card(page, venue)).toBeVisible();
       await expect(card(page, venue)).toHaveCount(0, { timeout: Math.max(1, startsAt + 3_000 - Date.now()) });
       expect(Date.now()).toBeGreaterThanOrEqual(startsAt);
       expect(Date.now() - startsAt).toBeLessThanOrEqual(3_000);

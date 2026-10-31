@@ -210,6 +210,16 @@ export class RegularGroup {
     );
   }
 
+  /** Owner: withdraw an unanswered invitation for one player. */
+  cancelInvitation(command: { readonly actorId: UUID; readonly inviteeId: UUID }): boolean {
+    this.assertOwner(command.actorId);
+    DomainError.require(this.#status === "ACTIVE", "INVALID_STATE", "An archived group cannot change invitations");
+    validateId(command.inviteeId, "inviteeId");
+    const existing = this.#invitations.some((invitation) => invitation.inviteeId === command.inviteeId);
+    if (existing) this.#invitations = this.#invitations.filter((invitation) => invitation.inviteeId !== command.inviteeId);
+    return existing;
+  }
+
   removeMember(command: {
     readonly actorId: UUID;
     readonly userId: UUID;

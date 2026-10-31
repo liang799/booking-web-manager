@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef, useState } from "react";
-import { Copy, Link as LinkIcon } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Check, Copy, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,16 @@ export function SessionInvitationShare({ sessionId, disabled, presentation = "de
   const [state, setState] = useState<ShareState>({ status: "idle" });
   const busy = useRef(false);
   const inputId = useId();
+  const copied = state.status === "ready" && state.clipboard === "copied";
+
+  // A successful copy is transient feedback, not a new panel that resizes the dialog.
+  useEffect(() => {
+    if (state.status !== "ready" || state.clipboard !== "copied") return;
+    const timeout = window.setTimeout(() => {
+      setState((current) => current === state ? { status: "idle" } : current);
+    }, 2000);
+    return () => window.clearTimeout(timeout);
+  }, [state]);
 
   async function copyInvitation() {
     if (busy.current || disabled) return;
@@ -51,12 +61,13 @@ export function SessionInvitationShare({ sessionId, disabled, presentation = "de
   return <div className={presentation === "details" ? details.invitation : "mt-4 space-y-3"}>
     <div className={presentation === "details" ? details.inviteRow : undefined}>
     <Button type="button" variant={presentation === "details" ? "default" : "outline"} className={presentation === "details" ? details.inviteButton : "min-h-11"} disabled={disabled || state.status === "loading"} onClick={copyInvitation}>
-      {presentation === "details" ? <LinkIcon aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
-      {state.status === "loading" ? "Loading invitation…" : "Copy invitation link"}
+      {copied ? <Check aria-hidden="true" /> : presentation === "details" ? <LinkIcon aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
+      {state.status === "loading" ? "Loading invitation…" : copied ? "Link copied" : "Copy invitation link"}
     </Button>
     </div>
-    {state.status === "ready" && <div className="mt-3 space-y-2 rounded-lg bg-muted p-3">
-      <p role="status" className="text-sm">{state.clipboard === "copied" ? "Invitation link copied." : "Copy the invitation link below."}</p>
+    <span role="status" aria-live="polite" className="sr-only">{copied ? "Invitation link copied." : ""}</span>
+    {state.status === "ready" && state.clipboard === "manual" && <div className="mt-3 space-y-2 rounded-lg bg-muted p-3">
+      <p className="text-sm">Copy the invitation link below.</p>
       <label htmlFor={inputId} className="sr-only">Invitation link</label>
       <Input id={inputId} value={state.url} readOnly onFocus={(event) => event.currentTarget.select()} className="min-h-11 bg-background" />
       <p className="text-xs leading-relaxed text-muted-foreground">Anyone with this link can view the session details and request to join.</p>
