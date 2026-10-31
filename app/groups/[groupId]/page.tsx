@@ -61,13 +61,13 @@ export default async function GroupPage({ params }: GroupPageProps) {
             ? <RemoveMemberButton groupId={group.groupId} memberId={member.userId} memberName={name} /> : undefined,
         };
       })}
-      pendingInvitations={active ? (group.invitations ?? []).map((entry) => {
+      pendingInvitations={active ? [...(group.invitations ?? [])].sort((a, b) => b.invitedAt.getTime() - a.invitedAt.getTime()).map((entry) => {
         const profile = profiles.get(entry.inviteeId);
         const invitedName = profile?.name ?? "Unnamed player";
         return { key: entry.inviteeId, name: invitedName, handle: profile?.handle ?? null,
           invited: joinedDate.format(entry.invitedAt),
           revokeControl: isOwner ? <CancelPendingInvitationButton groupId={group.groupId} inviteeId={entry.inviteeId} inviteeName={invitedName} /> : undefined };
-      }).sort((first, second) => first.name.localeCompare(second.name)) : []}
+      }) : []}
       invitation={active ? <GroupInvitationPanel groupId={group.groupId} url={invitationUrl}
         active={group.invitationActive} inviteAction={invitePlayer}
         controls={isOwner ? <InvitationControls groupId={group.groupId} active={group.invitationActive} /> : undefined} /> : undefined}
