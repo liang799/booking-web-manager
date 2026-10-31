@@ -36,10 +36,14 @@ try {
   await page.getByRole("heading", { name: "No pending invitations" }).waitFor();
   await capture("after-invitations-empty.png");
 
-  await story("groups-details--pending-invitations", "Pending invitations");
+  await story("groups-details--visual-pending", "Members (4)");
+  await page.getByRole("tab", { name: "Invitations" }).click();
+  await page.getByRole("heading", { name: "Pending invitations" }).waitFor();
   await capture("after-invitations-pending.png");
 
-  await story("groups-details--owner", "Group settings");
+  await story("groups-details--visual-owner", "Members (4)");
+  await page.getByRole("tab", { name: "Settings" }).click();
+  await page.getByRole("heading", { name: "Group settings" }).waitFor();
   await capture("after-settings.png");
 } finally {
   await browser.close();
