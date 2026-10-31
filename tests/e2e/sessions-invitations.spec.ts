@@ -102,11 +102,15 @@ test("a host creates a private session and shares a mobile invitation that a sec
         expect(await anonymousListing.json()).toEqual({
           error: { code: "UNAUTHENTICATED", message: "Authentication is required" },
         });
-        const publicListing = await request.get("/api/sessions", { headers: ownerHeaders, params: { q: venueName } });
+        const publicListing = await request.get("/api/sessions", {
+          headers: { Authorization: `Bearer ${player.token}` }, params: { q: venueName },
+        });
         expect(publicListing.status()).toBe(200);
         const publicBody = await publicListing.json();
         expect(publicBody.items.map((item: { sessionId: string }) => item.sessionId)).toEqual([sessionId]);
         expect(JSON.stringify(publicBody)).not.toContain(stored.room_token);
+        const ownerListing = await request.get("/api/sessions", { headers: ownerHeaders, params: { q: venueName } });
+        expect(await ownerListing.json()).toEqual({ items: [], nextCursor: null });
       }
     }
 

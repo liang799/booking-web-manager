@@ -1,3 +1,4 @@
+import type { NotificationIntent } from "@/use-cases/notifications/notification-intents";
 import { describe, expect, test, vi } from "vitest";
 import { FundHold, Money, Participation, Session, type User } from "@/domain";
 import { ListSessionParticipants } from "@/use-cases/sessions/ListSessionParticipants";
@@ -178,13 +179,49 @@ describe("UC2-03b Remove Participant", () => {
 });
 
 describe("Session participant list", () => {
+  test("links a legacy funded booker to their existing participation without allowing removal", async () => {
+    const scenario = removal(createTestSession({ committedUserIds: ["booker", "alice"] }));
+    scenario.names.mockResolvedValue(new Map([["booker", "Casey Tan"], ["alice", "Alice"]]));
+
+    const list = await scenario.list.forBooker("booker", "s");
+
+    expect(list.booker).toEqual({ displayName: "Casey Tan", participationId: "p-booker" });
+    expect(list.participants[0]).toEqual({ participationId: "p-booker", displayName: "Casey Tan", status: "COMMITTED", attendance: "UNVERIFIED", canRemove: false });
+    expect(list.canVerifyAttendance).toBe(false);
+    scenario.clock.now.mockReturnValue(hoursAfterSessionEnd(1));
+    expect((await scenario.list.forBooker("booker", "s")).canVerifyAttendance).toBe(true);
+  });
+
+  test("shows the booker separately when no funded guests have joined", async () => {
+    const scenario = removal(createTestSession());
+    scenario.names.mockResolvedValue(new Map([["booker", "Casey Tan"]]));
+
+    const list = await scenario.list.forBooker("booker", "s");
+
+    expect(list).toMatchObject({ booker: { displayName: "Casey Tan" }, participants: [] });
+    expect(list.booker).not.toHaveProperty("participationId");
+    expect(list.booker).not.toHaveProperty("attendance");
+    expect(list.booker).not.toHaveProperty("canRemove");
+  });
+
+  test("keeps the legacy booker linked to their existing record after cancellation", async () => {
+    const initial = createTestSession({ committedUserIds: ["booker"] });
+    readyBooker().cancel(initial, hoursBeforeSessionStart(48));
+    const scenario = removal(initial);
+
+    const list = await scenario.list.forBooker("booker", "s");
+
+    expect(list.booker).toMatchObject({ participationId: "p-booker" });
+    expect(list.participants).toEqual([{ participationId: "p-booker", displayName: "Unnamed player", status: "CANCELLED", attendance: "UNVERIFIED", canRemove: false }]);
+  });
+
   test("shows names, statuses and historical rows in participant-list order without private identities", async () => {
     const initial = createTestSession({ committedUserIds: ["alice", "ben"], waitlistedUserIds: ["waiting"] });
     readyBooker().removeParticipant(initial, "p-ben", hoursBeforeSessionStart(48));
     const scenario = removal(initial);
     expect(await scenario.list.forBooker("booker", "s")).toEqual({
       sessionId: "s", venueName: "Court", sport: "Badminton", startAt: initial.booking.startAt, endAt: initial.booking.endAt,
-      status: "OPEN", availableSlots: 1, canVerifyAttendance: false, participants: [
+      status: "OPEN", availableSlots: 1, canVerifyAttendance: false, booker: { displayName: "Unnamed player" }, participants: [
         { participationId: "p-alice", displayName: "Alice", status: "COMMITTED", attendance: "UNVERIFIED", canRemove: true },
         { participationId: "p-ben", displayName: "Deleted user", status: "REMOVED", attendance: "UNVERIFIED", canRemove: false },
         { participationId: "p-waiting", displayName: "Unnamed player", status: "WAITLISTED", attendance: "UNVERIFIED", canRemove: false },
@@ -240,6 +277,9 @@ function copy(session: Session, override: { visibility?: "PRIVATE" | "PUBLIC" } 
 }
 function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
   let persisted = initial;
+  const notices: NotificationIntent[] = [];
+  const saveNotices = vi.fn<(intents: readonly NotificationIntent[]) => Promise<void>>().mockResolvedValue(undefined);
+  const groupMembers = vi.fn<(groupId: string) => Promise<readonly string[]>>().mockResolvedValue([]);
   let response: SessionParticipantRemovalResult | undefined;
   let commitFailure: Error | undefined;
   const clock = { now: vi.fn(() => hoursBeforeSessionStart(3)) };
@@ -251,6 +291,7 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
   const append = vi.fn<SessionRemovalRepositories["ledger"]["append"]>().mockResolvedValue(undefined);
   const once = vi.fn<SessionRemovalRepositories["submission"]["once"]>();
   const transaction: SessionRemovalTransaction = { run: async (work) => {
+    const stagedNotices: NotificationIntent[] = [];
     let candidate: Session | undefined;
     let candidateResult: SessionParticipantRemovalResult | undefined;
     once.mockImplementation(async (_actor, _session, _participation, _version, perform) => {
@@ -259,10 +300,11 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
     });
     const result = await work({ users: { get: getUser }, sessions: { get: getSession,
       saveRemoval: async (session, id) => { await save(session, id); candidate = session; } },
-      ledger: { append }, submission: { once } });
+      ledger: { append }, submission: { once }, notifications: { append: async (intents) => { await saveNotices(intents); stagedNotices.push(...intents); }, groupMembers } });
     if (commitFailure) throw commitFailure;
     if (candidate) persisted = candidate;
     if (candidateResult) response = candidateResult;
+    notices.push(...stagedNotices);
     return result;
   } };
   const readTransaction: SessionRemovalReadTransaction = { run: (work) => work({
@@ -271,7 +313,7 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
   const list = new ListSessionParticipants({ transaction: readTransaction, clock });
   const preview = new PreviewParticipantRemoval({ transaction: readTransaction, clock, versioner });
   const remove = new RemoveParticipant({ transaction, clock, versioner });
-  return { list, preview, remove, clock, getUser, getSession, names, save, append, once,
+  return { saveNotices, groupMembers, notices, list, preview, remove, clock, getUser, getSession, names, save, append, once,
     stored: () => persisted, replace: (session: Session) => { persisted = session; },
     cached: () => response, failCommit: (error: Error) => { commitFailure = error; },
     submit: async (participationId = "p-alice") => remove.forBooker("booker", "s", participationId,
@@ -280,3 +322,21 @@ function removal(initial = createTestSession({ committedUserIds: ["alice"] })) {
       : entry === "preview" ? preview.forBooker("booker", "s", "p-alice") : remove.forBooker("booker", "s", "p-alice", "version"),
   };
 }
+
+
+test("removal stores the removed participant's actual refund and replays without another notice", async () => {
+  const scenario = removal();
+  const version = (await scenario.preview.forBooker("booker", "s", "p-alice")).previewVersion;
+  await scenario.remove.forBooker("booker", "s", "p-alice", version);
+  await scenario.remove.forBooker("booker", "s", "p-alice", version);
+  expect(scenario.notices).toEqual([expect.objectContaining({ kind: "PARTICIPANT_REMOVED", recipientId: "alice", refundCents: 500 })]);
+});
+
+test("removal rolls back when its canonical message cannot be saved", async () => {
+  const scenario = removal();
+  scenario.saveNotices.mockRejectedValue(new Error("Notification persistence failed"));
+  await expect(scenario.submit()).rejects.toThrow("Notification persistence failed");
+  expect(scenario.stored().participantList.requireParticipation("p-alice").status).toBe("COMMITTED");
+  expect(scenario.cached()).toBeUndefined();
+  expect(scenario.notices).toEqual([]);
+});

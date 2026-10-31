@@ -30,9 +30,9 @@ describe("UC1-08 production payout persistence", () => {
     const sessionId = randomUUID();
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-        total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, status,
+        total_cost_cents, total_slots, booking_share_cents, visibility, status,
         room_token, holding_account_id)
-       values ($1,$2,'Payout fixture','West','Badminton',$3,$4,1000,2,2,500,'PRIVATE','AWAITING_PAYOUT',$5,$6)`,
+       values ($1,$2,'Payout fixture','West','Badminton',$3,$4,1000,3,500,'PRIVATE','AWAITING_PAYOUT',$5,$6)`,
       [sessionId, booker.userId, startAt, endAt, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );
     for (const attendance of withPayableHolds ? ["ATTENDED", "ABSENT"] : []) {

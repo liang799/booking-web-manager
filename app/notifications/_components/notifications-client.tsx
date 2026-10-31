@@ -1,68 +1,78 @@
 "use client";
-
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { NotificationFilter } from "@/use-cases/notifications/notification-inbox";
-import { fetchNotifications, markNotificationRead, type InboxPage, type NotificationItem } from "../transport";
+import { NotificationProvider, useNotificationPage } from "../provider";
+import { type NotificationItem, fetchNotifications } from "../transport";
 import { NotificationsView } from "./notifications-view";
 
-export function NotificationsClient({ readPage = fetchNotifications, saveRead = markNotificationRead }: {
-  readonly readPage?: typeof fetchNotifications;
-  readonly saveRead?: typeof markNotificationRead;
+const noRealtime = () => () => {};
+/** Custom transport is used only by deterministic browser stories; production uses the shared signed-in provider. */
+export function NotificationsClient({
+  readPage,
+}: {
+  readPage?: typeof fetchNotifications;
 }) {
-  const router = useRouter();
-  const [query, setQuery] = useState<{ filter: NotificationFilter; before: InboxPage["nextCursor"]; revision: number }>({ filter: "all", before: null, revision: 0 });
-  const [page, setPage] = useState<InboxPage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState("");
-  const [now, setNow] = useState(() => new Date().toISOString());
-  const refresh = useCallback(() => setQuery((value) => ({ ...value, before: null, revision: value.revision + 1 })), []);
-
+  if (readPage)
+    return (
+      <NotificationProvider
+        userId="notification-preview"
+        readPage={readPage}
+        subscribe={noRealtime}
+      >
+        <Inbox />
+      </NotificationProvider>
+    );
+  return <Inbox />;
+}
+function Inbox() {
+  const [filter, setFilter] = useState<NotificationFilter>("all"),
+    [notice, setNotice] = useState("");
+  const { store, reads, changed, snapshot, page } = useNotificationPage(filter);
   useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    if (!query.before) setPage(null);
-    readPage(query.filter, query.before, controller.signal).then((result) => {
-      if (controller.signal.aborted) return;
-      setPage((previous) => ({ ...result, items: query.before && previous ? [...previous.items, ...result.items.filter((item) => !previous.items.some((old) => old.id === item.id))] : result.items }));
-      setNow(new Date().toISOString());
-    }).catch((cause) => {
-      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Notifications could not be loaded.");
-    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [query, readPage]);
-
-  useEffect(() => {
-    window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
-  }, [refresh]);
-
-  async function markRead(id: string, destination?: string) {
-    if (saving) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await saveRead(id);
-      setNotice(id === "all" ? "All notifications marked as read." : "Notification marked as read.");
-      if (destination) router.push(destination);
-      else refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Read status could not be saved.");
-    } finally { setSaving(false); }
+    if (page?.items[0]) {
+      reads.visit(page.items[0]);
+      changed();
+    }
+  }, [reads, Boolean(page)]); // A visit records the displayed head once, never an arriving Broadcast.
+  function mark(id: string) {
+    if (id === "all")
+      reads.markAll(snapshot.pages.all?.items[0] ?? page?.items[0]);
+    else {
+      const item = page?.items.find((x) => x.id === id);
+      if (item) reads.markRead(item);
+    }
+    changed();
+    setNotice(
+      id === "all"
+        ? "All notifications marked as read on this browser."
+        : "Notification marked as read on this browser.",
+    );
   }
-
-  function open(item: NotificationItem, event: MouseEvent<HTMLAnchorElement>) {
-    if (item.readAt || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-    event.preventDefault();
-    void markRead(item.id, item.url);
+  function open(item: NotificationItem) {
+    reads.markRead(item);
+    changed();
   }
-
-  return <NotificationsView items={page?.items ?? []} unreadCount={page?.unreadCount ?? 0} filter={query.filter} now={now}
-    loading={loading} saving={saving} error={error} notice={notice} hasMore={Boolean(page?.nextCursor)}
-    onFilter={(filter) => setQuery((value) => ({ filter, before: null, revision: value.revision + 1 }))}
-    onRefresh={refresh} onLoadMore={() => setQuery((value) => ({ ...value, before: page?.nextCursor ?? null, revision: value.revision + 1 }))}
-    onMarkRead={(id) => { void markRead(id); }} onOpen={open} />;
+  return (
+    <NotificationsView
+      items={(page?.items ?? []).map((item) => ({
+        ...item,
+        read: reads.isRead(item),
+      }))}
+      filter={filter}
+      now={new Date().toISOString()}
+      loading={!snapshot.forbidden && (snapshot.loading[filter] ?? !page)}
+      error={
+        snapshot.forbidden
+          ? "Sign in again to see your notifications."
+          : snapshot.errors[filter]
+      }
+      notice={notice}
+      hasMore={Boolean(page?.nextCursor)}
+      onFilter={setFilter}
+      onRefresh={() => void store.refreshVisible()}
+      onLoadMore={() => void store.older(filter)}
+      onMarkRead={mark}
+      onOpen={open}
+    />
+  );
 }

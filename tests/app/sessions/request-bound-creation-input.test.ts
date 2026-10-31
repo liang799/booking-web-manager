@@ -13,7 +13,7 @@ function body() {
       venueName: "Jurong East Sports Hall", region: "West", sport: "Badminton",
       startAt: "2030-01-01T10:00:00Z", endAt: "2030-01-01T12:00:00Z", totalCostCents: 1000,
     },
-    config: { totalSlots: 4, minimumHeadcount: 2 },
+    config: { totalSlots: 4, },
   };
 }
 
@@ -44,7 +44,7 @@ describe("UC2-02 API-owned request binding", () => {
   test("equivalent timestamp offsets and property ordering have the same fingerprint", () => {
     const original = body();
     const equivalent = {
-      config: { minimumHeadcount: 2, totalSlots: 4 },
+      config: { totalSlots: 4 },
       booking: { ...original.booking, startAt: "2030-01-01T18:00:00+08:00", endAt: "2030-01-01T20:00:00+08:00" },
       idempotencyKey: original.idempotencyKey,
     };

@@ -8,10 +8,10 @@ import {
 } from "./session-fixtures";
 
 describe("Session admission and availability", () => {
-  test("recordAdmission_WhenBookerTakesEighthSlot_FillsSession", () => {
-    const bookerJoinedAt = hoursBeforeSessionStart(48);
+  test("recordAdmission_WhenLastGuestTakesTheRemainingPlace_FillsSession", () => {
+    const guestJoinedAt = hoursBeforeSessionStart(48);
     const bookingSession = createTestSession({
-      totalSlots: 8,
+      totalSlots: 9,
       committedUserIds: [
         "alice",
         "ben",
@@ -22,17 +22,17 @@ describe("Session admission and availability", () => {
         "grace",
       ],
     });
-    const bookerAdmission = committedParticipation(bookingSession, "booker");
+    const guestAdmission = committedParticipation(bookingSession, "harry");
 
     bookingSession.recordAdmission(
-      bookerAdmission,
+      guestAdmission,
       undefined,
-      bookerJoinedAt,
+      guestJoinedAt,
     );
 
     const participantList = bookingSession.participantList;
 
-    expect(participantList.findByUserId("booker")).toBe(bookerAdmission);
+    expect(participantList.findByUserId("harry")).toBe(guestAdmission);
     expect(
       participantList.participations.map((entry) => entry.status),
     ).toEqual([
@@ -45,7 +45,7 @@ describe("Session admission and availability", () => {
       "COMMITTED",
       "COMMITTED",
     ]);
-    expect(bookingSession.getAvailableSlots(bookerJoinedAt)).toBe(0);
+    expect(bookingSession.getAvailableSlots(guestJoinedAt)).toBe(0);
   });
 
   test("recordAdmission_WhenSessionIsFull_RecordsWaitlistedParticipation", () => {

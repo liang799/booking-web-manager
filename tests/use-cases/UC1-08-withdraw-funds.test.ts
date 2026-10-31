@@ -595,7 +595,6 @@ function cloneSession(session: Session): Session {
     booking: session.booking,
     bookingShare: session.bookingShare,
     totalSlots: session.totalSlots,
-    minimumHeadcount: session.minimumHeadcount,
     visibility: session.visibility,
     status: session.status,
     minimumReliability: session.minimumReliability,

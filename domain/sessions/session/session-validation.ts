@@ -4,7 +4,7 @@ import type {
   PayoutBatch,
 } from "../../shared/operations";
 import type { UUID } from "../../shared/types";
-import { isValidSlotCount, MAX_SESSION_SLOTS, MIN_SESSION_SLOTS } from "../capacity";
+import { MAX_STORED_SESSION_SLOTS, MIN_SESSION_SLOTS } from "../capacity";
 import type { FundHold } from "../fund-hold";
 import type { SessionDetails } from "./session";
 import type { ParticipantListView } from "./participant-list";
@@ -44,7 +44,7 @@ export function validateSessionDetails(details: SessionDetails): void {
 
 type SessionConfiguration = Pick<
   SessionDetails,
-  "status" | "visibility" | "totalSlots" | "minimumHeadcount"
+  "status" | "visibility" | "totalSlots"
 >;
 
 export function validateSessionConfiguration(
@@ -67,18 +67,11 @@ export function validateSessionConfiguration(
     "Unknown session visibility",
   );
   DomainError.require(
-    isValidSlotCount(input.totalSlots),
+    Number.isSafeInteger(input.totalSlots) &&
+      input.totalSlots >= MIN_SESSION_SLOTS &&
+      input.totalSlots <= MAX_STORED_SESSION_SLOTS,
     "INVALID_INPUT",
-    `totalSlots must be a safe integer from ${MIN_SESSION_SLOTS} to ${MAX_SESSION_SLOTS}`,
-  );
-  const hasValidMinimumHeadcount =
-    Number.isSafeInteger(input.minimumHeadcount) &&
-    input.minimumHeadcount >= 2 &&
-    input.minimumHeadcount <= input.totalSlots;
-  DomainError.require(
-    hasValidMinimumHeadcount,
-    "INVALID_INPUT",
-    "minimumHeadcount must be between 2 and totalSlots",
+    `totalSlots must be a safe integer from ${MIN_SESSION_SLOTS} to ${MAX_STORED_SESSION_SLOTS}`,
   );
 }
 

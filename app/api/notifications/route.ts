@@ -6,7 +6,7 @@ import { notificationErrorResponse } from "@/app/notifications/http";
 export const runtime = "nodejs";
 const actions = createAuthenticatedActions({ getDependencies: getNotificationDependencies, errorResponse: notificationErrorResponse });
 const querySchema = z.object({
-  filter: z.enum(["all", "unread", "bookings", "groups", "payments", "system"]).default("all"),
+  filter: z.enum(["all", "bookings", "groups", "payments", "system"]).default("all"),
   before: z.string().datetime({ offset: true }).optional(),
   id: z.string().uuid().optional(),
 }).refine((query) => Boolean(query.before) === Boolean(query.id));
@@ -18,15 +18,8 @@ export const GET = actions.get({
   },
   run: ({ inbox }, { userId, filter, before }) => inbox.list(userId, filter, before),
   serialize: (page) => ({
-    ...page,
-    items: page.items.map((item) => ({ ...item, createdAt: item.createdAt.toISOString(), readAt: item.readAt?.toISOString() ?? null })),
+    retentionCutoff: page.retentionCutoff.toISOString(),
+    items: page.items.map((item) => ({ ...item, createdAt: item.createdAt.toISOString() })),
     nextCursor: page.nextCursor ? { createdAt: page.nextCursor.createdAt.toISOString(), id: page.nextCursor.id } : null,
   }),
-});
-
-export const PATCH = actions.json({
-  parse: (userId, body) => ({ userId, id: z.object({ id: z.union([z.literal("all"), z.string().uuid().transform((id) => id.toLowerCase())]) }).strict().parse(body).id }),
-  run: ({ inbox }, { userId, id }) => inbox.markRead(userId, id),
-  invalidRequestMessage: "Choose a notification or all notifications",
-  successStatus: 204,
 });

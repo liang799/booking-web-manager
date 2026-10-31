@@ -55,9 +55,9 @@ describe("UC2-01 / UC2-03a database broadcast invalidation", () => {
     const startAt = new Date(Date.now() + offset);
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-         total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, status,
+         total_cost_cents, total_slots, booking_share_cents, visibility, status,
          room_token, holding_account_id)
-       values ($1,$2,$3,'West','Badminton',$4,$5,200,2,2,100,$6,$7,$8,$9)`,
+       values ($1,$2,$3,'West','Badminton',$4,$5,200,3,100,$6,$7,$8,$9)`,
       [sessionId, bookerId, `Realtime-${sessionId}`, startAt, new Date(startAt.getTime() + 7_200_000),
         visibility, status, randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );

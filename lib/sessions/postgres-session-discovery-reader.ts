@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { UUID } from "@/domain";
-import { MAX_SESSION_SLOTS } from "@/domain/sessions/capacity";
+import { MAX_STORED_SESSION_SLOTS } from "@/domain/sessions/capacity";
 import { fromDatabaseCents } from "@/lib/money/cents";
 import type { SqlExecutor } from "@/lib/money/sql";
 import type {
@@ -33,9 +33,11 @@ export class PostgresSessionDiscoveryReader implements SessionDiscoveryReader {
     if (criteria.startsWithin?.before !== undefined)
       conditions.push(`start_at < ${parameter(criteria.startsWithin.before)}`);
     if (viewerId !== undefined) {
+      const viewer = parameter(viewerId);
+      conditions.push(`booker_id <> ${viewer}`);
       conditions.push(`not exists (
         select 1 from participations p
-        where p.session_id = sessions.session_id and p.user_id = ${parameter(viewerId)}
+        where p.session_id = sessions.session_id and p.user_id = ${viewer}
           and p.status in ('COMMITTED', 'WAITLISTED')
       )`);
     }
@@ -55,7 +57,7 @@ export class PostgresSessionDiscoveryReader implements SessionDiscoveryReader {
       region: text(row.region),
       startAt: date(row.start_at),
       endAt: date(row.end_at),
-      totalSlots: z.number().int().min(1).max(MAX_SESSION_SLOTS).parse(row.total_slots),
+      totalSlots: z.number().int().min(1).max(MAX_STORED_SESSION_SLOTS).parse(row.total_slots),
       bookingShareCents: fromDatabaseCents(row.booking_share_cents, "booking_share_cents").toCents(),
     }));
   }

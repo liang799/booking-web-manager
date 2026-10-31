@@ -1,10 +1,10 @@
+import type { NotificationIntent } from "../notifications/notification-intents";
+import { sessionNotificationFacts } from "./session-notification-facts";
 import { DomainError, type UUID, type WithdrawalResult } from "@/domain";
 import type { UseCaseDependencies } from "../shared/dependencies";
 import { appendInstructions, requireAggregate } from "../shared/helpers";
 import {
-  type CommitmentNotification,
   type CommitmentNotifier,
-  notifyBestEffort,
 } from "./commitment-notifications";
 import { type FollowUpPromotion, promoteAfter } from "./follow-up-promotion";
 import type { PromoteFromWaitlist } from "./PromoteFromWaitlist";
@@ -34,7 +34,8 @@ export interface WithdrawFromSessionResult {
 export interface WithdrawFromSessionDependencies
   extends Pick<UseCaseDependencies, "unitOfWork" | "clock"> {
   readonly promote: Pick<PromoteFromWaitlist, "forSession">;
-  readonly notifier: CommitmentNotifier;
+  /** @deprecated Delivery is recorded through the transaction notification writer. */
+  readonly notifier?: CommitmentNotifier;
 }
 
 /**
@@ -51,8 +52,8 @@ export interface WithdrawFromSessionDependencies
  * work (see follow-up-promotion.ts). A named invitation reserves the place
  * for that person instead, who accepts through AcceptReplacement.
  *
- * After commit, a named invitee is sent the invitation and a late withdrawer
- * is warned that their held share is forfeited at start unless replaced.
+ * The same transaction saves a named invitation and warns a late withdrawer
+ * that their held share is forfeited at start unless replaced.
  */
 export class WithdrawFromSession {
   constructor(private readonly dependencies: WithdrawFromSessionDependencies) {}
@@ -60,7 +61,7 @@ export class WithdrawFromSession {
   async forParticipant(
     request: WithdrawFromSessionRequest,
   ): Promise<WithdrawFromSessionResult> {
-    const { unitOfWork, clock, promote, notifier } = this.dependencies;
+    const { unitOfWork, clock, promote } = this.dependencies;
     const key = JSON.stringify([
       "UC2-05-withdraw",
       request.userId,
@@ -104,6 +105,10 @@ export class WithdrawFromSession {
 
       await transaction.sessions.save(session);
       await appendInstructions(transaction, result.instructions);
+      const notices: NotificationIntent[] = [];
+      if (request.replacement.mode === "DIRECT_INVITE") notices.push({ ...sessionNotificationFacts(session), kind: "REPLACEMENT_INVITATION", recipientId: request.replacement.inviteeId, occurrenceKey: key, expiresAt: session.booking.startAt });
+      if (result.kind === "AWAITING_REPLACEMENT") notices.push({ ...sessionNotificationFacts(session), kind: "FORFEITURE_WARNING", recipientId: request.userId, occurrenceKey: key, expiresAt: session.booking.startAt });
+      await transaction.notifications.append(notices);
       return {
         kind: result.kind,
         sessionId: session.sessionId,
@@ -113,23 +118,6 @@ export class WithdrawFromSession {
           .reduce((sum, instruction) => sum + instruction.amount.toCents(), 0),
       };
     });
-
-    const notifications: CommitmentNotification[] = [];
-    if (request.replacement.mode === "DIRECT_INVITE")
-      notifications.push({
-        kind: "REPLACEMENT_INVITATION",
-        recipientId: request.replacement.inviteeId,
-        sessionId: withdrawal.sessionId,
-        occurrenceKey: key,
-      });
-    if (withdrawal.kind === "AWAITING_REPLACEMENT")
-      notifications.push({
-        kind: "FORFEITURE_WARNING",
-        recipientId: request.userId,
-        sessionId: withdrawal.sessionId,
-        occurrenceKey: key,
-      });
-    await notifyBestEffort(notifier, notifications);
 
     const promotion: FollowUpPromotion =
       request.replacement.mode === "OPEN_SLOT"

@@ -196,9 +196,9 @@ describe.skipIf(!DATABASE_URL)("PostgresCommitmentUnitOfWork (database)", () => 
     const totalCost = shareCents * totalSlots;
     await pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport,
-         start_at, end_at, total_cost_cents, total_slots, minimum_headcount,
+         start_at, end_at, total_cost_cents, total_slots,
          booking_share_cents, visibility, room_token, holding_account_id)
-       values ($1, $2, 'Court', 'North', 'Badminton', $3, $4, $5, $6, 2, $7,
+       values ($1, $2, 'Court', 'North', 'Badminton', $3, $4, $5, $6, $7,
          'PUBLIC', $8, $9)`,
       [
         sessionId,
@@ -206,7 +206,7 @@ describe.skipIf(!DATABASE_URL)("PostgresCommitmentUnitOfWork (database)", () => 
         startsAt,
         new Date(startsAt.getTime() + 2 * 3_600_000),
         totalCost,
-        totalSlots,
+        totalSlots + 1,
         Math.floor(totalCost / totalSlots),
         randomUUID(),
         holdingAccountId,

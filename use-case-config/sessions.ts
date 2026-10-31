@@ -1,3 +1,4 @@
+import { createNotificationPublisher } from "./notification-publisher";
 import type { SessionApiDependencies } from "@/app/sessions/dependencies";
 import { SessionApiUnavailableError } from "@/app/sessions/session-api-unavailable";
 import { readSessionServerSettings } from "@/app/sessions/server-environment";
@@ -35,6 +36,7 @@ export function createSessionDependencies(): SessionApiDependencies {
           getPool(),
           submission,
           clock,
+          createNotificationPublisher(),
         ),
         clock,
         ids: { next: randomUUID },

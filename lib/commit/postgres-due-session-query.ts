@@ -14,8 +14,8 @@ const AUTO_VERIFY_AFTER_END_MS = 72 * 3_600_000;
  * - ended at least 72 hours ago (automatic verification).
  *
  * Promotion eligibility mirrors the domain so a session that cannot make
- * progress is never selected: free places are total slots minus committed
- * participants minus pending personal-invitation reservations
+ * progress is never selected: free places are total slots minus the booker's
+ * place, committed guests and pending personal-invitation reservations
  * (`Session.getAvailableSlots`), and a queue head who is the invitee of such a
  * reservation stops promotion (`PromoteFromWaitlist`). Every other outcome
  * changes the session (a promoted or skipped head leaves the queue; expiry and
@@ -61,9 +61,10 @@ export class PostgresDueSessionQuery implements DueSessionQuery {
              and (
                select count(*) from participations p
                where p.session_id = s.session_id and p.status = 'COMMITTED'
+                 and p.user_id <> s.booker_id
              ) + (
                select count(*) from reservations r where r.session_id = s.session_id
-             ) < s.total_slots
+             ) < s.total_slots - 1
              and exists (
                select 1
                from participations head

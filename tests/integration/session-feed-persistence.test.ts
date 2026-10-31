@@ -36,9 +36,9 @@ describe("PostgreSQL personal sessions feed", () => {
     const endAt = input.endAt ? new Date(input.endAt) : new Date(startAt.getTime() + 3_600_000);
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-        total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, status,
+        total_cost_cents, total_slots, booking_share_cents, visibility, status,
         room_token, holding_account_id)
-       values ($1,$2,'Personal feed court','West','Tennis',$3,$4,2000,4,2,500,$5,$6,$7,$8)`,
+       values ($1,$2,'Personal feed court','West','Tennis',$3,$4,2000,4,500,$5,$6,$7,$8)`,
       [sessionId, input.bookerId ?? hostId, startAt, endAt, input.visibility ?? "PRIVATE",
         input.status ?? "OPEN", randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
     );
@@ -92,8 +92,10 @@ describe("PostgreSQL personal sessions feed", () => {
       expect(session).not.toHaveProperty("participants");
     }
     expect(page.sessions.find((session) => session.sessionId === waitlisted))
-      .toMatchObject({ participationStatus: "WAITLISTED", participantCount: 0 });
-    expect((await feed.list(userId, { tab: "hosting" })).sessions.map((session) => session.sessionId)).toEqual([owned]);
+      .toMatchObject({ participationStatus: "WAITLISTED", participantCount: 1 });
+    const hosted = await feed.list(userId, { tab: "hosting" });
+    expect(hosted.sessions.map((session) => session.sessionId)).toEqual([owned]);
+    expect(hosted.sessions[0]?.participantCount).toBe(1);
   });
 
   test("includes sessions in progress and preserves completed, cancelled and departed history", async () => {
@@ -112,6 +114,9 @@ describe("PostgreSQL personal sessions feed", () => {
     expect(page.sessions.map((session) => session.sessionId)).toEqual([current, withdrawn, ended, settled, cancelled]);
     expect(page.sessions.map((session) => session.section)).toEqual(["upcoming", "past", "past", "past", "past"]);
     expect(page).toMatchObject({ upcomingCount: 1, pastCount: 4 });
+    expect(page.sessions.find((session) => session.sessionId === current)?.participantCount).toBe(2);
+    expect(page.sessions.find((session) => session.sessionId === settled)?.participantCount).toBe(2);
+    expect(page.sessions.find((session) => session.sessionId === cancelled)?.participantCount).toBe(0);
   });
 
   test("paginates tied upcoming and past timestamps across the section boundary without skips or duplicates", async () => {
@@ -135,7 +140,7 @@ describe("PostgreSQL personal sessions feed", () => {
     const settled = await insertSession({ bookerId: userId, status: "SETTLED", startAt: "2042-01-13T00:00:00Z" });
     for (const id of [ended, future, settled]) await participate(id, player);
     const page = await feed.list(userId, { tab: "hosting" });
-    expect(page.sessions.find((session) => session.sessionId === ended)).toMatchObject({ participantCount: 1, unverifiedCount: 1 });
+    expect(page.sessions.find((session) => session.sessionId === ended)).toMatchObject({ participantCount: 2, unverifiedCount: 1 });
     expect(page.sessions.find((session) => session.sessionId === future)?.unverifiedCount).toBe(0);
     expect(page.sessions.find((session) => session.sessionId === settled)?.unverifiedCount).toBe(0);
   });

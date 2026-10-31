@@ -1,6 +1,6 @@
 import { DomainError, GroupInvitation, GroupMembership, RegularGroup, type GroupStatus, type UUID } from "@/domain";
-import { GroupChangedError, type GroupQueries } from "@/use-cases/groups/manage-group";
-import type { Repository } from "@/use-cases/shared/contracts";
+import { GroupChangedError, type GroupQueries, type GroupRepository } from "@/use-cases/groups/manage-group";
+import { encodeNotificationIntent } from "@/lib/notifications/notification-presentation";
 import { createAdminClient } from "./admin";
 
 // Tables and save_regular_group come from migration 0005_regular_groups (invitations by
@@ -73,7 +73,7 @@ const INACTIVE_GROUP_ACCOUNT = "GRP02";
  * Migration 0010 also locks/checks owner and newly added member profiles in that transaction,
  * coordinating these mutations with account deletion even after request authentication.
  */
-export function supabaseGroupStore(): { groups: Repository<RegularGroup>; queries: GroupQueries } {
+export function supabaseGroupStore(afterCommit?: (recipients: readonly UUID[]) => void): { groups: GroupRepository; queries: GroupQueries } {
   const admin = createAdminClient();
   const loaded = new WeakMap<RegularGroup, LoadedGroup>();
 
@@ -94,10 +94,10 @@ export function supabaseGroupStore(): { groups: Repository<RegularGroup>; querie
     return remember(toGroup(row), row.version);
   }
 
-  const groups: Repository<RegularGroup> = {
+  const groups: GroupRepository = {
     get: (groupId) => selectOne("group_id", groupId),
 
-    async save(group) {
+    async save(group, notifications = []) {
       const previous = loaded.get(group);
       const before = previous?.members ?? new Set<UUID>();
       const now = new Set(group.memberships.map((member) => member.userId));
@@ -125,6 +125,7 @@ export function supabaseGroupStore(): { groups: Repository<RegularGroup>; querie
           invited_at: invitation.invitedAt.toISOString(),
         })),
         p_removed_invitations: uninvited,
+        p_notifications: notifications.map((intent) => encodeNotificationIntent(intent, JSON.stringify(["group", group.groupId, previous ? previous.version + 1 : 0]))),
       });
       if (error !== null) {
         if (error.code === GROUP_CHANGED) throw new GroupChangedError();
@@ -137,6 +138,9 @@ export function supabaseGroupStore(): { groups: Repository<RegularGroup>; querie
         throw error;
       }
       remember(group, version as number);
+      if (afterCommit && notifications.length > 0) {
+        try { afterCommit([...new Set(notifications.map((entry) => entry.recipientId))]); } catch { /* A hint cannot change the successful group save. */ }
+      }
     },
   };
 

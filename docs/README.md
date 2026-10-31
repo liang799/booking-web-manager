@@ -44,6 +44,10 @@ Architecture decisions are recorded in [`docs/adr`](./adr):
 - [ADR-0021: User IDs for finding players](./adr/0021-user-ids-for-finding-players.md) — a unique, changeable, Telegram-style user ID on every active account: chosen at sign-up, generated from the name for existing accounts, editable in Edit profile, freed on deletion, and found only by exact signed-in lookup.
 - [ADR-0022: Invite players to groups by user ID](./adr/0022-invite-players-to-groups-by-user-id.md) — any member invites a found player while the group's link is on; only the player accepts or declines; turning the link off or archiving ends invitations.
 
+- [ADR-0022: Booker-inclusive capacity](./adr/0022-booker-inclusive-session-capacity.md) — no minimum headcount; automatic prepaid booker place and preservation of historical accepted prices.
+
 Product decisions and remaining discussion:
 
 - [Waitlists and replacements: confirmed scope, historical options, and remaining policy questions](./discussions/waitlist-and-replacement-options.md). The waitlist and fixed either/or departure choice are confirmed; unrelated financial and rejoining proposals remain under review.
+
+- [ADR-0023: Durable notifications and browser-local read state](./adr/0023-durable-notifications-and-local-read-state.md) — atomic inbox/push persistence, 30-day retention and private Realtime invalidation after commit.

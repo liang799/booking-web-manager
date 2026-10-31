@@ -33,3 +33,12 @@ export function resolveBookingShare(totalCost: Money, slots: number, chosen?: Mo
     share.toCents() <= range.maximumCents, "INVALID_INPUT", "Price per slot must be within the suggested price range");
   return share;
 }
+
+/** Restore an accepted immutable quote without applying today's creation bounds. */
+export function restoreBookingShare(share: Money, totalSlots: number): Money {
+  DomainError.require(share instanceof Money && share.toCents() > 0,
+    "INVALID_INPUT", "An accepted booking share must be positive Money");
+  DomainError.require(BigInt(share.toCents()) * BigInt(Math.max(1, totalSlots - 1)) <= BigInt(Number.MAX_SAFE_INTEGER),
+    "INVALID_INPUT", "Total participant collection must stay within safe integer cents");
+  return share;
+}

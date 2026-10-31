@@ -27,8 +27,8 @@ async function insertSession(context: SessionTestContext, bookerId: string, inpu
 }) {
   await context.pool.query(
     `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-     total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, room_token, holding_account_id)
-     values ($1,$2,$3,$4,$5,$6,$7,1001,3,2,333,'PUBLIC',$8,$9)`,
+     total_cost_cents, total_slots, booking_share_cents, visibility, room_token, holding_account_id)
+     values ($1,$2,$3,$4,$5,$6,$7,1001,4,333,'PUBLIC',$8,$9)`,
     [input.sessionId ?? randomUUID(), bookerId, input.name, input.region ?? "West", input.sport ?? "Badminton", input.startAt,
       new Date(new Date(input.startAt).getTime() + 2 * 60 * 60 * 1000), randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID],
   );
@@ -40,11 +40,12 @@ test("direct mobile Discover entry preserves drafts and history, disables pendin
   let releaseRequest: (() => void) | undefined;
   try {
     const user = await context.identity(false);
+    const booker = await context.identity(false);
     const tag = `Court-${randomUUID().slice(0, 8)}`;
     const westVenue = `${tag} West badminton court`;
     const eastVenue = `${tag} East tennis court`;
-    await insertSession(context, user.userId, { name: westVenue, startAt: "2043-04-01T10:00:00Z" });
-    await insertSession(context, user.userId, { name: eastVenue, startAt: "2043-04-01T10:00:00Z", sport: "Tennis", region: "East" });
+    await insertSession(context, booker.userId, { name: westVenue, startAt: "2043-04-01T10:00:00Z" });
+    await insertSession(context, booker.userId, { name: eastVenue, startAt: "2043-04-01T10:00:00Z", sport: "Tennis", region: "East" });
     const origin = "/?date=2043-04-01&region=West";
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, user, origin);
@@ -144,10 +145,11 @@ test("search pagination preserves the query and return destination while sport c
   const context = sessionTestContext();
   try {
     const user = await context.identity(false);
+    const booker = await context.identity(false);
     const tag = `Search-page-${randomUUID().slice(0, 8)}`;
     const ids = Array.from({ length: 21 }, () => randomUUID()).sort();
     for (const [index, sessionId] of ids.entries()) {
-      await insertSession(context, user.userId, {
+      await insertSession(context, booker.userId, {
         name: `${tag} row ${String(index + 1).padStart(2, "0")}`,
         startAt: "2043-04-02T10:00:00Z", sessionId,
       });

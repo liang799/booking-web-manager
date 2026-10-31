@@ -20,7 +20,12 @@ test("documents exact financial DTOs and validates the request example with the 
   expect(schemas?.ParticipantRemovalPreview).toMatchObject({ required: ["sessionId", "participationId", "refundCents", "previewVersion"], properties: { refundCents: { type: "integer", minimum: 0 } } });
   expect(schemas?.ParticipantRemovalRequest).toMatchObject({ required: ["idempotencyKey", "previewVersion"] });
   expect(schemas?.ParticipantRemovalResult).toMatchObject({ required: ["sessionId", "participationId", "status", "refundCents"], properties: { status: { enum: ["REMOVED"] } } });
-  expect(schemas?.SessionParticipants).toMatchObject({ properties: { startAt: { type: "string", format: "date-time" }, endAt: { type: "string", format: "date-time" } } });
+  expect(schemas?.SessionParticipants).toMatchObject({ properties: {
+    startAt: { type: "string", format: "date-time" }, endAt: { type: "string", format: "date-time" },
+    booker: { type: "object", required: ["displayName"], properties: { displayName: { type: "string" } } },
+    canVerifyAttendance: { type: "boolean" },
+    participants: { items: { properties: { attendance: { enum: ["UNVERIFIED", "ATTENDED", "ABSENT"] } } } },
+  } });
   const body = openApiDocument.paths["/api/sessions/{sessionId}/participants/{participationId}/remove"]?.post?.requestBody;
   if (!body || !("content" in body)) throw new Error("Missing removal request body");
   const sessionId = "10000000-0000-4000-8000-000000000001";

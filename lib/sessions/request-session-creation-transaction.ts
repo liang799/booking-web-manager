@@ -50,7 +50,7 @@ export class RequestSessionCreationTransaction
     const key = JSON.stringify(["UC2-02", bookerId, this.idempotencyKey]);
 
     return this.unitOfWork.execute(key, (transaction) =>
-      work({ users: transaction.users, sessions: transaction.sessions }),
+      work({ users: transaction.users, sessions: transaction.sessions, notifications: transaction.notifications }),
     );
   }
 }

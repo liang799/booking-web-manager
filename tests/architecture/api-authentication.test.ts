@@ -96,7 +96,7 @@ describe("API authentication boundary", () => {
   });
 
   test.each([
-    ["GET", "sessions"], ["GET", "openapi"], ["POST", "webhooks/stripe"], ["GET", "cron/commitments"],
+    ["GET", "sessions"], ["GET", "openapi"], ["POST", "webhooks/stripe"], ["GET", "cron/commitments"], ["GET", "cron/notifications"],
   ])("exempts only %s /api/%s", async (method, route) => {
     expect(await authenticationMessages(`export const ${method} = () => new Response();`, `app/api/${route}/route.ts`)).toHaveLength(0);
     const otherMethod = method === "GET" ? "POST" : "GET";

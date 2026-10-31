@@ -26,7 +26,7 @@ const participant: SqlRow = {
 function scenario(overrides: SqlRow = {}, participants = [participant], requestKey = "new-key") {
   const row: SqlRow = {
     session_id: "session", booker_id: "booker", venue_name: "Court", region: "West", sport: "Tennis",
-    start_at: startAt, end_at: now, total_cost_cents: "200", total_slots: 2, minimum_headcount: 2,
+    start_at: startAt, end_at: now, total_cost_cents: "200", total_slots: 2,
     booking_share_cents: "100", visibility: "PUBLIC", status: "PAYOUT_PENDING", minimum_reliability: null,
     room_token: "room", holding_account_id: "platform", invited_group_id: null, next_queue_sequence: 1,
     payout_attempt_ids: ["payout"], payout_idempotency_keys: ["original-key"], pending_settlement: storedBatch,

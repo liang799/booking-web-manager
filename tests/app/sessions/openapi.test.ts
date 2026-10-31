@@ -47,15 +47,16 @@ describe("session creation OpenAPI contract", () => {
           },
         },
         config: {
-          required: ["totalSlots", "minimumHeadcount"],
+          required: ["totalSlots"],
           properties: {
             pricePerSlotCents: { type: "integer", minimum: 0, exclusiveMinimum: true, maximum: Number.MAX_SAFE_INTEGER },
             totalSlots: { type: "number" },
-            minimumHeadcount: { type: "number" },
           },
         },
       },
     });
+    expect(schema).not.toHaveProperty("properties.config.properties.minimumHeadcount");
+    expect(sessionOpenApiDocument.paths["/api/sessions"]?.post?.description).toContain("total participant capacity, including the booker");
   });
 
   test("accepts the documented example through the same transport schema and converts it for the use case", () => {
@@ -70,7 +71,7 @@ describe("session creation OpenAPI contract", () => {
     expect(input.booking.startAt).toBeInstanceOf(Date);
     expect(input.booking.totalCostCents).toBe(1001);
     expect(input.config.totalSlots).toBe(3);
-    expect(input.config.minimumHeadcount).toBe(2);
+    expect(input.config).not.toHaveProperty("minimumHeadcount");
   });
 
 });

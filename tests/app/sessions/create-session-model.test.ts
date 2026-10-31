@@ -4,6 +4,10 @@ import { bookingDates, decimalCents, draftFromSubmission, durationMinutes, empty
 const complete = { ...emptySessionDraft, venueName: "Booked court", region: "West", cost: "60.00", price: "7.50",
   startDate: "2045-06-17", startTime: "23:00", endDate: "2045-06-18", endTime: "01:00" };
 describe("Create-session drafts", () => {
+  test("configures total participants without a minimum headcount", () => {
+    expect(emptySessionDraft).not.toHaveProperty("minimumHeadcount");
+    expect(submissionPayload(complete, "capacity-only").config).not.toHaveProperty("minimumHeadcount");
+  });
   test.each([["0.01", 1], ["60", 6000], ["60.1", 6010], [" 60.01 ", 6001], ["90071992547409.91", Number.MAX_SAFE_INTEGER]])("parses %s directly into %s cents", (value, cents) => {
     expect(parseSgdCents(value)).toBe(cents);
     expect(decimalCents(cents)).toBe(value.trim().includes(".") ? value.trim().padEnd(value.trim().indexOf(".") + 3, "0") : `${value}.00`);
@@ -53,7 +57,7 @@ describe("Create-session drafts", () => {
         sport: "Tennis", venueName: "Booked court", region: "West",
         startAt: "2045-12-31T15:30:00.000Z", endAt: "2045-12-31T17:00:00.000Z", totalCostCents: 6000,
       },
-      config: { totalSlots: 8, minimumHeadcount: 4, visibility: "PRIVATE", minimumReliability: 90, pricePerSlotCents: 750 },
+      config: { totalSlots: 8, visibility: "PRIVATE", minimumReliability: 90, pricePerSlotCents: 750 },
     });
     const pending = pendingSubmissionSchema.parse(JSON.parse(JSON.stringify({ version: 1, payload })));
     const restored = draftFromSubmission(pending.payload);
@@ -69,23 +73,18 @@ describe("Create-session drafts", () => {
   test("validates details, settings and cent-adjusted pricing", () => {
     expect(validateStep(emptySessionDraft, 1)).toHaveProperty("venueName");
     expect(validateStep({ ...complete, cost: "0.01" }, 1)).toHaveProperty("cost");
-    expect(validateStep({ ...complete, totalSlots: 1 }, 2)).toHaveProperty("totalSlots");
+    expect(validateStep({ ...complete, totalSlots: 0 }, 2)).toHaveProperty("totalSlots");
     expect(validateStep({ ...complete, price: "15.01" }, 3)).toHaveProperty("price");
     expect(validateStep({ ...complete, price: "14.99" }, 3)).toEqual({});
   });
-  test("keeps the minimum headcount within capacity without changing a chosen price", () => {
-    expect(updateDraft(complete, { totalSlots: 2 })).toMatchObject({ minimumHeadcount: 2 });
-    expect(updateDraft({ ...complete, totalSlots: 4, minimumHeadcount: 3 }, { totalSlots: 8 }).minimumHeadcount).toBe(3);
-    expect(updateDraft({ ...complete, price: "12.01" }, { minimumHeadcount: 5 })).toMatchObject({ minimumHeadcount: 5, price: "12.01" });
-    for (const minimumHeadcount of [1, 9, 2.5]) {
-      expect(validateStep({ ...complete, minimumHeadcount }, 2)).toHaveProperty("minimumHeadcount");
-    }
-    expect(validateStep({ ...complete, minimumHeadcount: 8 }, 2)).toEqual({});
+  test("validates capacity without requiring a minimum participant count", () => {
+    expect(validateStep({ ...complete, totalSlots: 1 }, 2)).toEqual({});
+    expect(validateStep({ ...complete, totalSlots: 8 }, 2)).toEqual({});
   });
   test("retains chosen price and reliability scale when restoring a user-scoped pending payload", () => {
-    const payload = submissionPayload({ ...complete, price: "12.01", minimumHeadcount: 5 }, "key");
-    expect(payload.config).toMatchObject({ minimumReliability: 90, pricePerSlotCents: 1201, minimumHeadcount: 5 });
-    expect(draftFromSubmission(payload)).toEqual({ ...complete, price: "12.01", minimumHeadcount: 5 });
+    const payload = submissionPayload({ ...complete, price: "12.01" }, "key");
+    expect(payload.config).toMatchObject({ minimumReliability: 90, pricePerSlotCents: 1201 });
+    expect(draftFromSubmission(payload)).toEqual({ ...complete, price: "12.01" });
     expect(pendingStorageKey("alice")).not.toBe(pendingStorageKey("bob"));
     expect(submissionPayload({ ...complete, reliability: "none" }, "key").config.minimumReliability).toBeUndefined();
   });

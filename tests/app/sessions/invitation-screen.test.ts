@@ -67,3 +67,15 @@ test("database failure renders an opaque retry state", async () => {
   findByToken.mockRejectedValue(new Error("database credentials and private token"));
   expect(await loadInvitationScreen(sessionId, "token")).toEqual({ status: "error" });
 });
+
+test("tokenless group preview requires an active identity and exposes no room token", async () => {
+ const userId = "10000000-0000-4000-8000-000000000001";
+ vi.mocked(getCurrentUser).mockResolvedValue({id:userId,email:null,emailVerified:false,pendingEmail:null,accountStatus:"ACTIVE",displayName:"Player",profileName:"Player",preferredSports:[],preferredRegions:[],reliabilityScore:100});
+ const findForGroupMember=vi.fn().mockResolvedValue(session);
+ vi.mocked(getSessionInvitationPreviewDependencies).mockResolvedValue({preview:new GetInvitedSession({reader:{findByToken,findForGroupMember},clock:{now:()=>now}})});
+ const result=await loadInvitationScreen(sessionId,undefined);
+ expect(findForGroupMember).toHaveBeenCalledExactlyOnceWith(sessionId,userId,now);
+ expect(findByToken).not.toHaveBeenCalled();
+ expect(result).toMatchObject({status:"ready",viewerId:userId,invitationPath:`/sessions/${sessionId}/join`});
+ expect(result).not.toHaveProperty("roomToken");
+});

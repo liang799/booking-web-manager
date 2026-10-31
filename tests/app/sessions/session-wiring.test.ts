@@ -21,7 +21,7 @@ test("configured assembly creates separate real use cases for each submission", 
         venueName: "Jurong East Sports Hall", region: "West", sport: "Badminton",
         startAt: "2030-01-01T10:00:00Z", endAt: "2030-01-01T12:00:00Z", totalCostCents: 1001,
       },
-      config: { totalSlots: 3, minimumHeadcount: 2 },
+      config: { totalSlots: 3, },
     },
   );
   const first = dependencies.createForSubmission(submission);

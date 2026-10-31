@@ -293,7 +293,6 @@ describe("UC2-02 Create Session input", () => {
       idempotencyKey: request.idempotencyKey,
       booking: request.booking,
       totalSlots: 3,
-      minimumHeadcount: 2,
     };
 
     // Act & Assert
@@ -343,21 +342,21 @@ describe("UC2-02 Create Session input", () => {
     expect(() => parseCreateSessionInput(actorUserId, request)).toThrow(ZodError);
   });
 
-  test("rejects non-finite minimum headcount", () => {
+  test("ignores the retired minimum headcount field", () => {
     // Arrange
-    const request = creationRequest();
-    request.config.minimumHeadcount = NaN;
+    const baseRequest = creationRequest();
+    const request = { ...baseRequest, config: { ...baseRequest.config, minimumHeadcount: NaN } };
 
     // Act & Assert
-    expect(() => parseCreateSessionInput(actorUserId, request)).toThrow(ZodError);
+    expect(parseCreateSessionInput(actorUserId, request).input.config).toEqual(baseRequest.config);
   });
 
-  test("requires minimum headcount even when capacity is supplied", () => {
+  test("accepts session capacity without a minimum headcount", () => {
     // Arrange
     const request = { ...creationRequest(), config: { totalSlots: 3 } };
 
     // Act & Assert
-    expect(() => parseCreateSessionInput(actorUserId, request)).toThrow(ZodError);
+    expect(parseCreateSessionInput(actorUserId, request).input.config).toEqual({ totalSlots: 3 });
   });
 
   test("rejects non-finite minimum reliability", () => {
@@ -388,7 +387,6 @@ describe("UC2-02 Create Session input", () => {
     request.booking.totalCostCents = 0;
     request.booking.endAt = request.booking.startAt;
     request.config.totalSlots = 9.5;
-    request.config.minimumHeadcount = -1;
     request.config.minimumReliability = 101;
 
     // Act
@@ -405,7 +403,7 @@ describe("UC2-02 Create Session input", () => {
 });
 
 function creationRequest() {
-  const config: SessionConfig = { totalSlots: 3, minimumHeadcount: 2 };
+  const config: SessionConfig = { totalSlots: 3 };
   return {
     idempotencyKey: "create-session",
     booking: {

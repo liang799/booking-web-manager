@@ -136,8 +136,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
           </Select><p className="text-xs text-muted-foreground">{draft.visibility === "PRIVATE" ? "Only people with your room link can join." : "People can find this session in Discover."}</p>
         </div>
         <Stepper id="totalSlots" label="No. of Slots" value={draft.totalSlots} min={MIN_SESSION_SLOTS} max={MAX_SESSION_SLOTS} disabled={locked} onChange={(totalSlots) => change({ totalSlots })} />
-        <Stepper id="minimumHeadcount" label="Minimum viable headcount" value={draft.minimumHeadcount} min={2} max={draft.totalSlots} disabled={locked} onChange={(minimumHeadcount) => change({ minimumHeadcount })} />
-        {errors.minimumHeadcount && <p role="alert" className="text-xs text-destructive">{errors.minimumHeadcount}</p>}
+        <p className="text-xs text-muted-foreground">Includes you as the booker.</p>
         <div className="space-y-2"><label htmlFor="reliability" className="text-xs font-semibold">Minimum Reliability Score</label>
           <Select value={draft.reliability} disabled={locked} onValueChange={(reliability) => change({ reliability })}>
             <SelectTrigger id="reliability" className="min-h-11"><SelectValue /></SelectTrigger><SelectContent>
@@ -150,7 +149,7 @@ function SessionWizard(props: CreateSessionWizardProps) {
         <div><p className="text-xs font-semibold">Price per slot</p><p className="mt-2 text-5xl font-semibold tracking-tight"><Money cents={price ?? 0} /></p>
           {range && <p className="mt-2 text-xs text-muted-foreground">Suggested <Money cents={range.suggestedCents} /> · based on booking cost and {draft.totalSlots} slots</p>}
         </div>
-        <div><p className="text-xs">Estimated revenue at full capacity ({draft.totalSlots} slots)</p><p role="status" className="mt-2 text-2xl font-semibold text-success"><Money cents={range && price !== undefined && price <= range.maximumCents ? price * draft.totalSlots : 0} /></p></div>
+        <div><p className="text-xs">Estimated collected revenue at full capacity ({draft.totalSlots} slots)</p><p role="status" className="mt-2 text-2xl font-semibold text-success"><Money cents={range && price !== undefined && price <= range.maximumCents ? price * (draft.totalSlots - 1) : 0} /></p><p className="mt-2 text-xs text-muted-foreground">Excludes your place, which is covered by your venue payment.</p></div>
         {range && <div className="space-y-3">
           <label htmlFor="price" className="block text-xs font-semibold">Adjust price per slot (SGD)</label>
           <Input id="price" inputMode="decimal" value={draft.price} disabled={locked} aria-invalid={!!errors.price} aria-describedby="price-error price-range" className="min-h-11" onChange={(event) => change({ price: event.target.value })} />

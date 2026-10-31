@@ -10,7 +10,7 @@ import { GroupsView } from "./_components/groups-view";
 
 interface GroupsPageProps {
   /** e.g. /groups?left=1 after leaving a group. */
-  readonly searchParams: Promise<{ left?: string | string[] }>;
+  readonly searchParams: Promise<{ left?: string | string[]; invitation?: string | string[] }>;
 }
 
 /**
@@ -20,7 +20,8 @@ interface GroupsPageProps {
 export default async function GroupsPage({ searchParams }: GroupsPageProps) {
   const user = await getCurrentUser();
   if (user === null) redirect("/login");
-  const { left } = await searchParams;
+  const { left, invitation } = await searchParams;
+  const focusedGroupId = typeof invitation === "string" ? invitation : undefined;
 
   const manageGroup = createManageGroup();
   const [groups, invitations] = await Promise.all([
@@ -53,8 +54,9 @@ export default async function GroupsPage({ searchParams }: GroupsPageProps) {
       }))}
       leftGroup={left === "1"}
       findPlayer={<GroupFindPlayer findAction={findPlayer} inviteAction={invitePlayer} inviteGroups={inviteGroups} />}
-      invitations={invitations.length === 0 ? undefined : (
+      invitations={invitations.length === 0 && !focusedGroupId ? undefined : (
         <GroupInvitations
+          focusedGroupId={focusedGroupId}
           invitations={invitations.map((invitation) => ({
             groupId: invitation.groupId,
             groupName: invitation.groupName,

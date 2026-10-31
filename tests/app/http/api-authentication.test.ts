@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   protectedDependencies: vi.fn(),
   discoveryDependencies: vi.fn(),
   cronDependencies: vi.fn(),
+  notificationDispatchDependencies: vi.fn(),
   webhookDependencies: vi.fn(),
   businessAccess: vi.fn(),
 }));
@@ -32,6 +33,7 @@ vi.mock("@/app/users/user-handle-server-dependencies", () => ({ getUserHandleDep
 vi.mock("@/app/venues/server-dependencies", () => ({ getVenueDependencies: mocks.protectedDependencies }));
 vi.mock("@/app/notifications/server-dependencies", () => ({ getNotificationDependencies: mocks.protectedDependencies }));
 vi.mock("@/app/discover/server-dependencies", () => ({ getDiscoveryDependencies: mocks.discoveryDependencies }));
+vi.mock("@/use-case-config/notification-dispatch", () => ({ createNotificationDispatchDependencies: mocks.notificationDispatchDependencies }));
 vi.mock("@/app/commit/scheduled-jobs-server-dependencies", () => ({ getScheduledJobsDependencies: mocks.cronDependencies }));
 vi.mock("@/app/api/webhooks/stripe-webhook-server-dependencies", () => ({ getStripeWebhookDependencies: mocks.webhookDependencies }));
 
@@ -63,6 +65,7 @@ import * as userByHandle from "@/app/api/users/[handle]/route";
 import * as venues from "@/app/api/venues/route";
 import * as notifications from "@/app/api/notifications/route";
 import * as pushSubscriptions from "@/app/api/push/subscriptions/route";
+import * as notificationCron from "@/app/api/cron/notifications/route";
 import * as cron from "@/app/api/cron/commitments/route";
 import * as webhook from "@/app/api/webhooks/stripe/route";
 import * as openapi from "@/app/api/openapi/route";
@@ -103,13 +106,14 @@ const routes: Route[] = [
   { path: "/api/notifications", handlers: notifications },
   { path: "/api/push/subscriptions", handlers: pushSubscriptions },
   { path: "/api/cron/commitments", handlers: cron },
+  { path: "/api/cron/notifications", handlers: notificationCron },
   { path: "/api/webhooks/stripe", handlers: webhook },
   { path: "/api/openapi", handlers: openapi },
   { path: "/api/health", handlers: health },
 ];
 const nonUserRoutes = new Set([
   "GET /api/openapi", "GET /api/health",
-  "GET /api/cron/commitments", "POST /api/webhooks/stripe",
+  "GET /api/cron/commitments", "GET /api/cron/notifications", "POST /api/webhooks/stripe",
 ]);
 const exportedMethods = routes.flatMap(({ path, handlers }) => methods.flatMap((method) => {
   const handler = handlers[method];
@@ -255,4 +259,12 @@ describe("explicit exceptions to user authentication", () => {
     expect(creditWallet).not.toHaveBeenCalled();
     expect(updatePayoutAccount).not.toHaveBeenCalled();
   });
+});
+
+test.each([undefined, "Bearer user-jwt", "Bearer wrong"])("notification cron rejects %s before database assembly", async authorization => {
+ vi.stubEnv("CRON_SECRET","notification-secret");
+ try {
+  const response=await notificationCron.GET(new Request("https://app.test/api/cron/notifications",{headers:authorization?{authorization}:{}}));
+  expect(response.status).toBe(401);expect(mocks.notificationDispatchDependencies).not.toHaveBeenCalled();
+ } finally {vi.unstubAllEnvs();}
 });

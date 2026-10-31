@@ -246,9 +246,9 @@ describe.skipIf(!DATABASE_URL)("player session lists (database)", () => {
     const start = new Date(startsAt.getTime() + delayHours * HOUR);
     await pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport,
-         start_at, end_at, total_cost_cents, total_slots, minimum_headcount,
+         start_at, end_at, total_cost_cents, total_slots,
          booking_share_cents, visibility, room_token, holding_account_id)
-       values ($1, $2, 'Court', 'North', 'Badminton', $3, $4, $5, 2, 2, $6,
+       values ($1, $2, 'Court', 'North', 'Badminton', $3, $4, $5, 3, $6,
          'PUBLIC', $7, $8)`,
       [
         sessionId,

@@ -7,6 +7,7 @@ import {
   type UUID,
   Wallet,
 } from "@/domain";
+import type { NotificationIntent } from "@/use-cases/notifications/notification-intents";
 import type {
   DomainTransaction,
   Repository,
@@ -30,6 +31,8 @@ import type {
 export class InMemoryUnitOfWork implements UnitOfWork {
   readonly ledgerInstructions: FinancialInstruction[] = [];
   failNextLedgerAppend = false;
+  failNextNotificationAppend = false;
+  readonly notifications: NotificationIntent[] = [];
   readonly #users = new Map<UUID, UserDetails>();
   readonly #sessions = new Map<UUID, Session>();
   readonly #replayResults = new Map<string, unknown>();
@@ -78,6 +81,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
 
     const stagedSessions = new Map<UUID, Session>();
     const stagedInstructions: FinancialInstruction[] = [];
+    const stagedNotifications: NotificationIntent[] = [];
     const result = await work({
       users: {
         get: async (id) => this.#loadUser(id, stagedInstructions),
@@ -105,11 +109,22 @@ export class InMemoryUnitOfWork implements UnitOfWork {
         },
       },
       payoutIntents: { append: unsupported },
+      notifications: {
+        append: async (intents) => {
+          if (this.failNextNotificationAppend) {
+            this.failNextNotificationAppend = false;
+            throw new Error("Notification append failed");
+          }
+          stagedNotifications.push(...intents);
+        },
+        groupMembers: async () => [],
+      },
     });
 
     const replayResult = structuredClone(result);
     for (const [id, session] of stagedSessions) this.#sessions.set(id, session);
     this.ledgerInstructions.push(...stagedInstructions);
+    this.notifications.push(...stagedNotifications);
     this.#replayResults.set(key, replayResult);
     return result;
   }
@@ -153,8 +168,8 @@ function cloneSession(session: Session): Session {
     bookerId: session.bookerId,
     invitedGroupId: session.invitedGroupId,
     booking: session.booking,
+    bookingShare: session.bookingShare,
     totalSlots: session.totalSlots,
-    minimumHeadcount: session.minimumHeadcount,
     visibility: session.visibility,
     status: session.status,
     minimumReliability: session.minimumReliability,

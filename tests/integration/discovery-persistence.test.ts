@@ -35,9 +35,9 @@ describe("UC2-01 PostgreSQL discovery", () => {
     const endAt = new Date(new Date(input.startAt).getTime() + 2 * 60 * 60 * 1000);
     await context.pool.query(
       `insert into sessions (session_id, booker_id, venue_name, region, sport, start_at, end_at,
-        total_cost_cents, total_slots, minimum_headcount, booking_share_cents, visibility, status,
+        total_cost_cents, total_slots, booking_share_cents, visibility, status,
         room_token, holding_account_id, minimum_reliability)
-       values ($1,$2,$11,$3,$4,$5,$6,1001,2,2,500,$7,$8,$9,$10,100)`,
+       values ($1,$2,$11,$3,$4,$5,$6,1001,3,500,$7,$8,$9,$10,100)`,
       [sessionId, bookerId, input.region ?? "West", input.sport ?? "Badminton", input.startAt, endAt,
         input.visibility ?? "PUBLIC", input.status ?? "OPEN", randomUUID(), PLATFORM_HOLDING_ACCOUNT_ID,
         input.venueName ?? "Discovery fixture venue"],
@@ -56,6 +56,14 @@ describe("UC2-01 PostgreSQL discovery", () => {
   function discover(criteria: SessionDiscoveryCriteria = {}, at = now) {
     return discovery(at).searchPublic(criteria);
   }
+
+  test("a booker cannot discover their own public room as an available session to join", async () => {
+    const venueName = `Own room ${randomUUID()}`;
+    const sessionId = await insertSession({ startAt: "2040-06-08T08:00:00Z", venueName });
+
+    expect(await discovery().searchPublic({ text: venueName }, bookerId)).toEqual([]);
+    expect((await discover({ text: venueName })).map((room) => room.sessionId)).toEqual([sessionId]);
+  });
 
   test("anonymous discovery continues to list public sessions after the booker is inactive", async () => {
     const venueName = `Inactive booker public session ${randomUUID()}`;
@@ -243,7 +251,7 @@ describe("UC2-01 PostgreSQL discovery", () => {
       startsWithin: { from: new Date("2040-06-04T00:00:00Z"), before: new Date("2040-06-05T00:00:00Z") },
     });
     expect(result.map((session) => session.sessionId)).toEqual([sessionId]);
-    expect(result[0]?.totalSlots).toBe(2);
+    expect(result[0]?.totalSlots).toBe(3);
     expect(Object.keys(result[0] ?? {}).sort()).toEqual(publicKeys);
   });
 });

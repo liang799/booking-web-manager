@@ -197,11 +197,11 @@ describe("UC2-04 Commit to Session", () => {
   });
 
   // The priority test — see CLAUDE.md "Testing". Filtered by `npm run test:concurrency`.
-  test("concurrency: 20 concurrent commits on an 8-slot session — exactly 8 succeed, 12 waitlist, total locked = 8 × share", async () => {
+  test("concurrency: 20 concurrent commits on a 9-place session including the booker — exactly 8 guests succeed, 12 waitlist, total locked = 8 × share", async () => {
     // Arrange
     const userIds = Array.from({ length: 20 }, (_, index) => `user-${index}`);
     const { commitToSession, unitOfWork } = commitmentScenario({
-      session: new Session(sessionDetails({ totalSlots: 8 })),
+      session: new Session(sessionDetails({ totalSlots: 9 })),
       users: userIds.map((userId) => createTestUserDetails({ userId })),
     });
     const share = 125;
@@ -241,7 +241,7 @@ describe("UC2-04 Commit to Session", () => {
     test("promotes the FIFO queue head into a free place and locks their share", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol", "dave"],
       });
@@ -276,7 +276,7 @@ describe("UC2-04 Commit to Session", () => {
     test("fills every free place in one transaction, in FIFO order", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 3,
+        totalSlots: 4,
         committed: ["alice"],
         waitlisted: ["carol", "dave", "erin"],
       });
@@ -297,7 +297,7 @@ describe("UC2-04 Commit to Session", () => {
     test("skips a queue head who cannot fund their share and promotes the next person", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol", "dave"],
         fundsCents: { carol: 499 },
@@ -326,7 +326,7 @@ describe("UC2-04 Commit to Session", () => {
       // Arrange
       const lateWithdrawal = hoursBeforeSessionStart(10);
       const session = promotionSession({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice", "bob"],
         waitlisted: ["carol"],
       });
@@ -373,7 +373,7 @@ describe("UC2-04 Commit to Session", () => {
       // Arrange
       const lateWithdrawal = hoursBeforeSessionStart(10);
       const session = promotionSession({
-        totalSlots: 3,
+        totalSlots: 4,
         committed: ["alice", "bob"],
         waitlisted: ["carol", "dave"],
       });
@@ -408,7 +408,7 @@ describe("UC2-04 Commit to Session", () => {
     test("does nothing when no place is free", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice", "bob"],
         waitlisted: ["carol"],
       });
@@ -424,7 +424,7 @@ describe("UC2-04 Commit to Session", () => {
     test("does nothing once the session has started", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol"],
         now: sessionStartsAt,
@@ -446,7 +446,7 @@ describe("UC2-04 Commit to Session", () => {
     test("promotes nobody when the ledger write fails", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 3,
+        totalSlots: 4,
         committed: ["alice"],
         waitlisted: ["carol", "dave"],
       });
@@ -464,8 +464,8 @@ describe("UC2-04 Commit to Session", () => {
 
     test("notifies each promoted participant and tells a skipped one why they left the waitlist", async () => {
       // Arrange
-      const { promote, notifier } = promotionScenario({
-        totalSlots: 2,
+      const { promote, unitOfWork } = promotionScenario({
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol", "dave"],
         fundsCents: { carol: 499 },
@@ -475,11 +475,11 @@ describe("UC2-04 Commit to Session", () => {
       await promote.forSession(promotionRequest());
 
       // Assert
-      expect(notifier.deliveries()).toEqual([
+      expect(unitOfWork.notifications.map((entry) => [entry.kind, entry.recipientId])).toEqual([
         ["PROMOTED", "dave"],
         ["REMOVED_FROM_WAITLIST", "carol"],
       ]);
-      expect(notifier.sent).toContainEqual(
+      expect(unitOfWork.notifications).toContainEqual(
         expect.objectContaining({
           kind: "REMOVED_FROM_WAITLIST",
           recipientId: "carol",
@@ -488,10 +488,10 @@ describe("UC2-04 Commit to Session", () => {
       );
     });
 
-    test("keeps a promotion when its notification cannot be delivered", async () => {
+    test("persists promotion independently of the legacy external notifier", async () => {
       // Arrange
       const { promote, unitOfWork, notifier } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol"],
       });
@@ -512,7 +512,7 @@ describe("UC2-04 Commit to Session", () => {
     test("stops when promotion leaves the queue head unchanged", async () => {
       // Arrange
       const { promote, unitOfWork } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol"],
       });
@@ -536,7 +536,7 @@ describe("UC2-04 Commit to Session", () => {
     test("a repeated trigger key replays its result without locking again", async () => {
       // Arrange
       const { promote, unitOfWork, notifier } = promotionScenario({
-        totalSlots: 2,
+        totalSlots: 3,
         committed: ["alice"],
         waitlisted: ["carol"],
       });
@@ -549,9 +549,9 @@ describe("UC2-04 Commit to Session", () => {
       expect(retry).toEqual(first);
       expect(unitOfWork.ledgerInstructions).toHaveLength(1);
       expect(unitOfWork.availableCents("carol")).toBe(9_500);
-      expect(notifier.sent).toHaveLength(2);
-      expect(notifier.sent[0]?.occurrenceKey).toBe(JSON.stringify(["promote-from-waitlist", sessionId, "withdrawal-1"]));
-      expect(notifier.sent[1]?.occurrenceKey).toBe(notifier.sent[0]?.occurrenceKey);
+      expect(unitOfWork.notifications).toHaveLength(1);
+      expect(unitOfWork.notifications[0]?.occurrenceKey).toBe(JSON.stringify(["promote-from-waitlist", sessionId, "withdrawal-1"]));
+      expect(notifier.sent).toHaveLength(0);
     });
   });
 });
@@ -577,12 +577,12 @@ function commitRequest(userId: string, idempotencyKey = `commit-${userId}`) {
   return { userId, sessionId, idempotencyKey };
 }
 
-/** A two-slot session whose slots alice and bob already hold. */
+/** A three-place session containing its booker, Alice and Bob. */
 function fullSession(): Session {
   const details = sessionDetails();
   const terms = {
     holdingAccountId: details.holdingAccountId,
-    bookingShare: details.booking.totalCost.divideFloor(details.totalSlots),
+    bookingShare: details.bookingShare!,
   };
   return new Session({
     ...details,
@@ -607,7 +607,7 @@ function promotionSession({
   const details = sessionDetails({ totalSlots });
   const terms = {
     holdingAccountId: details.holdingAccountId,
-    bookingShare: details.booking.totalCost.divideFloor(totalSlots),
+    bookingShare: details.bookingShare!,
   };
   return new Session({
     ...details,
