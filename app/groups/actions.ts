@@ -114,6 +114,13 @@ export async function revokeInvitation(groupId: string): Promise<GroupActionResu
   return ownerAction(groupId, (userId) => createManageGroup().revokeInvitation({ actorId: userId, groupId }));
 }
 
+/** Owner: withdraw a pending invitation for one player, without disabling the group link. */
+export async function cancelPendingInvitation(groupId: string, inviteeId: string): Promise<GroupActionResult> {
+  const id = groupIdSchema.safeParse(groupId);
+  if (!id.success || !inviteeId.trim()) return { error: "That invitation wasn't found." };
+  return ownerAction(id.data, (userId) => createManageGroup().cancelPendingInvitation({ actorId: userId, groupId: id.data, inviteeId }));
+}
+
 /** UC1-06: owner archives the group (read-only afterwards). */
 export async function archiveGroup(groupId: string): Promise<GroupActionResult> {
   return ownerAction(groupId, (userId) => createManageGroup().archive({ actorId: userId, groupId }));
@@ -164,6 +171,7 @@ export async function invitePlayer(_previous: InvitePlayerState, formData: FormD
 
   try {
     const { invitee, result } = await createManageGroup().inviteByHandle({ actorId: userId, ...parsed.data });
+    refresh(parsed.data.groupId);
     return {
       status: "sent",
       message: result === "INVITED"

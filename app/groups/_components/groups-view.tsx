@@ -141,7 +141,7 @@ function GroupRow({ group, coverIndex }: { readonly group: GroupOverview; readon
 }
 
 /** Native disclosure links retain normal Tab navigation, outside dismissal and Escape focus. */
-export function GroupOptions({ group, onNavigate }: { readonly group: Pick<GroupOverview, "groupId" | "name" | "isOwner" | "archived">; readonly onNavigate?: () => void }) {
+export function GroupOptions({ group, onNavigate }: { readonly group: Pick<GroupOverview, "groupId" | "name" | "isOwner" | "archived">; readonly onNavigate?: (href: string) => void }) {
   const ref = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export function GroupOptions({ group, onNavigate }: { readonly group: Pick<Group
       }
     }}>
       <summary aria-label={`Options for ${group.name}`}><MoreHorizontal size={22} strokeWidth={1.8} aria-hidden="true" /></summary>
-      <div className={styles.optionsPanel} onClick={() => { if (ref.current) ref.current.open = false; onNavigate?.(); }}>
+      <div className={styles.optionsPanel} onClick={(event) => { if (ref.current) ref.current.open = false; const href = (event.target as Element).closest("a")?.getAttribute("href"); if (href) onNavigate?.(href); }}>
         <Link href={`/groups/${group.groupId}#members`}><UsersRound aria-hidden="true" />View members</Link>
         {!group.archived && <Link href={`/groups/${group.groupId}#invite`}><Link2 aria-hidden="true" />Invitation link</Link>}
         {!group.archived && group.isOwner && <Link href={`/groups/${group.groupId}#settings`}><Settings2 aria-hidden="true" />Group settings</Link>}
