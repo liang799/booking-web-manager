@@ -3,7 +3,7 @@
 import { useId, useRef, type KeyboardEvent } from "react";
 import Image from "next/image";
 import { ExternalLink, UsersRound } from "lucide-react";
-import { DialogTitle } from "@/components/ui/dialog";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Money } from "@/components/ui/money";
 import type { SessionFeedItem } from "../session-feed-contract";
 import { sessionArtwork, sessionCalendarHref, sessionDate, sessionStatus, sessionTime, sessionTitle, sessionVenueLabel } from "./session-display";
@@ -52,6 +52,7 @@ export function JoinedSessionDetails({ session, userId, canLeave, onRefresh }: J
         <header className={styles.header}>
           <p className={styles.eyebrow}>Session details</p>
           <DialogTitle className={styles.title}>{sessionTitle(session)}</DialogTitle>
+          <DialogDescription className="sr-only">Booking at {session.venueName}. {status}.</DialogDescription>
           <span className={styles.status} data-positive={status === "Joined" || status === "Hosting" || undefined}>
             <span aria-hidden="true" className={styles.statusDot} />{status}
           </span>
