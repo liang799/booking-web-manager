@@ -447,7 +447,7 @@ test("older-history pagination preserves the active artwork and viewport anchor 
   await expect(timeline(page)).toHaveAttribute("data-timeline-entrance", "complete");
 });
 
-test("URL-restored session details keep native dialog scrolling and restore focus", async ({ page }) => {
+test("URL-restored session details keep native pane scrolling and restore focus", async ({ page }) => {
   const story = "sessions-overview-loading--url-restores-session-and-panel-across-pages";
   await page.goto(`/storybook/iframe.html?id=${story}&viewMode=story`);
   // Wait for the user-visible loaded feed, not a private Storybook phase.
