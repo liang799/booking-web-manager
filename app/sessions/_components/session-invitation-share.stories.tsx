@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, userEvent } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import type { LoadSessionInvitation } from "../invitation-transport";
 import { SessionInvitationShare } from "./session-invitation-share";
 
@@ -18,7 +18,8 @@ export const Copied: Story = {
     await expect(args.loadInvitation).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole("button", { name: "Copy invitation link" }));
     await expect(canvas.getByRole("status")).toHaveTextContent("Invitation link copied.");
-    await expect(canvas.getByLabelText("Invitation link")).toHaveValue(`${window.location.origin}${invitationPath}`);
+    await expect(canvas.getByRole("button", { name: "Link copied" })).toBeEnabled();
+    await expect(canvas.queryByLabelText("Invitation link")).not.toBeInTheDocument();
     await expect(args.loadInvitation).toHaveBeenCalledTimes(1);
     await expect(args.loadInvitation).toHaveBeenCalledWith(sessionId);
     await expect(args.copyText).toHaveBeenCalledTimes(1);
@@ -30,7 +31,7 @@ export const ClipboardUnavailable: Story = {
   args: { copyText: fn<(value: string) => Promise<void>>(async () => { throw new Error("Clipboard denied"); }) },
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Copy invitation link" }));
-    await expect(canvas.getByRole("status")).toHaveTextContent("Copy the invitation link below.");
+    await expect(canvas.getByText("Copy the invitation link below.")).toBeInTheDocument();
     await expect(canvas.getByLabelText("Invitation link")).toHaveAttribute("readonly");
     await expect(canvas.getByRole("button", { name: "Copy invitation link" })).toBeEnabled();
   },
@@ -51,6 +52,25 @@ export const RetryableFailure: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Copy invitation link" }));
     await expect(canvas.getByRole("alert")).toHaveTextContent("Please try again.");
     await expect(canvas.getByRole("button", { name: "Copy invitation link" })).toBeEnabled();
+    await expect(canvas.queryByLabelText("Invitation link")).not.toBeInTheDocument();
+  },
+};
+
+export const CopiedInDetails: Story = {
+  args: { presentation: "details" },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Copy invitation link" }));
+    await expect(canvas.getByRole("button", { name: "Link copied" })).toBeInTheDocument();
+    await expect(canvas.getByRole("status")).toHaveTextContent("Invitation link copied.");
+    await expect(canvas.queryByLabelText("Invitation link")).not.toBeInTheDocument();
+  },
+};
+
+export const SuccessResets: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Copy invitation link" }));
+    await expect(canvas.getByRole("button", { name: "Link copied" })).toBeInTheDocument();
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Copy invitation link" })).toBeInTheDocument(), { timeout: 3500 });
     await expect(canvas.queryByLabelText("Invitation link")).not.toBeInTheDocument();
   },
 };
