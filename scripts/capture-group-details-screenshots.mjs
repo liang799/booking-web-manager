@@ -24,6 +24,12 @@ async function capture(name) {
 }
 
 try {
+  // Current light- and dark-mode headers, captured from actual Storybook renders.
+  await story("groups-details--visual-owner", "Members (4)");
+  await capture("after-hero-light.png");
+  await story("groups-details--dark", "Members (4)");
+  await capture("after-hero-dark.png");
+
   await story("groups-details--dark", "Members (4)");
   await capture("after-members.png");
 
