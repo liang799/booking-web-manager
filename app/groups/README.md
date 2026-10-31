@@ -94,22 +94,27 @@ again. A transport error asks the user to check their group list before retrying
 
 ## Group details
 
-`GroupDetailView` receives display data and existing mutation controls from the
-server page. Members shows initials, names, user IDs and join dates; the sidebar
-has Share a link / By user ID invitation tabs and the member's leave control.
-Invitations provides a dedicated sharing view. Clipboard denial retains a
-selectable link and explains manual copying. The owner alone receives link
-management, rename, archive and member removal controls, with existing
-confirmations. Archived groups show member history without mutation controls;
-archiving while Invitations is selected returns to Members. Options links also
-restore the member view before opening their target section.
+The detail page follows the shared editorial court-header design with three distinct tabs:
+**Members**, **Invitations**, and (for active groups) **Settings**. Members lists the
+actual roster, join dates, role badges, and owner-only removal controls; it no longer
+forces invitation controls into a sidebar. Non-owners see membership/leave controls
+in Settings, while owners can rename or archive there. Archived groups remain read-only.
 
-No outgoing invitation history is shown: the current query exposes invitations
-received by the signed-in player, which remain on the overview. No database
-migration, group policy or shared navigation changes are included.
+**Invite players** opens a single dialog from either list. Its two internal tabs
+are **Share a link** (copy/rotate/disable) and **Invite by user ID** (existing
+server action). A disabled link blocks user-ID invites as before. Link copying
+keeps a selectable input for clipboard-denied browsers.
 
-Storybook **Groups / Create** and **Groups / Details** cover both themes, phone
-layouts, long/deleted profiles, invitation submission, draft restoration,
-validation, partial success, copy denial, pending player lookup and archive tab
-recovery. Current screenshots and validation are in
-[the experience previews](../../docs/assets/groups/experience/README.md).
+**Invitations** lists the group's *outgoing* unanswered invitations, including
+name, handle, sent date and pending status. An empty state replaces the list
+when there are none. Owners may revoke individual pending invitations with
+confirmation; the domain removes only the selected invitation and keeps the
+group's link active. Invitation data comes from the existing group aggregate,
+so no new database migration is needed. Incoming invitations remain on /groups.
+Server mutations revalidate the detail page so freshly sent/cancelled invitations
+update the list.
+
+Storybook **Groups / Details** covers both themes, mobile widths, long/deleted
+profiles, settings, dialog methods, clipboard refusal, pending/empty invitations,
+and archive tab recovery.
+
