@@ -94,6 +94,51 @@ export const JoinedMobileDark: Story = {
   globals: { theme: "dark", viewport: { value: "phone", isRotated: false } },
 };
 
+/** Regression for long address copy: no clipped venue text or horizontal modal overflow. */
+const longVenueName = "PCF SPARKLETOTS PRESCHOOL @ CHUA CHU KANG BLK 123 (KN) - TENNIS COURT";
+export const JoinedLongVenue: Story = {
+  ...Joined,
+  args: {
+    loadFeed: async () => ({
+      sessions: [{ ...session, venueName: longVenueName, role: "PARTICIPANT", participationStatus: "COMMITTED", participantCount: 3 }],
+      nextCursor: null, asOf: "2026-10-29T08:00:00+08:00", upcomingCount: 1, pastCount: 0,
+    }),
+  },
+  play: async ({ canvas, parameters }) => {
+    if (parameters.themes?.themeOverride === "dark") await waitFor(() => expect(document.documentElement).toHaveClass("dark"));
+    await userEvent.click(await canvas.findByRole("button", {
+      name: window.innerWidth < 768 ? `View Tennis Court Booking at ${longVenueName}, 6 Nov 2026` : "View details",
+    }));
+    const element = await screen.findByRole("dialog", { name: "Tennis Court Booking" });
+    const dialog = within(element);
+    const schedule = dialog.getByRole("region", { name: "Session schedule and location" });
+    const location = dialog.getByRole("link", { name: /PCF Sparkletots Preschool/ });
+    await expect(location).toBeVisible();
+    await expect(dialog.getByRole("link", { name: /View in calendar/ })).toBeVisible();
+    await waitFor(() => {
+      expect(schedule.scrollWidth).toBeLessThanOrEqual(schedule.clientWidth + 1);
+      expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth + 1);
+      expect(location.getBoundingClientRect().right).toBeLessThanOrEqual(schedule.getBoundingClientRect().right + 1);
+    });
+    await userEvent.click(dialog.getByRole("tab", { name: "Participants (3)" }));
+    await expect(dialog.getByRole("tabpanel")).toBeVisible();
+    await expect(location).toBeVisible();
+  },
+};
+export const JoinedLongVenueDark: Story = {
+  ...JoinedLongVenue,
+  parameters: { ...JoinedLongVenue.parameters, themes: { themeOverride: "dark" } },
+  globals: { theme: "dark" },
+};
+export const JoinedLongVenueMobile: Story = {
+  ...JoinedLongVenue,
+  globals: { viewport: { value: "phone", isRotated: false } },
+};
+export const JoinedLongVenueMobileDark: Story = {
+  ...JoinedLongVenueDark,
+  globals: { theme: "dark", viewport: { value: "phone", isRotated: false } },
+};
+
 export const JoinedWaitlisted: Story = {
   ...Joined,
   args: { loadFeed: async () => ({ sessions: [{ ...session, role: "PARTICIPANT", participationStatus: "WAITLISTED", participantCount: 3 }], nextCursor: null, asOf: "2026-10-29T08:00:00+08:00", upcomingCount: 1, pastCount: 0 }) },
