@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { SessionParticipantsOutcome } from "../removal-actions";
 import type { SessionParticipants } from "../removal-types";
 import { SessionParticipantsView } from "./session-participants-view";
+import type { SessionInvitationsTransport } from "./session-participants-invitations";
 import type { ParticipantRemovalTransport } from "./participant-removal-dialog";
 import { participantRemovalStorageKey } from "./participant-removal-storage";
 
@@ -27,11 +28,18 @@ const result = { sessionId: session.sessionId, participationId, status: "REMOVED
 const storageKey = participantRemovalStorageKey(userId, session.sessionId);
 const savedRequest = { ...preview, userId, displayName: "Alex Tan", idempotencyKey: "40000000-0000-4000-8000-000000000001" };
 
+const invitationTransport: SessionInvitationsTransport = {
+  findPlayer: fn(async (_previous, form) => ({ status: "found", player: { handle: String(form.get("handle")), displayName: "Storybook Player", reliabilityScore: null, isSelf: false } })),
+  loadSessionInvitation: fn(async (id) => ({ status: "ready", invitationPath: `/sessions/${id}/join?token=storybook` })),
+  sendDirectSessionInvitations: fn(async (_id, handles) => ({ status: "sent", invited: handles.length, alreadyInvited: 0, alreadyParticipating: 0 })),
+  sendGroupSessionInvitations: fn(async (_id, _groupId, members) => ({ status: "sent", invited: members.length, alreadyInvited: 0, alreadyParticipating: 0 })),
+};
+
 function Harness({ outcome, preview: loadPreview, remove }: Omit<ParticipantRemovalTransport, "userId"> & { readonly outcome: SessionParticipantsOutcome }) {
   const [mount, setMount] = useState(0);
   const [refreshes, setRefreshes] = useState(0);
   return <>
-    <SessionParticipantsView key={mount} sessionId={session.sessionId} outcome={outcome} groups={[]} invitations={[]} refreshing={false}
+    <SessionParticipantsView key={mount} sessionId={session.sessionId} outcome={outcome} groups={[]} invitations={[]} invitationTransport={invitationTransport} refreshing={false}
       removal={{ userId, preview: loadPreview, remove }} onRefresh={() => setRefreshes((value) => value + 1)} />
     <div className="px-6 pb-6"><Button variant="outline" onClick={() => setMount((value) => value + 1)}>Simulate reload</Button>
       <span className="sr-only">Server refreshes: {refreshes}</span></div>
