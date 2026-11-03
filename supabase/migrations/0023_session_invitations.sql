@@ -48,7 +48,7 @@ alter function public.notification_push_relevant(text,uuid,uuid,uuid)
   rename to notification_push_relevant_before_session_invitations;
 create function public.notification_push_relevant(
   p_kind text,p_recipient uuid,p_session uuid,p_group uuid
-) returns boolean language sql stable set search_path='' as $
+) returns boolean language sql stable set search_path='' as $$
   select case when p_kind='SESSION_INVITATION' then exists(
     select 1 from public.session_invitations i
     join public.sessions s on s.session_id=i.session_id
@@ -57,7 +57,7 @@ create function public.notification_push_relevant(
   ) else public.notification_push_relevant_before_session_invitations(
     p_kind,p_recipient,p_session,p_group
   ) end;
-$;
+$$;
 revoke all on function public.notification_push_relevant(text,uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.notification_push_relevant(text,uuid,uuid,uuid) to service_role;
 
