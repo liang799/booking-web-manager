@@ -9,7 +9,7 @@ import { Money } from "@/components/ui/money";
 import { initials } from "@/components/ui/initials";
 import { AttendanceVerificationForm } from "@/app/commit/_components/attendance-verification-form";
 import type { SessionParticipantsOutcome } from "../removal-actions";
-import type { SessionInviteDisplay } from "../session-invitation-actions";
+import type { SessionInviteDisplay, SendSessionInvitationsResult } from "../session-invitation-actions";
 import { sessionTitle, sessionVenueLabel, sessionTime } from "./session-display";
 import { ParticipantRemovalDialog, type ParticipantRemovalTransport, type RemovalResult, type RemovalTarget } from "./participant-removal-dialog";
 import { SessionGroupImportDialog, SessionInviteDialog, type ImportGroup } from "./session-participants-invitations";
@@ -61,6 +61,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
   const [menuId, setMenuId] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [showGroups, setShowGroups] = useState(false);
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const heading = useRef<HTMLHeadingElement | null>(null);
   const session = outcome.status === "ready" ? outcome.session : null;
@@ -77,6 +78,14 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
     update();
     return () => clearTimeout(timer);
   }, [startAt]);
+
+  function handleInvited(result: Extract<SendSessionInvitationsResult, { status: "sent" }>) {
+    const sent = `${result.invited} new ${result.invited === 1 ? "invitation" : "invitations"} sent.`;
+    const existing = result.alreadyInvited ? ` ${result.alreadyInvited} already invited.` : "";
+    const joined = result.alreadyParticipating ? ` ${result.alreadyParticipating} already participating.` : "";
+    setInviteNotice(`${sent}${existing}${joined}`);
+    onRefresh();
+  }
 
   function restoreFocus() {
     if (trigger.current?.isConnected && !trigger.current.disabled) trigger.current.focus();
@@ -139,6 +148,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
       }}
       onRefresh={onRefresh} onRecoveryChange={setRecoveryLocked} />
 
+    {inviteNotice && <p role="status" className={styles.feedback}>{inviteNotice}</p>}
     {success && <p role="status" className={styles.feedback}>
       {success.displayName} removed. <Money cents={success.result.refundCents} /> refunded to their in-app wallet.
     </p>}
@@ -241,7 +251,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
         <AttendanceVerificationForm sessionId={session.sessionId} onSaved={onRefresh}
           players={session.participants.filter((player) => player.status === "COMMITTED" && player.attendance === "UNVERIFIED")} />
       </div>}
-      <SessionGroupImportDialog sessionId={sessionId} groups={groups} open={showGroups} onOpenChange={setShowGroups} onInvited={onRefresh} />
+      <SessionGroupImportDialog sessionId={sessionId} groups={groups} open={showGroups} onOpenChange={setShowGroups} onInvited={handleInvited} />
       <SessionInviteDialog sessionId={sessionId} open={showInvite} onOpenChange={setShowInvite} onInvited={onRefresh} />
     </>}
   </main>;
