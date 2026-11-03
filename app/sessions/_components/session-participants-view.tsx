@@ -219,7 +219,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, refreshing
                         <MoreHorizontal size={24} aria-hidden="true" />
                       </button>
                       {menuId === player.participationId && <div className={styles.menu}>
-                        <button type="button" onClick={(event) => { trigger.current = event.currentTarget; setSelected(player); setMenuId(null); }}>Remove participant</button>
+                        <button type="button" onClick={(event) => { trigger.current = event.currentTarget.parentElement?.previousElementSibling as HTMLButtonElement | null; setSelected(player); setMenuId(null); }}>Remove participant</button>
                       </div>}
                     </>}
                   </div>
