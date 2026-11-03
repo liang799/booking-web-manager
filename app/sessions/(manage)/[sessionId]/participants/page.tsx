@@ -5,6 +5,7 @@ import { createManageGroup } from "@/use-case-config/groups";
 import { SessionParticipantsController } from "@/app/sessions/_components/session-participants-controller";
 import type { ImportGroup } from "@/app/sessions/_components/session-participants-invitations";
 import { listSessionParticipants } from "@/app/sessions/removal-actions";
+import { loadSessionInvitations } from "@/app/sessions/session-invitation-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,8 @@ export default async function SessionParticipantsPage({ params }: { readonly par
   const user = await getCurrentUser();
   if (user === null) redirect(`/login?next=${encodeURIComponent(`/sessions/${sessionId}/participants`)}`);
   const outcome = await listSessionParticipants(sessionId);
-  const groups = outcome.status === "ready" ? await importableGroups(user.id).catch(() => [] as readonly ImportGroup[]) : [];
-  return <SessionParticipantsController sessionId={sessionId} userId={user.id} outcome={outcome} groups={groups} />;
+  const [groups, invitations] = outcome.status === "ready"
+    ? await Promise.all([importableGroups(user.id), loadSessionInvitations(sessionId)])
+    : [[], []] as const;
+  return <SessionParticipantsController sessionId={sessionId} userId={user.id} outcome={outcome} groups={groups} invitations={invitations} />;
 }
