@@ -31,7 +31,7 @@ function Harness({ outcome, preview: loadPreview, remove }: Omit<ParticipantRemo
   const [mount, setMount] = useState(0);
   const [refreshes, setRefreshes] = useState(0);
   return <>
-    <SessionParticipantsView key={mount} sessionId={session.sessionId} outcome={outcome} refreshing={false}
+    <SessionParticipantsView key={mount} sessionId={session.sessionId} outcome={outcome} groups={[]} invitations={[]} refreshing={false}
       removal={{ userId, preview: loadPreview, remove }} onRefresh={() => setRefreshes((value) => value + 1)} />
     <div className="px-6 pb-6"><Button variant="outline" onClick={() => setMount((value) => value + 1)}>Simulate reload</Button>
       <span className="sr-only">Server refreshes: {refreshes}</span></div>
