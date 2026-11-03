@@ -61,8 +61,8 @@
 .rowMenu { position:relative; flex:0 0 170px; display:flex; justify-content:flex-end; }
 .dots { width:44px; height:42px; display:inline-flex; align-items:center; justify-content:center; border-radius:5px; }
 .dots:hover { background:#252c35; }
-.menu { position:absolute; z-index:5; top:45px; right:0; min-width:185px; padding:6px; border:1px solid #454954; border-radius:8px; background:#191e27; box-shadow:0 12px 30px #0008; }
-.menu button { display:block; width:100%; padding:12px; border-radius:4px; text-align:left; font-size:14px; }
+.menu { position:absolute; z-index:5; top:45px; right:0; min-width:185px; padding:6px; border:1px solid #454954; border-radius:8px; background:#191e27; color:#f5f6f8; box-shadow:0 12px 30px #0008; }
+.menu button { display:block; width:100%; padding:12px; border-radius:4px; color:inherit; text-align:left; font-size:14px; }
 .menu button:hover { background:#353a43; }
 .loadMore { display:block; min-height:48px; margin:20px auto; padding:10px 24px; border:1px solid #40454d; border-radius:6px; color:#ddd; font-size:14px; }
 .emptyState { padding:68px 16px; text-align:center; color:#bac0c8; font-size:16px; line-height:1.6; }
@@ -213,3 +213,12 @@
 :global(:root:not(.dark)) .secondaryButton { border-color:#b5bac2; color:#14181e; }
 :global(:root:not(.dark)) .dialog .avatar { background:#e5e7e9; }
 :global(:root:not(.dark)) .memberRow { border-color:#e0e2e6; }
+:global(:root:not(.dark)) .dots:hover { background:#e7e9ec; }
+:global(:root:not(.dark)) .menu {
+  border-color:#d7dbe1;
+  background:#fff;
+  color:#151920;
+  box-shadow:0 12px 32px rgb(20 24 32 / 14%);
+}
+:global(:root:not(.dark)) .menu button:hover,
+:global(:root:not(.dark)) .menu button:focus-visible { background:#f0f2f5; }
