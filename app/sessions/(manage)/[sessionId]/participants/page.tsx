@@ -17,7 +17,8 @@ async function importableGroups(userId: string): Promise<readonly ImportGroup[]>
   return active.map((group) => ({
     groupId: group.groupId,
     name: group.name,
-    members: group.memberships.filter((member) => member.userId !== userId).map((member) => ({
+    memberCount: group.memberships.length,
+    members: group.memberships.filter((member) => member.userId !== userId && profiles.get(member.userId)?.handle !== null).map((member) => ({
       userId: member.userId,
       displayName: profiles.get(member.userId)?.name ?? "Unnamed player",
       handle: profiles.get(member.userId)?.handle ?? null,
