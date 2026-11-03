@@ -4,10 +4,10 @@ import { useId, useState } from "react";
 import { Check, Copy, Link2, UserRound, UserRoundPlus, UsersRound, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { initials } from "@/components/ui/initials";
-import { findPlayer } from "@/app/users/find-player-action";
+import type { FindPlayerState } from "@/app/users/find-player-action";
 import { userHandleSchema } from "@/app/users/schemas";
-import { loadSessionInvitation } from "../invitation-transport";
-import { sendDirectSessionInvitations, sendGroupSessionInvitations, type SendSessionInvitationsResult } from "../session-invitation-actions";
+import type { LoadSessionInvitation } from "../invitation-transport";
+import type { SendSessionInvitationsResult } from "../session-invitation-actions";
 import styles from "./session-participants.module.css";
 
 export interface ImportGroup {
@@ -17,9 +17,17 @@ export interface ImportGroup {
   readonly members: readonly { readonly userId: string; readonly displayName: string; readonly handle: string | null }[];
 }
 
+/** Browser-facing boundaries. Production supplies server actions; Storybook supplies inert fakes. */
+export interface SessionInvitationsTransport {
+  readonly findPlayer: (previousState: FindPlayerState, formData: FormData) => Promise<FindPlayerState>;
+  readonly loadSessionInvitation: LoadSessionInvitation;
+  readonly sendDirectSessionInvitations: (sessionId: string, handles: readonly string[]) => Promise<SendSessionInvitationsResult>;
+  readonly sendGroupSessionInvitations: (sessionId: string, groupId: string, userIds: readonly string[]) => Promise<SendSessionInvitationsResult>;
+}
+
 type CopyState = { readonly message: string; readonly url?: string; readonly clipboard?: "copied" | "manual" };
 
-async function getShareLink(sessionId: string): Promise<CopyState> {
+async function getShareLink(sessionId: string, loadSessionInvitation: LoadSessionInvitation): Promise<CopyState> {
   const result = await loadSessionInvitation(sessionId);
   if (result.status === "error") return { message: result.message };
   const url = new URL(result.invitationPath, window.location.origin).href;
@@ -36,8 +44,9 @@ function Avatar({ name }: { readonly name: string }) {
 }
 
 /** Host sends recipient-specific notifications; the recipient confirms their paid place separately. */
-export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }: {
+export function SessionInviteDialog({ sessionId, transport, open, onOpenChange, onInvited }: {
   readonly sessionId: string;
+  readonly transport: SessionInvitationsTransport;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly onInvited: (result: Extract<SendSessionInvitationsResult, { status: "sent" }>) => void;
@@ -63,7 +72,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
     try {
       const form = new FormData();
       form.set("handle", parsed.data);
-      const outcome = await findPlayer({ status: "idle" }, form);
+      const outcome = await transport.findPlayer({ status: "idle" }, form);
       if (outcome.status === "found") {
         if (outcome.player.isSelf) { setMessage("You are already hosting this session."); return; }
         setPlayers((previous) => [...previous, { handle: outcome.player.handle, displayName: outcome.player.displayName }]);
@@ -80,7 +89,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
     setSending(true);
     setMessage("");
     try {
-      const result = await sendDirectSessionInvitations(sessionId, players.map((player) => player.handle));
+      const result = await transport.sendDirectSessionInvitations(sessionId, players.map((player) => player.handle));
       if (result.status === "error") { setMessage(result.message); return; }
       setPlayers([]);
       onOpenChange(false);
@@ -94,7 +103,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
     if (copying) return;
     setCopying(true);
     setCopied(null);
-    try { setCopied(await getShareLink(sessionId)); }
+    try { setCopied(await getShareLink(sessionId, transport.loadSessionInvitation)); }
     catch { setCopied({ message: "Could not load the invitation link. Try again." }); }
     finally { setCopying(false); }
   }
@@ -155,8 +164,9 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
 }
 
 /** Bulk invite validates selected membership inside the same database transaction as notifications. */
-export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange, onInvited }: {
+export function SessionGroupImportDialog({ sessionId, transport, groups, open, onOpenChange, onInvited }: {
   readonly sessionId: string;
+  readonly transport: SessionInvitationsTransport;
   readonly groups: readonly ImportGroup[];
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -182,7 +192,7 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
     setCopying(true);
     setCopied(null);
     try {
-      const result = await sendGroupSessionInvitations(
+      const result = await transport.sendGroupSessionInvitations(
         sessionId, activeGroup.groupId, members.filter((member) => selected.has(member.userId)).map((member) => member.userId),
       );
       if (result.status === "error") { setCopied({ message: result.message }); return; }
