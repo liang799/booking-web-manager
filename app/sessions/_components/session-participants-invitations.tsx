@@ -7,6 +7,7 @@ import { initials } from "@/components/ui/initials";
 import { findPlayer } from "@/app/users/find-player-action";
 import { userHandleSchema } from "@/app/users/schemas";
 import { loadSessionInvitation } from "../invitation-transport";
+import { sendDirectSessionInvitations, sendGroupSessionInvitations } from "../session-invitation-actions";
 import styles from "./session-participants.module.css";
 
 export interface ImportGroup {
@@ -33,17 +34,19 @@ function Avatar({ name }: { readonly name: string }) {
   return <span className={styles.avatar} aria-hidden="true">{initials(name)}</span>;
 }
 
-/** Mirrors the editorial invitation design while respecting the existing link-based session admission contract. */
-export function SessionInviteDialog({ sessionId, open, onOpenChange }: {
+/** Host sends recipient-specific notifications; the recipient confirms their paid place separately. */
+export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }: {
   readonly sessionId: string;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
+  readonly onInvited: () => void;
 }) {
   const inputId = useId();
   const [tab, setTab] = useState<"id" | "link">("id");
   const [handle, setHandle] = useState("");
   const [players, setPlayers] = useState<readonly { handle: string; displayName: string }[]>([]);
   const [finding, setFinding] = useState(false);
+  const [sending, setSending] = useState(false);
   const [copying, setCopying] = useState(false);
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState<CopyState | null>(null);
@@ -69,6 +72,21 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange }: {
     } catch {
       setMessage("Player lookup is unavailable. Try again.");
     } finally { setFinding(false); }
+  }
+
+  async function send() {
+    if (sending || players.length === 0) return;
+    setSending(true);
+    setMessage("");
+    try {
+      const result = await sendDirectSessionInvitations(sessionId, players.map((player) => player.handle));
+      if (result.status === "error") { setMessage(result.message); return; }
+      setPlayers([]);
+      onOpenChange(false);
+      onInvited();
+    } catch {
+      setMessage("Could not send invitations. Please try again.");
+    } finally { setSending(false); }
   }
 
   async function copy() {
@@ -114,7 +132,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange }: {
               <button type="button" aria-label={`Remove @${player.handle}`} onClick={() => setPlayers((previous) => previous.filter((item) => item.handle !== player.handle))}><X size={22} /></button>
             </li>)}
           </ul>
-          {players.length > 0 && <p className={styles.hint}>Players must accept the session through its invitation link. Adding a user ID does not reserve or charge their place.</p>}
+          {players.length > 0 && <p className={styles.hint}>Players receive an invitation in Notifications. They confirm their own booking share to join.</p>}
         </> : <div>
           <label className={styles.fieldLabel} htmlFor={inputId + "-link"}>Session invitation link</label>
           <p className={styles.hint}>Anyone with the link can review the session and choose to join. The session host controls availability.</p>
@@ -128,19 +146,20 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange }: {
       <div className={styles.modalFooter}>
         {tab === "id" && <span className={styles.footerCount}>Invite {players.length} {players.length === 1 ? "player" : "players"}</span>}
         <button type="button" className={styles.secondaryButton} onClick={() => onOpenChange(false)}>Cancel</button>
-        <button type="button" className={styles.primaryButton} disabled={copying || (tab === "id" && players.length === 0)}
-          onClick={() => void copy()}>{copying ? "Loading…" : tab === "id" ? "Copy invite link" : "Copy invite link"}</button>
+        <button type="button" className={styles.primaryButton} disabled={copying || sending || (tab === "id" && players.length === 0)}
+          onClick={() => tab === "id" ? void send() : void copy()}>{sending ? "Sending…" : copying ? "Loading…" : tab === "id" ? "Invite players" : "Copy invite link"}</button>
       </div>
     </DialogContent>
   </Dialog>;
 }
 
-/** Group memberships are read server-side. Import prepares a shareable invitation, never silently enrolls or charges another player. */
-export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange }: {
+/** Bulk invite validates selected membership inside the same database transaction as notifications. */
+export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange, onInvited }: {
   readonly sessionId: string;
   readonly groups: readonly ImportGroup[];
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
+  readonly onInvited: () => void;
 }) {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<ReadonlyMap<string, ReadonlySet<string>>>(new Map());
@@ -157,13 +176,20 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
     if (enabled) next.add(userId); else next.delete(userId);
     setOverrides((previous) => new Map(previous).set(activeGroup.groupId, next));
   }
-  async function copy() {
-    if (copying || selectedCount === 0) return;
+  async function send() {
+    if (copying || !activeGroup || selectedCount === 0) return;
     setCopying(true);
     setCopied(null);
-    try { setCopied(await getShareLink(sessionId)); }
-    catch { setCopied({ message: "Could not load the invitation link. Try again." }); }
-    finally { setCopying(false); }
+    try {
+      const result = await sendGroupSessionInvitations(
+        sessionId, activeGroup.groupId, members.filter((member) => selected.has(member.userId)).map((member) => member.userId),
+      );
+      if (result.status === "error") { setCopied({ message: result.message }); return; }
+      onOpenChange(false);
+      onInvited();
+    } catch {
+      setCopied({ message: "Could not send group invitations. Please try again." });
+    } finally { setCopying(false); }
   }
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
@@ -206,12 +232,12 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
           </ul>
         </section>
       </div>
-      {copied && <div className={styles.modalStatus} role="status">{copied.message}{copied.url && <input aria-label="Invitation URL to copy" readOnly value={copied.url} onFocus={(event) => event.currentTarget.select()} className={styles.inputWrap} style={{ width: "100%", minHeight: 48, marginTop: 10, padding: 12 }} />}</div>}
+      {copied && <div className={styles.modalStatus} role="alert">{copied.message}</div>}
       <div className={styles.modalFooter}>
-        <span className={styles.hint} style={{ marginRight: "auto", maxWidth: 340 }}>Members must join themselves. Copy the session link to share with the selected group.</span>
+        <span className={styles.hint} style={{ marginRight: "auto", maxWidth: 340 }}>Invited members receive a notification and confirm their own booking share.</span>
         <button type="button" className={styles.secondaryButton} onClick={() => onOpenChange(false)}>Cancel</button>
-        <button type="button" className={styles.primaryButton} disabled={copying || selectedCount === 0} onClick={() => void copy()}>
-          {copying ? "Loading…" : `Copy link for ${selectedCount} ${selectedCount === 1 ? "member" : "members"}`}
+        <button type="button" className={styles.primaryButton} disabled={copying || selectedCount === 0} onClick={() => void send()}>
+          {copying ? "Sending…" : `Invite ${selectedCount} ${selectedCount === 1 ? "member" : "members"}`}
         </button>
       </div>
     </DialogContent>
