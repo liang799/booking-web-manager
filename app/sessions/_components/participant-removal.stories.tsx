@@ -29,10 +29,10 @@ const storageKey = participantRemovalStorageKey(userId, session.sessionId);
 const savedRequest = { ...preview, userId, displayName: "Alex Tan", idempotencyKey: "40000000-0000-4000-8000-000000000001" };
 
 const invitationTransport: SessionInvitationsTransport = {
-  findPlayer: fn(async (_previous, form) => ({ status: "found", player: { handle: String(form.get("handle")), displayName: "Storybook Player", reliabilityScore: null, isSelf: false } })),
-  loadSessionInvitation: fn(async (id) => ({ status: "ready", invitationPath: `/sessions/${id}/join?token=storybook` })),
-  sendDirectSessionInvitations: fn(async (_id, handles) => ({ status: "sent", invited: handles.length, alreadyInvited: 0, alreadyParticipating: 0 })),
-  sendGroupSessionInvitations: fn(async (_id, _groupId, members) => ({ status: "sent", invited: members.length, alreadyInvited: 0, alreadyParticipating: 0 })),
+  findPlayer: fn<SessionInvitationsTransport["findPlayer"]>(async (_previous, form) => ({ status: "found", player: { handle: String(form.get("handle")), displayName: "Storybook Player", reliabilityScore: null, isSelf: false } })),
+  loadSessionInvitation: fn<SessionInvitationsTransport["loadSessionInvitation"]>(async (id) => ({ status: "ready", invitationPath: `/sessions/${id}/join?token=storybook` })),
+  sendDirectSessionInvitations: fn<SessionInvitationsTransport["sendDirectSessionInvitations"]>(async (_id, handles) => ({ status: "sent", invited: handles.length, alreadyInvited: 0, alreadyParticipating: 0 })),
+  sendGroupSessionInvitations: fn<SessionInvitationsTransport["sendGroupSessionInvitations"]>(async (_id, _groupId, members) => ({ status: "sent", invited: members.length, alreadyInvited: 0, alreadyParticipating: 0 })),
 };
 
 function Harness({ outcome, preview: loadPreview, remove }: Omit<ParticipantRemovalTransport, "userId"> & { readonly outcome: SessionParticipantsOutcome }) {
