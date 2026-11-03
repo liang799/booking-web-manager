@@ -28,3 +28,11 @@ test("new invitation modals render without server-only dependencies", async ({ p
     page.off("pageerror", onError);
   }
 });
+
+test("light mode participant action menu has readable foreground and background", async ({ page }) => {
+  await page.goto("/storybook/iframe.html?viewMode=story&id=sessions-participant-removal--light-mode-menu");
+  const menuItem = page.getByRole("button", { name: "Remove participant" });
+  await expect(menuItem).toBeVisible();
+  await expect(menuItem).toHaveCSS("color", "rgb(21, 25, 32)");
+  await expect(menuItem.locator("..")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+});
