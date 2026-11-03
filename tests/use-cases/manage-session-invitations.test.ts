@@ -144,6 +144,7 @@ describe("UC2-03d: booker sends session invitations", () => {
 
   test("reports failure if commit cannot be confirmed instead of faking successful sends", async () => {
     const s = setup();
+    s.byHandles.mockResolvedValue([{ userId: "alice", handle: "alice_01", displayName: "Alice" }]);
     const failure = new Error("Commit failed");
     s.run.mockImplementation(async (work) => {
       await work(s.repositories);
