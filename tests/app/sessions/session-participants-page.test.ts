@@ -4,6 +4,9 @@ import { listSessionParticipants } from "@/app/sessions/removal-actions";
 import { getCurrentUser } from "@/lib/supabase/current-user";
 
 vi.mock("@/app/sessions/removal-actions", () => ({ listSessionParticipants: vi.fn() }));
+vi.mock("@/app/sessions/session-invitation-actions", () => ({ loadSessionInvitations: async () => [] }));
+vi.mock("@/use-case-config/groups", () => ({ createManageGroup: () => ({ listMine: async () => [] }) }));
+vi.mock("@/lib/supabase/profile-names", () => ({ memberProfiles: async () => new Map() }));
 vi.mock("@/app/sessions/_components/session-participants-controller", () => ({ SessionParticipantsController: () => null }));
 vi.mock("@/lib/supabase/current-user", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: (path: string) => { throw new Error(`redirect:${path}`); } }));
@@ -29,7 +32,7 @@ describe("session participants page", () => {
     vi.mocked(listSessionParticipants).mockResolvedValue(outcome);
     const page = await SessionParticipantsPage(props);
     expect(listSessionParticipants).toHaveBeenCalledExactlyOnceWith(sessionId);
-    expect(page.props).toEqual({ sessionId, userId: "host", outcome });
+    expect(page.props).toEqual({ sessionId, userId: "host", outcome, groups: [], invitations: [] });
   });
 
   test("renders the safe denial outcome without participant identities", async () => {
