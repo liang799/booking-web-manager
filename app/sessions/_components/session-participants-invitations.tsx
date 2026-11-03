@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { AtSign, Check, Copy, Link2, UserRound, UserRoundPlus, UsersRound, X } from "lucide-react";
+import { Check, Copy, Link2, UserRound, UserRoundPlus, UsersRound, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { initials } from "@/components/ui/initials";
 import { findPlayer } from "@/app/users/find-player-action";
