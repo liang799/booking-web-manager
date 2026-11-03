@@ -203,7 +203,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
           {displayed.length === 0 ? <p className={styles.emptyState}>{captions[tab]}</p> :
             <ul className={styles.list} aria-label={tab === "participants" ? "Participants" : tab === "waitlist" ? "Waitlist" : "Withdrawn players"}>
               {displayed.map((player) => {
-                const canRemove = !player.isBooker && player.canRemove && player.status === "COMMITTED" && canInvite && !recoveryLocked;
+                const canRemove = !player.isBooker && player.canRemove && player.status === "COMMITTED" && canInvite;
                 const label = player.status === "COMMITTED" ? "Booked" : player.status === "WAITLISTED" ? "Waiting" : player.status === "REMOVED" ? "Removed" : player.status === "WITHDRAWN" ? "Withdrawn" : player.status === "PENDING" ? "Invited" : player.status === "ACCEPTED" ? "Accepted" : player.status === "DECLINED" ? "Declined" : "Left";
                 return <li className={styles.playerRow} key={player.participationId}>
                   <div className={styles.playerInfo}>
@@ -217,7 +217,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
                   <span className={styles.statusBadge}>{label}</span>
                   <div className={styles.rowMenu}>
                     {canRemove && <>
-                      <button type="button" className={styles.dots} aria-label={`Manage ${player.displayName}`} aria-expanded={menuId === player.participationId}
+                      <button type="button" className={styles.dots} disabled={refreshing || recoveryLocked} aria-label={`Manage ${player.displayName}`} aria-expanded={menuId === player.participationId}
                         onClick={() => setMenuId((previous) => previous === player.participationId ? null : player.participationId)}>
                         <MoreHorizontal size={24} aria-hidden="true" />
                       </button>
