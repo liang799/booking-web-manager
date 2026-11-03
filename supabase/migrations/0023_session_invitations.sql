@@ -42,6 +42,25 @@ create trigger accept_pending_session_invitation
   after insert or update of status on public.participations
   for each row execute function public.accept_pending_session_invitation();
 
+-- Reuse the notification dispatcher's existing relevance checks for all other
+-- kinds, and enable push only for currently actionable session invitations.
+alter function public.notification_push_relevant(text,uuid,uuid,uuid)
+  rename to notification_push_relevant_before_session_invitations;
+create function public.notification_push_relevant(
+  p_kind text,p_recipient uuid,p_session uuid,p_group uuid
+) returns boolean language sql stable set search_path='' as $
+  select case when p_kind='SESSION_INVITATION' then exists(
+    select 1 from public.session_invitations i
+    join public.sessions s on s.session_id=i.session_id
+    where i.session_id=p_session and i.invitee_id=p_recipient
+      and i.status='PENDING' and s.status='OPEN' and s.start_at>statement_timestamp()
+  ) else public.notification_push_relevant_before_session_invitations(
+    p_kind,p_recipient,p_session,p_group
+  ) end;
+$;
+revoke all on function public.notification_push_relevant(text,uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.notification_push_relevant(text,uuid,uuid,uuid) to service_role;
+
 comment on table public.session_invitations is
   'Recipient-specific invitations to upcoming hosted sessions; membership is accepted only through UC2-04 wallet-guarded commitment.';
 commit;
