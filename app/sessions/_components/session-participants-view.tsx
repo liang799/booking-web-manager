@@ -9,6 +9,7 @@ import { Money } from "@/components/ui/money";
 import { initials } from "@/components/ui/initials";
 import { AttendanceVerificationForm } from "@/app/commit/_components/attendance-verification-form";
 import type { SessionParticipantsOutcome } from "../removal-actions";
+import type { SessionInviteDisplay } from "../session-invitation-actions";
 import { sessionTitle, sessionVenueLabel, sessionTime } from "./session-display";
 import { ParticipantRemovalDialog, type ParticipantRemovalTransport, type RemovalResult, type RemovalTarget } from "./participant-removal-dialog";
 import { SessionGroupImportDialog, SessionInviteDialog, type ImportGroup } from "./session-participants-invitations";
@@ -18,6 +19,7 @@ export interface SessionParticipantsViewProps {
   readonly sessionId: string;
   readonly outcome: SessionParticipantsOutcome;
   readonly groups: readonly ImportGroup[];
+  readonly invitations: readonly SessionInviteDisplay[];
   readonly refreshing: boolean;
   readonly removal: ParticipantRemovalTransport;
   readonly onRefresh: () => void;
@@ -40,7 +42,7 @@ const captions: Record<RosterTab, string> = {
   participants: "No players have joined this session yet.",
   waitlist: "There is nobody on the waitlist.",
   withdrawn: "No players have withdrawn or been removed.",
-  invitations: "Session invitations are shared by link. Copy a link above to invite players.",
+  invitations: "You haven’t invited any players yet.",
 };
 
 function PlayerAvatar({ name }: { readonly name: string }) {
@@ -48,7 +50,7 @@ function PlayerAvatar({ name }: { readonly name: string }) {
 }
 
 /** Editorial host roster, with the original transaction-safe refund removal and attendance workflows intact. */
-export function SessionParticipantsView({ sessionId, outcome, groups, refreshing, removal, onRefresh }: SessionParticipantsViewProps) {
+export function SessionParticipantsView({ sessionId, outcome, groups, invitations, refreshing, removal, onRefresh }: SessionParticipantsViewProps) {
   const [selected, setSelected] = useState<RemovalTarget | null>(null);
   const [removed, setRemoved] = useState<ReadonlyMap<string, RemovalResult>>(new Map());
   const [success, setSuccess] = useState<{ result: RemovalResult; displayName: string } | null>(null);
@@ -103,7 +105,8 @@ export function SessionParticipantsView({ sessionId, outcome, groups, refreshing
   const availableSlots = session ? session.availableSlots + regularPlayers.filter((player) =>
     player.status === "REMOVED" && removed.has(player.participationId)).length : 0;
   const capacity = committed.length + availableSlots;
-  const activeList = tab === "participants" ? committed : tab === "waitlist" ? waitlisted : tab === "withdrawn" ? withdrawn : [];
+  const invited: RosterPlayer[] = invitations.map((invite) => ({ participationId: invite.inviteeId, displayName: invite.displayName, status: invite.status }));
+  const activeList = tab === "participants" ? committed : tab === "waitlist" ? waitlisted : tab === "withdrawn" ? withdrawn : invited;
   const displayed = activeList.slice(0, visibleCount);
   const canInvite = session?.status === "OPEN" && !started;
   const venue = session ? sessionVenueLabel(session.venueName) : "";
@@ -179,7 +182,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, refreshing
               ["participants", "Participants", committed.length],
               ["waitlist", "Waitlist", waitlisted.length],
               ["withdrawn", "Withdrawn", withdrawn.length],
-              ["invitations", "Invitations", 0],
+              ["invitations", "Invitations", invitations.filter((invite) => invite.status === "PENDING").length],
             ] as const).map(([value, label, count]) => <button key={value} id={`roster-tab-${value}`} type="button" role="tab" aria-selected={tab === value}
               aria-controls="roster-panel" className={styles.tab} onClick={() => { setTab(value); setVisibleCount(2); setMenuId(null); }}>
               {label} ({count})
@@ -201,7 +204,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, refreshing
             <ul className={styles.list} aria-label={tab === "participants" ? "Participants" : tab === "waitlist" ? "Waitlist" : "Withdrawn players"}>
               {displayed.map((player) => {
                 const canRemove = !player.isBooker && player.canRemove && player.status === "COMMITTED" && canInvite && !recoveryLocked;
-                const label = player.status === "COMMITTED" ? "Booked" : player.status === "WAITLISTED" ? "Waiting" : player.status === "REMOVED" ? "Removed" : player.status === "WITHDRAWN" ? "Withdrawn" : "Left";
+                const label = player.status === "COMMITTED" ? "Booked" : player.status === "WAITLISTED" ? "Waiting" : player.status === "REMOVED" ? "Removed" : player.status === "WITHDRAWN" ? "Withdrawn" : player.status === "PENDING" ? "Invited" : player.status === "ACCEPTED" ? "Accepted" : player.status === "DECLINED" ? "Declined" : "Left";
                 return <li className={styles.playerRow} key={player.participationId}>
                   <div className={styles.playerInfo}>
                     <PlayerAvatar name={player.displayName} />
@@ -238,8 +241,8 @@ export function SessionParticipantsView({ sessionId, outcome, groups, refreshing
         <AttendanceVerificationForm sessionId={session.sessionId} onSaved={onRefresh}
           players={session.participants.filter((player) => player.status === "COMMITTED" && player.attendance === "UNVERIFIED")} />
       </div>}
-      <SessionGroupImportDialog sessionId={sessionId} groups={groups} open={showGroups} onOpenChange={setShowGroups} />
-      <SessionInviteDialog sessionId={sessionId} open={showInvite} onOpenChange={setShowInvite} />
+      <SessionGroupImportDialog sessionId={sessionId} groups={groups} open={showGroups} onOpenChange={setShowGroups} onInvited={onRefresh} />
+      <SessionInviteDialog sessionId={sessionId} open={showInvite} onOpenChange={setShowInvite} onInvited={onRefresh} />
     </>}
   </main>;
 }
