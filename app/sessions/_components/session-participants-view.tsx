@@ -192,7 +192,7 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
               ["participants", "Participants", committed.length],
               ["waitlist", "Waitlist", waitlisted.length],
               ["withdrawn", "Withdrawn", withdrawn.length],
-              ["invitations", "Invitations", invitations.filter((invite) => invite.status === "PENDING").length],
+              ["invitations", "Invitations", invitations.length],
             ] as const).map(([value, label, count]) => <button key={value} id={`roster-tab-${value}`} type="button" role="tab" aria-selected={tab === value}
               aria-controls="roster-panel" className={styles.tab} onClick={() => { setTab(value); setVisibleCount(2); setMenuId(null); }}>
               {label} ({count})
