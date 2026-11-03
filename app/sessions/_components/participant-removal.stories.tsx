@@ -307,7 +307,7 @@ export const BookerOnly: Story = {
   args: { outcome: { status: "ready", session: { ...session, availableSlots: 0, participants: [] } } },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("tab", { name: "Participants (1)" })).toBeVisible();
-    const booker = within(canvas.getByRole("list", { name: "Participants" }).getByRole("listitem"));
+    const booker = within(within(canvas.getByRole("list", { name: "Participants" })).getByRole("listitem"));
     await expect(booker.getByText("Booker · You")).toBeVisible();
     await expect(booker.queryByRole("button")).not.toBeInTheDocument();
     await expect(canvas.queryByText("No participants yet")).not.toBeInTheDocument();
@@ -321,7 +321,7 @@ export const LegacyFundedBooker: Story = {
   } } },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("tab", { name: "Participants (2)" })).toBeVisible();
-    const booker = within(canvas.getByRole("list", { name: "Participants" }).getAllByRole("listitem")[0]!);
+    const booker = within(within(canvas.getByRole("list", { name: "Participants" })).getAllByRole("listitem")[0]!);
     await expect(booker.getByText(/Booker · You/)).toBeVisible();
     await expect(booker.queryByRole("button")).not.toBeInTheDocument();
     await expect(within(canvas.getByRole("region", { name: "Check attendance" })).getByRole("group", { name: "Casey Tan" })).toBeVisible();
