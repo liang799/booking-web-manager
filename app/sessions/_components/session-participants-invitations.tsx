@@ -13,6 +13,7 @@ import styles from "./session-participants.module.css";
 export interface ImportGroup {
   readonly groupId: string;
   readonly name: string;
+  readonly memberCount: number;
   readonly members: readonly { readonly userId: string; readonly displayName: string; readonly handle: string | null }[];
 }
 
@@ -210,7 +211,7 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
               return <button type="button" key={group.groupId} className={styles.groupChoice} aria-pressed={activeGroup?.groupId === group.groupId}
                 onClick={() => { setGroupId(group.groupId); setCopied(null); }}>
                 <span aria-hidden="true" className={styles.groupThumbnail} data-sport={sport} />
-                <span className={styles.groupIdentity}><strong>{group.name}</strong><small>{group.members.length + 1} members</small></span>
+                <span className={styles.groupIdentity}><strong>{group.name}</strong><small>{group.memberCount} members</small></span>
                 {activeGroup?.groupId === group.groupId && <Check size={25} aria-hidden="true" />}
               </button>;
             })}
