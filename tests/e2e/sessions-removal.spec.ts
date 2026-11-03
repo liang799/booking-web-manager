@@ -65,9 +65,9 @@ test("UC2-03b host removes a participant with a full refund, retained history, a
     expect((await response).status()).toBe(200);
     await expect(page.getByRole("status").filter({ hasText: "Player 1 removed" })).toContainText("5.00");
     await expect(page.getByText("2 / 3 players", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Badminton Session", exact: true })).toBeFocused();
     await page.getByRole("tab", { name: "Withdrawn (1)" }).click();
     await expect(page.getByRole("list", { name: "Withdrawn players" })).toContainText("Player 1");
-    await expect(page.getByRole("heading", { name: "Badminton Session", exact: true })).toBeFocused();
     expect((await context.pool.query("select available_cents from wallet_balances where wallet_id=$1", [f.participants[0]!.walletId])).rows[0].available_cents).toBe("500");
     expect((await context.pool.query("select status from sessions where session_id=$1", [f.sessionId])).rows[0].status).toBe("OPEN");
     await page.screenshot({ path: testInfo.outputPath("participant-removed-mobile.png"), fullPage: true, animations: "disabled" });
