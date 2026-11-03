@@ -12,7 +12,7 @@ import type { SessionParticipantsOutcome } from "../removal-actions";
 import type { SessionInviteDisplay, SendSessionInvitationsResult } from "../session-invitation-actions";
 import { sessionTitle, sessionVenueLabel, sessionTime } from "./session-display";
 import { ParticipantRemovalDialog, type ParticipantRemovalTransport, type RemovalResult, type RemovalTarget } from "./participant-removal-dialog";
-import { SessionGroupImportDialog, SessionInviteDialog, type ImportGroup } from "./session-participants-invitations";
+import { SessionGroupImportDialog, SessionInviteDialog, type ImportGroup, type SessionInvitationsTransport } from "./session-participants-invitations";
 import styles from "./session-participants.module.css";
 
 export interface SessionParticipantsViewProps {
@@ -20,6 +20,7 @@ export interface SessionParticipantsViewProps {
   readonly outcome: SessionParticipantsOutcome;
   readonly groups: readonly ImportGroup[];
   readonly invitations: readonly SessionInviteDisplay[];
+  readonly invitationTransport: SessionInvitationsTransport;
   readonly refreshing: boolean;
   readonly removal: ParticipantRemovalTransport;
   readonly onRefresh: () => void;
@@ -50,7 +51,7 @@ function PlayerAvatar({ name }: { readonly name: string }) {
 }
 
 /** Editorial host roster, with the original transaction-safe refund removal and attendance workflows intact. */
-export function SessionParticipantsView({ sessionId, outcome, groups, invitations, refreshing, removal, onRefresh }: SessionParticipantsViewProps) {
+export function SessionParticipantsView({ sessionId, outcome, groups, invitations, invitationTransport, refreshing, removal, onRefresh }: SessionParticipantsViewProps) {
   const [selected, setSelected] = useState<RemovalTarget | null>(null);
   const [removed, setRemoved] = useState<ReadonlyMap<string, RemovalResult>>(new Map());
   const [success, setSuccess] = useState<{ result: RemovalResult; displayName: string } | null>(null);
@@ -251,8 +252,8 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
         <AttendanceVerificationForm sessionId={session.sessionId} onSaved={onRefresh}
           players={session.participants.filter((player) => player.status === "COMMITTED" && player.attendance === "UNVERIFIED")} />
       </div>}
-      <SessionGroupImportDialog sessionId={sessionId} groups={groups} open={showGroups} onOpenChange={setShowGroups} onInvited={handleInvited} />
-      <SessionInviteDialog sessionId={sessionId} open={showInvite} onOpenChange={setShowInvite} onInvited={onRefresh} />
+      <SessionGroupImportDialog sessionId={sessionId} transport={invitationTransport} groups={groups} open={showGroups} onOpenChange={setShowGroups} onInvited={handleInvited} />
+      <SessionInviteDialog sessionId={sessionId} transport={invitationTransport} open={showInvite} onOpenChange={setShowInvite} onInvited={onRefresh} />
     </>}
   </main>;
 }
