@@ -17,7 +17,7 @@ export interface ImportGroup {
   readonly members: readonly { readonly userId: string; readonly displayName: string; readonly handle: string | null }[];
 }
 
-type CopyState = { readonly message: string; readonly url?: string };
+type CopyState = { readonly message: string; readonly url?: string; readonly clipboard?: "copied" | "manual" };
 
 async function getShareLink(sessionId: string): Promise<CopyState> {
   const result = await loadSessionInvitation(sessionId);
@@ -25,9 +25,9 @@ async function getShareLink(sessionId: string): Promise<CopyState> {
   const url = new URL(result.invitationPath, window.location.origin).href;
   try {
     await navigator.clipboard.writeText(url);
-    return { message: "Invitation link copied. Share it with the selected players; they join and confirm their own places." };
+    return { message: "Invitation link copied. Players can review and confirm their own places.", url, clipboard: "copied" };
   } catch {
-    return { message: "Copy the invitation link below and share it with your players.", url };
+    return { message: "Copy the invitation link below and share it with your players.", url, clipboard: "manual" };
   }
 }
 
@@ -143,7 +143,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
           </div>
         </div>}
       </div>
-      {copied && <div role="status" className={styles.modalStatus}>{copied.message}{copied.url && <input aria-label="Invitation URL to copy" readOnly value={copied.url} onFocus={(event) => event.currentTarget.select()} className={styles.inputWrap} style={{ width: "100%", minHeight: 48, marginTop: 10, padding: 12 }} />}</div>}
+      {copied && <div role="status" className={styles.modalStatus}>{copied.message}{copied.clipboard === "manual" && copied.url && <input aria-label="Invitation URL to copy" readOnly value={copied.url} onFocus={(event) => event.currentTarget.select()} className={styles.inputWrap} style={{ width: "100%", minHeight: 48, marginTop: 10, padding: 12 }} />}</div>}
       <div className={styles.modalFooter}>
         {tab === "id" && <span className={styles.footerCount}>Invite {players.length} {players.length === 1 ? "player" : "players"}</span>}
         <button type="button" className={styles.secondaryButton} onClick={() => onOpenChange(false)}>Cancel</button>
