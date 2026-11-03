@@ -111,8 +111,8 @@ export function SessionParticipantsView({ sessionId, outcome, groups, invitation
   const committed = allPlayers.filter((player) => player.status === "COMMITTED");
   const waitlisted = allPlayers.filter((player) => player.status === "WAITLISTED");
   const withdrawn = allPlayers.filter((player) => player.status !== "COMMITTED" && player.status !== "WAITLISTED");
-  const availableSlots = session ? session.availableSlots + regularPlayers.filter((player) =>
-    player.status === "REMOVED" && removed.has(player.participationId)).length : 0;
+  const availableSlots = session ? session.availableSlots + session.participants.filter((player) =>
+    player.status === "COMMITTED" && removed.has(player.participationId)).length : 0;
   const capacity = committed.length + availableSlots;
   const invited: RosterPlayer[] = invitations.map((invite) => ({ participationId: invite.inviteeId, displayName: invite.displayName, status: invite.status }));
   const activeList = tab === "participants" ? committed : tab === "waitlist" ? waitlisted : tab === "withdrawn" ? withdrawn : invited;
