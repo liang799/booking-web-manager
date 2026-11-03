@@ -338,6 +338,17 @@ export const LegacyFundedBooker: Story = {
 export const Unavailable: Story = { args: { outcome: { status: "error", code: "SESSION_REMOVAL_UNAVAILABLE", message: "Participant management is temporarily unavailable.", refresh: false, retrySameRequest: true } } };
 export const Desktop: Story = { globals: { viewport: { value: "desktop", isRotated: false } } };
 
+/** A visible open-menu state for reviewing light-theme contrast in Storybook. */
+export const LightModeMenu: Story = {
+  globals: { theme: "light", viewport: { value: "desktop", isRotated: false } },
+  play: async ({ canvas }) => {
+    const trigger = canvas.getByRole("button", { name: "Manage Alex Tan" });
+    await waitFor(() => expect(trigger).toBeEnabled());
+    await userEvent.click(trigger);
+    await expect(canvas.getByRole("button", { name: "Remove participant" })).toBeVisible();
+  },
+};
+
 /** UC2-06: once an open session has ended, the booker sees the attendance check above the list. */
 export const AttendanceCheckOpen: Story = {
   args: { outcome: { status: "ready", session: { ...session, canVerifyAttendance: true } } },
