@@ -105,7 +105,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
         <span className={styles.dialogIcon} aria-hidden="true"><UserRoundPlus /></span>
         <div>
           <DialogTitle className={styles.dialogTitle}>Invite players</DialogTitle>
-          <DialogDescription className={styles.dialogDescription}>Add players to this session.</DialogDescription>
+          <DialogDescription className={styles.dialogDescription}>Invite players to this session.</DialogDescription>
         </div>
       </div>
       <div className={styles.dialogBody}>
@@ -199,7 +199,7 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
         <span className={styles.dialogIcon} aria-hidden="true"><UsersRound /></span>
         <div>
           <DialogTitle className={styles.dialogTitle}>Import from group</DialogTitle>
-          <DialogDescription className={styles.dialogDescription}>Add members from one of your groups to this session.</DialogDescription>
+          <DialogDescription className={styles.dialogDescription}>Invite members from one of your groups to this session.</DialogDescription>
         </div>
       </div>
       <div className={styles.groupColumns}>
