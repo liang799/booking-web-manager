@@ -7,7 +7,7 @@ import { initials } from "@/components/ui/initials";
 import { findPlayer } from "@/app/users/find-player-action";
 import { userHandleSchema } from "@/app/users/schemas";
 import { loadSessionInvitation } from "../invitation-transport";
-import { sendDirectSessionInvitations, sendGroupSessionInvitations } from "../session-invitation-actions";
+import { sendDirectSessionInvitations, sendGroupSessionInvitations, type SendSessionInvitationsResult } from "../session-invitation-actions";
 import styles from "./session-participants.module.css";
 
 export interface ImportGroup {
@@ -39,7 +39,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
   readonly sessionId: string;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
-  readonly onInvited: () => void;
+  readonly onInvited: (result: Extract<SendSessionInvitationsResult, { status: "sent" }>) => void;
 }) {
   const inputId = useId();
   const [tab, setTab] = useState<"id" | "link">("id");
@@ -83,7 +83,7 @@ export function SessionInviteDialog({ sessionId, open, onOpenChange, onInvited }
       if (result.status === "error") { setMessage(result.message); return; }
       setPlayers([]);
       onOpenChange(false);
-      onInvited();
+      onInvited(result);
     } catch {
       setMessage("Could not send invitations. Please try again.");
     } finally { setSending(false); }
@@ -159,7 +159,7 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
   readonly groups: readonly ImportGroup[];
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
-  readonly onInvited: () => void;
+  readonly onInvited: (result: Extract<SendSessionInvitationsResult, { status: "sent" }>) => void;
 }) {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<ReadonlyMap<string, ReadonlySet<string>>>(new Map());
@@ -186,7 +186,7 @@ export function SessionGroupImportDialog({ sessionId, groups, open, onOpenChange
       );
       if (result.status === "error") { setCopied({ message: result.message }); return; }
       onOpenChange(false);
-      onInvited();
+      onInvited(result);
     } catch {
       setCopied({ message: "Could not send group invitations. Please try again." });
     } finally { setCopying(false); }
